@@ -423,6 +423,7 @@ v3/carbonlens_v3_poc/
 │   └── index.css                       # Tailwind directives + custom slider styles
 │
 ├── public/
+│   ├── prd.html                        # Product Requirements Document (standalone page)
 │   └── sample_well.las                 # Sample LAS 2.0 file (20 depth samples, POR/PERM/GR/RHOB)
 │
 ├── src/__tests__/                      # Vitest test suite
@@ -544,7 +545,9 @@ The repository includes a GitHub Actions workflow at `.github/workflows/deploy.y
 2. `yarn build`
 3. Deploy `dist/` to GitHub Pages
 
-Live URL: `https://<username>.github.io/carbonlens/`
+Live URL: [`https://todak2000.github.io/carbonlens/`](https://todak2000.github.io/carbonlens/)
+
+Standalone Product Requirements Document (PRD): [`https://todak2000.github.io/carbonlens/prd.html`](https://todak2000.github.io/carbonlens/prd.html)
 
 ### Manual Static Deploy
 
