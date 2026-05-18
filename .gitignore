@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+dist/
+v1/
+v2/
+equations/
+*.csv
+*.xlsx

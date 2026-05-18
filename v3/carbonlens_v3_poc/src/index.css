@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-page: #ffffff;
+    --bg-card: #f8fafc;
+    --bg-elevated: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --bg-input: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --accent: #00b89a;
+    --accent-hover: #007a66;
+    --accent-bg: rgba(0, 184, 154, 0.08);
+  }
+
+  .dark {
+    --bg-page: #0a1015;
+    --bg-card: #0f172a;
+    --bg-elevated: #0f172a;
+    --bg-tertiary: #1e293b;
+    --bg-input: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --border: #1e293b;
+    --border-strong: #334155;
+    --accent: #00b89a;
+    --accent-hover: #007a66;
+    --accent-bg: rgba(0, 184, 154, 0.1);
+  }
+
+  html {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .bg-page { background-color: var(--bg-page); }
+  .bg-card { background-color: var(--bg-card); }
+  .bg-elevated { background-color: var(--bg-elevated); }
+  .bg-tertiary { background-color: var(--bg-tertiary); }
+  .bg-input { background-color: var(--bg-input); }
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted { color: var(--text-muted); }
+  .border-theme { border-color: var(--border); }
+  .border-theme-strong { border-color: var(--border-strong); }
+  .bg-accent { background-color: var(--accent); }
+  .bg-accent-hover { background-color: var(--accent-hover); }
+  .bg-accent-subtle { background-color: var(--accent-bg); }
+  .text-accent { color: var(--accent); }
+
+  .btn-primary {
+    background-color: var(--accent);
+    color: white;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s;
+  }
+  .btn-primary:hover { background-color: var(--accent-hover); }
+  .btn-primary:disabled { background-color: var(--bg-tertiary); color: var(--text-muted); }
+
+  .input-field {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--text-muted); }
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-page);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-page);
+}
+
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Cross-section events log */
+.le {
+  background: rgba(15,23,42,0.85);
+  border: 1px solid rgba(30,41,59,0.6);
+  border-left: 2px solid transparent;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin-bottom: 2px;
+  opacity: 0;
+  transition: opacity 0.4s;
+  line-height: 1.2;
+  color: var(--text-muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 6px;
+}
+.le.v { opacity: 1; }
+.le.good { border-left-color: var(--accent); }
+.le.warn { border-left-color: #e8820a; }
+.lt {
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 6px;
+  display: inline;
+}
