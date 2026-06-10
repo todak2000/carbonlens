@@ -4,6 +4,7 @@ export interface FormationPreset {
   name: string
   location: string
   description: string
+  jurisdiction: string
   params: FormationParams
 }
 
@@ -12,6 +13,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Sleipner Utsira',
     location: 'North Sea, Norway',
     description: 'Saline aquifer, ~200 Bt storage potential. World\'s longest-running CCS project.',
+    jurisdiction: 'EU',
     params: {
       depth: 1012, thickness: 200, porosity: 0.37, permeability: 3000,
       pressure: 10.3, temperature: 37, monovalentSalinity: 0.05,
@@ -24,6 +26,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Mount Simon',
     location: 'Illinois Basin, USA',
     description: 'Deep saline formation, ~150 Bt capacity. Extensive characterization from DOE projects.',
+    jurisdiction: 'US',
     params: {
       depth: 2134, thickness: 152, porosity: 0.15, permeability: 500,
       pressure: 21.3, temperature: 52, monovalentSalinity: 0.22,
@@ -36,6 +39,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Snøhvit Tubåen',
     location: 'Barents Sea, Norway',
     description: 'Saline aquifer, Equinor-operated. Low permeability compared to Sleipner.',
+    jurisdiction: 'EU',
     params: {
       depth: 2600, thickness: 75, porosity: 0.13, permeability: 150,
       pressure: 28, temperature: 90, monovalentSalinity: 0.08,
@@ -48,6 +52,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Gorgon',
     location: 'Barrow Island, Australia',
     description: 'Silty-sandstone formation, Chevron-operated. High residual trapping potential.',
+    jurisdiction: 'AU',
     params: {
       depth: 2300, thickness: 100, porosity: 0.18, permeability: 200,
       pressure: 23, temperature: 65, monovalentSalinity: 0.12,
@@ -62,6 +67,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Johansen',
     location: 'Norwegian North Sea, offshore Bergen, Norway',
     description: 'Lower Jurassic saline aquifer. EU benchmark storage site. ~1 Gt capacity. Dunlin shale caprock (excellent seal).',
+    jurisdiction: 'EU',
     params: {
       depth: 2700, thickness: 150, porosity: 0.25, permeability: 300,
       pressure: 28.5, temperature: 98, monovalentSalinity: 0.60,
@@ -74,6 +80,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'In Salah',
     location: 'Central Algeria',
     description: 'Gas field CO₂ storage. Low-permeability fractured carbonate reservoir.',
+    jurisdiction: 'EU',
     params: {
       depth: 1800, thickness: 50, porosity: 0.12, permeability: 50,
       pressure: 18, temperature: 85, monovalentSalinity: 0.3,
@@ -86,6 +93,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Kasawari',
     location: 'Sarawak, Malaysia',
     description: 'Carbonate gas field, PETRONAS. Target injection ~2027. High CO₂ content gas.',
+    jurisdiction: 'MY',
     params: {
       depth: 1300, thickness: 90, porosity: 0.2, permeability: 800,
       pressure: 13.5, temperature: 45, monovalentSalinity: 0.1,
@@ -98,6 +106,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Duyong',
     location: 'Terengganu, Malaysia',
     description: 'Depleted gas field, first Malaysian CCS permit (Nov 2025).',
+    jurisdiction: 'MY',
     params: {
       depth: 1500, thickness: 70, porosity: 0.22, permeability: 600,
       pressure: 15, temperature: 50, monovalentSalinity: 0.09,
@@ -110,6 +119,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Otway',
     location: 'Victoria, Australia',
     description: 'CO2CRC research site. Well-characterized saline aquifer with extensive monitoring.',
+    jurisdiction: 'AU',
     params: {
       depth: 2000, thickness: 40, porosity: 0.17, permeability: 350,
       pressure: 20, temperature: 75, monovalentSalinity: 0.25,
@@ -125,6 +135,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Malay Basin',
     location: 'South China Sea, Malaysia',
     description: 'Tertiary saline aquifer, South China Sea. Underpins Malaysia\'s CCUS roadmap. ~8 Gt regional storage potential.',
+    jurisdiction: 'MY',
     params: {
       depth: 1500, thickness: 50, porosity: 0.25, permeability: 250,
       pressure: 15.0, temperature: 75, monovalentSalinity: 0.20,
@@ -139,6 +150,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Niger Delta',
     location: 'Niger Delta, Nigeria',
     description: 'High-permeability Agbada sandstone saline aquifer. Nigeria\'s primary CCS target. Addresses gas flaring (~15 Mt CO₂-eq/yr).',
+    jurisdiction: 'EU',
     params: {
       depth: 1800, thickness: 60, porosity: 0.30, permeability: 800,
       pressure: 18.0, temperature: 80, monovalentSalinity: 0.35,
@@ -153,6 +165,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'North Sumatra Basin',
     location: 'Northern Sumatra, Indonesia',
     description: 'Miocene sandstone saline aquifer. Largest SE Asian developing-world CO₂ storage potential. ~50 Gt estimated capacity.',
+    jurisdiction: 'EU',
     params: {
       depth: 1600, thickness: 45, porosity: 0.22, permeability: 200,
       pressure: 16.0, temperature: 78, monovalentSalinity: 0.45,
@@ -168,6 +181,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Nile Delta',
     location: 'Northern Egypt',
     description: 'Miocene sandstone saline aquifer beneath Messinian evaporite caprock (anhydrite/salt). High seal integrity. Gulf-adjacent geopolitical relevance.',
+    jurisdiction: 'EU',
     params: {
       depth: 2200, thickness: 70, porosity: 0.24, permeability: 300,
       pressure: 22.0, temperature: 90, monovalentSalinity: 0.70,
@@ -184,6 +198,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Abu Dhabi Basin',
     location: 'Abu Dhabi, UAE',
     description: 'Deep saline sandstone / Arab Formation carbonate. Home of Al Reyadah CCS — first CCS facility in MENA. ADNOC 2030 CCS target: 10 Mt/yr.',
+    jurisdiction: 'EU',
     params: {
       depth: 2800, thickness: 80, porosity: 0.16, permeability: 120,
       pressure: 28.0, temperature: 110, monovalentSalinity: 1.80,
@@ -199,6 +214,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Rotterdam / North Sea',
     location: 'North Sea, Netherlands',
     description: 'Permian Bunter Sandstone saline aquifer (P18 block). Porthos CCS project — EU\'s flagship live CCS project (FID 2023). 37 Mt total storage target.',
+    jurisdiction: 'EU',
     params: {
       depth: 3100, thickness: 65, porosity: 0.22, permeability: 120,
       pressure: 31.0, temperature: 108, monovalentSalinity: 2.20,
@@ -214,6 +230,7 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Alberta Basin',
     location: 'Alberta, Canada',
     description: 'Basal Cambrian Sandstone saline aquifer. Quest CCS project (Shell / ADNOC co-owned) — most-published MVA dataset in the Americas. >8 Mt injected.',
+    jurisdiction: 'EU',
     params: {
       depth: 2200, thickness: 50, porosity: 0.14, permeability: 50,
       pressure: 22.0, temperature: 75, monovalentSalinity: 2.80,

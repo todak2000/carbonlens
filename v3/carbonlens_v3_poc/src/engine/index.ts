@@ -2,8 +2,11 @@ export { evaluateMars, scaleInput, subEquation, subScaler, supEquation, supScale
 export type { MarsInput, MarsEquation, FeatureScaler, PhaseRegime, ADResult, ADViolation } from './mars'
 export {
   co2DensitySpanWagner,
+  co2DensityPR,
   brineDensityGarcia,
   co2ViscosityFenghour,
+  co2ViscosityLaeseckeMuzny,
+  isNearCriticalRegion,
   co2SolubilityDuanSun,
   co2DiffusionCoefficient,
   determinePhase,

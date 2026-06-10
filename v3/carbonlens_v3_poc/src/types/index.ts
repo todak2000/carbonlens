@@ -151,7 +151,12 @@ export interface SimulationResult {
   p10: number  // DOE storage capacity P10 (low estimate, Mt)
   p50: number  // DOE storage capacity P50 (best estimate, Mt)
   p90: number  // DOE storage capacity P90 (high estimate, Mt)
-  storageEfficiency: number  // effective P50 Cc as % (= Cc_P50 × 100 = 2.0%) for transparency
+  storageEfficiency: number   // effective P50 Cc as % (= Cc_P50 × 100 = 2.0%) for transparency
+  peacemanBHP?: number        // Peaceman (1978) wellbore BHP — accounts for skin & completion (MPa)
+  injectivityIndex?: number   // J = q / ΔP  [m³/(d·MPa)] — diagnostic for injectivity assessment
+  haliteRisk?: import('../engine/classical/haliteRisk').HaliteRiskResult
+  vePlumeArea?: number        // VE solver: 2D plume footprint (km²)
+  vePlumeRadius?: number      // VE solver: effective circular radius of VE plume (m)
 }
 
 export interface GeomechanicsResult {

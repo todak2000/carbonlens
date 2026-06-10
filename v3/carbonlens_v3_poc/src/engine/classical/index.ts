@@ -1,5 +1,5 @@
-export { co2DensitySpanWagner, brineDensityGarcia } from './density'
-export { co2ViscosityFenghour } from './viscosity'
+export { co2DensitySpanWagner, co2DensityPR, brineDensityGarcia } from './density'
+export { co2ViscosityFenghour, co2ViscosityLaeseckeMuzny, isNearCriticalRegion } from './viscosity'
 export { co2SolubilityDuanSun } from './solubility'
 export { co2DiffusionCoefficient } from './diffusion'
 export { determinePhase, computeTr, computePr } from './phase'

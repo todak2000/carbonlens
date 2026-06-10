@@ -23,6 +23,15 @@ import {
 } from '../engine'
 import { cumulativeInjection, wellRateAtTime } from '../utils/gridParser'
 import { computePressureField, expIntegralE1 } from '../utils/computePressureField'
+import {
+  computeWellboreDiagnostics,
+  DEFAULT_WELLBORE,
+} from '../engine/plume/wellboreModel'
+import { computeHaliteRisk } from '../engine/classical/haliteRisk'
+import {
+  VESolver, uniformPermField, wellToGridIndex,
+  type VEFluidProps, type VEWellSource,
+} from '../engine/ve'
 
 export function computeYearly(
   params: FormationParams,
@@ -173,6 +182,62 @@ export function computeYearly(
   // ── Pressure field for 3D visualization ───────────────────────────────────
   const pressureField = computePressureField(params, wells, year, projectYears, rhoCO2_mobile, visc_final)
 
+  // ── Peaceman wellbore BHP (skin-aware near-wellbore pressure) ──────────────
+  // Cell width estimate from model area and assumed 20×20 grid resolution.
+  // Peaceman (1978) equivalent radius: r_eq = 0.1982 · dx.
+  // This gives a physics-consistent BHP that accounts for skin, completion
+  // geometry, and wellbore radius — independent of the Theis far-field model.
+  const cellWidth_m = Math.sqrt(params.area * 1e6) / 20
+  let peacemanBHP = P_t   // default to Theis-based pressure if no active wells
+  let injectivityIndex = 0
+  if (currentRate > 0 && wells.length > 0) {
+    // Use average rate per well for each Peaceman computation; take the
+    // worst-case (highest) BHP across all active wells.
+    let maxBHP = 0
+    let lastJ  = 0
+    for (const w of wells) {
+      const wRate = wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears)
+      if (wRate <= 0) continue
+      const diag = computeWellboreDiagnostics(
+        DEFAULT_WELLBORE,
+        params.permeability,
+        cellWidth_m,
+        visc_final,           // Pa·s
+        params.pressure,      // initial reservoir pressure (MPa)
+        wRate,                // Mt/yr for this well
+        rhoCO2_mobile,        // kg/m³
+        params.depth,
+      )
+      if (diag.bhp_MPa > maxBHP) {
+        maxBHP = diag.bhp_MPa
+        lastJ  = diag.injectivityIndex_m3dMPa
+      }
+    }
+    if (maxBHP > 0) {
+      peacemanBHP     = maxBHP
+      injectivityIndex = lastJ
+    }
+  }
+
+  // ── Halite precipitation risk (Zeidouni 2009 dryout-radius model) ──────────
+  // Computed once using peak well rate and full project duration.
+  // Only meaningful when wells are active.
+  const maxWellRate = wells.reduce((m, w) => Math.max(m, w.injectionRate), 0)
+  const haliteRisk = maxWellRate > 0
+    ? computeHaliteRisk(
+        maxWellRate,
+        h_m,
+        phi,
+        0.15,                               // Swi — connate water (default)
+        params.monovalentSalinity,
+        params.bivalentSalinity,
+        rhoCO2_mobile,
+        rhoBrine,
+        params.temperature,
+        projectYears,
+      )
+    : undefined
+
   return {
     storageCapacity: storageAtYear,
     totalCapacity,
@@ -203,6 +268,9 @@ export function computeYearly(
     p50: totalCapacity,
     p90: capacityP90,
     storageEfficiency: Cc_P50 * 100,  // 2.0% — gross pore volume efficiency (DOE P50)
+    peacemanBHP,
+    injectivityIndex,
+    haliteRisk,
   }
 }
 
@@ -214,11 +282,22 @@ interface AnimationState {
   peakResult: SimulationResult | null
   plumeGrid: PlumeGrid | null
   colorUpdateFn: (() => void) | null
+  veSolver: VESolver | null
+  /** Pure-analytical trapping chain — never overridden by PlumeGrid.
+   *  Tracked year-by-year so computeYearly always uses the previous frame's
+   *  analytical mobilePlume as its prev-state, keeping the stateful trapping
+   *  accumulation free of PlumeGrid boundary-loss contamination.
+   *  Used exclusively for the export snapshot mass-balance fields. */
+  analyticalResult: SimulationResult | null
 }
 
 function makeAnimState(): AnimationState {
-  return { raf: 0, startTime: 0, prevYear: -1, resumeYear: 0, peakResult: null, plumeGrid: null, colorUpdateFn: null }
+  return { raf: 0, startTime: 0, prevYear: -1, resumeYear: 0, peakResult: null, plumeGrid: null, colorUpdateFn: null, veSolver: null, analyticalResult: null }
 }
+
+// VE grid dimensions — 40×40 provides a good speed/resolution trade-off in-browser
+const VE_NX = 40
+const VE_NY = 40
 
 export interface CheckResult {
   ok: boolean
@@ -524,18 +603,30 @@ export function useSimulation(gridRef?: React.RefObject<{
       st.prevYear = year
       const params = useFormationStore.getState().params
       const wells = useFormationStore.getState().wells
-      let newResult = computeYearly(params, year, projectYears)
+
+      // ── Pure-analytical chain ─────────────────────────────────────────────
+      // Pass st.analyticalResult as prev so each frame accumulates from the
+      // previous ANALYTICAL state, never from PlumeGrid-overridden store values.
+      // This guarantees residual + solubility + mobile = storageCapacity every frame.
+      const analyticalNew = computeYearly(params, year, projectYears, st.analyticalResult)
+      st.analyticalResult = analyticalNew
+
+      // Start with the analytical result; PlumeGrid may override trapping values
+      // below for the LIVE display (3D colours + UI panel) only.
+      let newResult = analyticalNew
 
       if (st.plumeGrid) {
         st.plumeGrid.step(year, newResult)
         const tb = st.plumeGrid.trappingBreakdown()
         const plumeSum = tb.freeMt + tb.residualMt + tb.dissolvedMt + tb.mineralMt
         // Only override analytical trapping when PlumeGrid values are non-zero AND conserve
-        // at least 50% of injected mass. PlumeGrid can lose mass through boundary outflow when
-        // the plume extends beyond the finite model extent — in that case the analytical model
-        // (computeYearly) is more reliable for mass-balance reporting.
+        // at least 85% of injected mass.  The analytical model (computeYearly) always satisfies
+        // residual + solubility + mobile = storageCapacity exactly — this invariant is needed for
+        // internally consistent mass-balance reporting in the export documents.  If the PlumeGrid
+        // loses more than 15% of mass through open boundaries (common for large plumes that reach
+        // the finite model extent), the analytical model is used instead.
         const plumeMassOk = plumeSum > 0
-          && (newResult.storageCapacity <= 0 || plumeSum >= newResult.storageCapacity * 0.5)
+          && (newResult.storageCapacity <= 0 || plumeSum >= newResult.storageCapacity * 0.85)
         if (plumeMassOk) {
           newResult = {
             ...newResult,
@@ -549,6 +640,25 @@ export function useSimulation(gridRef?: React.RefObject<{
         st.colorUpdateFn?.()
       }
 
+      // ── VE solver step ────────────────────────────────────────────────────
+      if (st.veSolver) {
+        const veWells: VEWellSource[] = []
+        for (const w of wells) {
+          const rate = wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears)
+          if (rate > 0) {
+            const q_m3s = rate * 1e9 / (newResult.co2Density * 365.25 * 24 * 3600)
+            const { i, j } = wellToGridIndex(w.x, w.z, VE_NX, VE_NY)
+            veWells.push({ i, j, q_m3s })
+          }
+        }
+        const veState = st.veSolver.step(veWells)
+        newResult = {
+          ...newResult,
+          vePlumeArea:   veState.plumeArea_m2 / 1e6,  // m² → km²
+          vePlumeRadius: veState.plumeRadius_m,
+        }
+      }
+
       const totalRate = wells.reduce((s, w) => s + wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears), 0)
 
       if (totalRate > 0) {
@@ -560,7 +670,7 @@ export function useSimulation(gridRef?: React.RefObject<{
           const plumeSum = tb.freeMt + tb.residualMt + tb.dissolvedMt + tb.mineralMt
           const peakStorage = st.peakResult.storageCapacity
           const plumeMassOk = plumeSum > 0
-            && (peakStorage <= 0 || plumeSum >= peakStorage * 0.5)
+            && (peakStorage <= 0 || plumeSum >= peakStorage * 0.85)
           newResult = plumeMassOk
             ? {
                 ...st.peakResult,
@@ -601,14 +711,36 @@ export function useSimulation(gridRef?: React.RefObject<{
       const finalResult = useSimulationStore.getState().result
       const finalParams = useFormationStore.getState().params
       const finalWells = useFormationStore.getState().wells
-      if (finalResult) {
-        // Snapshot result + wells + params together so exports always describe
-        // the same simulation regardless of subsequent formation store edits.
-        sim.setCompletedSnapshot(finalResult, finalWells, finalParams)
+
+      // Build the export result: keep PlumeGrid-derived geometry (plumeRadius, VE data, etc.)
+      // from the live result but replace mass-balance fields with the pure-analytical values.
+      // This guarantees residual + solubility + mobile = storageCapacity in BOTH export docs.
+      const ana = st.analyticalResult
+      const exportResult: SimulationResult | null = (finalResult != null && ana != null)
+        ? {
+            ...finalResult,
+            // Mass-balance fields come exclusively from the analytical chain
+            storageCapacity:  ana.storageCapacity,
+            residualTrapping: ana.residualTrapping,
+            solubilityTrapping: ana.solubilityTrapping,
+            mineralTrapping:  ana.mineralTrapping,
+            mobilePlume:      ana.mobilePlume,
+          }
+        : finalResult
+
+      // Compute final geomechanics with the actual injected volume for accurate surface heave.
+      const finalGeo = computeGeomechanicsResult(finalParams, finalWells, exportResult)
+      if (exportResult) {
+        // Snapshot result + wells + params + geomechanics together so both export
+        // documents always describe the same completed run.  Storing geomechanics in
+        // the snapshot (not just the live field) prevents the permit report from
+        // showing "Run geomechanics assessment" when the live field is updated by a
+        // subsequent action before the user clicks export.
+        sim.setCompletedSnapshot(exportResult, finalWells, finalParams, finalGeo)
       }
-      // Refresh geomechanics with the completed simulation result so surface heave
-      // uses the actual injected volume instead of the zero placeholder from run().
-      sim.setGeomechanics(computeGeomechanicsResult(finalParams, finalWells, finalResult))
+      // Also update the live geomechanics field so the GeomechanicsPanel reflects the
+      // completed run (this is separate from the frozen export snapshot above).
+      sim.setGeomechanics(finalGeo)
       sim.stopAnimation()
       autoSaveProject().catch(() => { /* silent */ })
     }
@@ -621,6 +753,7 @@ export function useSimulation(gridRef?: React.RefObject<{
     st.prevYear = -1
     st.startTime = 0
     st.peakResult = null
+    st.analyticalResult = null  // reset pure-analytical chain for fresh run
     const params = useFormationStore.getState().params
     const wells = useFormationStore.getState().wells
     const projectYears = useUIStore.getState().projectYears
@@ -674,6 +807,34 @@ export function useSimulation(gridRef?: React.RefObject<{
       st.colorUpdateFn = null
     }
 
+    // ── VE solver initialisation ──────────────────────────────────────────
+    try {
+      const dx_m = Math.sqrt(params.area * 1e6) / VE_NX
+      const dy_m = Math.sqrt(params.area * 1e6) / VE_NY
+      const T_K   = params.temperature + 273.15
+      const P_Pa  = params.pressure * 1e6
+      const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa)
+      const rhoBrine = brineDensityGarcia(T_K, params.pressure, params.monovalentSalinity, params.bivalentSalinity)
+      const muCO2  = co2ViscosityFenghour(T_K, rhoCO2)
+      const veFluid: VEFluidProps = {
+        co2Density:    rhoCO2,
+        brineDensity:  rhoBrine,
+        co2Viscosity:  muCO2,
+        porosity:      params.porosity,
+        Swi:           0.15,
+        thickness:     params.thickness,
+      }
+      const permField = uniformPermField(VE_NX, VE_NY, params.permeability)
+      st.veSolver = new VESolver(
+        { nx: VE_NX, ny: VE_NY, dx_m, dy_m },
+        veFluid,
+        permField,
+      )
+      st.veSolver.reset()
+    } catch {
+      st.veSolver = null
+    }
+
     st.raf = requestAnimationFrame(animateFrame)
 
     try { autoSaveProject() } catch { /* silent */ }
@@ -684,9 +845,12 @@ export function useSimulation(gridRef?: React.RefObject<{
     cancelAnimationFrame(st.raf)
     st.raf = 0
     st.plumeGrid?.reset()
+    st.veSolver?.reset()
+    st.veSolver = null
     st.plumeGrid = null
     st.colorUpdateFn = null
     st.resumeYear = 0
+    st.analyticalResult = null
     useSimulationStore.getState().stopAnimation()
     try { autoSaveProject() } catch { /* silent */ }
   }, [])

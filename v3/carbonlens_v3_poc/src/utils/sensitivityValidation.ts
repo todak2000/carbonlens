@@ -519,13 +519,13 @@ export function validateAgainstPreset(
       tolerance: 20,
       pass: Math.abs(safeRatio(currentResult.co2Density - refDensity, refDensity)) < 0.20,
       unit: 'kg/m³',
-      note: 'Span-Wagner EOS at formation T/P. Deviates if temperature or pressure changed.',
+      note: 'Peng-Robinson EOS (PR-76) at formation T/P. Deviates if temperature or pressure changed. Accuracy ±3–8% vs Span-Wagner ±0.05–0.5% at CCS conditions.',
     },
   ]
 
   const hasLiteratureData = presetName in LITERATURE_FORMATIONS
   const literatureNote = LITERATURE_FORMATIONS[presetName]
-    ?? `No published injection data for ${presetName}. Reference values computed analytically from DOE Goodman 2011 + Span-Wagner EOS using default preset parameters.`
+    ?? `No published injection data for ${presetName}. Reference values computed analytically from DOE Goodman (2011) + Peng-Robinson EOS (PR-76) using default preset parameters.`
 
   return {
     presetName,

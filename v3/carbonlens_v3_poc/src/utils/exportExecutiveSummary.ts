@@ -111,12 +111,14 @@ export function generateRecommendations(
     )
   }
 
-  // Use the same denominator as the trapping chart: sum of all 4 components.
-  // Using storageCapacity as denominator gives a different total, causing text/chart mismatch.
-  const allTotal = Math.max(0.001,
-    result.residualTrapping + result.solubilityTrapping + result.mineralTrapping + result.mobilePlume,
-  )
-  const permanentPct = ((result.residualTrapping + result.solubilityTrapping + result.mineralTrapping) / allTotal) * 100
+  // Use storageCapacity as denominator (mass-conservative injection total).
+  // The non-overlapping trapping components are: residual + dissolvedOnly + mineral + mobile.
+  // dissolvedOnly = solubility - mineral (avoids double-counting mineralised CO₂).
+  const dissolvedOnlyRec = Math.max(0, result.solubilityTrapping - result.mineralTrapping)
+  const allTotal = Math.max(0.001, result.storageCapacity || (
+    result.residualTrapping + result.solubilityTrapping + result.mobilePlume
+  ))
+  const permanentPct = ((result.residualTrapping + dissolvedOnlyRec + result.mineralTrapping) / allTotal) * 100
   const mobilePct = (result.mobilePlume / allTotal) * 100
   if (permanentPct > 50) {
     recs.push(
@@ -307,7 +309,7 @@ export function exportExecutiveSummary(
       main: `${result.injectionPressure.toFixed(1)} MPa`,
       sub1: `Reservoir P: ${params.pressure.toFixed(1)} MPa`,
       sub2: `Depth: ${params.depth} m`,
-      note: 'Theis radial flow model',
+      note: 'Nordbotten (2005) two-phase radial flow',
     },
   ]
 
@@ -365,12 +367,16 @@ export function exportExecutiveSummary(
   sectionTitle('HOW CO\u2082 IS STORED', y)
   y += 5
 
+  // mineralTrapping is a SUBSET of solubilityTrapping that has precipitated.
+  // Split into non-overlapping pools so the four bars sum to 100% of storageCapacity:
+  //   residual + dissolvedOnly + mineral + mobile = residual + solubility + mobile ≈ storageCapacity
+  const dissolvedOnly = Math.max(0, result.solubilityTrapping - result.mineralTrapping)
   const stored = result.storageCapacity || 1
   const bars: Array<{ label: string; value: number; color: RGB }> = [
-    { label: 'Residual trapping',   value: result.residualTrapping,   color: CLR.emerald },
-    { label: 'Solubility trapping', value: result.solubilityTrapping, color: [56, 189, 248]  as const },
-    { label: 'Mineral trapping',    value: result.mineralTrapping,    color: [167, 139, 250] as const },
-    { label: 'Mobile plume',        value: result.mobilePlume,        color: CLR.amber },
+    { label: 'Residual trapping',          value: result.residualTrapping, color: CLR.emerald },
+    { label: 'Dissolution (aqueous phase)', value: dissolvedOnly,           color: [56, 189, 248]  as const },
+    { label: 'Mineral trapping',           value: result.mineralTrapping,  color: [167, 139, 250] as const },
+    { label: 'Mobile plume',               value: result.mobilePlume,      color: CLR.amber },
   ]
   const barMaxW = W - M * 2 - 52
   const barH = 4.5

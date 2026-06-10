@@ -10,6 +10,9 @@ interface SimulationState {
   completedResult: SimulationResult | null
   completedWells: import('../types').Well[] | null
   completedParams: import('../types').FormationParams | null
+  /** Geomechanics frozen atomically with completedResult — guarantees both export
+   *  documents see the same geomechanical state as the completed simulation. */
+  completedGeomechanics: GeomechanicsResult | null
   geomechanics: GeomechanicsResult | null
   validation: GeomechValidation | null
   forceRun: boolean
@@ -22,7 +25,7 @@ interface SimulationState {
   runSimulation: () => void
   setResult: (result: SimulationResult) => void
   setCompletedResult: (result: SimulationResult) => void
-  setCompletedSnapshot: (result: SimulationResult, wells: import('../types').Well[], params: import('../types').FormationParams) => void
+  setCompletedSnapshot: (result: SimulationResult, wells: import('../types').Well[], params: import('../types').FormationParams, geomechanics?: GeomechanicsResult | null) => void
   setGeomechanics: (g: GeomechanicsResult) => void
   setValidation: (v: GeomechValidation | null) => void
   setForceRun: (f: boolean) => void
@@ -44,6 +47,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   completedResult: null,
   completedWells: null,
   completedParams: null,
+  completedGeomechanics: null,
   geomechanics: null,
   validation: null,
   forceRun: false,
@@ -55,13 +59,13 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   snapshots: [],
 
   // Clear completedResult when a new run starts so stale exports are not reused
-  runSimulation: () => set({ status: 'running', progress: 0, snapshots: [], completedResult: null, completedWells: null, completedParams: null }),
+  runSimulation: () => set({ status: 'running', progress: 0, snapshots: [], completedResult: null, completedWells: null, completedParams: null, completedGeomechanics: null }),
 
   setResult: (result) => set({ result }),
 
   setCompletedResult: (result) => set({ completedResult: result }),
 
-  setCompletedSnapshot: (result, wells, params) => set({ completedResult: result, completedWells: wells, completedParams: params }),
+  setCompletedSnapshot: (result, wells, params, geomechanics) => set({ completedResult: result, completedWells: wells, completedParams: params, completedGeomechanics: geomechanics ?? null }),
 
   setGeomechanics: (g) => set({ geomechanics: g }),
 
@@ -89,5 +93,5 @@ export const useSimulationStore = create<SimulationState>((set) => ({
 
   clearSnapshots: () => set({ snapshots: [] }),
 
-  reset: () => set({ status: 'idle', result: null, completedResult: null, completedWells: null, completedParams: null, geomechanics: null, validation: null, forceRun: false, progress: 0, isAnimating: false, baselineResult: null, baselineParams: null, snapshots: [] }),
+  reset: () => set({ status: 'idle', result: null, completedResult: null, completedWells: null, completedParams: null, completedGeomechanics: null, geomechanics: null, validation: null, forceRun: false, progress: 0, isAnimating: false, baselineResult: null, baselineParams: null, snapshots: [] }),
 }))

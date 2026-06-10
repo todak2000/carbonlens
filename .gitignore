@@ -6,6 +6,8 @@ v2/
 equations/
 *.csv
 *.xlsx
+*.pdf
+*.md
 
 # legacy files (not part of v3/carbonlens_v3_poc)
 carbonlens_prototype/

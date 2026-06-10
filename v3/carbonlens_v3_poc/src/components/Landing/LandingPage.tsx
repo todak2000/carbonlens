@@ -3,6 +3,7 @@ import { useUIStore } from '../../store/uiStore'
 import { Sun, Moon } from 'lucide-react'
 import Logo from '../Logo'
 import HeroScene from './HeroScene'
+import WorldMap from './WorldMap'
 
 // ── Icons as simple SVG components (no extra deps needed) ─────────────────────
 
@@ -372,56 +373,7 @@ export default function LandingPage() {
               <rect width="100%" height="100%" fill="url(#dots)" />
             </svg>
 
-            {/* Simplified world map SVG — continents as rough paths */}
-            <svg
-              viewBox="0 0 1000 500"
-              className="w-full h-auto max-h-80 relative z-10"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Continent fills — simplified polygons */}
-              {/* North America */}
-              <path d="M80,60 L200,55 L230,90 L220,150 L190,190 L150,200 L120,180 L90,140 L75,100 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* South America */}
-              <path d="M160,210 L210,205 L230,250 L220,320 L190,360 L165,350 L150,300 L145,250 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Europe */}
-              <path d="M420,60 L510,55 L530,80 L510,110 L470,115 L440,100 L415,85 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Africa */}
-              <path d="M440,130 L520,125 L545,160 L540,250 L510,310 L470,320 L440,280 L425,210 L430,160 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Middle East / Arabia */}
-              <path d="M530,120 L600,115 L620,150 L590,180 L555,175 L530,155 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Asia */}
-              <path d="M560,55 L800,50 L820,100 L790,160 L720,180 L650,170 L600,140 L560,110 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Southeast Asia */}
-              <path d="M680,180 L760,175 L780,220 L750,240 L700,230 L675,210 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-              {/* Australia */}
-              <path d="M680,290 L800,285 L820,340 L790,390 L720,400 L670,370 L655,320 Z"
-                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
-                    strokeWidth="0.8" strokeOpacity="0.15" />
-
-              {/* Formation markers — plotted using the FORMATION_MARKERS x/y percentages × 10 (for 1000×500 viewBox) */}
-              {FORMATION_MARKERS.map((f) => (
-                <g key={f.name} transform={`translate(${f.x * 10}, ${f.y * 10})`}>
-                  {/* Outer pulse ring */}
-                  <circle r="9" fill="none" stroke={REGION_COLORS[f.region]} strokeWidth="0.8" opacity="0.35" />
-                  {/* Inner filled dot */}
-                  <circle r="4" fill={REGION_COLORS[f.region]} opacity="0.85" />
-                </g>
-              ))}
-            </svg>
+            <WorldMap />
 
             {/* Region legend */}
             <div className="px-4 md:px-6 py-3 border-t dark:border-white/[0.06] border-gray-200 flex flex-wrap gap-x-5 gap-y-2">
