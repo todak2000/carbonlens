@@ -40,3 +40,18 @@ export interface FeatureScaler {
 }
 
 export type PhaseRegime = 'subcritical' | 'supercritical'
+
+export interface ADViolation {
+  feature: string
+  value: number
+  min: number
+  max: number
+  pct_outside: number
+}
+
+export interface ADResult {
+  status: 'green' | 'yellow' | 'red'
+  pi_halfwidth: number  // mN/m, 90% conformal PI half-width
+  pi_level: number      // 0.90
+  violations: ADViolation[]
+}

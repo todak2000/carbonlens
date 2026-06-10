@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { Jurisdiction, ColorProperty } from '../types'
 
-type Panel = 'properties' | 'formation' | 'simulation' | 'geomechanics' | 'economics' | 'leakage' | 'screening' | 'jurisdiction' | 'export' | 'overview' | 'registry'
+type Panel = 'properties' | 'formation' | 'geology' | 'simulation' | 'geomechanics' | 'economics' | 'leakage' | 'screening' | 'jurisdiction' | 'export' | 'overview' | 'registry' | 'methodology' | 'validation' | 'montecarlo' | 'historymatching'
 type Theme = 'dark' | 'light'
 type View = 'landing' | 'auth' | 'dashboard' | 'workspace'
+export type { Panel, Theme, View }
 
 function getInitialTheme(): Theme {
   try {
@@ -31,6 +32,11 @@ interface UIState {
   showPressureField: boolean
   warningCount: number
   blowoutActive: boolean
+  showGridView: boolean
+  demoActive: boolean
+  currentProjectId: string | null
+  toggleGridView: () => void
+  setDemoActive: (v: boolean) => void
   setProjectYears: (y: number) => void
   setView: (v: View) => void
   setSidebar: (open: boolean) => void
@@ -46,6 +52,7 @@ interface UIState {
   togglePressureField: () => void
   incrementWarning: () => void
   setBlowout: (active: boolean) => void
+  setCurrentProjectId: (id: string | null) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -66,6 +73,11 @@ export const useUIStore = create<UIState>((set) => ({
   showPressureField: true,
   warningCount: 0,
   blowoutActive: false,
+  showGridView: true,
+  demoActive: false,
+  currentProjectId: null,
+  toggleGridView: () => set((s) => ({ showGridView: !s.showGridView })),
+  setDemoActive: (v) => set({ demoActive: v }),
   setProjectYears: (y) => set({ projectYears: y }),
   setView: (v) => set({ view: v }),
   setSidebar: (open) => set({ sidebarOpen: open }),
@@ -85,4 +97,5 @@ export const useUIStore = create<UIState>((set) => ({
   togglePressureField: () => set((s) => ({ showPressureField: !s.showPressureField })),
   incrementWarning: () => set((s) => ({ warningCount: s.warningCount + 1 })),
   setBlowout: (active) => set({ blowoutActive: active, warningCount: active ? 0 : 0 }),
+  setCurrentProjectId: (id) => set({ currentProjectId: id }),
 }))

@@ -50,6 +50,21 @@ export interface MarsScaler {
   params: Record<string, MarsScalerParams>
 }
 
+export interface ADViolation {
+  feature: string
+  value: number
+  min: number
+  max: number
+  pct_outside: number
+}
+
+export interface ADResult {
+  status: 'green' | 'yellow' | 'red'
+  pi_halfwidth: number
+  pi_level: number
+  violations: ADViolation[]
+}
+
 export interface ClassicalProperties {
   co2Density: number
   brineDensity: number
@@ -80,7 +95,6 @@ export interface FormationParams {
   permeability: number
   pressure: number
   temperature: number
-  salinity: number
   monovalentSalinity: number
   bivalentSalinity: number
   saltType: SaltType
@@ -129,12 +143,15 @@ export interface SimulationResult {
   diffusion: number
   solubilityTrapping: number
   residualTrapping: number
+  mineralTrapping: number
   mobilePlume: number
   containmentProbability: number
   ift: number | null
-  p10: number
-  p50: number
-  p90: number
+  adAssessment: ADResult | null
+  p10: number  // DOE storage capacity P10 (low estimate, Mt)
+  p50: number  // DOE storage capacity P50 (best estimate, Mt)
+  p90: number  // DOE storage capacity P90 (high estimate, Mt)
+  storageEfficiency: number  // effective P50 Cc as % (= Cc_P50 × 100 = 2.0%) for transparency
 }
 
 export interface GeomechanicsResult {
@@ -189,6 +206,9 @@ export interface LasState {
 export interface UserProfile {
   email: string
   displayName: string
+  organization: string
   tier: 'free' | 'pro' | 'enterprise'
   createdAt: number
 }
+
+export * from './geological'

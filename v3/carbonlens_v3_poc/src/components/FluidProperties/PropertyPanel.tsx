@@ -31,6 +31,30 @@ export default function PropertyPanel() {
           <h3 className="text-[10px] text-muted font-mono uppercase tracking-wider">Simulation Results</h3>
           <PropertyRow label="Storage Capacity" value={`${result.storageCapacity.toFixed(1)} Mt`} />
           <PropertyRow label="IFT" value={result.ift !== null ? `${result.ift.toFixed(2)} mN/m` : 'N/A'} />
+          {result.adAssessment && (
+            <div className="flex items-center justify-between py-0.5">
+              <span className="text-[10px] text-muted font-mono">MARS AD Gate</span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full"
+                  style={{
+                    backgroundColor:
+                      result.adAssessment.status === 'green' ? '#22c55e' :
+                      result.adAssessment.status === 'yellow' ? '#eab308' : '#ef4444',
+                  }}
+                />
+                <span className="text-[10px] font-mono text-secondary capitalize">
+                  {result.adAssessment.status}
+                </span>
+              </span>
+            </div>
+          )}
+          {result.adAssessment && (
+            <PropertyRow
+              label={`IFT PI90 ±`}
+              value={`${result.adAssessment.pi_halfwidth.toFixed(2)} mN/m`}
+            />
+          )}
           <PropertyRow label="Plume Radius" value={`${result.plumeRadius.toFixed(1)} m`} />
           <PropertyRow label="Containment" value={`${(result.containmentProbability * 100).toFixed(0)} %`} />
           <PropertyRow label="P50 Capacity" value={`${result.p50.toFixed(1)} Mt`} />

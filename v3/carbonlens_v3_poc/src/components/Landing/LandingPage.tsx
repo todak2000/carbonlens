@@ -139,6 +139,43 @@ const NAV_LINKS = [
   { label: 'Pricing', href: '#pricing' },
 ]
 
+// All 16 formation presets organised by world region for the coverage map
+// Coords are [x%, y%] within the 100×50 SVG viewBox (rough geographic placement)
+const FORMATION_MARKERS = [
+  // Europe / North Sea
+  { name: 'Sleipner Utsira',     region: 'Europe',        x: 48.5, y: 17 },
+  { name: 'Snøhvit Tubåen',      region: 'Europe',        x: 49.5, y: 13 },
+  { name: 'Johansen',            region: 'Europe',        x: 48,   y: 18 },
+  { name: 'Rotterdam / North Sea', region: 'Europe',      x: 47.5, y: 20 },
+  // Africa / Middle East
+  { name: 'In Salah',            region: 'Africa',        x: 47,   y: 30 },
+  { name: 'Niger Delta',         region: 'Africa',        x: 46,   y: 35 },
+  { name: 'Nile Delta',          region: 'Africa',        x: 52,   y: 29 },
+  { name: 'Abu Dhabi Basin',     region: 'Middle East',   x: 56,   y: 31 },
+  // Americas
+  { name: 'Mount Simon',         region: 'Americas',      x: 22,   y: 24 },
+  { name: 'Alberta Basin',       region: 'Americas',      x: 18,   y: 19 },
+  // Asia-Pacific
+  { name: 'Kasawari',            region: 'Asia-Pacific',  x: 72,   y: 37 },
+  { name: 'Duyong',              region: 'Asia-Pacific',  x: 72,   y: 36 },
+  { name: 'Malay Basin',         region: 'Asia-Pacific',  x: 71,   y: 37.5 },
+  { name: 'North Sumatra Basin', region: 'Asia-Pacific',  x: 68,   y: 39 },
+  // Australia
+  { name: 'Gorgon',              region: 'Australia',     x: 70,   y: 46 },
+  { name: 'Otway',               region: 'Australia',     x: 74,   y: 48 },
+]
+
+const REGION_COLORS: Record<string, string> = {
+  'Europe':      '#34d399',
+  'Africa':      '#fb923c',
+  'Middle East': '#fbbf24',
+  'Americas':    '#60a5fa',
+  'Asia-Pacific':'#a78bfa',
+  'Australia':   '#f472b6',
+}
+
+const REGIONS = Object.keys(REGION_COLORS)
+
 export default function LandingPage() {
   const setView = useUIStore((s) => s.setView)
   const theme = useUIStore((s) => s.theme)
@@ -241,30 +278,44 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] md:text-xs font-mono mb-4 md:mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              CCS Studio Platform
+              Prototypes for Humanity 2026 — Dubai Future Forum
             </div>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-3 md:mb-5">
-              Carbon Storage{' '}
+              Rigorous CO₂ Storage{' '}
               <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                Intelligence
+                Screening
               </span>
+              {' '}— At Zero Cost
             </h1>
-            <p className="text-sm md:text-base text-muted max-w-lg leading-relaxed mb-6 md:mb-8">
-              Screen, simulate, and permit carbon storage sites with physics-based modeling.
-              Real-time 3D visualization, automated well optimization, and jurisdiction-ready
-              compliance reports — all in one platform.
+            <p className="text-sm md:text-base text-muted max-w-lg leading-relaxed mb-4">
+              Enterprise CCS simulation tools cost{' '}
+              <span className="text-primary font-semibold">$160,000–$230,000 per year</span>.
+              CarbonLens delivers equivalent accuracy in your browser, free, with no installation
+              and no specialist hardware.
             </p>
+            {/* Cost comparison pill */}
+            <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 mb-6 md:mb-8">
+              <div className="text-center">
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">Enterprise Simulators</div>
+                <div className="text-lg font-bold text-rose-400 font-mono">$200K<span className="text-xs font-normal">/yr</span></div>
+              </div>
+              <div className="text-muted font-mono text-sm">→</div>
+              <div className="text-center">
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">CarbonLens</div>
+                <div className="text-lg font-bold text-emerald-400 font-mono">$0</div>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => setView('auth')}
                 className="px-6 py-3 md:py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition min-h-[48px] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
-                Start Free Simulation
+                Screen a Formation
                 <IconChevronRight />
               </button>
-              <button onClick={() => scrollTo('features')}
+              <button onClick={() => scrollTo('global-access')}
                 className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-white/5 bg-gray-100 hover:dark:bg-white/10 hover:bg-gray-200 text-secondary text-sm transition min-h-[48px] font-mono"
               >
-                Explore Features
+                See Global Coverage
               </button>
             </div>
           </div>
@@ -276,9 +327,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
             {[
-              { value: '10+', label: 'Formation Presets' },
+              { value: '16', label: 'Formation Presets' },
               { value: '50 yr', label: 'Simulation Horizon' },
-              { value: '4', label: 'Jurisdictions' },
+              { value: '5', label: 'Regulatory Jurisdictions' },
               { value: '6', label: 'Physics Engines' },
             ].map((s) => (
               <div key={s.label}>
@@ -286,6 +337,124 @@ export default function LandingPage() {
                 <div className="text-[10px] md:text-xs text-muted font-mono tracking-wider uppercase">{s.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ GLOBAL COVERAGE MAP ════════════════════════════════════════ */}
+      <section id="global-access" className="py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-10 md:mb-14">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              16 Formations · 6 Regions · 12 Countries
+            </div>
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">
+              The $200K barrier — removed everywhere
+            </h2>
+            <p className="text-sm md:text-base text-muted max-w-2xl mx-auto">
+              CCS simulation should be accessible to every geologist, regulator, and researcher
+              — not only those at institutions that can afford enterprise licenses.
+              CarbonLens ships pre-loaded with validated geological parameters for formations
+              across six world regions.
+            </p>
+          </div>
+
+          {/* SVG world map with formation markers */}
+          <div className="relative dark:bg-white/[0.015] bg-gray-50/80 border dark:border-white/[0.06] border-gray-200 rounded-2xl overflow-hidden mb-8">
+            {/* Dotted grid background */}
+            <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="1" cy="1" r="0.8" fill="currentColor" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+
+            {/* Simplified world map SVG — continents as rough paths */}
+            <svg
+              viewBox="0 0 1000 500"
+              className="w-full h-auto max-h-80 relative z-10"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Continent fills — simplified polygons */}
+              {/* North America */}
+              <path d="M80,60 L200,55 L230,90 L220,150 L190,190 L150,200 L120,180 L90,140 L75,100 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* South America */}
+              <path d="M160,210 L210,205 L230,250 L220,320 L190,360 L165,350 L150,300 L145,250 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Europe */}
+              <path d="M420,60 L510,55 L530,80 L510,110 L470,115 L440,100 L415,85 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Africa */}
+              <path d="M440,130 L520,125 L545,160 L540,250 L510,310 L470,320 L440,280 L425,210 L430,160 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Middle East / Arabia */}
+              <path d="M530,120 L600,115 L620,150 L590,180 L555,175 L530,155 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Asia */}
+              <path d="M560,55 L800,50 L820,100 L790,160 L720,180 L650,170 L600,140 L560,110 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Southeast Asia */}
+              <path d="M680,180 L760,175 L780,220 L750,240 L700,230 L675,210 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+              {/* Australia */}
+              <path d="M680,290 L800,285 L820,340 L790,390 L720,400 L670,370 L655,320 Z"
+                    fill="currentColor" className="text-emerald-500/8 dark:text-emerald-400/8" stroke="currentColor"
+                    strokeWidth="0.8" strokeOpacity="0.15" />
+
+              {/* Formation markers — plotted using the FORMATION_MARKERS x/y percentages × 10 (for 1000×500 viewBox) */}
+              {FORMATION_MARKERS.map((f) => (
+                <g key={f.name} transform={`translate(${f.x * 10}, ${f.y * 10})`}>
+                  {/* Outer pulse ring */}
+                  <circle r="9" fill="none" stroke={REGION_COLORS[f.region]} strokeWidth="0.8" opacity="0.35" />
+                  {/* Inner filled dot */}
+                  <circle r="4" fill={REGION_COLORS[f.region]} opacity="0.85" />
+                </g>
+              ))}
+            </svg>
+
+            {/* Region legend */}
+            <div className="px-4 md:px-6 py-3 border-t dark:border-white/[0.06] border-gray-200 flex flex-wrap gap-x-5 gap-y-2">
+              {REGIONS.map((r) => (
+                <div key={r} className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: REGION_COLORS[r] }} />
+                  <span className="text-[10px] text-muted font-mono">{r} ({FORMATION_MARKERS.filter((f) => f.region === r).length})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Formation grid by region */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {REGIONS.map((region) => {
+              const fms = FORMATION_MARKERS.filter((f) => f.region === region)
+              const color = REGION_COLORS[region]
+              return (
+                <div key={region} className="p-4 rounded-xl dark:bg-white/[0.02] bg-white border dark:border-white/[0.06] border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-xs font-semibold text-primary">{region}</span>
+                  </div>
+                  <ul className="space-y-1">
+                    {fms.map((f) => (
+                      <li key={f.name} className="text-[11px] text-muted font-mono flex items-center gap-1.5">
+                        <span className="opacity-40">·</span>{f.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>

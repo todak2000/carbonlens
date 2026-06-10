@@ -112,15 +112,39 @@ export default function LeakagePanel() {
     const nWells = legacyWells.length
     const maxDensity = Math.sqrt(params.area) * 2
     const densityFactor = Math.min(1, nWells / Math.max(1, maxDensity))
-    const avgWellAge = legacyWells.reduce((s, w) => s + w.age, 0) / Math.max(1, nWells)
+    // When no legacy wells exist, age and cement degradation risk are zero (not maximum)
+    const avgWellAge = nWells > 0
+      ? legacyWells.reduce((s, w) => s + w.age, 0) / nWells
+      : 0
     const ageFactor = Math.min(1, avgWellAge / 80)
-    const avgCement = legacyWells.reduce((s, w) => s + w.cementQuality, 0) / Math.max(1, nWells)
-    const cementFactor = 1 - avgCement
+    const avgCement = nWells > 0
+      ? legacyWells.reduce((s, w) => s + w.cementQuality, 0) / nWells
+      : 1  // no wells = perfect "cement" (no leak paths)
+    const cementFactor = nWells > 0 ? 1 - avgCement : 0
 
     const depthFactor = Math.min(1, params.depth / 3000)
-    const score = (densityFactor * 0.3 + ageFactor * 0.25 + cementFactor * 0.25 + depthFactor * 0.2) * 100
-    return { score, densityFactor, ageFactor, cementFactor, depthFactor, nWells, avgWellAge, avgCement }
-  }, [legacyWells, params.depth])
+
+    // Injection pressure factor: higher ΔP above reservoir pressure → higher drive
+    // to push CO₂ through any legacy well paths
+    const totalRate = wells.reduce((s, w) => s + w.injectionRate, 0)
+    // Approximate wellbore ΔP using simplified Theis (same as geomechanics panel)
+    const perm_m2 = params.permeability * 9.869e-16
+    const Q_m3s = totalRate * 1e9 / (700 * 365.25 * 24 * 3600)
+    const alpha = perm_m2 / (params.porosity * 5e-5 * 1e-9)
+    const u = 0.01 / (4 * alpha * 365.25 * 24 * 3600)
+    const e1 = u <= 1
+      ? Math.max(0, -0.5772156649 - Math.log(Math.max(u, 1e-300)) + u)
+      : Math.exp(-u) * (u * u + 2.334733 * u + 0.250621) / (u * u + 3.330657 * u + 1.681534)
+    const dP_MPa = ((Q_m3s * 5e-5) / (4 * Math.PI * perm_m2 * params.thickness) * e1) / 1e6
+    // Normalise ΔP: fracture pressure (rough proxy 0.023 × depth × 0.9) as ceiling
+    const fracCeiling = Math.max(1, params.depth * 0.023 * 0.9)
+    const injPFactor = nWells > 0 ? Math.min(1, dP_MPa / fracCeiling) : 0
+
+    const score = Math.min(100,
+      (densityFactor * 0.25 + ageFactor * 0.20 + cementFactor * 0.25 + depthFactor * 0.15 + injPFactor * 0.15) * 100
+    )
+    return { score, densityFactor, ageFactor, cementFactor, depthFactor, injPFactor, nWells, avgWellAge, avgCement }
+  }, [legacyWells, params.depth, params.area, params.permeability, params.porosity, params.thickness, wells])
 
   const abandonCost = useMemo(() => {
     const nAbandoned = legacyWells.filter(w => w.abandoned).length
@@ -159,13 +183,13 @@ export default function LeakagePanel() {
       </div>
 
       {/* Risk Assessment */}
-      <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${riskScore.score < 30 ? 'bg-teal-900/20 border-teal-500/40 text-teal-300' : riskScore.score < 60 ? 'bg-amber-900/20 border-amber-500/40 text-amber-300' : 'bg-red-900/30 border-red-500/40 text-red-300'}`}>
+      <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${riskScore.score < 30 ? 'bg-success border-success text-success' : riskScore.score < 60 ? 'bg-warning border-warning text-warning' : 'bg-error border-error text-error'}`}>
         <div className="flex justify-between items-center">
           <span className="uppercase tracking-wider text-[8px] opacity-70">Leakage Risk</span>
           <span className="text-[13px] font-bold">{riskScore.score.toFixed(0)}%</span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-tertiary overflow-hidden mt-1">
-          <div className={`h-full rounded-full transition-all ${riskScore.score < 30 ? 'bg-teal' : riskScore.score < 60 ? 'bg-amber' : 'bg-red-500'}`}
+          <div className={`h-full rounded-full transition-all ${riskScore.score < 30 ? 'bg-teal' : riskScore.score < 60 ? 'bg-warning' : 'bg-error'}`}
             style={{ width: `${riskScore.score}%` }} />
         </div>
       </div>
@@ -176,7 +200,13 @@ export default function LeakagePanel() {
         <FactorRow label="Well age" pct={riskScore.ageFactor * 100} />
         <FactorRow label="Cement degradation" pct={riskScore.cementFactor * 100} />
         <FactorRow label="Depth" pct={riskScore.depthFactor * 100} />
+        <FactorRow label="Inj. pressure drive" pct={riskScore.injPFactor * 100} />
       </div>
+      {riskScore.nWells === 0 && (
+        <p className="text-[9px] text-success font-mono">
+          ✓ No legacy wells in AoR — zero wellbore leakage pathway risk
+        </p>
+      )}
 
       {/* Corrective Action Cost */}
       <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
@@ -198,7 +228,7 @@ function FactorRow({ label, pct }: { label: string; pct: number }) {
     <div className="flex items-center gap-2">
       <span className="text-muted w-28 shrink-0">{label}</span>
       <div className="flex-1 h-1 rounded-full bg-tertiary overflow-hidden">
-        <div className={`h-full rounded-full ${pct < 30 ? 'bg-teal' : pct < 60 ? 'bg-amber' : 'bg-red-500'}`}
+        <div className={`h-full rounded-full ${pct < 30 ? 'bg-teal' : pct < 60 ? 'bg-warning' : 'bg-error'}`}
           style={{ width: `${pct}%` }} />
       </div>
       <span className="text-secondary w-8 text-right">{pct.toFixed(0)}%</span>

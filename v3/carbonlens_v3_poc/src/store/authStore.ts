@@ -4,8 +4,8 @@ import { UserProfile } from '../types'
 interface AuthState {
   user: UserProfile | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => boolean
-  register: (email: string, displayName: string) => void
+  login: (email: string) => boolean
+  register: (email: string, displayName: string, organization: string) => void
   logout: () => void
   hydrate: () => void
 }
@@ -27,27 +27,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
 
-  login: (email: string, _password: string) => {
+  login: (email: string) => {
     const existing = loadUser()
     if (existing && existing.email === email) {
       set({ user: existing, isAuthenticated: true })
       return true
     }
-    const user: UserProfile = {
-      email,
-      displayName: email.split('@')[0],
-      tier: 'free',
-      createdAt: Date.now(),
-    }
-    saveUser(user)
-    set({ user, isAuthenticated: true })
-    return true
+    return false
   },
 
-  register: (email: string, displayName: string) => {
+  register: (email: string, displayName: string, organization: string) => {
     const user: UserProfile = {
       email,
       displayName,
+      organization,
       tier: 'free',
       createdAt: Date.now(),
     }

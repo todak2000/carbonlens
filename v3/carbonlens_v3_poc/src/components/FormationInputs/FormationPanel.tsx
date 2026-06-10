@@ -1,13 +1,157 @@
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useCallback } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
 import { GeometryType } from '../../types'
 import { parseLAS } from '../../utils/lasParser'
 import { parseCarbonGrid, generateSampleGrid } from '../../utils/gridParser'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
-import { computeOptimalRate, classifyRate, RATE_STATUS_META } from '../../utils/computeOptimalRate'
-import { Plus, Trash2, DrillIcon as Drilling, Upload, Info, Move, FileDown, Clock, Sparkles } from 'lucide-react'
+import { computeOptimalRate, classifyRate, RATE_STATUS_META, RateEnvelope } from '../../utils/computeOptimalRate'
+import { Plus, Trash2, DrillIcon as Drilling, Upload, Info, Move, FileDown, Clock, Sparkles, Brain, CheckCircle2, X } from 'lucide-react'
 import { autoOptimizeWells } from '../../utils/autoOptimize'
+import { validateGeomechanics } from '../../hooks/useSimulation'
+
+// ── Formation Intelligence Card ───────────────────────────────────────────────
+// Shows live risk assessment, year-to-P90, MAIP margin, and actionable guidance
+// whenever formation params or well rates change.
+
+interface IntelligenceProps {
+  env: RateEnvelope
+  totalAnnualRate: number
+  projectYears: number
+  maipMPa: number
+  maipMarginPct: number
+  onApplySafeRate: () => void
+}
+
+function FormationIntelligenceCard({ env, totalAnnualRate, projectYears, maipMPa, maipMarginPct, onApplySafeRate }: IntelligenceProps) {
+  // Classify the total fleet rate vs the P50-scaled envelope
+  const perWell = totalAnnualRate  // caller passes total; envelope is per-well * n wells
+  const yearsToP90 = totalAnnualRate > 0 ? env.totalCapacityP90 / totalAnnualRate : Infinity
+  const yearsToP50 = totalAnnualRate > 0 ? env.totalCapacityP50 / totalAnnualRate : Infinity
+
+  // Derive status from total rate vs scaled envelope
+  const atRisk   = yearsToP90 < projectYears
+  const aboveP50 = yearsToP50 < projectYears
+  const maipRisk = maipMarginPct < 20
+
+  // Highest severity wins
+  const severity: 'critical' | 'warning' | 'ok' =
+    atRisk || maipMarginPct < 0 ? 'critical' : (aboveP50 || maipRisk) ? 'warning' : 'ok'
+
+  const border = severity === 'critical' ? 'border-error/40 bg-error/5'
+    : severity === 'warning' ? 'border-amber-500/40 bg-amber-500/5'
+    : 'border-emerald-500/30 bg-emerald-500/5'
+
+  const iconColor = severity === 'critical' ? 'text-error'
+    : severity === 'warning' ? 'text-amber-400'
+    : 'text-emerald-400'
+
+  // ── Implication text ──────────────────────────────────────────────────────
+  let headline = ''
+  let body = ''
+  let tip = ''
+
+  if (maipMarginPct < 0) {
+    headline = 'Injection pressure already exceeds MAIP'
+    body = `Wellbore pressure will breach the Maximum Allowable Injection Pressure (${maipMPa.toFixed(1)} MPa) before the project even starts. Caprock fracturing is expected from the first year of injection.`
+    tip = 'Apply the safe rate below, or reduce well count / increase caprock cohesion in the Geomechanics panel.'
+  } else if (atRisk) {
+    headline = `P90 capacity will be exceeded at year ${yearsToP90.toFixed(0)}`
+    body = `Total injection rate (${totalAnnualRate.toFixed(3)} Mt/yr) will fill the P90 storage estimate (${env.totalCapacityP90.toFixed(2)} Mt) in ${yearsToP90.toFixed(0)} years — before your ${projectYears}-year project ends. Sustained overpressure beyond P90 pushes reservoir pressure toward fracture pressure, risking caprock seal failure and CO₂ migration upward.`
+    tip = 'Reduce injection rate using the slider below, or click "Apply safe rate" to let the engine compute the maximum rate that keeps you within the P90 envelope with MAIP margin.'
+  } else if (maipRisk) {
+    headline = `MAIP margin is thin (${maipMarginPct.toFixed(0)}%)`
+    body = `Wellbore injection pressure is within 20% of the Maximum Allowable Injection Pressure (${maipMPa.toFixed(1)} MPa). Small rate increases or pressure transients could breach the regulatory safety limit.`
+    tip = 'Lower the injection rate slider or increase formation depth / caprock cohesion to widen the margin.'
+  } else if (aboveP50) {
+    headline = `P50 optimal rate exceeded — approaching P90 by year ${yearsToP90.toFixed(0)}`
+    body = `Rate is above the DOE P50 optimal. The P90 limit will be reached at year ${yearsToP90.toFixed(0)}. This is acceptable if your project ends before then, but leaves less buffer for pressure transients.`
+    tip = 'Consider reducing rate to the P50 optimal for a conservative, well-utilised design.'
+  } else {
+    headline = 'Formation is well-configured'
+    body = `Injection rate is within the DOE P50 optimal envelope. P90 capacity (${env.totalCapacityP90.toFixed(2)} Mt) will not be reached within the ${projectYears}-year project. MAIP margin is ${maipMarginPct.toFixed(0)}% — safe.`
+    tip = ''
+  }
+
+  return (
+    <div className={`rounded-lg border ${border} p-3 space-y-2`}>
+      <div className="flex items-center gap-1.5">
+        <Brain size={12} className={iconColor} />
+        <span className="text-[9px] font-mono font-semibold text-primary uppercase tracking-wider">Formation Intelligence</span>
+        <span className={`ml-auto text-[8px] font-mono px-1.5 py-0.5 rounded border ${
+          severity === 'critical' ? 'bg-error/10 border-error/30 text-error'
+          : severity === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+        }`}>
+          {severity === 'critical' ? 'RISK' : severity === 'warning' ? 'CAUTION' : 'SAFE'}
+        </span>
+      </div>
+
+      {/* Headline */}
+      <p className={`text-[10px] font-mono font-semibold leading-snug ${
+        severity === 'critical' ? 'text-error' : severity === 'warning' ? 'text-amber-300' : 'text-emerald-300'
+      }`}>{headline}</p>
+
+      {/* Explanation */}
+      <p className="text-[9px] text-muted font-mono leading-relaxed">{body}</p>
+
+      {/* Metrics strip */}
+      <div className="grid grid-cols-3 gap-1.5 text-[9px] font-mono">
+        <div className="rounded bg-card border border-theme/50 px-1.5 py-1">
+          <div className="text-muted text-[7px] uppercase tracking-wider mb-0.5">P90 Capacity</div>
+          <div className="text-primary font-semibold">{env.totalCapacityP90.toFixed(2)} Mt</div>
+        </div>
+        <div className="rounded bg-card border border-theme/50 px-1.5 py-1">
+          <div className="text-muted text-[7px] uppercase tracking-wider mb-0.5">Yrs to P90</div>
+          <div className={`font-semibold ${atRisk ? 'text-error' : 'text-success'}`}>
+            {yearsToP90 > 999 ? '> 999' : yearsToP90.toFixed(0)} yr
+          </div>
+        </div>
+        <div className="rounded bg-card border border-theme/50 px-1.5 py-1">
+          <div className="text-muted text-[7px] uppercase tracking-wider mb-0.5">MAIP margin</div>
+          <div className={`font-semibold ${maipMarginPct < 0 ? 'text-error' : maipMarginPct < 20 ? 'text-amber-400' : 'text-success'}`}>
+            {maipMarginPct.toFixed(0)}%
+          </div>
+        </div>
+      </div>
+
+      {/* Tip + action */}
+      {tip && (
+        <div className="flex items-start gap-1.5 pt-1 border-t border-theme/30">
+          <Info size={9} className="text-muted shrink-0 mt-0.5" />
+          <p className="text-[8px] text-muted font-mono leading-relaxed flex-1">{tip}</p>
+        </div>
+      )}
+      {severity !== 'ok' && (
+        <button
+          onClick={onApplySafeRate}
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-semibold transition"
+        >
+          <CheckCircle2 size={10} />
+          Apply safe rate (geomechanics-validated)
+        </button>
+      )}
+    </div>
+  )
+}
+
+function ValidationBanner({ issues }: { issues: { type: 'error' | 'warning'; message: string }[] }) {
+  if (issues.length === 0) return null
+  return (
+    <div className="space-y-1 mb-2">
+      {issues.map((issue, i) => (
+        <div key={i} className={`flex items-start gap-1.5 px-2 py-1.5 rounded text-[10px] font-mono border ${
+          issue.type === 'error'
+            ? 'bg-error border-error text-error'
+            : 'bg-warning border-warning text-warning'
+        }`}>
+          <span className="font-bold shrink-0">{issue.type === 'error' ? '\u2715' : '\u26a0'}</span>
+          {issue.message}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const geometries: { value: GeometryType; label: string }[] = [
   { value: 'anticline', label: 'Anticline' },
@@ -64,12 +208,83 @@ export default function FormationPanel() {
     () => computeOptimalRate(params, wells, projectYears),
     [params, wells, projectYears],
   )
+
+  const validationIssues = useMemo(() => {
+    const issues: { type: 'error' | 'warning'; message: string }[] = []
+    if (params.methaneFraction + params.nitrogenFraction > 1.0)
+      issues.push({ type: 'error', message: `CH\u2084 (${(params.methaneFraction*100).toFixed(0)}%) + N\u2082 (${(params.nitrogenFraction*100).toFixed(0)}%) exceeds 100% \u2014 CO\u2082 fraction would be negative` })
+    if (params.temperature < -56.3)
+      issues.push({ type: 'warning', message: `Temperature ${params.temperature}\u00b0C is below CO\u2082 triple point (\u221256.3\u00b0C)` })
+    if (params.pressure <= 0)
+      issues.push({ type: 'error', message: 'Initial pressure must be > 0 MPa' })
+    if (params.porosity <= 0)
+      issues.push({ type: 'error', message: 'Porosity must be > 0' })
+    if (wells.length === 0)
+      issues.push({ type: 'warning', message: 'No injection wells configured \u2014 add at least one well' })
+    const zeroRateWells = wells.filter(w => w.injectionRate <= 0)
+    if (zeroRateWells.length > 0)
+      issues.push({ type: 'warning', message: `Well${zeroRateWells.length > 1 ? 's' : ''} ${zeroRateWells.map(w => w.label).join(', ')} ha${zeroRateWells.length > 1 ? 've' : 's'} zero injection rate` })
+    return issues
+  }, [params, wells])
+
   const setLas = useFormationStore((s) => s.setLas)
   const las = useFormationStore((s) => s.las)
   const setGridData = useFormationStore((s) => s.setGridData)
   const gridData = useFormationStore((s) => s.gridData)
   const loadPreset = useFormationStore((s) => s.load)
   const [activePreset, setActivePreset] = useState<string | null>(null)
+
+  // ── Auto-optimize notice ──────────────────────────────────────────────────
+  interface OptNotice { formation: string; perWellRate: number; totalRate: number; p90: number; maip: number }
+  const [optNotice, setOptNotice] = useState<OptNotice | null>(null)
+
+  // Compute live MAIP margin from current params + wells for the intelligence card
+  const liveMAIP = useMemo(() => {
+    if (wells.length === 0) return { maip: 0, maipMarginPct: 100 }
+    try {
+      const v = validateGeomechanics(params, wells)
+      return {
+        maip: v.estimatedPInj ?? 0,
+        maipMarginPct: v.checks.maip?.value ?? 100,
+      }
+    } catch {
+      return { maip: 0, maipMarginPct: 100 }
+    }
+  }, [params, wells])
+
+  // Compute total annual rate across all wells
+  const totalAnnualRate = useMemo(
+    () => wells.reduce((s, w) => s + w.injectionRate, 0),
+    [wells],
+  )
+
+  // Handler: apply geomechanics-validated safe rate to all wells
+  const handleApplySafeRate = useCallback(() => {
+    const opt = autoOptimizeWells(params, Math.max(1, wells.length), wells)
+    setWells(opt.wells)
+  }, [params, wells, setWells])
+
+  // Handler: load a preset AND auto-optimize wells for that formation
+  const handlePresetLoad = useCallback((preset: typeof FORMATION_PRESETS[0]) => {
+    loadPreset(preset.params, undefined, preset.name)
+    setActivePreset(preset.name)
+    // Run optimization against the new formation params (not the old ones)
+    const opt = autoOptimizeWells(preset.params, Math.max(1, wells.length), wells)
+    setWells(opt.wells)
+    // Compute P90 for the notice
+    const T_K = preset.params.temperature + 273.15
+    const rhoCO2Approx = 700 // kg/m³ approx for notice display
+    const poreVol = preset.params.area * 1e6 * preset.params.thickness * preset.params.netToGross * preset.params.porosity
+    const p90 = poreVol * 0.055 * rhoCO2Approx / 1e9
+    setOptNotice({
+      formation: preset.name,
+      perWellRate: opt.perWellRate,
+      totalRate: opt.totalRate,
+      p90,
+      maip: 0,
+    })
+  }, [loadPreset, wells, setWells])
+
   const fileRef = useRef<HTMLInputElement>(null)
   const gridFileRef = useRef<HTMLInputElement>(null)
 
@@ -125,6 +340,8 @@ export default function FormationPanel() {
     <div className="p-4 space-y-3">
       <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider">Formation Parameters</h2>
 
+      <ValidationBanner issues={validationIssues} />
+
       <div>
         <label className="text-[11px] text-muted font-mono block mb-1">Presets</label>
         <div className="flex flex-wrap gap-1">
@@ -133,37 +350,59 @@ export default function FormationPanel() {
             return (
               <button
                 key={preset.name}
-                onClick={() => { loadPreset(preset.params); setActivePreset(preset.name) }}
-                title={preset.description}
-                className={`px-2 py-1 rounded text-[9px] font-mono transition-all border ${
+                onClick={() => handlePresetLoad(preset)}
+                title={`${preset.location} — ${preset.description}`}
+                className={`px-2 py-1 rounded text-[9px] font-mono transition-all border flex items-center gap-1 ${
                   isActive
-                    ? 'bg-accent/20 text-accent border-accent/60 font-semibold ring-1 ring-accent/30'
+                    ? 'bg-accent text-white border-accent shadow-[0_0_6px_rgba(0,196,160,0.4)] font-semibold'
                     : 'bg-tertiary text-muted hover:text-secondary border-theme/30 hover:border-theme/60'
                 }`}
               >
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white inline-block shrink-0" />}
                 {preset.name}
               </button>
             )
           })}
         </div>
 
+        {/* Auto-optimize applied notice */}
+        {optNotice && (
+          <div className="mt-2 px-2.5 py-2 rounded border border-emerald-500/30 bg-emerald-500/8 flex items-start gap-2">
+            <CheckCircle2 size={11} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] text-emerald-300 font-mono font-semibold leading-snug">
+                Wells auto-optimized for {optNotice.formation}
+              </p>
+              <p className="text-[8px] text-emerald-400/70 font-mono leading-relaxed mt-0.5">
+                Rate set to {optNotice.perWellRate.toFixed(3)} Mt/yr per well (total {optNotice.totalRate.toFixed(3)} Mt/yr) — maximum safe rate validated against MAIP, caprock fracture pressure, and Mohr-Coulomb failure criteria. Adjust with the slider below.
+              </p>
+            </div>
+            <button onClick={() => setOptNotice(null)} className="text-emerald-400/50 hover:text-emerald-400 transition shrink-0">
+              <X size={10} />
+            </button>
+          </div>
+        )}
+
         {/* Active preset info card */}
         {activePreset && (() => {
           const p = FORMATION_PRESETS.find((p) => p.name === activePreset)
           return p ? (
-            <div className="mt-2 px-2.5 py-2 rounded border border-accent/25 bg-accent/5">
+            <div className="mt-2 px-2.5 py-2 rounded border border-accent/50 bg-accent/10 shadow-[0_0_8px_rgba(0,196,160,0.12)]">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[10px] text-accent font-mono font-semibold">{p.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse inline-block" />
+                  <span className="text-[10px] text-accent font-mono font-semibold">{p.name}</span>
+                </div>
                 <span className="text-[8px] text-muted font-mono">{p.location}</span>
               </div>
-              <p className="text-[8px] text-muted/70 font-mono leading-tight">{p.description}</p>
+              <p className="text-[8px] text-muted/80 font-mono leading-tight">{p.description}</p>
             </div>
           ) : null
         })()}
       </div>
 
       <Slider label="Depth" value={params.depth} min={500} max={4000} step={10} unit=" m" onChange={(v) => setParams({ depth: v })} />
-      <Slider label="Thickness" value={params.thickness} min={10} max={500} step={5} unit=" m" onChange={(v) => setParams({ thickness: v })} />
+      <Slider label="Thickness (Storage Interval)" value={params.thickness} min={10} max={500} step={5} unit=" m" onChange={(v) => setParams({ thickness: v })} />
       <Slider label="Porosity" value={params.porosity * 100} min={5} max={40} step={0.5} unit=" %" onChange={(v) => setParams({ porosity: v / 100 })} />
       <Slider label="Permeability" value={params.permeability} min={1} max={5000} step={10} unit=" mD" onChange={(v) => setParams({ permeability: v })} />
       <Slider label="Pressure" value={params.pressure} min={5} max={60} step={0.1} unit=" MPa" onChange={(v) => setParams({ pressure: v })} />
@@ -255,7 +494,7 @@ export default function FormationPanel() {
           ))}
           <div className="pt-1 border-t border-theme/20 text-[8px] text-muted font-mono flex justify-between">
             <span>Optimal rate / well</span>
-            <span className="text-teal-300">{rateEnvelope.optimalRate.toFixed(3)} Mt/yr</span>
+            <span className="text-success">{rateEnvelope.optimalRate.toFixed(3)} Mt/yr</span>
           </div>
         </div>
 
@@ -291,7 +530,7 @@ export default function FormationPanel() {
                 <input value={w.label} onChange={(e) => updateWellLabel(w.id, e.target.value)}
                   className="text-xs text-secondary font-mono bg-transparent border-b border-theme/30 outline-none focus:border-accent px-0 py-0 w-28"
                 />
-                <button onClick={() => removeWell(w.id)} className="flex items-center gap-0.5 text-[10px] text-muted hover:text-red-400 font-mono"><Trash2 size={10} /> Remove</button>
+                <button onClick={() => removeWell(w.id)} className="flex items-center gap-0.5 text-[10px] text-muted hover:text-error font-mono"><Trash2 size={10} /> Remove</button>
               </div>
 
               {/* Position sliders */}
@@ -388,6 +627,18 @@ export default function FormationPanel() {
           )
         })}
       </div>
+
+      {/* Formation Intelligence Card — live risk assessment */}
+      {wells.length > 0 && (
+        <FormationIntelligenceCard
+          env={rateEnvelope}
+          totalAnnualRate={totalAnnualRate}
+          projectYears={projectYears}
+          maipMPa={liveMAIP.maip}
+          maipMarginPct={liveMAIP.maipMarginPct}
+          onApplySafeRate={handleApplySafeRate}
+        />
+      )}
 
       <div className="pt-2 border-t border-theme">
         <div className="flex items-center justify-between mb-2">

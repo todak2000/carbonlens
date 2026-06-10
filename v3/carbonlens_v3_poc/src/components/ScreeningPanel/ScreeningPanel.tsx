@@ -110,13 +110,13 @@ export default function ScreeningPanel() {
         <SubScore label="Regulatory ({jurisdiction})" value={score.regulatory} desc={`Based on ${jurisdiction} CCS framework`} />
       </div>
 
-      <div className={`rounded px-2 py-2 border text-xs font-mono ${score.overall < 30 ? 'bg-red-900/20 border-red-500/40 text-red-300' : score.overall < 60 ? 'bg-amber-900/20 border-amber-500/40 text-amber-300' : 'bg-teal-900/20 border-teal-500/40 text-teal-300'}`}>
+      <div className={`rounded px-2 py-2 border text-xs font-mono ${score.overall < 30 ? 'bg-error border-error text-error' : score.overall < 60 ? 'bg-warning border-warning text-warning' : 'bg-success border-success text-success'}`}>
         <div className="flex justify-between items-center">
           <span className="uppercase tracking-wider text-[9px] opacity-70">Overall Score</span>
           <span className="text-lg font-bold">{score.overall.toFixed(0)} / 100</span>
         </div>
         <div className="w-full h-2 rounded-full bg-tertiary overflow-hidden mt-1">
-          <div className={`h-full rounded-full transition-all ${score.overall < 30 ? 'bg-red-500' : score.overall < 60 ? 'bg-amber' : 'bg-teal'}`}
+          <div className={`h-full rounded-full transition-all ${score.overall < 30 ? 'bg-error' : score.overall < 60 ? 'bg-warning' : 'bg-teal'}`}
             style={{ width: `${score.overall}%` }} />
         </div>
         <p className="text-[9px] mt-1 opacity-70">
@@ -132,10 +132,10 @@ function SubScore({ label, value, desc }: { label: string; value: number; desc: 
     <div>
       <div className="flex justify-between text-[10px] font-mono">
         <span className="text-muted">{label}</span>
-        <span className={`font-bold ${value < 30 ? 'text-red-400' : value < 60 ? 'text-amber' : 'text-teal'}`}>{value.toFixed(0)}%</span>
+        <span className={`font-bold ${value < 30 ? 'text-error' : value < 60 ? 'text-warning' : 'text-success'}`}>{value.toFixed(0)}%</span>
       </div>
       <div className="w-full h-1 rounded-full bg-tertiary overflow-hidden mt-0.5">
-        <div className={`h-full rounded-full ${value < 30 ? 'bg-red-500' : value < 60 ? 'bg-amber' : 'bg-teal'}`}
+        <div className={`h-full rounded-full ${value < 30 ? 'bg-error' : value < 60 ? 'bg-warning' : 'bg-teal'}`}
           style={{ width: `${value}%` }} />
       </div>
       <span className="text-[8px] text-muted/60 font-mono">{desc}</span>

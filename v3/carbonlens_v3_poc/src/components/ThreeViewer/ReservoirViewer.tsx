@@ -12,6 +12,13 @@ import { useSimulation } from '../../hooks/useSimulation'
 import { wellRateAtTime, cumulativeInjection } from '../../utils/gridParser'
 import { getDeformation, getGridDeformation } from '../../utils/deformation'
 import CrossSection from './CrossSection'
+import GeologyLayers from './GeologyLayers'
+import FaultPlanes from './FaultPlanes'
+import GridReservoir, { GridReservoirHandle } from './GridReservoir'
+import SimulationHUD from './SimulationHUD'
+import CO2Particles from './CO2Particles'
+import CaprockMesh from './CaprockMesh'
+import { WellGlowLights, PressureWaveRings, CurrentPhaseLabel, ConvectionFingers } from './SceneAnnotations'
 
 function sampleDepthCurve(las: LasState, depth: number): number | null {
   const curve = las.curves.find(
@@ -90,12 +97,13 @@ function spatialField(x: number, z: number, ny: number, seed: number, freq: numb
 function propertyValueAt(
   x: number, z: number, ny: number,
   params: ReturnType<typeof useFormationStore.getState>['params'],
-  property: ColorProperty, las: LasState | null
+  property: ColorProperty, las: LasState | null,
+  result: ReturnType<typeof useSimulationStore.getState>['result'] | null,
+  ui: ReturnType<typeof useUIStore.getState>
 ): number {
   if (property === 'custom') {
-    const ui = useUIStore.getState()
-    const v1 = propertyValueAt(x, z, ny, params, ui.customBlendPrimary, las)
-    const v2 = propertyValueAt(x, z, ny, params, ui.customBlendSecondary, las)
+    const v1 = propertyValueAt(x, z, ny, params, ui.customBlendPrimary, las, result, ui)
+    const v2 = propertyValueAt(x, z, ny, params, ui.customBlendSecondary, las, result, ui)
     const r1 = PROP_RANGES[ui.customBlendPrimary]
     const r2 = PROP_RANGES[ui.customBlendSecondary]
     const n1 = (v1 - r1.min) / (r1.max - r1.min)
@@ -141,7 +149,6 @@ function propertyValueAt(
   }
 
   if (property === 'ift' || property === 'co2Density' || property === 'solubility') {
-    const result = useSimulationStore.getState().result
     let mean: number
     if (property === 'ift') mean = result?.ift ?? 30
     else if (property === 'co2Density') mean = result?.co2Density ?? 600
@@ -175,15 +182,17 @@ const SEG = 48
 
 function buildSmoothGeometry(
   type: GeometryType, thickness: number, depth: number,
-  porosity: number, permeability: number, property: ColorProperty, las: LasState | null
+  porosity: number, permeability: number, property: ColorProperty, las: LasState | null,
+  gridData: ReturnType<typeof useFormationStore.getState>['gridData'],
+  params: ReturnType<typeof useFormationStore.getState>['params'],
+  result: ReturnType<typeof useSimulationStore.getState>['result'] | null,
+  ui: ReturnType<typeof useUIStore.getState>
 ): THREE.BufferGeometry {
   const w = 3, d = 3, h = 0.3 + thickness / 500
   const geo = new THREE.BoxGeometry(w, h, d, SEG, 1, SEG)
   const pos = geo.attributes.position
-  const gridData = useFormationStore.getState().gridData
   const seed = { anticline: 1, dome: 2, fault: 3, layered: 4, stratigraphic: 5, channel: 6, gridfile: 7 }[type] || 1
   const roughScale = Math.max(0.3, Math.min(1, permeability / 2000))
-  const params = useFormationStore.getState().params
 
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i)
@@ -204,7 +213,7 @@ function buildSmoothGeometry(
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i)
     const ny = (y + h / 2) / h
-    const pv = propertyValueAt(x, z, ny, params, property, las)
+    const pv = propertyValueAt(x, z, ny, params, property, las, result, ui)
     const base = valueToColor(pv, property)
     const varN = fbm(x * 4 + seed * 100, z * 4 + seed * 100, 2, seed + 10) * 0.08 - 0.04
     const bright = 0.65 + ny * 0.35
@@ -232,10 +241,11 @@ function FormationMesh() {
   const hasSim = result !== null
 
   const geometry = useMemo(() => {
-    const g = buildSmoothGeometry(params.geometryType, params.thickness, params.depth, params.porosity, params.permeability, cp, las)
+    const ui = useUIStore.getState()
+    const g = buildSmoothGeometry(params.geometryType, params.thickness, params.depth, params.porosity, params.permeability, cp, las, gridData, params, result, ui)
     baseRef.current = new Float32Array(g.attributes.color.array)
     return g
-  }, [params.geometryType, params.thickness, params.depth, params.porosity, params.permeability, params.monovalentSalinity, params.bivalentSalinity, params.methaneFraction, params.nitrogenFraction, params.pressure, params.temperature, cp, las, result, gridData])
+  }, [params, cp, las, gridData, result])
 
   // ── CO2 saturation overlay (drainage → imbibition → final balance) ────────
   useEffect(() => {
@@ -358,13 +368,13 @@ function FormationMesh() {
         <meshPhongMaterial
           vertexColors side={THREE.DoubleSide} shininess={6}
           transparent={hasSim}
-          opacity={hasSim ? 0.75 : 1.0}
+          opacity={hasSim ? 0.92 : 1.0}
           depthWrite={!hasSim}
           depthTest={true}
         />
       </mesh>
       <lineSegments geometry={new THREE.WireframeGeometry(geometry)} renderOrder={hasSim ? -1 : 0}>
-        <lineBasicMaterial color="#8b7d6b" transparent={hasSim} opacity={hasSim ? 0.015 : 0.04} depthWrite={false} />
+        <lineBasicMaterial color="#8b7d6b" transparent opacity={hasSim ? 0.04 : 0.06} depthWrite={false} />
       </lineSegments>
     </group>
   )
@@ -427,7 +437,7 @@ function CaprockLayer() {
     <group position={[0, -0.4 + h / 2, 0]}>
       {/* Main caprock mesh */}
       <mesh geometry={geo} position={[0, caprockThickness / 2, 0]} renderOrder={hasSim ? -1 : 0}>
-        <meshPhongMaterial vertexColors transparent opacity={hasSim ? 0.40 : 0.82} side={THREE.DoubleSide} shininess={2} depthWrite={!hasSim} />
+        <meshPhongMaterial vertexColors transparent opacity={hasSim ? 0.68 : 0.82} side={THREE.DoubleSide} shininess={2} depthWrite={!hasSim} />
       </mesh>
       {/* Top surface of caprock — slightly emissive to distinguish it */}
       <mesh geometry={geo} position={[0, caprockThickness, 0]} renderOrder={hasSim ? -1 : 0}>
@@ -923,17 +933,20 @@ function PlumeParticles3D() {
         if (slot === -1) break
         const w = wells[Math.floor(Math.random() * wells.length)]
         const base = slot * STRIDE
-        // Spawn very close to wellbore at perforation depth
         const spawnAngle = Math.random() * Math.PI * 2
-        data[base + 0] = w.x + Math.cos(spawnAngle) * 0.02
-        data[base + 1] = perfMidY + (Math.random() - 0.5) * h * 0.12
-        data[base + 2] = w.z + Math.sin(spawnAngle) * 0.02
-        // Initial velocity: radially outward from well (injection pressure)
-        data[base + 3] = Math.cos(spawnAngle) * (0.003 + Math.random() * 0.004)
-        data[base + 4] = 0.001  // slight upward
-        data[base + 5] = Math.sin(spawnAngle) * (0.003 + Math.random() * 0.004)
-        data[base + 6] = 0 // state: inject (radial near-well phase)
-        data[base + 7] = 0 // age
+        // 35% spawn along the well column (layer-by-layer invasion)
+        const isColumnSpawn3D = Math.random() < 0.35
+        const spawnY3D = isColumnSpawn3D
+          ? reservoirBottomLocalY + (caprockLocalY - reservoirBottomLocalY) * (0.05 + Math.random() * 0.82)
+          : perfMidY + (Math.random() - 0.5) * h * 0.12
+        data[base + 0] = w.x + Math.cos(spawnAngle) * (isColumnSpawn3D ? 0.015 : 0.02)
+        data[base + 1] = spawnY3D
+        data[base + 2] = w.z + Math.sin(spawnAngle) * (isColumnSpawn3D ? 0.015 : 0.02)
+        data[base + 3] = Math.cos(spawnAngle) * (isColumnSpawn3D ? 0.005 + Math.random() * 0.005 : 0.003 + Math.random() * 0.004)
+        data[base + 4] = isColumnSpawn3D ? 0.0015 + Math.random() * 0.001 : 0.001
+        data[base + 5] = Math.sin(spawnAngle) * (isColumnSpawn3D ? 0.005 + Math.random() * 0.005 : 0.003 + Math.random() * 0.004)
+        data[base + 6] = isColumnSpawn3D ? 1 : 0
+        data[base + 7] = 0
         data[base + 8] = wells.indexOf(w)
         alive[slot] = 1
         countRef.current++
@@ -1050,8 +1063,8 @@ function PlumeParticles3D() {
   )
 }
 
-// ── BLOWOUT EFFECT ─────────────────────────────────────────────────────────────
-// Fountain of escaping CO2 through the caprock when overpressure warnings ignored
+// ── CAPROCK FAILURE PARTICLE EFFECT ────────────────────────────────────────────
+// Upward CO₂ particle fountain simulating seal breach when MAIP is persistently exceeded
 function BlowoutEffect() {
   const N = 200
   const ref = useRef<THREE.Points>(null)
@@ -1204,7 +1217,7 @@ function WellTrajectory({ well }: { well: { id: string; x: number; z: number; in
       {well.injectionRate > 0 && (
         <mesh position={[well.x, perfMid, well.z]}>
           <cylinderGeometry args={[0.010, 0.010, h * 0.25, 8]} />
-          <meshPhongMaterial color="#f97316" emissive="#f97316" emissiveIntensity={0.4} transparent opacity={0.85} />
+          <meshPhongMaterial color="#f97316" emissive="#f97316" emissiveIntensity={0.75} transparent opacity={0.95} />
         </mesh>
       )}
 
@@ -1216,10 +1229,23 @@ function WellTrajectory({ well }: { well: { id: string; x: number; z: number; in
         </mesh>
       ))}
 
+      {/* Perforation zone label */}
+      {well.injectionRate > 0 && (
+        <Text
+          position={[well.x + 0.06, perfMid, well.z]}
+          fontSize={0.030}
+          color="#fb923c"
+          anchorX="left"
+          fillOpacity={0.85}
+        >
+          Perf. Interval
+        </Text>
+      )}
+
       {/* Injection point sphere — at reservoir bottom where CO2 enters, clearly marked */}
       <mesh position={[well.x, reservoirBottom, well.z]}>
         <sphereGeometry args={[0.022, 8, 8]} />
-        <meshPhongMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.35} transparent opacity={0.9} />
+        <meshPhongMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.6} transparent opacity={0.9} />
       </mesh>
 
       {/* Near-wellbore radial pressure halo at injection depth */}
@@ -1387,14 +1413,14 @@ function GridHelper() {
 }
 
 const LEGEND_GRADIENTS: Record<string, string> = {
-  porosity: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  permeability: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  salinity: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  ift: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  co2Density: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  solubility: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  depth: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
-  custom: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00)',
+  porosity: 'linear-gradient(to right, #1a3a5c, #2e6fa3, #7bc9eb)',
+  permeability: 'linear-gradient(to right, #4a1942, #c94b4b, #f5c542)',
+  salinity: 'linear-gradient(to right, #2d6a4f, #e9c46a, #e76f51)',
+  ift: 'linear-gradient(to right, #e76f51, #e9c46a, #2d6a4f)',
+  co2Density: 'linear-gradient(to right, #e9c46a, #e07a5f, #9c1c1c)',
+  solubility: 'linear-gradient(to right, #9c1c1c, #e9c46a, #2d6a4f)',
+  depth: 'linear-gradient(to right, #e9c46a, #2e6fa3, #1a3a5c)',
+  custom: 'linear-gradient(to right, #4a1942, #7bc9eb, #2d6a4f)',
 }
 
 const LEGEND_LABELS: Record<string, { min: string; max: string }> = {
@@ -1469,6 +1495,7 @@ function StatsOverlay() {
   const cp = useUIStore((s) => s.colorProperty)
   const params = useFormationStore((s) => s.params)
   const result = useSimulationStore((s) => s.result)
+  const showGridView = useUIStore((s) => s.showGridView)
 
   const fmt = FORMATTERS[cp]
   const isComputed = COMPUTED_PROPS.has(cp)
@@ -1512,45 +1539,49 @@ function StatsOverlay() {
         Range: {cp === 'custom' ? '0 – 1' : `${range?.min ?? 0} – ${range?.max ?? 1}`}
       </div>
 
-      <div className="mt-2 pt-1.5 border-t border-theme/50">
-        <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Trapping</div>
-        <div className="space-y-0.5 text-[8px]">
-          <div className="flex justify-between"><span>Structural</span><span className="text-accent">✓ Seal</span></div>
-          <div className="flex justify-between">
-            <span>Residual</span>
-            <span className="text-muted">{result ? `${(result.residualTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(0)}%` : '—'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Solubility</span>
-            <span className="text-muted">{result ? `${(result.solubilityTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(0)}%` : '—'}</span>
-          </div>
-          <div className="flex justify-between"><span>Mineral</span><span className="text-muted">△ slow</span></div>
-        </div>
-      </div>
-
-      {result && (
-        <div className="mt-2 pt-1.5 border-t border-theme/50">
-          <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Plume</div>
-          <div className="space-y-0.5 text-[8px]">
-            <div className="flex justify-between">
-              <span>Radius</span>
-              <span className="text-accent">{result.plumeRadius.toFixed(1)} m</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Height</span>
-              <span className="text-accent">{result.plumeHeight.toFixed(1)} m</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Fill</span>
-              <span className="text-muted">{result.capacityUtilPct.toFixed(1)}%</span>
-            </div>
-            {result.overpressureRisk && (
-              <div className="flex justify-between text-red-400 font-bold mt-1 pt-1 border-t border-red-400/30">
-                <span>⚠ Overpressure</span>
+      {showGridView && (
+        <>
+          <div className="mt-2 pt-1.5 border-t border-theme/50">
+            <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Trapping</div>
+            <div className="space-y-0.5 text-[8px]">
+              <div className="flex justify-between"><span>Structural</span><span className="text-accent">✓ Seal</span></div>
+              <div className="flex justify-between">
+                <span>Residual</span>
+                <span className="text-muted">{result ? `${(result.residualTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(1)}%` : '—'}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span>Solubility</span>
+                <span className="text-muted">{result ? `${(result.solubilityTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(1)}%` : '—'}</span>
+              </div>
+              <div className="flex justify-between"><span>Mineral</span><span className="text-muted">△ slow</span></div>
+            </div>
           </div>
-        </div>
+
+          {result && (
+            <div className="mt-2 pt-1.5 border-t border-theme/50">
+              <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Plume</div>
+              <div className="space-y-0.5 text-[8px]">
+                <div className="flex justify-between">
+                  <span>Radius</span>
+                  <span className="text-accent">{result.plumeRadius.toFixed(1)} m</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Height</span>
+                  <span className="text-accent">{result.plumeHeight.toFixed(1)} m</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Fill</span>
+                  <span className="text-muted">{result.capacityUtilPct.toFixed(1)}%</span>
+                </div>
+                {result.overpressureRisk && (
+                  <div className="flex justify-between text-error font-bold mt-1 pt-1 border-t border-error">
+                    <span>⚠ Overpressure</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -1586,12 +1617,51 @@ function TimestepSlider() {
         onChange={(e) => setTimestep(Number(e.target.value))}
         className="flex-1 h-1 accent-accent"
       />
-      <span className={`text-[8px] w-32 text-right whitespace-nowrap ${isOverpressure ? 'text-red-400' : 'text-accent'}`}>
+      <span className={`text-[8px] w-32 text-right whitespace-nowrap ${isOverpressure ? 'text-error' : 'text-accent'}`}>
         {result
           ? `${storedCO2.toFixed(3)} Mt${utilPct !== null ? ` (${utilPct.toFixed(2)}%)` : ''}`
           : '—'}
         {isOverpressure ? ' ⚠' : ''}
       </span>
+    </div>
+  )
+}
+
+function DepthRuler() {
+  const params      = useFormationStore((s) => s.params)
+  const result      = useSimulationStore((s) => s.result)
+  const showGridView = useUIStore((s) => s.showGridView)
+
+  if (!showGridView) return null
+
+  const topDepth    = params.depth           // m
+  const botDepth    = params.depth + params.thickness
+  const mid1        = Math.round(topDepth  + params.thickness * 0.33)
+  const mid2        = Math.round(topDepth  + params.thickness * 0.67)
+  const ticks       = [topDepth, mid1, mid2, botDepth]
+
+  return (
+    <div
+      className="absolute left-2 pointer-events-none select-none z-10 flex items-stretch"
+      style={{ top: 48, bottom: 48 }}
+    >
+      {/* Tick bar */}
+      <div className="flex flex-col justify-between items-end pr-1.5 py-0.5">
+        {ticks.map((d) => (
+          <span key={d} className="text-[8px] font-mono text-muted/60" style={{ lineHeight: 1 }}>
+            {d}m
+          </span>
+        ))}
+      </div>
+      {/* Vertical line */}
+      <div
+        className="w-px flex flex-col justify-between"
+        style={{ background: 'rgba(0,196,160,0.20)' }}
+      >
+        {ticks.map((d) => (
+          <div key={d} className="w-1.5 h-px" style={{ background: 'rgba(0,196,160,0.45)' }} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -1626,8 +1696,10 @@ function CaptureHelper({ onReady }: { onReady: (capture: () => string) => void }
 }
 
 export default function ReservoirViewer() {
-  useSimulation()
+  const gridReservoirRef = useRef<GridReservoirHandle>(null)
+  useSimulation(gridReservoirRef)
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d')
+  const theme = useUIStore((s) => s.theme)
   const isAnimating = useSimulationStore((s) => s.isAnimating)
   const toggleStress = useUIStore((s) => s.toggleStressField)
   const showStress = useUIStore((s) => s.showStressField)
@@ -1640,6 +1712,8 @@ export default function ReservoirViewer() {
   const setBlowout = useUIStore((s) => s.setBlowout)
   const timestep = useUIStore((s) => s.timestep)
   const projectYears = useUIStore((s) => s.projectYears)
+  const showGridView = useUIStore((s) => s.showGridView)
+  const toggleGridView = useUIStore((s) => s.toggleGridView)
 
   useEffect(() => {
     if (isAnimating) {
@@ -1655,6 +1729,9 @@ export default function ReservoirViewer() {
       const s = useUIStore.getState()
       if (s.warningCount >= 3) {
         s.setBlowout(true)
+        useFormationStore.getState().setWells(
+          useFormationStore.getState().wells.map(w => ({ ...w, injectionRate: 0 }))
+        )
         clearInterval(id)
         return
       }
@@ -1730,8 +1807,8 @@ export default function ReservoirViewer() {
         className="absolute top-0 left-0 right-0 z-10 flex items-center pointer-events-auto"
         style={{
           height: '32px',
-          background: blowoutActive ? 'rgba(180,20,10,0.35)' : 'rgba(6,12,20,0.85)',
-          borderBottom: blowoutActive ? '1px solid rgba(255,60,40,0.6)' : '1px solid rgba(21,37,53,0.8)',
+          background: blowoutActive ? 'rgba(180,20,10,0.35)' : 'var(--bg-elevated)',
+          borderBottom: blowoutActive ? '1px solid rgba(255,60,40,0.6)' : '1px solid var(--border)',
           backdropFilter: 'blur(4px)',
         }}
       >
@@ -1739,10 +1816,10 @@ export default function ReservoirViewer() {
           onClick={() => setViewMode('3d')}
           style={{
             padding: '0 16px', height: '100%', fontSize: '10px', fontFamily: 'monospace',
-            background: viewMode === '3d' ? 'rgba(0,196,160,0.12)' : 'transparent',
-            color: viewMode === '3d' ? '#00c4a0' : '#4a7090',
-            borderRight: '1px solid rgba(21,37,53,0.6)',
-            borderBottom: viewMode === '3d' ? '2px solid #00c4a0' : '2px solid transparent',
+            background: viewMode === '3d' ? 'var(--accent-bg)' : 'transparent',
+            color: viewMode === '3d' ? 'var(--accent)' : 'var(--text-muted)',
+            borderRight: '1px solid var(--border)',
+            borderBottom: viewMode === '3d' ? '2px solid var(--accent)' : '2px solid transparent',
             cursor: 'pointer', outline: 'none',
           }}
         >
@@ -1752,10 +1829,10 @@ export default function ReservoirViewer() {
           onClick={() => setViewMode('2d')}
           style={{
             padding: '0 16px', height: '100%', fontSize: '10px', fontFamily: 'monospace',
-            background: viewMode === '2d' ? 'rgba(0,196,160,0.12)' : 'transparent',
-            color: viewMode === '2d' ? '#00c4a0' : '#4a7090',
-            borderRight: '1px solid rgba(21,37,53,0.6)',
-            borderBottom: viewMode === '2d' ? '2px solid #00c4a0' : '2px solid transparent',
+            background: viewMode === '2d' ? 'var(--accent-bg)' : 'transparent',
+            color: viewMode === '2d' ? 'var(--accent)' : 'var(--text-muted)',
+            borderRight: '1px solid var(--border)',
+            borderBottom: viewMode === '2d' ? '2px solid var(--accent)' : '2px solid transparent',
             cursor: 'pointer', outline: 'none',
           }}
         >
@@ -1777,17 +1854,17 @@ export default function ReservoirViewer() {
             {isProcessing ? '⏳ Encoding...' : isRecording ? '⏹ Stop' : '🎥 Record'}
           </button>
 
-          {/* Overpressure warning countdown */}
+          {/* Overpressure → caprock failure countdown */}
           {warningCount > 0 && !blowoutActive && (
-            <div className="text-[9px] font-mono px-2 py-1 rounded bg-red-900/40 border border-red-500/50 text-red-300 animate-pulse">
-              ⚠ OVERPRESSURE ({warningCount}/3)
+            <div className="text-[9px] font-mono px-2 py-1 rounded bg-error border border-error text-error animate-pulse">
+              ⚠ P90 EXCEEDED — CAPROCK STRESS {warningCount}/3
             </div>
           )}
 
-          {/* Blowout indicator */}
+          {/* Caprock failure indicator */}
           {blowoutActive && (
-            <div className="text-[9px] font-mono px-2 py-1 rounded bg-red-900/80 border border-red-400 text-red-200 animate-pulse font-bold">
-              💥 BLOWOUT — CO₂ ESCAPING
+            <div className="text-[9px] font-mono px-2 py-1 rounded bg-error border border-error text-error animate-pulse font-bold">
+              ⚠ CAPROCK FAILURE — SEAL BREACH SIMULATED
             </div>
           )}
 
@@ -1801,6 +1878,12 @@ export default function ReservoirViewer() {
           >
             {showStress ? '✕ Stress' : '⊟ Stress'}
           </button>
+          <button onClick={toggleGridView}
+            className={`text-[9px] font-mono px-2 py-1 rounded border ${showGridView ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
+            title={showGridView ? 'Switch to smooth mesh view' : 'Switch to cellular grid view'}
+          >
+            {showGridView ? '⊞ Grid' : '⊡ Mesh'}
+          </button>
         </div>
       </div>
 
@@ -1808,32 +1891,43 @@ export default function ReservoirViewer() {
       {viewMode === '3d' && (
         <div className="absolute inset-0 pt-8">
           <Canvas camera={{ position: [3.5, 2.8, 3.5], fov: 40 }} gl={{ preserveDrawingBuffer: true }}>
-            <color attach="background" args={blowoutActive ? ['#1a0505'] : ['#0a1015']} />
+            <color attach="background" args={blowoutActive ? ['#1a0505'] : [theme === 'dark' ? '#0a1015' : '#dce2ec']} />
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} intensity={0.9} />
             <directionalLight position={[-3, -5, -3]} intensity={0.15} />
             <directionalLight position={[0, -3, 5]} intensity={0.2} />
             <CaptureHelper onReady={(fn) => { captureFrameRef.current = fn }} />
-            <FormationMesh />
-            <CaprockLayer />
+            {showGridView
+              ? <GridReservoir ref={gridReservoirRef} />
+              : <><FormationMesh /><CaprockLayer /></>
+            }
             <SealOutline />
             <PlumeMeshes />
             <CO2SaturationTop />
             <PlumeGlowSpheres />
-            <PlumeParticles3D />
+            {showGridView ? <CO2Particles /> : <PlumeParticles3D />}
             {blowoutActive && <BlowoutEffect />}
             <PressureOverlay />
             <StressOverlay />
             <WellMarkers />
             <PropertyLabels />
             <DimensionAnnotations />
+            <GeologyLayers />
+            <FaultPlanes />
+            <CaprockMesh />
+            {showGridView && <WellGlowLights />}
+            {showGridView && <PressureWaveRings />}
+            {showGridView && <ConvectionFingers />}
             <BoundingBox />
             <GridHelper />
             <OrbitControls makeDefault enableDamping dampingFactor={0.12} minDistance={1.2} maxDistance={8} />
           </Canvas>
           <StatsOverlay />
+          <SimulationHUD />
           <ColorLegendOverlay />
           <TimestepSlider />
+          <CurrentPhaseLabel />
+          <DepthRuler />
         </div>
       )}
 
@@ -1844,15 +1938,39 @@ export default function ReservoirViewer() {
         </div>
       )}
 
-      {/* Full-screen blowout overlay */}
+      {/* Caprock failure full-screen overlay */}
       {blowoutActive && (
-        <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center pt-8">
+        <div className="absolute inset-0 pointer-events-none z-20 flex flex-col items-center justify-center pt-8 gap-4">
+          {/* Headline */}
           <div className="text-center">
-            <div className="text-4xl font-bold text-red-500 opacity-80 animate-pulse" style={{ fontFamily: 'monospace' }}>
-              💥 BLOWOUT
+            <div className="text-3xl font-bold text-error opacity-90 animate-pulse font-mono tracking-wide">
+              ⚠ CAPROCK FAILURE EVENT
             </div>
-            <div className="text-sm text-red-300/70 mt-2" style={{ fontFamily: 'monospace' }}>
-              Overpressure ignored — CO₂ escaping through caprock
+            <div className="text-sm text-error/80 mt-1 font-mono">
+              Simulated CO₂ migration through fractured seal — injection halted
+            </div>
+          </div>
+          {/* Cause + fix panel */}
+          <div
+            className="rounded-xl border border-error/40 bg-black/60 backdrop-blur-sm px-5 py-4 max-w-sm text-left space-y-2"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <div className="text-[10px] text-error font-mono font-semibold uppercase tracking-wider mb-1">What happened</div>
+            <p className="text-[11px] text-white/80 font-mono leading-relaxed">
+              Cumulative injected CO₂ exceeded the P90 storage capacity estimate.
+              Sustained overpressure caused the simulated reservoir pressure to approach
+              the <strong className="text-white">fracture pressure</strong> of the caprock seal,
+              triggering hydraulic fracturing — the primary CO₂ leakage pathway in CCS.
+            </p>
+            <div className="text-[10px] text-amber-300 font-mono font-semibold uppercase tracking-wider mt-2 mb-1">How to prevent it</div>
+            <ul className="text-[11px] text-white/70 font-mono space-y-1">
+              <li>→ <strong className="text-white">Reduce injection rate</strong> (Formation panel → well Mt/yr)</li>
+              <li>→ <strong className="text-white">Check MAIP margin</strong> in Geomechanics panel before running</li>
+              <li>→ <strong className="text-white">Increase formation area</strong> to raise P90 capacity</li>
+              <li>→ <strong className="text-white">Increase caprock cohesion / friction</strong> to raise fracture pressure</li>
+            </ul>
+            <div className="text-[9px] text-white/30 font-mono pt-1 border-t border-white/10">
+              MAIP = Maximum Allowable Injection Pressure = 90% × fracture pressure (Hubbert-Willis)
             </div>
           </div>
         </div>

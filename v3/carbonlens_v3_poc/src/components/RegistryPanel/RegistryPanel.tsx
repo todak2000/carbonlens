@@ -63,11 +63,11 @@ export default function RegistryPanel() {
   }, [result, jurisdiction, projectYears])
 
   const statusBadge = verified
-    ? { label: 'Verified', color: 'bg-teal-900/20 border-teal-500/40 text-teal-300' }
+    ? { label: 'Verified', color: 'bg-success border-success text-success' }
     : warning
-    ? { label: 'Review Required', color: 'bg-amber-900/20 border-amber-500/40 text-amber-300' }
+    ? { label: 'Review Required', color: 'bg-warning border-warning text-warning' }
     : failed
-    ? { label: 'Non-Compliant', color: 'bg-red-900/30 border-red-500/40 text-red-300' }
+    ? { label: 'Non-Compliant', color: 'bg-error border-error text-error' }
     : { label: 'Not Assessed', color: 'bg-tertiary/30 border-theme/30 text-muted' }
 
   return (
@@ -85,7 +85,7 @@ export default function RegistryPanel() {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Shield size={14} className={verified ? 'text-teal' : warning ? 'text-amber' : 'text-muted'} />
+          <Shield size={14} className={verified ? 'text-success' : warning ? 'text-warning' : 'text-muted'} />
           <span className="text-[13px] font-mono font-bold text-primary tracking-wider">{assetId}</span>
         </div>
         <div className="text-[8px] text-muted/50 font-mono flex items-center gap-2">
@@ -99,14 +99,14 @@ export default function RegistryPanel() {
 
       {/* Verification Summary */}
       <div className="grid grid-cols-2 gap-2">
-        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${containmentOk ? 'bg-teal-900/20 border-teal-500/40 text-teal-300' : result ? 'bg-amber-900/20 border-amber-500/40 text-amber-300' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
+        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${containmentOk ? 'bg-success border-success text-success' : result ? 'bg-warning border-warning text-warning' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
           <span className="uppercase tracking-wider text-[8px] opacity-70">Containment</span>
           <div className="mt-0.5 font-bold flex items-center gap-1">
             {result ? `${(result.containmentProbability * 100).toFixed(0)}%` : '—'}
             {containmentOk && <BadgeCheck size={11} />}
           </div>
         </div>
-        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${geomechOk ? 'bg-teal-900/20 border-teal-500/40 text-teal-300' : geomech ? 'bg-amber-900/20 border-amber-500/40 text-amber-300' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
+        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${geomechOk ? 'bg-success border-success text-success' : geomech ? 'bg-warning border-warning text-warning' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
           <span className="uppercase tracking-wider text-[8px] opacity-70">Geomechanics</span>
           <div className="mt-0.5 font-bold flex items-center gap-1">
             {geomech ? `${geomech.safetyFactor.toFixed(2)} SF` : '—'}
@@ -144,10 +144,10 @@ export default function RegistryPanel() {
           </div>
           <div className="mt-1.5 flex items-center gap-1.5">
             <div className="flex-1 h-1.5 rounded-full bg-tertiary overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${geomech.maipMargin > 20 ? 'bg-teal' : geomech.maipMargin > 0 ? 'bg-amber' : 'bg-red-500'}`}
+              <div className={`h-full rounded-full transition-all ${geomech.maipMargin > 20 ? 'bg-success' : geomech.maipMargin > 0 ? 'bg-warning' : 'bg-red-500'}`}
                 style={{ width: `${Math.max(0, Math.min(100, geomech.maipMargin))}%` }} />
             </div>
-            <span className={`text-[10px] font-mono font-bold ${geomech.maipMargin > 20 ? 'text-teal' : geomech.maipMargin > 0 ? 'text-amber' : 'text-red-400'}`}>
+            <span className={`text-[10px] font-mono font-bold ${geomech.maipMargin > 20 ? 'text-success' : geomech.maipMargin > 0 ? 'text-warning' : 'text-error'}`}>
               {geomech.maipMargin.toFixed(1)}% margin
             </span>
           </div>
@@ -166,7 +166,7 @@ export default function RegistryPanel() {
             <span className="text-muted">Solubility Trapping</span>
             <span className="text-secondary text-right font-bold">{result.solubilityTrapping.toFixed(2)} Mt</span>
             <span className="text-muted">Overpressure Risk</span>
-            <span className={`text-right font-bold ${result.overpressureRisk ? 'text-red-400' : 'text-teal'}`}>
+            <span className={`text-right font-bold ${result.overpressureRisk ? 'text-error' : 'text-success'}`}>
               {result.overpressureRisk ? '⚠ Yes' : 'None'}
             </span>
           </div>
@@ -175,18 +175,18 @@ export default function RegistryPanel() {
 
       {/* Verified Credit Ledger */}
       <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-        <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><PiggyBank size={11} className="text-amber-400" /> Credit Ledger</h3>
+        <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><PiggyBank size={11} className="text-warning" /> Credit Ledger</h3>
         {result ? (
           <>
             <div className="flex items-baseline justify-between mb-1.5">
               <span className="text-[9px] text-muted font-mono">Total Verified Credits</span>
-              <span className="text-[16px] font-mono font-bold text-amber-300">{totalCredits.toFixed(0)}</span>
+              <span className="text-[16px] font-mono font-bold text-warning">{totalCredits.toFixed(0)}</span>
             </div>
             <div className="space-y-1">
               {mockTxns.map((tx) => (
                 <div key={tx.id} className="flex items-center justify-between text-[9px] font-mono border-b border-theme/10 pb-1 last:border-0">
                   <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${tx.status === 'confirmed' ? 'bg-teal' : 'bg-amber'}`} />
+                    <div className={`w-1.5 h-1.5 rounded-full ${tx.status === 'confirmed' ? 'bg-success' : 'bg-warning'}`} />
                     <span className="text-muted">{tx.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function RegistryPanel() {
               ))}
             </div>
             <button onClick={() => setPanel('economics')}
-              className="mt-2 w-full flex items-center justify-center gap-1 py-1.5 rounded bg-amber-900/20 border border-amber-500/30 text-[10px] font-mono text-amber-300 hover:bg-amber-900/30 transition">
+              className="mt-2 w-full flex items-center justify-center gap-1 py-1.5 rounded bg-warning border border-warning text-[10px] font-mono text-warning hover:bg-warning transition">
               <ArrowUpRight size={11} /> View Economics
             </button>
           </>

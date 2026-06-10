@@ -31,7 +31,7 @@ export default function ProjectCard({ project, onOpen, onDelete }: Props) {
         ) : (
           <span className="text-[10px] text-muted font-mono">Not simulated</span>
         )}
-        <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="flex items-center gap-1 text-[10px] text-muted hover:text-red-400 font-mono p-1.5 -m-1.5">
+        <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="flex items-center gap-1 text-[10px] text-muted hover:text-error font-mono p-1.5 -m-1.5">
           <Trash2 size={10} /> Delete
         </button>
       </div>

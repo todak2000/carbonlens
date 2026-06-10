@@ -1,4 +1,6 @@
 export { useAuthStore } from './authStore'
 export { useFormationStore } from './formationStore'
+export { useGeologicalStore } from './geologicalStore'
 export { useSimulationStore } from './simulationStore'
 export { useUIStore } from './uiStore'
+export { useHistoryMatchingStore } from './historyMatchingStore'

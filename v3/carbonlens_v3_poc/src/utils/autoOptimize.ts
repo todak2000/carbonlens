@@ -166,7 +166,7 @@ export function autoOptimizeWells(
   })
 
   let low = 0.001
-  let high = 20
+  let high = 1.0   // cap at 1 Mt/yr per well — matches typical CCS project scale (Sleipner: ~0.9 Mt/yr)
   let bestRate = 0.001
 
   for (let iter = 0; iter < 30; iter++) {

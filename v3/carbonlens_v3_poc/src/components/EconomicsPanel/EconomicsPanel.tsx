@@ -30,17 +30,20 @@ export default function EconomicsPanel() {
     const totalOpex = opexPerTonne * Math.max(totalStored, yearlyRate * projectYears)
 
     const discountRate = 0.08
+    const credit45q = jurisdiction === 'US' ? 85 : jurisdiction === 'EU' ? 60 : jurisdiction === 'Australia' ? 45 : jurisdiction === 'Norway' ? 70 : 0
+    const carbonPrice = Math.max(credit45q, 10)
     let npv = -capex
     for (let y = 1; y <= projectYears; y++) {
+      const rev = carbonPrice * yearlyRate
       const op = opexPerTonne * yearlyRate
-      npv += (0 - op) / Math.pow(1 + discountRate, y)
+      npv += (rev - op) / Math.pow(1 + discountRate, y)
     }
 
     const breakevenCost = totalStored > 0.001
       ? (capex + totalOpex) / totalStored
       : (capex + totalOpex) / Math.max(0.001, yearlyRate * projectYears)
 
-    const credit45q = jurisdiction === 'US' ? 85 : jurisdiction === 'EU' ? 60 : jurisdiction === 'Australia' ? 45 : jurisdiction === 'Norway' ? 70 : 0
+
     const netAfterCredit = breakevenCost - credit45q
     const creditRevenue = credit45q * Math.max(totalStored, yearlyRate * projectYears)
 
@@ -100,21 +103,21 @@ export default function EconomicsPanel() {
           <span className="text-[9px] text-muted font-mono">/ tonne</span>
         </div>
         {econ.totalStored < 0.001 && (
-          <p className="text-[8px] text-amber-400/60 mt-1 italic">Estimated from formation params — run simulation for actual total</p>
+          <p className="text-[8px] text-warning mt-1 italic">Estimated from formation params — run simulation for actual total</p>
         )}
       </div>
 
       {/* 45Q Credits */}
       {jurisdiction === 'US' && (
         <div className="rounded px-2 py-1.5 border border-amber-500/30 bg-amber-900/10">
-          <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><PiggyBank size={11} className="text-amber-400" /> 45Q Tax Credit</h3>
+          <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><PiggyBank size={11} className="text-warning" /> 45Q Tax Credit</h3>
           <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-            <div><span className="text-muted">Credit rate</span><br /><span className="text-amber-300 font-bold">${econ.credit45q}/t</span></div>
-            <div><span className="text-muted">Revenue</span><br /><span className="text-amber-300 font-bold">${econ.creditRevenue.toFixed(1)}M</span></div>
+            <div><span className="text-muted">Credit rate</span><br /><span className="text-warning font-bold">${econ.credit45q}/t</span></div>
+            <div><span className="text-muted">Revenue</span><br /><span className="text-warning font-bold">${econ.creditRevenue.toFixed(1)}M</span></div>
             <div className="col-span-2">
               <span className="text-muted">Net cost after credit</span>
               <div className="flex items-baseline gap-1">
-                <span className={`text-lg font-bold font-mono ${econ.netAfterCredit < 0 ? 'text-teal-300' : 'text-amber-300'}`}>
+                <span className={`text-lg font-bold font-mono ${econ.netAfterCredit < 0 ? 'text-success' : 'text-warning'}`}>
                   ${econ.netAfterCredit.toFixed(2)}
                 </span>
                 <span className="text-[9px] text-muted font-mono">/ tonne</span>
@@ -138,7 +141,7 @@ export default function EconomicsPanel() {
       {/* Tokenize action */}
       {jurisdiction === 'US' && simResult && (
         <button onClick={() => useUIStore.getState().setPanel('registry')}
-          className="w-full flex items-center justify-center gap-1.5 py-2 rounded border border-amber-500/30 bg-amber-900/10 text-[10px] font-mono text-amber-300 hover:bg-amber-900/20 transition">
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded border border-amber-500/30 bg-amber-900/10 text-[10px] font-mono text-warning hover:bg-amber-900/20 transition">
           <ArrowUpRight size={12} /> Tokenize Credits
         </button>
       )}
@@ -175,5 +178,5 @@ function CapexRow({ label, value, pct, color }: { label: string; value: number; 
 }
 
 function Row({ label, value, negative }: { label: string; value: string; negative?: boolean }) {
-  return <div className="flex justify-between"><span className="text-[11px] text-muted font-mono">{label}</span><span className={`text-[11px] font-mono ${negative ? 'text-red-400' : 'text-secondary'}`}>{value}</span></div>
+  return <div className="flex justify-between"><span className="text-[11px] text-muted font-mono">{label}</span><span className={`text-[11px] font-mono ${negative ? 'text-error' : 'text-secondary'}`}>{value}</span></div>
 }

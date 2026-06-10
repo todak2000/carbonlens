@@ -32,10 +32,10 @@ describe('co2DiffusionCoefficient', () => {
     expect(DeLow).toBeGreaterThan(DeHigh)
   })
 
-  it('returns nm²/s scale (1e-9 m²/s range, output multiplied by 1e9)', () => {
-    const De = co2DiffusionCoefficient(310, 10, 0.2) // P in MPa
-    // Result is in units of 1e-9 m²/s after *1e9, so value is order ~0.01–10
-    expect(De).toBeGreaterThan(0.001)
-    expect(De).toBeLessThan(100)
+  it('returns physically realistic effective diffusivity in m²/s (1e-11 to 1e-9 range)', () => {
+    const De = co2DiffusionCoefficient(310, 10, 0.2) // T in K, P in MPa
+    // Typical effective CO₂ diffusivity in brine-saturated sandstone: 1e-11 to 5e-9 m²/s
+    expect(De).toBeGreaterThan(1e-11)
+    expect(De).toBeLessThan(5e-9)
   })
 })

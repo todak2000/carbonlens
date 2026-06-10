@@ -1,5 +1,5 @@
-export { evaluateMars, scaleInput, subEquation, subScaler, supEquation, supScaler, hinge } from './mars'
-export type { MarsInput, MarsEquation, FeatureScaler, PhaseRegime } from './mars'
+export { evaluateMars, scaleInput, subEquation, subScaler, supEquation, supScaler, hinge, assessApplicabilityDomain } from './mars'
+export type { MarsInput, MarsEquation, FeatureScaler, PhaseRegime, ADResult, ADViolation } from './mars'
 export {
   co2DensitySpanWagner,
   brineDensityGarcia,

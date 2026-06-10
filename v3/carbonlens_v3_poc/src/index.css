@@ -4,35 +4,53 @@
 
 @layer base {
   :root {
-    --bg-page: #ffffff;
-    --bg-card: #f8fafc;
+    --bg-page: #f7f8fa;
+    --bg-card: #ffffff;
     --bg-elevated: #ffffff;
-    --bg-tertiary: #f1f5f9;
+    --bg-tertiary: #ebeff5;
     --bg-input: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --accent: #00b89a;
-    --accent-hover: #007a66;
-    --accent-bg: rgba(0, 184, 154, 0.08);
+    --text-primary: #0b1a2e;
+    --text-secondary: #244166;
+    --text-muted: #4f658a;
+    --border: #c8d2e0;
+    --border-strong: #9aabbf;
+    --accent: #009277;
+    --accent-hover: #007a63;
+    --accent-bg: rgba(0, 146, 119, 0.08);
+    --color-success: #059669;
+    --color-success-bg: #ecfdf5;
+    --color-success-border: #a7f3d0;
+    --color-warning: #d97706;
+    --color-warning-bg: #fffbeb;
+    --color-warning-border: #fde68a;
+    --color-error: #dc2626;
+    --color-error-bg: #fef2f2;
+    --color-error-border: #fecaca;
   }
 
   .dark {
-    --bg-page: #0a1015;
-    --bg-card: #0f172a;
-    --bg-elevated: #0f172a;
-    --bg-tertiary: #1e293b;
-    --bg-input: #1e293b;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
-    --border: #1e293b;
-    --border-strong: #334155;
-    --accent: #00b89a;
-    --accent-hover: #007a66;
-    --accent-bg: rgba(0, 184, 154, 0.1);
+    --bg-page: #060a10;
+    --bg-card: #0e1520;
+    --bg-elevated: #131c2a;
+    --bg-tertiary: #192234;
+    --bg-input: #1a2438;
+    --text-primary: #e8edf4;
+    --text-secondary: #b8cae0;
+    --text-muted: #8a9fb9;
+    --border: #28354a;
+    --border-strong: #3d506e;
+    --accent: #00d4b0;
+    --accent-hover: #00e8c0;
+    --accent-bg: rgba(0, 212, 176, 0.12);
+    --color-success: #34d399;
+    --color-success-bg: rgba(5, 150, 105, 0.15);
+    --color-success-border: rgba(5, 150, 105, 0.4);
+    --color-warning: #fbbf24;
+    --color-warning-bg: rgba(217, 119, 6, 0.15);
+    --color-warning-border: rgba(217, 119, 6, 0.4);
+    --color-error: #f87171;
+    --color-error-bg: rgba(220, 38, 38, 0.15);
+    --color-error-border: rgba(220, 38, 38, 0.4);
   }
 
   html {
@@ -55,6 +73,15 @@
   .bg-accent-hover { background-color: var(--accent-hover); }
   .bg-accent-subtle { background-color: var(--accent-bg); }
   .text-accent { color: var(--accent); }
+  .text-success { color: var(--color-success); }
+  .text-warning { color: var(--color-warning); }
+  .text-error { color: var(--color-error); }
+  .bg-success { background-color: var(--color-success-bg); }
+  .bg-warning { background-color: var(--color-warning-bg); }
+  .bg-error { background-color: var(--color-error-bg); }
+  .border-success { border-color: var(--color-success-border); }
+  .border-warning { border-color: var(--color-warning-border); }
+  .border-error { border-color: var(--color-error-border); }
 
   .btn-primary {
     background-color: var(--accent);

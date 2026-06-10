@@ -1,22 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { useFormationStore } from '../../store/formationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
-import { StorageProject } from '../../types'
 import { createDefaultProject } from '../../data/defaultProject'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
+import { db, migrateFromLocalStorage, StoredProject } from '../../db/projectDb'
 import { Lock, LogOut, PlusCircle, ChevronDown, Sun, Moon } from 'lucide-react'
 import Logo from '../Logo'
 import ProjectCard from './ProjectCard'
-
-function loadProjects(): StorageProject[] {
-  try { return JSON.parse(localStorage.getItem('carbonlens_projects') || '[]') } catch { return [] }
-}
-
-function saveProjects(projects: StorageProject[]) {
-  localStorage.setItem('carbonlens_projects', JSON.stringify(projects))
-}
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user)
@@ -26,26 +18,40 @@ export default function Dashboard() {
   const setView = useUIStore((s) => s.setView)
   const theme = useUIStore((s) => s.theme)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
-  const [projects, setProjects] = useState<StorageProject[]>(loadProjects)
+  const [projects, setProjects] = useState<StoredProject[]>([])
   const [showNew, setShowNew] = useState(false)
   const [newName, setNewName] = useState('')
   const [showPresets, setShowPresets] = useState(false)
 
-  useEffect(() => { saveProjects(projects) }, [projects])
+  const loadProjects = useCallback(async () => {
+    const list = await db.projects.orderBy('updatedAt').reverse().toArray()
+    setProjects(list)
+  }, [])
 
-  const createProject = (preset?: typeof FORMATION_PRESETS[0]) => {
-    const project = createDefaultProject()
-    project.name = newName || (preset?.name ?? 'New Project')
-    if (preset) { project.formation = { ...preset.params }; project.name = preset.name }
-    project.id = crypto.randomUUID()
-    setProjects((prev) => [project, ...prev])
+  useEffect(() => {
+    migrateFromLocalStorage().then(() => loadProjects())
+  }, [loadProjects])
+
+  const createProject = async (preset?: typeof FORMATION_PRESETS[0]) => {
+    const base = createDefaultProject()
+    base.name = newName || (preset?.name ?? 'New Project')
+    if (preset) { base.formation = { ...preset.params }; base.name = preset.name }
+    base.id = crypto.randomUUID()
+    const project: StoredProject = {
+      ...base,
+      snapshots: [],
+      thumbnail: null,
+    }
+    await db.projects.put(project)
+    await loadProjects()
     loadFormation(project.formation)
     setShowNew(false); setNewName(''); setShowPresets(false)
+    useUIStore.getState().setCurrentProjectId(project.id)
     useUIStore.getState().setView('workspace')
     setPanel('overview')
   }
 
-  const openProject = (project: StorageProject) => {
+  const openProject = (project: StoredProject) => {
     loadFormation(project.formation)
     if (project.wells?.length) {
       useFormationStore.getState().load(project.formation, project.wells)
@@ -56,11 +62,15 @@ export default function Dashboard() {
     if (project.geomechanicsResult) {
       useSimulationStore.getState().setGeomechanics(project.geomechanicsResult)
     }
+    useUIStore.getState().setCurrentProjectId(project.id)
     useUIStore.getState().setView('workspace')
     setPanel('overview')
   }
 
-  const deleteProject = (id: string) => setProjects((prev) => prev.filter((p) => p.id !== id))
+  const deleteProject = async (id: string) => {
+    await db.projects.delete(id)
+    await loadProjects()
+  }
 
   return (
     <div className="min-h-screen bg-page text-primary">

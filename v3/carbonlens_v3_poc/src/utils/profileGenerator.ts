@@ -54,12 +54,10 @@ export function generateDepthProfile(
 
     const T_K = T + 273.15
     const P_Pa = P * 1e6
-    const totalSalt = params.monovalentSalinity + params.bivalentSalinity
-
     const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa)
-    const rhoBrine = brineDensityGarcia(T_K, P, totalSalt)
+    const rhoBrine = brineDensityGarcia(T_K, P, params.monovalentSalinity, params.bivalentSalinity)
     const visc = co2ViscosityFenghour(T_K, rhoCO2)
-    const solubility = co2SolubilityDuanSun(T_K, P, totalSalt)
+    const solubility = co2SolubilityDuanSun(T_K, P, params.monovalentSalinity, params.bivalentSalinity)
     const drho = rhoBrine - rhoCO2
 
     // IFT via MARS model

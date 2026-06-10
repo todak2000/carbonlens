@@ -45,7 +45,7 @@ export default function OverviewPanel() {
             <h3 className="text-[9px] text-muted font-mono mb-1 flex items-center gap-1"><Activity size={10} /> Containment</h3>
             <div className="text-lg font-bold font-mono text-accent">{(simResult.containmentProbability * 100).toFixed(0)}%</div>
             <div className="w-full h-1 rounded-full bg-tertiary overflow-hidden mt-1">
-              <div className="h-full rounded-full bg-teal" style={{ width: `${simResult.containmentProbability * 100}%` }} />
+              <div className="h-full rounded-full bg-success" style={{ width: `${simResult.containmentProbability * 100}%` }} />
             </div>
             <div className="text-[8px] text-muted/60 font-mono mt-1">
               P10: {simResult.p10.toFixed(2)} · P50: {simResult.p50.toFixed(2)} · P90: {simResult.p90.toFixed(2)} Mt
@@ -71,7 +71,7 @@ export default function OverviewPanel() {
             <Metric label="CO₂ Density" value={`${simResult.co2Density.toFixed(0)} kg/m³`} />
           </div>
           {simResult.overpressureRisk && (
-            <div className="flex items-center gap-1 text-[9px] text-red-400 font-mono bg-red-900/20 rounded px-1.5 py-1">
+            <div className="flex items-center gap-1 text-[9px] text-error font-mono bg-error rounded px-1.5 py-1">
               ⚠ Overpressure risk — stored CO₂ exceeds P90 capacity
             </div>
           )}
@@ -83,13 +83,13 @@ export default function OverviewPanel() {
         <div>
           <h3 className="text-[9px] text-muted font-mono mb-1 flex items-center gap-1"><Droplets size={10} /> Trapping</h3>
           <div className="w-full h-3 rounded-full bg-tertiary overflow-hidden flex">
-            <div className="h-full bg-teal transition-all" style={{ width: `${trappedPct.mobile}%` }} title={`Mobile ${trappedPct.mobile.toFixed(0)}%`} />
-            <div className="h-full bg-amber transition-all" style={{ width: `${trappedPct.residual}%` }} title={`Residual ${trappedPct.residual.toFixed(0)}%`} />
+            <div className="h-full bg-success transition-all" style={{ width: `${trappedPct.mobile}%` }} title={`Mobile ${trappedPct.mobile.toFixed(0)}%`} />
+            <div className="h-full bg-warning transition-all" style={{ width: `${trappedPct.residual}%` }} title={`Residual ${trappedPct.residual.toFixed(0)}%`} />
             <div className="h-full bg-blue-500 transition-all" style={{ width: `${trappedPct.solubility}%` }} title={`Dissolved ${trappedPct.solubility.toFixed(0)}%`} />
           </div>
           <div className="flex gap-3 text-[8px] font-mono text-muted/70 mt-0.5">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-teal" /> Mobile {trappedPct.mobile.toFixed(0)}%</span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-amber" /> Residual {trappedPct.residual.toFixed(0)}%</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-success" /> Mobile {trappedPct.mobile.toFixed(0)}%</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-warning" /> Residual {trappedPct.residual.toFixed(0)}%</span>
             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-blue-500" /> Dissolved {trappedPct.solubility.toFixed(0)}%</span>
           </div>
         </div>
@@ -160,8 +160,8 @@ function GeoCheck({ label, value, threshold, ok, unit }: { label: string; value?
     : '—'
   const cls = value !== undefined
     ? ok
-      ? 'text-teal'
-      : 'text-red-400'
+      ? 'text-success'
+      : 'text-error'
     : 'text-muted'
   return (
     <div className="flex items-center justify-between rounded px-1.5 py-1 bg-tertiary/20 border border-theme/10">
@@ -190,8 +190,8 @@ function ScreeningMini({ params, jurisdiction }: { params: { depth: number; temp
   const regulatory = regScores[jurisdiction] ?? 0.7
   const overall = (depth * 0.15 + phase * 0.15 + reservoir * 0.25 + caprock * 0.15 + storageScore * 0.2 + regulatory * 0.1) * 100
 
-  const cls = overall < 30 ? 'text-red-400' : overall < 60 ? 'text-amber' : 'text-teal'
-  const bg = overall < 30 ? 'bg-red-500' : overall < 60 ? 'bg-amber' : 'bg-teal'
+  const cls = overall < 30 ? 'text-error' : overall < 60 ? 'text-warning' : 'text-success'
+  const bg = overall < 30 ? 'bg-error' : overall < 60 ? 'bg-warning' : 'bg-success'
 
   return (
     <div className="rounded px-2 py-2 border border-theme/30 bg-tertiary/20">
