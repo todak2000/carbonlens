@@ -6,3 +6,28 @@ v2/
 equations/
 *.csv
 *.xlsx
+
+# legacy files (not part of v3/carbonlens_v3_poc)
+carbonlens_prototype/
+dataset/
+11thSPE-CSP
+Fenghour.pdf
+Paper 3 draft.md
+engineer_usecase.md
+masterplan.md
+masterplan.pdf
+poc_audit.md
+poc_upgrade_plan.md
+research.md
+research.pdf
+researcher_usecase.md
+sleipner-2004.md
+sleipner-2012.md
+sleipner-2017.md
+sleipner-2017.pdf
+CO2_Brine_IFT*.csv
+
+# v3 sibling files (outside carbonlens_v3_poc)
+v3/3d-sample*
+v3/carbonlens_full_*
+v3/carbonlens_poc_*
