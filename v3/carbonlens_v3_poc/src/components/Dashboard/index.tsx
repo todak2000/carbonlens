@@ -171,6 +171,7 @@ export default function Dashboard() {
     loadFormation(project.formation)
 
     useUIStore.getState().setCurrentProjectId(project.id)
+    useUIStore.getState().setCurrentProjectName(project.name)
     useUIStore.getState().setView('workspace')
     setPanel('formation')   // land on formation panel so user can tweak
 
@@ -247,6 +248,7 @@ export default function Dashboard() {
       useSimulationStore.getState().setGeomechanics(project.geomechanicsResult)
     }
     useUIStore.getState().setCurrentProjectId(project.id)
+    useUIStore.getState().setCurrentProjectName(project.name)
     useUIStore.getState().setView('workspace')
     setPanel('overview')
   }
@@ -316,7 +318,7 @@ export default function Dashboard() {
           style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
           onClick={closeWizard}
         >
-          <div className="relative w-full max-w-2xl rounded-2xl border border-theme overflow-hidden shadow-2xl bg-card"
+          <div className="relative w-full max-w-2xl rounded-2xl border border-theme flex flex-col shadow-2xl bg-card max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}>
 
             {/* ── Wizard header ── */}
@@ -346,6 +348,7 @@ export default function Dashboard() {
             {/* ══════════════════════════════════════════════════════════════════
                 STEP 1: Formation name + Country
                 ══════════════════════════════════════════════════════════════════ */}
+            <div className="flex-1 overflow-y-auto">
             {wizardStep === 1 && (
               <div className="p-6 space-y-5">
                 <p className="text-xs text-muted font-mono leading-relaxed">
@@ -482,6 +485,27 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* ── "Or pick a preset directly" shortcut ── */}
+            {wizardStep === 1 && (
+              <div className="px-6 pb-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 h-px bg-theme" />
+                  <span className="text-[10px] font-mono text-muted">or jump straight to a preset</span>
+                  <div className="flex-1 h-px bg-theme" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                  {FORMATION_PRESETS.map((p) => (
+                    <button key={p.name} onClick={() => createFromPreset(p)}
+                      className="text-left p-2.5 rounded-lg bg-tertiary hover:bg-card border border-theme text-xs min-h-[44px] transition">
+                      <div className="font-medium text-primary font-mono text-[11px]">{p.name}</div>
+                      <div className="text-[9px] text-muted mt-0.5">{p.location}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            </div>{/* end scrollable body */}
+
             {/* ── Wizard footer ── */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-theme">
               <div>
@@ -520,26 +544,6 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-
-            {/* ── "Or pick a preset directly" shortcut ── */}
-            {wizardStep === 1 && (
-              <div className="px-6 pb-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1 h-px bg-theme" />
-                  <span className="text-[10px] font-mono text-muted">or jump straight to a preset</span>
-                  <div className="flex-1 h-px bg-theme" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {FORMATION_PRESETS.map((p) => (
-                    <button key={p.name} onClick={() => createFromPreset(p)}
-                      className="text-left p-2.5 rounded-lg bg-tertiary hover:bg-card border border-theme text-xs min-h-[44px] transition">
-                      <div className="font-medium text-primary font-mono text-[11px]">{p.name}</div>
-                      <div className="text-[9px] text-muted mt-0.5">{p.location}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
         </div>

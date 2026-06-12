@@ -146,6 +146,8 @@ const NAV_LINKS = [
   { label: 'Venture & Pitch', href: '#venture' },
 ]
 
+const WHITEPAPER_URL = `${BASE}/whitepaper.html`
+
 // All 16 formation presets organised by world region for the coverage map
 // Coords are [x%, y%] within the 100×50 SVG viewBox (rough geographic placement)
 const FORMATION_MARKERS = [
@@ -349,6 +351,14 @@ export default function LandingPage() {
                 {l.label}
               </button>
             ))}
+            <a
+              href={WHITEPAPER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-secondary hover:text-primary transition font-mono tracking-wider uppercase"
+            >
+              White Paper
+            </a>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -425,6 +435,14 @@ export default function LandingPage() {
                 {l.label}
               </button>
             ))}
+            <a
+              href={WHITEPAPER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-left text-xs text-secondary hover:text-primary transition font-mono tracking-wider uppercase py-2"
+            >
+              White Paper
+            </a>
             <hr className="border-theme" />
             {user ? (
               <>

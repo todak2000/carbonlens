@@ -35,6 +35,7 @@ interface UIState {
   showGridView: boolean
   demoActive: boolean
   currentProjectId: string | null
+  currentProjectName: string | null
   toggleGridView: () => void
   setDemoActive: (v: boolean) => void
   setProjectYears: (y: number) => void
@@ -53,6 +54,7 @@ interface UIState {
   incrementWarning: () => void
   setBlowout: (active: boolean) => void
   setCurrentProjectId: (id: string | null) => void
+  setCurrentProjectName: (name: string | null) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -76,6 +78,7 @@ export const useUIStore = create<UIState>((set) => ({
   showGridView: false,
   demoActive: false,
   currentProjectId: null,
+  currentProjectName: null,
   toggleGridView: () => set((s) => ({ showGridView: !s.showGridView })),
   setDemoActive: (v) => set({ demoActive: v }),
   setProjectYears: (y) => set({ projectYears: y }),
@@ -98,4 +101,5 @@ export const useUIStore = create<UIState>((set) => ({
   incrementWarning: () => set((s) => ({ warningCount: s.warningCount + 1 })),
   setBlowout: (active) => set({ blowoutActive: active, warningCount: active ? 0 : 0 }),
   setCurrentProjectId: (id) => set({ currentProjectId: id }),
+  setCurrentProjectName: (name) => set({ currentProjectName: name }),
 }))

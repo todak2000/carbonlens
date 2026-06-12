@@ -7,6 +7,7 @@ import MainLayout from './components/Layout/MainLayout'
 import LandingPage from './components/Landing/LandingPage'
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard'
 import CertificatePage from './components/Certificate/CertificatePage'
+import MobileGuard from './components/MobileGuard'
 import { trackVisit, trackDuration } from './utils/visitorTracker'
 
 export default function App() {
@@ -43,9 +44,10 @@ export default function App() {
   if (certId) return <CertificatePage assetId={certId} />
 
   // Route: landing → auth → dashboard → workspace | analytics (admin-only)
-  if (view === 'analytics') return <AnalyticsDashboard />
+  // Landing page is accessible on all devices; all other views require desktop
+  if (view === 'analytics') return <MobileGuard><AnalyticsDashboard /></MobileGuard>
   if (view === 'landing') return <LandingPage />
-  if (!isAuthenticated) return <AuthScreen />
-  if (view === 'dashboard') return <Dashboard />
-  return <MainLayout />
+  if (!isAuthenticated) return <MobileGuard><AuthScreen /></MobileGuard>
+  if (view === 'dashboard') return <MobileGuard><Dashboard /></MobileGuard>
+  return <MobileGuard><MainLayout /></MobileGuard>
 }

@@ -33,6 +33,7 @@ export default function MainLayout() {
   const setView = useUIStore((s) => s.setView)
   const demoActive = useUIStore((s) => s.demoActive)
   const setDemoActive = useUIStore((s) => s.setDemoActive)
+  const currentProjectName = useUIStore((s) => s.currentProjectName)
 
   const isOwner = user?.email === 'todak2000@gmail.com'
   const displayName = user?.displayName || 'Engineer'
@@ -76,6 +77,12 @@ export default function MainLayout() {
               <p className="text-sm font-medium text-primary leading-tight">Welcome back, {displayName}</p>
               <p className="text-[10px] text-muted font-mono">{user?.email || 'engineer@carbonlens.io'}</p>
             </div>
+            {currentProjectName && (
+              <div className="hidden sm:flex items-center gap-2 ml-2 pl-3 border-l border-theme">
+                <span className="text-[9px] text-muted font-mono uppercase tracking-wider">Project</span>
+                <span className="text-xs font-semibold text-primary font-mono truncate max-w-[200px]">{currentProjectName}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
