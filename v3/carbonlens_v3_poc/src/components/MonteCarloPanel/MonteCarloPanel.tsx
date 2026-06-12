@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Shuffle, Play, Download, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
@@ -55,6 +55,7 @@ function RangeBar({ p10, p50, p90, unit, fmt }: { p10: number; p50: number; p90:
 export default function MonteCarloPanel() {
   const params = useFormationStore((s) => s.params)
   const projectYears = useUIStore((s) => s.projectYears)
+  const demoActive = useUIStore((s) => s.demoActive)
   const [config, setConfig] = useState<MCConfig>(DEFAULT_MC_CONFIG)
   const [result, setResult] = useState<MCResult | null>(null)
   const [running, setRunning] = useState(false)
@@ -96,6 +97,14 @@ export default function MonteCarloPanel() {
       }
     }, 20)
   }, [config, params, projectYears])
+
+  // Auto-run during demo so the panel shows results immediately
+  useEffect(() => {
+    if (demoActive && !result && !running) {
+      run()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoActive])
 
   const sliderCls = 'w-full accent-accent cursor-pointer'
 

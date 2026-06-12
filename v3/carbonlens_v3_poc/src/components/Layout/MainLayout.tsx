@@ -34,6 +34,7 @@ export default function MainLayout() {
   const demoActive = useUIStore((s) => s.demoActive)
   const setDemoActive = useUIStore((s) => s.setDemoActive)
 
+  const isOwner = user?.email === 'todak2000@gmail.com'
   const displayName = user?.displayName || 'Engineer'
   const initials = displayName.slice(0, 2).toUpperCase()
 
@@ -84,18 +85,20 @@ export default function MainLayout() {
               <ArrowLeft size={12} />
               Projects
             </button>
-            <button
-              onClick={() => setDemoActive(!demoActive)}
-              className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md font-mono transition ${
-                demoActive
-                  ? 'bg-emerald-500 text-white hover:bg-emerald-400'
-                  : 'bg-tertiary text-secondary hover:text-primary border border-emerald-500/30 hover:border-emerald-500/60'
-              }`}
-              title="Toggle exhibition demo mode"
-            >
-              <MonitorPlay size={12} />
-              {demoActive ? 'Exit Demo' : 'Demo'}
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => setDemoActive(!demoActive)}
+                className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md font-mono transition ${
+                  demoActive
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-400'
+                    : 'bg-tertiary text-secondary hover:text-primary border border-emerald-500/30 hover:border-emerald-500/60'
+                }`}
+                title="Re-run live exhibition demo (owner only)"
+              >
+                <MonitorPlay size={12} />
+                {demoActive ? 'Exit Demo' : 'Re-run Demo'}
+              </button>
+            )}
             <span className="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 font-mono uppercase tracking-wider hidden sm:block">
               {user?.tier || 'Pro'}
             </span>

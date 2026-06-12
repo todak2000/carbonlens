@@ -125,7 +125,7 @@ function MetricTile({ label, value, accent }: { label: string; value: string; ac
 
 // ── Main certificate ──────────────────────────────────────────────────────────
 
-export default function CertificatePage({ assetId }: { assetId: string }) {
+export default function CertificatePage({ assetId, embedded }: { assetId: string; embedded?: boolean }) {
   let cert: CertificateRecord | null = null
   try {
     const stored = JSON.parse(localStorage.getItem('carbonlens_certificates') ?? '{}')
@@ -156,35 +156,37 @@ export default function CertificatePage({ assetId }: { assetId: string }) {
     <>
       <style>{GLOBAL_STYLE}</style>
 
-      {/* ── Action bar (screen only) ── */}
-      <div className="no-print" style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
-        padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid #e2e8f0',
-        boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
-      }}>
-        <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, color: '#64748b', letterSpacing: 1 }}>
-          CERTIFICATE · {assetId}
-        </span>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={() => window.print()}
-            style={{ background: '#00a884', color: 'white', border: 'none', borderRadius: 6, padding: '8px 18px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'IBM Plex Mono,monospace', letterSpacing: 1 }}
-          >
-            ↓ DOWNLOAD PDF
-          </button>
-          <button
-            onClick={() => { window.location.href = '/' }}
-            style={{ background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 6, padding: '8px 16px', fontSize: 12, cursor: 'pointer' }}
-          >
-            ← Back to App
-          </button>
+      {/* ── Action bar (screen only, hidden in embedded mode) ── */}
+      {!embedded && (
+        <div className="no-print" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+          background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+          padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          borderBottom: '1px solid #e2e8f0',
+          boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+        }}>
+          <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, color: '#64748b', letterSpacing: 1 }}>
+            CERTIFICATE · {assetId}
+          </span>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => window.print()}
+              style={{ background: '#00a884', color: 'white', border: 'none', borderRadius: 6, padding: '8px 18px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'IBM Plex Mono,monospace', letterSpacing: 1 }}
+            >
+              ↓ DOWNLOAD PDF
+            </button>
+            <button
+              onClick={() => { window.location.href = '/' }}
+              style={{ background: 'transparent', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 6, padding: '8px 16px', fontSize: 12, cursor: 'pointer' }}
+            >
+              ← Back to App
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Page wrapper ── */}
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 64, paddingBottom: 40, background: '#f0f4f8' }}>
+      <div style={{ minHeight: embedded ? 0 : '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: embedded ? 0 : 64, paddingBottom: embedded ? 0 : 40, background: '#f0f4f8' }}>
         <div className="cert-outer" style={{
           width: '100%',
           maxWidth: 1050,

@@ -7,6 +7,7 @@ interface AuthState {
   login: (email: string) => boolean
   register: (email: string, displayName: string, organization: string) => void
   loginAsDemo: () => void
+  loginAsOwnerEphemeral: () => void   // owner session — not saved to localStorage
   logout: () => void
   hydrate: () => void
 }
@@ -59,6 +60,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       createdAt: Date.now(),
     }
     set({ user: demoUser, isAuthenticated: true })
+  },
+
+  loginAsOwnerEphemeral: () => {
+    // Owner session verified by email gate — not saved to localStorage
+    const ownerUser: UserProfile = {
+      email: 'todak2000@gmail.com',
+      displayName: 'Daniel Olagunju',
+      organization: 'CarbonLens',
+      tier: 'free',
+      createdAt: Date.now(),
+    }
+    set({ user: ownerUser, isAuthenticated: true })
   },
 
   logout: () => {

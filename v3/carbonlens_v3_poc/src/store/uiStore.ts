@@ -73,7 +73,7 @@ export const useUIStore = create<UIState>((set) => ({
   showPressureField: true,
   warningCount: 0,
   blowoutActive: false,
-  showGridView: true,
+  showGridView: false,
   demoActive: false,
   currentProjectId: null,
   toggleGridView: () => set((s) => ({ showGridView: !s.showGridView })),

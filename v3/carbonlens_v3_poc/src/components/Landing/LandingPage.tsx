@@ -1,10 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, X } from 'lucide-react'
 import Logo from '../Logo'
 import HeroScene from './HeroScene'
 import WorldMap from './WorldMap'
+
+const OWNER_EMAIL = 'todak2000@gmail.com'
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')   // '' in dev, '/carbonlens' in prod
+const RECORDED_DEMO_URL  = `${BASE}/carbonlens-demo.webm`
+const SLEIPNER_REPORT_URL = `${BASE}/sleipner-validation-report.pdf`
 
 // ── Icons as simple SVG components (no extra deps needed) ─────────────────────
 
@@ -183,16 +188,52 @@ export default function LandingPage() {
   const setDemoActive = useUIStore((s) => s.setDemoActive)
   const theme = useUIStore((s) => s.theme)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
+  const user = useAuthStore((s) => s.user)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [showDemoModal, setShowDemoModal] = useState(false)
+
+  const isOwner = user?.email === OWNER_EMAIL
+  const [showEmailGate, setShowEmailGate] = useState(false)
+  const [gateEmail, setGateEmail]         = useState('')
+  const [gateError, setGateError]         = useState('')
 
   const handleWatchDemo = useCallback(() => {
-    if (!useAuthStore.getState().isAuthenticated) {
-      useAuthStore.getState().loginAsDemo()
-    }
+    setShowDemoModal(true)
+    setShowEmailGate(false)
+    setGateEmail('')
+    setGateError('')
+  }, [])
+
+  // Directly start the live demo (owner already verified)
+  const startLiveDemo = useCallback(() => {
+    setShowDemoModal(false)
+    setShowEmailGate(false)
     setDemoActive(true)
     setView('workspace')
   }, [setDemoActive, setView])
+
+  // Called when "Run Live Demo" is clicked
+  const handleRunLiveDemo = useCallback(() => {
+    if (isOwner) {
+      startLiveDemo()
+    } else {
+      setShowEmailGate(true)
+      setGateEmail('')
+      setGateError('')
+    }
+  }, [isOwner, startLiveDemo])
+
+  // Called when owner submits the email gate
+  const handleEmailGateSubmit = useCallback(() => {
+    if (gateEmail.trim().toLowerCase() === OWNER_EMAIL.toLowerCase()) {
+      useAuthStore.getState().loginAsOwnerEphemeral()
+      startLiveDemo()
+    } else {
+      setGateError('Access denied.')
+      setGateEmail('')
+    }
+  }, [gateEmail, startLiveDemo])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -207,6 +248,91 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-page text-primary font-sans overflow-x-hidden">
+
+      {/* ═══ RECORDED DEMO MODAL ════════════════════════════════════════ */}
+      {showDemoModal && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-8"
+          style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowDemoModal(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+            style={{ background: '#050e1a' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+              <div>
+                <div className="text-[10px] font-mono text-emerald-400 tracking-widest uppercase mb-0.5">
+                  CarbonLens Demo · Malay Basin · 50-Year CO₂ Storage Scenario
+                </div>
+                <div className="text-sm font-semibold text-white">
+                  Full End-to-End Workflow — Simulation · Geomechanics · Permit · Certificate
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDemoModal(false)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/15 text-white/50 hover:text-white transition ml-4 shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Video */}
+            <div className="bg-black">
+              <video
+                src={RECORDED_DEMO_URL}
+                controls
+                autoPlay
+                className="w-full"
+                style={{ maxHeight: '60vh', display: 'block' }}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            {/* Footer */}
+            <div className="flex flex-col gap-3 px-5 py-4 border-t border-white/10">
+
+
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <p className="text-[10px] text-white/30 font-mono">
+                  CarbonLens Simulation Studio v3 · Sleipner-validated · UTP Malaysia
+                </p>
+                <div className="flex items-center gap-3">
+                  {/* Download — owner only */}
+                  {isOwner && (
+                    <a
+                      href={RECORDED_DEMO_URL}
+                      download="carbonlens-demo.webm"
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/50 text-xs font-mono hover:bg-white/10 hover:text-white/80 transition"
+                    >
+                      ↓ Download
+                    </a>
+                  )}
+                  {/* Run Live Demo — owner only */}
+                  {isOwner && (
+                    <button
+                      onClick={handleRunLiveDemo}
+                      className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono hover:bg-emerald-500/30 transition flex items-center gap-1.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Run Live Demo
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setShowDemoModal(false); setView('auth') }}
+                    className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-mono transition"
+                  >
+                    Try It Yourself →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ═══ NAVBAR ════════════════════════════════════════════════════════ */}
       <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-page/90 backdrop-blur-md border-b border-theme' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 md:h-16 flex items-center justify-between">
@@ -229,16 +355,50 @@ export default function LandingPage() {
             <button onClick={toggleTheme} className="flex items-center gap-1 text-secondary hover:text-primary transition" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
-            <button onClick={() => setView('auth')}
-              className="text-xs text-secondary hover:text-primary transition font-mono px-3 py-1.5"
-            >
-              Sign In
-            </button>
-            <button onClick={() => setView('auth')}
-              className="text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
-            >
-              Get Started
-            </button>
+
+            {user ? (
+              /* ── Authenticated ── */
+              <>
+                {isOwner && (
+                  <button onClick={handleRunLiveDemo}
+                    className="hidden md:flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 transition min-h-[36px]"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    New Demo
+                  </button>
+                )}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg dark:bg-white/5 bg-gray-100 border border-theme">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <span className="text-[9px] font-mono text-emerald-400 font-bold">
+                      {(user.displayName || user.email).slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-secondary max-w-[110px] truncate">
+                    {user.displayName || user.email}
+                  </span>
+                </div>
+                <button onClick={() => setView('dashboard')}
+                  className="text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
+                >
+                  Dashboard
+                </button>
+              </>
+            ) : (
+              /* ── Unauthenticated ── */
+              <>
+                <button onClick={() => setView('auth')}
+                  className="text-xs text-secondary hover:text-primary transition font-mono px-3 py-1.5"
+                >
+                  Sign In
+                </button>
+                <button onClick={() => setView('auth')}
+                  className="text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
+
             {/* Mobile hamburger */}
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden ml-1 p-1.5 text-secondary">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -266,11 +426,30 @@ export default function LandingPage() {
               </button>
             ))}
             <hr className="border-theme" />
-            <button onClick={() => { setMobileMenuOpen(false); setView('auth') }}
-              className="w-full text-xs font-mono py-2.5 rounded-lg dark:bg-white/10 bg-gray-200 text-secondary hover:text-primary transition"
-            >
-              Sign In
-            </button>
+            {user ? (
+              <>
+                <div className="text-[10px] font-mono text-muted px-1">{user.displayName || user.email}</div>
+                {isOwner && (
+                  <button onClick={() => { setMobileMenuOpen(false); handleRunLiveDemo() }}
+                    className="w-full text-xs font-mono py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 transition flex items-center justify-center gap-2"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    New Demo
+                  </button>
+                )}
+                <button onClick={() => { setMobileMenuOpen(false); setView('dashboard') }}
+                  className="w-full text-xs font-mono py-2.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition"
+                >
+                  Dashboard
+                </button>
+              </>
+            ) : (
+              <button onClick={() => { setMobileMenuOpen(false); setView('auth') }}
+                className="w-full text-xs font-mono py-2.5 rounded-lg dark:bg-white/10 bg-gray-200 text-secondary hover:text-primary transition"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         )}
       </nav>
@@ -315,23 +494,26 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-              <button onClick={() => setView('auth')}
+              <button onClick={() => setView(user ? 'dashboard' : 'auth')}
                 className="px-6 py-3 md:py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition min-h-[48px] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
-                Screen a Formation
+                {user ? 'Go to Dashboard' : 'Screen a Formation'}
                 <IconChevronRight />
               </button>
               <button onClick={handleWatchDemo}
                 className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-emerald-500/10 bg-emerald-50 border dark:border-emerald-500/30 border-emerald-300 text-emerald-400 dark:text-emerald-300 text-sm transition min-h-[48px] font-mono flex items-center justify-center gap-2 hover:dark:bg-emerald-500/20 hover:bg-emerald-100"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Watch Live Demo
+                Watch Demo
               </button>
-              <button onClick={() => scrollTo('global-access')}
-                className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-white/5 bg-gray-100 hover:dark:bg-white/10 hover:bg-gray-200 text-secondary text-sm transition min-h-[48px] font-mono"
-              >
-                See Global Coverage
-              </button>
+              {isOwner && (
+                <button onClick={handleRunLiveDemo}
+                  className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-white/5 bg-gray-100 hover:dark:bg-white/10 hover:bg-gray-200 text-emerald-400 text-sm transition min-h-[48px] font-mono flex items-center justify-center gap-2"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Create New Demo
+                </button>
+              )}
             </div>
 
             {/* Sleipner validation proof strip */}
@@ -346,7 +528,7 @@ export default function LandingPage() {
                 Benchmarked against <span className="text-secondary">Sleipner Utsira</span> field data (Arts 2004 · Boait 2012 · Furre 2017) — the world's most data-rich CO₂ storage site.
               </div>
               <a
-                href="/sleipner-validation-report.pdf"
+                href={SLEIPNER_REPORT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[10px] font-mono text-emerald-400 hover:text-emerald-300 border dark:border-emerald-500/30 border-emerald-300 rounded-lg px-3 py-1.5 transition whitespace-nowrap flex items-center gap-1.5 shrink-0"
