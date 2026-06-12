@@ -96,8 +96,8 @@ export default function MainLayout() {
               <MonitorPlay size={12} />
               {demoActive ? 'Exit Demo' : 'Demo'}
             </button>
-            <span className="px-2 py-0.5 text-[10px] rounded bg-accent/10 text-accent font-mono uppercase tracking-wider hidden sm:block">
-              {user?.tier || 'Free'}
+            <span className="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 font-mono uppercase tracking-wider hidden sm:block">
+              {user?.tier || 'Pro'}
             </span>
             <button onClick={() => useUIStore.getState().setPanel('export')}
               className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md font-mono bg-tertiary text-secondary hover:text-primary transition"

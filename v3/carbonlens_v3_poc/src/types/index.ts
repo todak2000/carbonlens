@@ -1,6 +1,7 @@
 export type ColorProperty = 'porosity' | 'permeability' | 'salinity' | 'ift' | 'co2Density' | 'solubility' | 'depth' | 'custom'
 export type GeometryType = 'anticline' | 'dome' | 'fault' | 'layered' | 'stratigraphic' | 'channel' | 'gridfile'
 export type SaltType = 'NaCl' | 'CaCl2' | 'Mixed'
+export type FormationType = 'saline_aquifer' | 'depleted_gas' | 'depleted_oil' | 'hybrid'
 export type Jurisdiction = 'US' | 'EU' | 'Malaysia' | 'Australia' | 'Norway'
 export type SimulationStatus = 'idle' | 'running' | 'complete' | 'error'
 export type ProjectVisibility = 'private' | 'shared'
@@ -106,6 +107,17 @@ export interface FormationParams {
   caprockFriction: number
   caprockCohesion: number
   biotCoefficient: number
+  formationType?: FormationType         // default = saline_aquifer if absent
+  isOverpressured?: boolean             // flag: pressure regime is above hydrostatic (North Sumatra, Malay Basin)
+  giip?: number                         // Gas Initially In Place [Bcm] — depleted fields only
+  abandonmentPressure?: number          // Current sub-hydrostatic pressure [MPa] — depleted fields only
+  // ── Site-specific geomechanical parameters ─────────────────────────────────
+  poissonRatio?: number                 // reservoir/overburden Poisson ratio (default 0.30)
+  overburdenGradient?: number           // overburden stress gradient [MPa/m] (default 0.023)
+  stressRatioK0?: number                // σh/σv ratio — extensional ~0.55–0.65, compressional ~0.90–1.20 (default 0.82)
+  reservoirYoungsModulus?: number       // Young's modulus [GPa] for heave calc — 5 sandstone, 15–30 carbonate (default 5)
+  fracturedReservoir?: boolean          // true → apply fracture compliance factor (0.20×) to heave estimate
+  lithologyClass?: 'carbonate' | 'sandstone'  // reservoir matrix type — governs mineral trapping kinetics
 }
 
 export interface Well {
@@ -157,6 +169,16 @@ export interface SimulationResult {
   haliteRisk?: import('../engine/classical/haliteRisk').HaliteRiskResult
   vePlumeArea?: number        // VE solver: 2D plume footprint (km²)
   vePlumeRadius?: number      // VE solver: effective circular radius of VE plume (m)
+  // Physics-based independent trapping capacities (Bachu et al. 2007 framework)
+  // Each capacity is derived solely from formation properties — none is a residual of the others.
+  structuralCapacity: number      // closure trap volume × ρ_CO₂ from geometry (Mt)
+  residualCapacity: number        // Land(1968) snap-off in swept pore volume (Mt)
+  dissolutionCapacity: number     // Duan-Sun solubility + Fick + Rayleigh convection (Mt)
+  mineralCapacity: number         // mineral trapping (~0 at ≤20 yr) (Mt)
+  totalFormationCapacity: number  // sum of all four independent capacities (Mt)
+  formationCapacityUtil: number   // injected / totalFormationCapacity × 100%
+  // Multiphase closure diagnostics (Nordbotten & Celia 2006)
+  massBalanceError: number        // ε = injected − (residual + dissolved + mobile); ≥0 for unswept CO₂
 }
 
 export interface GeomechanicsResult {

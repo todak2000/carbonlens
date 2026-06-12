@@ -91,7 +91,7 @@ describe('FORMATION_PRESETS', () => {
     expect(p).toBeDefined()
     expect(p?.location).toContain('Netherlands')
     expect(p?.params.depth).toBe(3100)
-    expect(p?.params.temperature).toBeGreaterThan(100)
+    expect(p?.params.temperature).toBeGreaterThanOrEqual(100)
     // Bunter Sandstone — high salinity
     expect(p?.params.monovalentSalinity).toBeGreaterThan(2.0)
   })

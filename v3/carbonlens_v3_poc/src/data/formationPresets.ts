@@ -1,4 +1,4 @@
-import { FormationParams } from '../types'
+import { FormationParams, FormationType } from '../types'
 
 export interface FormationPreset {
   name: string
@@ -20,6 +20,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0, saltType: 'NaCl', methaneFraction: 0, nitrogenFraction: 0,
       area: 27, geometryType: 'dome', netToGross: 0.9,
       caprockFriction: 26, caprockCohesion: 6, biotCoefficient: 0.7,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.24, overburdenGradient: 0.0215, stressRatioK0: 0.60,
     },
   },
   {
@@ -33,6 +35,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.03, saltType: 'Mixed', methaneFraction: 0.02, nitrogenFraction: 0.01,
       area: 35, geometryType: 'layered', netToGross: 0.75,
       caprockFriction: 28, caprockCohesion: 7, biotCoefficient: 0.72,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.23, overburdenGradient: 0.0225, stressRatioK0: 0.68,
     },
   },
   {
@@ -46,6 +50,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0, saltType: 'NaCl', methaneFraction: 0, nitrogenFraction: 0,
       area: 12, geometryType: 'anticline', netToGross: 0.7,
       caprockFriction: 30, caprockCohesion: 8, biotCoefficient: 0.75,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.22, overburdenGradient: 0.0210, stressRatioK0: 0.58,
     },
   },
   {
@@ -59,6 +65,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.03, saltType: 'Mixed', methaneFraction: 0.01, nitrogenFraction: 0,
       area: 20, geometryType: 'anticline', netToGross: 0.65,
       caprockFriction: 32, caprockCohesion: 9, biotCoefficient: 0.76,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.26, overburdenGradient: 0.0228, stressRatioK0: 0.67,
     },
   },
   {
@@ -74,25 +82,32 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0, saltType: 'NaCl', methaneFraction: 0, nitrogenFraction: 0,
       area: 100, geometryType: 'anticline', netToGross: 0.85,
       caprockFriction: 27, caprockCohesion: 8, biotCoefficient: 0.75,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.24, overburdenGradient: 0.0218, stressRatioK0: 0.61,
     },
   },
   {
     name: 'In Salah',
     location: 'Central Algeria',
-    description: 'Gas field CO₂ storage. Low-permeability fractured carbonate reservoir.',
-    jurisdiction: 'EU',
+    description: 'Low-permeability fractured carbonate reservoir, Krechba field. h=20m, k≈10mD, T=91°C. Sub-hydrostatic after depletion.',
+    jurisdiction: 'DZ',
     params: {
-      depth: 1800, thickness: 50, porosity: 0.12, permeability: 50,
-      pressure: 18, temperature: 85, monovalentSalinity: 0.3,
+      depth: 1800, thickness: 20, porosity: 0.12, permeability: 10,
+      pressure: 10.5, temperature: 91, monovalentSalinity: 0.3,
       bivalentSalinity: 0.05, saltType: 'CaCl2', methaneFraction: 0.03, nitrogenFraction: 0,
       area: 5, geometryType: 'fault', netToGross: 0.6,
       caprockFriction: 25, caprockCohesion: 5, biotCoefficient: 0.68,
+      formationType: 'depleted_gas' as FormationType,
+      giip: 30,
+      abandonmentPressure: 10.5,
+      poissonRatio: 0.28, overburdenGradient: 0.0255, stressRatioK0: 0.66, reservoirYoungsModulus: 30, fracturedReservoir: true,
+      lithologyClass: 'carbonate' as const,
     },
   },
   {
     name: 'Kasawari',
     location: 'Sarawak, Malaysia',
-    description: 'Carbonate gas field, PETRONAS. Target injection ~2027. High CO₂ content gas.',
+    description: 'Carbonate depleted gas field, PETRONAS. ~84.9 Bcm GIIP, ~71–76 Mt CO₂ capacity (gas-replacement method). Target injection ~2027.',
     jurisdiction: 'MY',
     params: {
       depth: 1300, thickness: 90, porosity: 0.2, permeability: 800,
@@ -100,6 +115,11 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.02, saltType: 'Mixed', methaneFraction: 0.05, nitrogenFraction: 0.02,
       area: 15, geometryType: 'anticline', netToGross: 0.8,
       caprockFriction: 28, caprockCohesion: 6.5, biotCoefficient: 0.72,
+      formationType: 'depleted_gas' as FormationType,
+      giip: 84.9,
+      abandonmentPressure: 4.5,
+      poissonRatio: 0.27, overburdenGradient: 0.0230, stressRatioK0: 0.74, reservoirYoungsModulus: 20,
+      lithologyClass: 'carbonate' as const,
     },
   },
   {
@@ -113,6 +133,10 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.01, saltType: 'Mixed', methaneFraction: 0.04, nitrogenFraction: 0.01,
       area: 8, geometryType: 'anticline', netToGross: 0.78,
       caprockFriction: 29, caprockCohesion: 7, biotCoefficient: 0.73,
+      formationType: 'depleted_gas' as FormationType,
+      giip: 5.5,
+      abandonmentPressure: 3.0,
+      poissonRatio: 0.26, overburdenGradient: 0.0225, stressRatioK0: 0.72,
     },
   },
   {
@@ -126,6 +150,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.03, saltType: 'Mixed', methaneFraction: 0.01, nitrogenFraction: 0,
       area: 3, geometryType: 'layered', netToGross: 0.72,
       caprockFriction: 31, caprockCohesion: 7.5, biotCoefficient: 0.74,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.25, overburdenGradient: 0.0220, stressRatioK0: 0.64,
     },
   },
   // ── Global South formations — democratisation narrative ─────────────────────
@@ -142,6 +168,9 @@ export const FORMATION_PRESETS: FormationPreset[] = [
       bivalentSalinity: 0.02, saltType: 'NaCl', methaneFraction: 0.03, nitrogenFraction: 0.01,
       area: 120, geometryType: 'anticline', netToGross: 0.65,
       caprockFriction: 28, caprockCohesion: 6.5, biotCoefficient: 0.73,
+      formationType: 'saline_aquifer' as FormationType,
+      isOverpressured: true,
+      poissonRatio: 0.31, overburdenGradient: 0.0205, stressRatioK0: 0.92,
     },
   },
   {
@@ -150,13 +179,15 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Niger Delta',
     location: 'Niger Delta, Nigeria',
     description: 'High-permeability Agbada sandstone saline aquifer. Nigeria\'s primary CCS target. Addresses gas flaring (~15 Mt CO₂-eq/yr).',
-    jurisdiction: 'EU',
+    jurisdiction: 'NG',
     params: {
       depth: 1800, thickness: 60, porosity: 0.30, permeability: 800,
       pressure: 18.0, temperature: 80, monovalentSalinity: 0.35,
       bivalentSalinity: 0.02, saltType: 'NaCl', methaneFraction: 0.04, nitrogenFraction: 0.01,
       area: 250, geometryType: 'layered', netToGross: 0.70,
       caprockFriction: 26, caprockCohesion: 5.5, biotCoefficient: 0.71,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.33, overburdenGradient: 0.0200, stressRatioK0: 0.63,
     },
   },
   {
@@ -165,13 +196,16 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'North Sumatra Basin',
     location: 'Northern Sumatra, Indonesia',
     description: 'Miocene sandstone saline aquifer. Largest SE Asian developing-world CO₂ storage potential. ~50 Gt estimated capacity.',
-    jurisdiction: 'EU',
+    jurisdiction: 'ID',
     params: {
       depth: 1600, thickness: 45, porosity: 0.22, permeability: 200,
       pressure: 16.0, temperature: 78, monovalentSalinity: 0.45,
       bivalentSalinity: 0.03, saltType: 'NaCl', methaneFraction: 0.02, nitrogenFraction: 0.01,
       area: 180, geometryType: 'layered', netToGross: 0.55,
       caprockFriction: 27, caprockCohesion: 6.0, biotCoefficient: 0.72,
+      formationType: 'saline_aquifer' as FormationType,
+      isOverpressured: true,
+      poissonRatio: 0.30, overburdenGradient: 0.0210, stressRatioK0: 1.12,
     },
   },
   {
@@ -181,13 +215,15 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Nile Delta',
     location: 'Northern Egypt',
     description: 'Miocene sandstone saline aquifer beneath Messinian evaporite caprock (anhydrite/salt). High seal integrity. Gulf-adjacent geopolitical relevance.',
-    jurisdiction: 'EU',
+    jurisdiction: 'EG',
     params: {
       depth: 2200, thickness: 70, porosity: 0.24, permeability: 300,
       pressure: 22.0, temperature: 90, monovalentSalinity: 0.70,
       bivalentSalinity: 0.05, saltType: 'Mixed', methaneFraction: 0.01, nitrogenFraction: 0,
       area: 350, geometryType: 'dome', netToGross: 0.62,
       caprockFriction: 35, caprockCohesion: 12.0, biotCoefficient: 0.65,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.29, overburdenGradient: 0.0235, stressRatioK0: 0.88,
     },
   },
   // ── Middle East, Europe, Americas — deep-pocket markets ─────────────────────
@@ -198,13 +234,16 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Abu Dhabi Basin',
     location: 'Abu Dhabi, UAE',
     description: 'Deep saline sandstone / Arab Formation carbonate. Home of Al Reyadah CCS — first CCS facility in MENA. ADNOC 2030 CCS target: 10 Mt/yr.',
-    jurisdiction: 'EU',
+    jurisdiction: 'AE',
     params: {
       depth: 2800, thickness: 80, porosity: 0.16, permeability: 120,
       pressure: 28.0, temperature: 110, monovalentSalinity: 1.80,
       bivalentSalinity: 0.12, saltType: 'Mixed', methaneFraction: 0.02, nitrogenFraction: 0.01,
       area: 500, geometryType: 'anticline', netToGross: 0.58,
       caprockFriction: 33, caprockCohesion: 10.0, biotCoefficient: 0.67,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.27, overburdenGradient: 0.0248, stressRatioK0: 0.82, reservoirYoungsModulus: 18,
+      lithologyClass: 'carbonate' as const,
     },
   },
   {
@@ -213,14 +252,18 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     // Europe's flagship live CCS project; FID 2023; pipeline operational 2026
     name: 'Rotterdam / North Sea',
     location: 'North Sea, Netherlands',
-    description: 'Permian Bunter Sandstone saline aquifer (P18 block). Porthos CCS project — EU\'s flagship live CCS project (FID 2023). 37 Mt total storage target.',
+    description: 'Permian Bunter Sandstone depleted gas field (P18 block). Porthos CCS project — EU flagship (FID 2023). 37 Mt target. Abandonment P≈2.5 MPa sub-hydrostatic.',
     jurisdiction: 'EU',
     params: {
       depth: 3100, thickness: 65, porosity: 0.22, permeability: 120,
-      pressure: 31.0, temperature: 108, monovalentSalinity: 2.20,
+      pressure: 2.5, temperature: 100, monovalentSalinity: 2.20,
       bivalentSalinity: 0.10, saltType: 'Mixed', methaneFraction: 0, nitrogenFraction: 0,
       area: 300, geometryType: 'layered', netToGross: 0.68,
       caprockFriction: 30, caprockCohesion: 9.0, biotCoefficient: 0.74,
+      formationType: 'depleted_gas' as FormationType,
+      giip: 40,
+      abandonmentPressure: 2.5,
+      poissonRatio: 0.23, overburdenGradient: 0.0220, stressRatioK0: 0.57,
     },
   },
   {
@@ -230,13 +273,15 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     name: 'Alberta Basin',
     location: 'Alberta, Canada',
     description: 'Basal Cambrian Sandstone saline aquifer. Quest CCS project (Shell / ADNOC co-owned) — most-published MVA dataset in the Americas. >8 Mt injected.',
-    jurisdiction: 'EU',
+    jurisdiction: 'CA',
     params: {
       depth: 2200, thickness: 50, porosity: 0.14, permeability: 50,
       pressure: 22.0, temperature: 75, monovalentSalinity: 2.80,
       bivalentSalinity: 0.15, saltType: 'Mixed', methaneFraction: 0.01, nitrogenFraction: 0,
       area: 2000, geometryType: 'layered', netToGross: 0.65,
       caprockFriction: 29, caprockCohesion: 8.0, biotCoefficient: 0.73,
+      formationType: 'saline_aquifer' as FormationType,
+      poissonRatio: 0.22, overburdenGradient: 0.0228, stressRatioK0: 0.72,
     },
   },
 ]

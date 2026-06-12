@@ -170,8 +170,11 @@ export default function GeomechanicsPanel() {
 
   const depth = params.depth
   const pp = params.pressure
-  const sv = depth * OG
-  const sh = sv * K0
+  const _poisson = params.poissonRatio ?? POISSON
+  const _og      = params.overburdenGradient ?? OG
+  const _k0      = params.stressRatioK0 ?? K0
+  const sv = depth * _og
+  const sh = sv * _k0
 
   const estP = estimateInjPressure(params, wells)
   const simP = simResult?.injectionPressure ?? null
@@ -194,14 +197,14 @@ export default function GeomechanicsPanel() {
   }, [draw])
 
   const fracPres = useMemo(() => {
-    const baseFrac = (depth * OG - pp) * POISSON / (1 - POISSON) + pp
+    const baseFrac = (depth * _og - pp) * _poisson / (1 - _poisson) + pp
     const phiRad = params.caprockFriction * Math.PI / 180
     const frictionBoost = 1 + Math.tan(phiRad) * 0.15
     const alphaPenalty = 1 - (params.biotCoefficient - 0.4) * 0.12
     // Floor at σh: when K0 > ν/(1-ν), H-W formula gives fracture P < σh which is
     // physically inconsistent — hydraulic fracture requires exceeding min. principal stress.
     return Math.max(baseFrac * frictionBoost * Math.max(0.85, alphaPenalty), sh)
-  }, [depth, pp, params.caprockFriction, params.biotCoefficient, sh])
+  }, [depth, pp, params.caprockFriction, params.biotCoefficient, sh, _og, _poisson])
 
   // MAIP = 90% of fracture pressure (Hubbert-Willis / regulatory standard).
   // The old pp*1.1+1.5 secondary cap was ≈10% headroom — far too tight for CCS
@@ -216,16 +219,19 @@ export default function GeomechanicsPanel() {
     const dP_Pa = (injPres - pp) * 1e6
     const rho = simResult.co2Density || 700
     const V = simResult.storageCapacity * 1e9 / rho
-    return Math.max(0, 2 / Math.PI * (1 - 0.25 * 0.25) * dP_Pa * V / (5e9 * Math.max(100, depth) ** 2))
-  }, [simResult, injPres, pp, depth])
+    const E_gpa = params.reservoirYoungsModulus ?? 5
+    const fracCompliance = params.fracturedReservoir ? 0.20 : 1.0
+    const E_eff = E_gpa * fracCompliance * 1e9
+    return Math.max(0, 2 / Math.PI * (1 - 0.25 * 0.25) * dP_Pa * V / (E_eff * Math.max(100, depth) ** 2))
+  }, [simResult, injPres, pp, depth, params.reservoirYoungsModulus, params.fracturedReservoir])
 
   const capDepth = depth - Math.max(20, depth * 0.07)
   const capPP = pp * capDepth / depth
-  const capOB = capDepth * OG
+  const capOB = capDepth * _og
   const capPhiRad = params.caprockFriction * Math.PI / 180
   const capFrictionScale = 1 + Math.tan(capPhiRad) * 0.12
   const capAlphaScale = 1 - (params.biotCoefficient - 0.4) * 0.1
-  const capFrac = ((capOB - capPP) * POISSON / (1 - POISSON) + capPP) * capFrictionScale * Math.max(0.88, capAlphaScale)
+  const capFrac = ((capOB - capPP) * _poisson / (1 - _poisson) + capPP) * capFrictionScale * Math.max(0.88, capAlphaScale)
   const capInteg = injPres / Math.max(0.1, capFrac)
   const capOK = capInteg < 0.85
   const capWarn = capInteg >= 0.85 && capInteg < 1.0
@@ -534,7 +540,7 @@ export default function GeomechanicsPanel() {
       {/* Fracture & Integrity */}
       <div className="space-y-1.5">
         <Row label="Fracture Pressure" value={`${fracPres.toFixed(1)} MPa`} />
-        <Row label="Safety Factor" value={sf.toFixed(2)} />
+        <Row label="Safety Factor" value={`${sf.toFixed(2)} (screening)`} />
         <Row label="Caprock Stress" value={`${capFrac.toFixed(1)} MPa`} />
       </div>
 
@@ -661,9 +667,15 @@ export default function GeomechanicsPanel() {
             )}
           </div>
           <span className="text-[7px] text-muted/60 font-mono text-right leading-tight max-w-[120px]">
-            Nucleus-of-strain
+            Nucleus-of-strain{params.fracturedReservoir ? ' (fractured: ×2–10× possible)' : ''}
           </span>
         </div>
+        {params.fracturedReservoir && (
+          <p className="text-[8px] text-warning font-mono mt-1 leading-relaxed flex items-start gap-1">
+            <AlertTriangle size={9} className="shrink-0 mt-0.5" />
+            Fractured/faulted reservoir. Nucleus-of-strain underestimates heave — fault opening and fracture compliance can add 2–10× (cf. In Salah InSAR KB-502: 15–20 mm cumulative).
+          </p>
+        )}
       </div>
 
       {/* Stress state summary */}

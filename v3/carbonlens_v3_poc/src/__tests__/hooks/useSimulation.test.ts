@@ -132,6 +132,29 @@ describe('computeYearly', () => {
     expect(trapped20).toBeGreaterThan(trapped10)
   })
 
+  it('mass balance: residual + solubility + mobile + ε === storageCapacity at each year', () => {
+    // Each mechanism is computed from independent saturation physics.
+    // massBalanceError (ε) captures CO₂ outside the swept zone (tight/low-sweep formations).
+    // The full accounting: residual + dissolved + mobile + ε = totalCum.
+    // For well-swept formations ε ≈ 0; for tight formations ε may be substantial.
+    let prev: ReturnType<typeof computeYearly> | null = null
+    for (let yr = 1; yr <= 30; yr++) {
+      const r = computeYearly(BASE_PARAMS, yr, 30, prev)
+      const componentSum = r.residualTrapping + r.solubilityTrapping + r.mineralTrapping + r.mobilePlume + r.massBalanceError
+      expect(componentSum).toBeCloseTo(r.storageCapacity, 6)
+      prev = r
+    }
+  })
+
+  it('massBalanceError is non-negative at each year', () => {
+    let prev: ReturnType<typeof computeYearly> | null = null
+    for (let yr = 1; yr <= 30; yr++) {
+      const r = computeYearly(BASE_PARAMS, yr, 30, prev)
+      expect(r.massBalanceError).toBeGreaterThanOrEqual(0)
+      prev = r
+    }
+  })
+
   it('pressureField is an array', () => {
     const r = computeYearly(BASE_PARAMS, 5, 30, null)
     expect(Array.isArray(r.pressureField)).toBe(true)

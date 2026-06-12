@@ -3,12 +3,16 @@ import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { useMemo, useState, useCallback, useEffect } from 'react'
-import { Download, Clipboard, Check, FileJson, FileSpreadsheet, Camera, FileText } from 'lucide-react'
+import { Download, Clipboard, Check, FileJson, FileSpreadsheet, Camera, FileText, BarChart2 } from 'lucide-react'
 import { downloadExportPackage, generateExcelHTML } from '../../utils/exportPackage'
 import { generateDepthProfile, generateTimeSeries, buildExportJSON } from '../../utils/profileGenerator'
 import { PERMIT_TEMPLATES, renderPermitReport, DEFAULT_JURISDICTION, PermitTemplate } from '../../utils/permitTemplates'
 import { openExecutiveSummary, openPermitApplication } from '../../utils/exportHTMLReports'
+import { openSleipnerReport } from '../../utils/exportSleipnerReport'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
+import { useHistoryMatchingStore } from '../../store/historyMatchingStore'
+import { useMCStore, type PersistedMCResult } from '../../store/mcStore'
+import { runMonteCarlo, REPORT_MC_CONFIG } from '../../utils/monteCarlo'
 
 export default function ExportPanel() {
   const params = useFormationStore((s) => s.params)
@@ -28,6 +32,33 @@ export default function ExportPanel() {
   const user = useAuthStore((s) => s.user)
   const organization = useAuthStore((s) => s.user?.organization ?? '')
   const [exporting, setExporting] = useState<'package' | 'excel' | null>(null)
+  const hmOptResult = useHistoryMatchingStore(s => s.optimizationResult)
+  const setLastMCResult = useMCStore(s => s.setLastResult)
+
+  // Always run fresh 500-sample MC on the frozen formation params at export time.
+  // This guarantees the report always has probabilistic bounds regardless of whether
+  // the user has visited the Monte Carlo panel.
+  const runMCForReport = useCallback((
+    fp: typeof params,
+    fName: string,
+    pYears: number,
+  ): PersistedMCResult => {
+    const res = runMonteCarlo(REPORT_MC_CONFIG, fp, pYears)
+    const persisted: PersistedMCResult = {
+      p10_Mt: res.p10_Mt, p50_Mt: res.p50_Mt, p90_Mt: res.p90_Mt,
+      p10_P: res.p10_P, p50_P: res.p50_P, p90_P: res.p90_P,
+      realizations: res.realizations.length,
+      runTimeMs: res.runTimeMs,
+      permUncertPct: REPORT_MC_CONFIG.permUncertPct,
+      poroUncertAbs: REPORT_MC_CONFIG.poroUncertAbs,
+      areaUncertPct: REPORT_MC_CONFIG.areaUncertPct,
+      thickUncertPct: REPORT_MC_CONFIG.thickUncertPct,
+      formationName: fName,
+      ranAt: new Date().toISOString(),
+    }
+    setLastMCResult(persisted)
+    return persisted
+  }, [setLastMCResult])
 
   // Resolve formation name + location + jurisdiction from presets (match by depth + porosity as fingerprint)
   const { formationName, formationLocation, presetJurisdiction } = useMemo(() => {
@@ -108,8 +139,11 @@ export default function ExportPanel() {
     const fw = simSnap.completedWells
     const fg = simSnap.completedGeomechanics ?? simSnap.geomechanics
     const preset = FORMATION_PRESETS.find((p) => p.params.depth === fp.depth && p.params.porosity === fp.porosity)
-    openExecutiveSummary(fp, snap, fg, fw, preset?.name ?? 'Custom Formation', preset?.location ?? 'User-defined site', authSnap.user?.displayName ?? authSnap.user?.email ?? null, authSnap.user?.organization ?? '', simSnap.snapshots, uiSnap.projectYears, uiSnap.timestep)
-  }, [])
+    const presetName = preset?.name ?? 'Custom Formation'
+    // Always compute fresh 500-sample MC on the frozen params so every report has probabilistic bounds
+    const mcResult = runMCForReport(fp, presetName, uiSnap.projectYears)
+    openExecutiveSummary(fp, snap, fg, fw, presetName, preset?.location ?? 'User-defined site', authSnap.user?.displayName ?? authSnap.user?.email ?? null, authSnap.user?.organization ?? '', simSnap.snapshots, uiSnap.projectYears, uiSnap.timestep, reportTemplate, hmOptResult ?? undefined, mcResult)
+  }, [reportTemplate, hmOptResult, runMCForReport])
 
   const handleExportPermitPDF = useCallback(() => {
     // Read ALL dynamic values directly from stores at click time.
@@ -128,8 +162,11 @@ export default function ExportPanel() {
     const fw = simSnap.completedWells
     const fg = simSnap.completedGeomechanics ?? simSnap.geomechanics
     const preset = FORMATION_PRESETS.find((p) => p.params.depth === fp.depth && p.params.porosity === fp.porosity)
-    openPermitApplication(fp, snap, fg, fw, preset?.name ?? 'Custom Formation', preset?.location ?? 'User-defined site', reportTemplate, authSnap.user?.organization ?? '', simSnap.snapshots, uiSnap.projectYears, uiSnap.timestep)
-  }, [reportTemplate])
+    const presetName = preset?.name ?? 'Custom Formation'
+    // Always compute fresh 500-sample MC on the frozen params so every report has probabilistic bounds
+    const mcResult = runMCForReport(fp, presetName, uiSnap.projectYears)
+    openPermitApplication(fp, snap, fg, fw, presetName, preset?.location ?? 'User-defined site', reportTemplate, authSnap.user?.organization ?? '', simSnap.snapshots, uiSnap.projectYears, uiSnap.timestep, hmOptResult ?? undefined, mcResult)
+  }, [reportTemplate, hmOptResult, runMCForReport])
 
   const handleDownloadJSON = useCallback(() => {
     const profile = generateDepthProfile(params)
@@ -143,85 +180,6 @@ export default function ExportPanel() {
     a.click()
     URL.revokeObjectURL(url)
   }, [params, wells, result, jurisdiction])
-
-  // Debug: export the exact frozen snapshot that BOTH PDF handlers read from.
-  // Use this to verify Executive Summary and Permit Pre-Application are using
-  // identical numbers before generating PDFs.
-  const handleExportDebugSnapshot = useCallback(() => {
-    const simSnap = useSimulationStore.getState()
-    const uiSnap = useUIStore.getState()
-    const authSnap = useAuthStore.getState()
-
-    const snap = simSnap.completedResult
-    const fp   = simSnap.completedParams
-    const fw   = simSnap.completedWells
-    const fg   = simSnap.completedGeomechanics ?? simSnap.geomechanics
-
-    // Derived verification block — mirrors the arithmetic both HTML reports perform.
-    // NOTE: all mass fields (storageCapacity, residualTrapping, etc.) are already in Mt.
-    //       injectionRate on wells is already in Mt/yr.
-    const verification = snap && fp ? (() => {
-      const residual    = snap.residualTrapping   ?? 0
-      const solubility  = snap.solubilityTrapping ?? 0
-      const mineral     = snap.mineralTrapping    ?? 0
-      const mobile      = snap.mobilePlume        ?? 0
-      const total       = snap.storageCapacity    ?? 0
-      const componentSum = residual + solubility + mineral + mobile
-      const gap          = total - componentSum
-      const injectionRateMtyr = fw
-        ? fw.reduce((s, w) => s + (w.injectionRate ?? 0), 0)
-        : null
-      return {
-        storageCapacity_Mt:       +total.toFixed(6),
-        residualTrapping_Mt:      +residual.toFixed(6),
-        solubilityTrapping_Mt:    +solubility.toFixed(6),
-        mineralTrapping_Mt:       +mineral.toFixed(6),
-        mobilePlume_Mt:           +mobile.toFixed(6),
-        componentSum_Mt:          +componentSum.toFixed(6),
-        massBalanceGap_Mt:        +gap.toFixed(6),
-        massBalanceGapPct:        total > 0 ? +((gap / total) * 100).toFixed(4) : null,
-        residualPct_ofTotal:      total > 0 ? +((residual / total) * 100).toFixed(2) : null,
-        solubilityPct_ofTotal:    total > 0 ? +((solubility / total) * 100).toFixed(2) : null,
-        mineralPct_ofTotal:       total > 0 ? +((mineral / total) * 100).toFixed(2) : null,
-        mobilePct_ofTotal:        total > 0 ? +((mobile / total) * 100).toFixed(2) : null,
-        injectionRate_Mtyr:       injectionRateMtyr !== null ? +injectionRateMtyr.toFixed(6) : null,
-        geomechanicsPresent:      fg !== null,
-        // safetyFactor > 1.5 = safe; fracturePressure vs injectionPressure is the key check
-        safetyFactor:             fg?.safetyFactor ?? null,
-        fracturePressure_MPa:     fg?.fracturePressure ?? null,
-        injectionPressure_MPa:    snap.injectionPressure ?? null,
-        inducedSeismicityRisk:    fg?.inducedSeismicityRisk ?? null,
-        maip_MPa:                 fg?.maip ?? null,
-      }
-    })() : null
-
-    const debugPayload = {
-      _meta: {
-        generatedAt:       new Date().toISOString(),
-        description:       'Frozen export snapshot — identical object read by Executive Summary and Permit Pre-Application handlers',
-        snapshotComplete:  snap !== null && fp !== null && fw !== null,
-        jurisdiction:      uiSnap.jurisdiction,
-        reportTemplate,
-        projectYears:      uiSnap.projectYears,
-        simulationYear:    uiSnap.timestep,
-        user:              authSnap.user?.displayName ?? authSnap.user?.email ?? null,
-        organization:      authSnap.user?.organization ?? null,
-      },
-      _verification: verification,
-      completedResult:      snap,
-      completedParams:      fp,
-      completedWells:       fw,
-      completedGeomechanics: fg,
-    }
-
-    const blob = new Blob([JSON.stringify(debugPayload, null, 2)], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `carbonlens_debug_snapshot_${Date.now()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }, [reportTemplate])
 
   const simulationComplete = !isAnimating && result != null && simulationYear >= projectYears
   const nearZeroSalinity = params.monovalentSalinity < 0.1 && params.bivalentSalinity < 0.05
@@ -350,32 +308,21 @@ export default function ExportPanel() {
         </button>
       </div>
 
-      {/* Debug: verify both PDF exports read from the same frozen snapshot */}
-      <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-1.5">
-        <p className="text-[9px] text-yellow-400 font-mono uppercase tracking-wider">State Verification</p>
+      {/* Sleipner Benchmark Report */}
+      <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 space-y-1.5">
+        <p className="text-[9px] text-violet-400 font-mono uppercase tracking-wider">Benchmark Validation</p>
         <p className="text-[10px] text-muted leading-relaxed">
-          Download the exact frozen snapshot both PDF handlers read from. Compare
-          <code className="text-yellow-300 mx-1">completedResult</code> fields across runs to confirm the two documents are using identical numbers.
+          Compare CarbonLens simulation against 20+ years of published Sleipner monitoring data
+          (Boait 2012, Furre 2017). Includes physics validation, injection timeline, and future projections.
         </p>
         <button
-          onClick={handleExportDebugSnapshot}
-          disabled={!completedResult}
-          className="w-full flex items-center justify-center gap-1.5 py-2 rounded bg-yellow-600/80 hover:bg-yellow-500/80 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[10px] font-medium font-mono transition"
+          onClick={openSleipnerReport}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md bg-violet-700 hover:bg-violet-600 text-white text-[10px] font-medium font-mono transition"
         >
-          <FileJson size={12} />
-          {completedResult ? 'Export Debug Snapshot JSON' : 'Run simulation first'}
+          <BarChart2 size={12} /> Sleipner Benchmark Report
         </button>
-        {completedResult && (
-          <p className="text-[9px] text-muted font-mono">
-            Includes <code>_verification</code> block with mass-balance cross-checks, component percentages, injection rate, and geomechanics presence flag.
-          </p>
-        )}
       </div>
 
-      {/* Preview */}
-      <div className="p-3 rounded bg-card border border-theme">
-        <pre className="text-[10px] text-muted font-mono whitespace-pre-wrap leading-relaxed">{summary}</pre>
-      </div>
     </div>
   )
 }

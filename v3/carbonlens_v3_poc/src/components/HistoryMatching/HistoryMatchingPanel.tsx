@@ -10,7 +10,7 @@
  */
 
 import { useCallback } from 'react';
-import { Activity, RefreshCw, TrendingUp, Sliders, BarChart2, Database } from 'lucide-react';
+import { Activity, RefreshCw, TrendingUp, Sliders, BarChart2, Database, CheckCircle2, RotateCcw, ArrowRightCircle } from 'lucide-react';
 import { useHistoryMatchingStore } from '../../store/historyMatchingStore';
 import { useFormationStore } from '../../store/formationStore';
 import {
@@ -29,6 +29,7 @@ import ObservationImport from './ObservationImport';
 export default function HistoryMatchingPanel() {
   const store = useHistoryMatchingStore();
   const formation = useFormationStore(s => s.params);
+  const setFormationParams = useFormationStore(s => s.setParams);
 
   const {
     matchableParams,
@@ -47,6 +48,10 @@ export default function HistoryMatchingPanel() {
     setActiveSweepParam,
     resetToDefaults,
     applyOptimizedParams,
+    previousFormationSnapshot,
+    isAppliedToFormation,
+    applyToFormation,
+    revertFormation,
   } = store;
 
   // Recompute misfit whenever a param changes
@@ -305,6 +310,44 @@ export default function HistoryMatchingPanel() {
               >
                 Apply Best Fit Parameters
               </button>
+              {/* Apply to Formation / Revert */}
+              <div className="pt-2 border-t border-theme/20 space-y-1.5">
+                {!isAppliedToFormation ? (
+                  <button
+                    onClick={() => {
+                      applyToFormation({ permeability: formation.permeability, porosity: formation.porosity, netToGross: formation.netToGross });
+                      setFormationParams({
+                        permeability: matchableParams.permeability,
+                        porosity: matchableParams.porosity,
+                        netToGross: matchableParams.netToGross,
+                      });
+                    }}
+                    className="w-full py-1.5 text-[10px] font-mono rounded border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 transition flex items-center justify-center gap-1.5"
+                  >
+                    <ArrowRightCircle size={11} />
+                    Apply to Formation &amp; Re-run Simulation
+                  </button>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-[9px] text-success font-mono">
+                      <CheckCircle2 size={10} />
+                      <span>Formation updated with calibrated params. Re-run simulation to see effect.</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (previousFormationSnapshot) {
+                          setFormationParams({ ...previousFormationSnapshot });
+                        }
+                        revertFormation();
+                      }}
+                      className="w-full py-1.5 text-[10px] font-mono rounded border border-warning/40 bg-warning/5 text-warning hover:bg-warning/10 transition flex items-center justify-center gap-1.5"
+                    >
+                      <RotateCcw size={11} />
+                      Revert to Original Formation Params
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

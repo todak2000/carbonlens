@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useGeologicalStore } from '../../store/geologicalStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { geologicalModelToGrid } from '../../utils/geologicalModelToGrid'
-import { SimulationGrid, GRID_NX, GRID_NY, GRID_NZ, GRID_CELL_COUNT } from '../../engine/grid/SimulationGrid'
+import { SimulationGrid, GRID_MAX_CELLS } from '../../engine/grid/SimulationGrid'
 
 // ── Scene scale constants (match existing ReservoirViewer coordinate space) ─
 const SCENE_W = 3.0   // XZ full width (matches existing w=3 in FormationMesh)
@@ -24,13 +24,16 @@ const GridReservoir = forwardRef<GridReservoirHandle>((_, ref) => {
   const gridRef  = useRef<SimulationGrid | null>(null)
 
   const model    = useGeologicalStore((s) => s.model)
+  const gridNx   = useGeologicalStore((s) => s.gridNx)
+  const gridNy   = useGeologicalStore((s) => s.gridNy)
+  const gridNz   = useGeologicalStore((s) => s.gridNz)
   const result   = useSimulationStore((s) => s.result)
 
   // ── Build grid from geological model ──────────────────────────────────────
   const gridData = useMemo(
-    () => geologicalModelToGrid(model, GRID_NX, GRID_NY, GRID_NZ),
+    () => geologicalModelToGrid(model, gridNx, gridNy, gridNz),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [model.zones, model.faults, model.modelWidthM, model.modelLengthM],
+    [model.zones, model.faults, model.modelWidthM, model.modelLengthM, gridNx, gridNy, gridNz],
   )
 
   const simGrid = useMemo(() => new SimulationGrid(gridData), [gridData])
@@ -69,6 +72,11 @@ const GridReservoir = forwardRef<GridReservoirHandle>((_, ref) => {
       mesh.setMatrixAt(cell.instanceId, matrix)
     }
     mesh.instanceMatrix.needsUpdate = true
+    // Hide any instances beyond the current cell count (from a previous larger grid)
+    const scale0 = new THREE.Matrix4().scale(new THREE.Vector3(0, 0, 0))
+    for (let id = gridData.cells.length; id < GRID_MAX_CELLS; id++) {
+      mesh.setMatrixAt(id, scale0)
+    }
   }, [gridData, sceneH])
 
   // ── Apply initial colors (geology/lithology view) ─────────────────────────
@@ -95,7 +103,7 @@ const GridReservoir = forwardRef<GridReservoirHandle>((_, ref) => {
     <group position={[0, -0.4, 0]}>
       <instancedMesh
         ref={meshRef}
-        args={[boxGeo, undefined, GRID_CELL_COUNT]}
+        args={[boxGeo, undefined, GRID_MAX_CELLS]}
         castShadow
         receiveShadow
       >

@@ -65,7 +65,11 @@ export default function Sidebar() {
 
   return (
     <nav className={`${w} border-r border-theme flex flex-col items-center py-3 shrink-0 bg-page transition-all duration-200`}>
-      <div className="mb-4">
+      <div 
+        className="mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => useUIStore.getState().setView('landing')}
+        title="Go to landing page"
+      >
         {sidebarOpen ? (
           <Logo width={130} />
         ) : (

@@ -2,10 +2,11 @@ import { GridCell, SimulationGridData } from '../../utils/geologicalModelToGrid'
 import { saturationToColor, lithologyToColor } from '../../utils/colorMapping'
 import * as THREE from 'three'
 
-export const GRID_NX = 20
-export const GRID_NY = 20
-export const GRID_NZ = 10
-export const GRID_CELL_COUNT = GRID_NX * GRID_NY * GRID_NZ
+export const GRID_NX = 60
+export const GRID_NY = 60
+export const GRID_NZ = 20
+export const GRID_CELL_COUNT = GRID_NX * GRID_NY * GRID_NZ  // 72 000 cells (default)
+export const GRID_MAX_CELLS  = 100 * 100 * 30               // 300 000 — hard upper bound for InstancedMesh allocation
 
 /**
  * SimulationGrid wraps SimulationGridData and provides:

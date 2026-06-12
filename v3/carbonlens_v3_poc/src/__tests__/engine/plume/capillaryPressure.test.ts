@@ -22,8 +22,8 @@ describe('getCapillaryLambda', () => {
 describe('pcDrainage', () => {
   const params = makeCapillaryParams(0.05, 'sandstone')
 
-  it('returns 0 at Sw = 1 (fully brine-saturated)', () => {
-    expect(pcDrainage(1, params)).toBe(0)
+  it('returns entry pressure at Sw = 1 (fully brine-saturated)', () => {
+    expect(pcDrainage(1, params)).toBe(params.entryPressure)
   })
 
   it('returns capped entry pressure below residual water', () => {
@@ -59,8 +59,8 @@ describe('pcImbibition', () => {
     expect(pcImbibition(0.6, params, 0)).toBe(pcDrainage(0.6, params))
   })
 
-  it('returns 0 at Sw = 1 regardless of history', () => {
-    expect(pcImbibition(1, params, 0.5)).toBe(0)
+  it('returns entry pressure at Sw = 1 regardless of history', () => {
+    expect(pcImbibition(1, params, 0.5)).toBe(params.entryPressure)
   })
 })
 

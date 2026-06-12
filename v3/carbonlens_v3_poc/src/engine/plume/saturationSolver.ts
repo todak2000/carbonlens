@@ -307,10 +307,14 @@ export function stepSaturation(
         // Check caprock directly above: if cellAbove is the caprock boundary, block
         if (cellAbove.isCaprock) continue
 
-        // Mass-conserving transfer (porosity-weighted)
+        // Mass-conserving transfer (porosity-weighted).
+        // The saturation change in cellAbove = dSgTotal × (φ_below / φ_above) so that
+        // the CO2 volume transferred is identical in both cells.
+        // Cap at 4.0 only to prevent float overflow in degenerate grids; real geological
+        // porosity ratios between adjacent reservoir cells are almost always < 3.
         const phiRatio = cell.porosity / Math.max(0.001, cellAbove.porosity)
         delta[cell.instanceId]      -= dSgTotal
-        delta[cellAbove.instanceId] += dSgTotal * Math.min(phiRatio, 2.0)
+        delta[cellAbove.instanceId] += dSgTotal * Math.min(phiRatio, 4.0)
       }
     }
   }
@@ -469,23 +473,26 @@ export function stepSaturation(
     // ── Update cell CO2 phase ─────────────────────────────────────────────
     const totalImmobile = state.Sg_residual[cid] + state.Sg_dissolved[cid] + state.Sg_mineral[cid]
 
-    // Assign phase to display: most "interesting" phase wins
+    // co2Saturation always stores the total free CO2 (Sg) so that STEP 2 and STEP 3 in
+    // subsequent years read the correct base saturation for flux calculations.
+    // Overwriting it with a phase-specific display value (e.g. Sg_dissolved) would cause
+    // the next year's transport to treat most of the free CO2 as absent — the primary
+    // source of the ~37% mass conservation gap reported on large formations.
+    cell.co2Saturation = Sg
+
+    // co2Phase is display-only: drives the colour mapper without affecting transport.
+    // The "most interesting" phase wins for the 3D visualisation.
     const freeFinal = Math.max(0, Sg - state.Sg_residual[cid])
     if (state.Sg_mineral[cid] > 0.005 && state.Sg_mineral[cid] >= state.Sg_dissolved[cid] * 0.5) {
       cell.co2Phase = 'mineral'
-      cell.co2Saturation = state.Sg_mineral[cid]
     } else if (state.Sg_dissolved[cid] > 0.008) {
       cell.co2Phase = 'dissolved'
-      cell.co2Saturation = state.Sg_dissolved[cid]
     } else if (state.Sg_residual[cid] > 0.005 && freeFinal < 0.01) {
       cell.co2Phase = 'residual'
-      cell.co2Saturation = state.Sg_residual[cid]
     } else if (Sg > 0.003) {
       cell.co2Phase = 'free'
-      cell.co2Saturation = Sg
     } else {
       cell.co2Phase = 'none'
-      cell.co2Saturation = 0
     }
 
     // Track previous step for imbibition detection

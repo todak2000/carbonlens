@@ -180,6 +180,100 @@ function valueToColor(value: number, property: ColorProperty): [number, number, 
 
 const SEG = 48
 
+/**
+ * Option C: Build a non-rectangular reservoir solid from a boundary polygon.
+ *
+ * Algorithm:
+ *   1. Create a THREE.Shape from the boundary polygon (points in normalised -1..1 XZ coords).
+ *      Polygon Z is negated when building the Shape so that after rotateX(-PI/2) the world Z
+ *      axis is correctly oriented (not mirrored).
+ *   2. Extrude the shape along Z with depth=h using ExtrudeGeometry.
+ *   3. Rotate -90° around X: Shape XY → world XZ; extruded Z → world Y (vertical).
+ *   4. Translate -h/2 in Y to centre the solid.
+ *   5. Displace top-face vertices (world Y ≈ +h/2) by the deformation field.
+ *   6. Recompute normals, apply vertex colours.
+ */
+function buildPolygonGeometry(
+  polygon: [number, number][],
+  type: GeometryType,
+  thickness: number,
+  porosity: number,
+  permeability: number,
+  property: ColorProperty,
+  las: LasState | null,
+  gridData: ReturnType<typeof useFormationStore.getState>['gridData'],
+  params: ReturnType<typeof useFormationStore.getState>['params'],
+  result: ReturnType<typeof useSimulationStore.getState>['result'] | null,
+  ui: ReturnType<typeof useUIStore.getState>,
+): THREE.BufferGeometry {
+  const SCALE = 1.5  // scene radius: polygon -1..1 → -1.5..1.5 scene units
+  const h = 0.3 + thickness / 500
+
+  // Build 2D shape — polygon X stays X, polygon Z is negated so world Z is correct after rotateX(-PI/2)
+  const shape = new THREE.Shape()
+  shape.moveTo(polygon[0][0] * SCALE, -polygon[0][1] * SCALE)
+  for (let i = 1; i < polygon.length; i++) {
+    shape.lineTo(polygon[i][0] * SCALE, -polygon[i][1] * SCALE)
+  }
+  shape.closePath()
+
+  // Extrude — steps=4 gives interior subdivision for visual quality; uvGenerator default is fine
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: h,
+    bevelEnabled: false,
+    steps: 4,
+  })
+
+  // Orient: XY shape → XZ world; extrusion Z (0..h) → world Y (0..h)
+  geo.rotateX(-Math.PI / 2)
+  // Centre vertically: world Y shifts from (0..h) to (-h/2..+h/2)
+  geo.translate(0, -h / 2, 0)
+
+  // Displace top-face vertices (world Y near +h/2) using the deformation field
+  const pos = geo.attributes.position
+  const topThreshold = h / 2 - h * 0.05  // vertices within 5% of top
+  const seed = { anticline: 1, dome: 2, fault: 3, layered: 4, stratigraphic: 5, channel: 6, gridfile: 7 }[type] || 7
+
+  for (let i = 0; i < pos.count; i++) {
+    const wy = pos.getY(i)
+    if (wy < topThreshold) continue  // only top face
+
+    const wx = pos.getX(i)
+    const wz = pos.getZ(i)
+    // Map world coords back to normalised -1..1 for deformation lookup
+    const nx = wx / SCALE
+    const nz = wz / SCALE
+    const macro = gridData?.deformations
+      ? getGridDeformation(nx, nz, gridData.deformations, gridData.nx, gridData.nz)
+      : getDeformation(type, nx, nz)
+    const roughScale = Math.max(0.3, Math.min(1, permeability / 2000))
+    const nv = fbm(wx * 1.8 + 50, wz * 1.8 + 50, 3, seed)
+    pos.setY(i, wy + macro + (nv - 0.5) * 0.10 * roughScale)
+  }
+  pos.needsUpdate = true
+  geo.computeVertexNormals()
+
+  // Vertex colours (same logic as buildSmoothGeometry)
+  const colors: number[] = []
+  for (let i = 0; i < pos.count; i++) {
+    const wx = pos.getX(i)
+    const wy = pos.getY(i)
+    const wz = pos.getZ(i)
+    const ny = (wy + h / 2) / h
+    const pv = propertyValueAt(wx, wz, ny, params, property, las, result, ui)
+    const base = valueToColor(pv, property)
+    const varN = fbm(wx * 4 + seed * 100, wz * 4 + seed * 100, 2, seed + 10) * 0.08 - 0.04
+    const bright = 0.65 + ny * 0.35
+    colors.push(
+      (base[0] + varN) * bright,
+      (base[1] + varN * 0.8) * bright,
+      (base[2] + varN * 0.5) * bright,
+    )
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  return geo
+}
+
 function buildSmoothGeometry(
   type: GeometryType, thickness: number, depth: number,
   porosity: number, permeability: number, property: ColorProperty, las: LasState | null,
@@ -188,6 +282,14 @@ function buildSmoothGeometry(
   result: ReturnType<typeof useSimulationStore.getState>['result'] | null,
   ui: ReturnType<typeof useUIStore.getState>
 ): THREE.BufferGeometry {
+  // Option C: custom polygon footprint — delegate to dedicated builder
+  if (gridData?.boundary_polygon && gridData.boundary_polygon.length >= 3) {
+    return buildPolygonGeometry(
+      gridData.boundary_polygon, type, thickness, porosity, permeability,
+      property, las, gridData, params, result, ui,
+    )
+  }
+
   const w = 3, d = 3, h = 0.3 + thickness / 500
   const geo = new THREE.BoxGeometry(w, h, d, SEG, 1, SEG)
   const pos = geo.attributes.position

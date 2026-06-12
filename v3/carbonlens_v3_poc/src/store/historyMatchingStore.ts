@@ -18,6 +18,10 @@ interface HistoryMatchingState {
   sensitivityResults: SensitivityResult[];
   isOptimizing: boolean;
   activeSweepParam: keyof MatchableParams | null;
+  previousFormationSnapshot: { permeability: number; porosity: number; netToGross: number } | null;
+  isAppliedToFormation: boolean;
+  applyToFormation: (currentFormationParams: { permeability: number; porosity: number; netToGross: number }) => void;
+  revertFormation: () => void;
 
   setMatchableParam: (key: keyof MatchableParams, value: number) => void;
   setObservations: (obs: ObservationData) => void;
@@ -38,6 +42,8 @@ export const useHistoryMatchingStore = create<HistoryMatchingState>((set, get) =
   sensitivityResults: [],
   isOptimizing: false,
   activeSweepParam: null,
+  previousFormationSnapshot: null,
+  isAppliedToFormation: false,
 
   setMatchableParam: (key, value) =>
     set(s => ({ matchableParams: { ...s.matchableParams, [key]: value } })),
@@ -53,5 +59,17 @@ export const useHistoryMatchingStore = create<HistoryMatchingState>((set, get) =
     if (optimizationResult) {
       set({ matchableParams: { ...optimizationResult.bestFit } });
     }
+  },
+  applyToFormation: (currentFormationParams) => {
+    const { matchableParams } = get();
+    set({
+      previousFormationSnapshot: { ...currentFormationParams },
+      isAppliedToFormation: true,
+    });
+    // Caller is responsible for updating formationStore — this just tracks state
+    return matchableParams;
+  },
+  revertFormation: () => {
+    set({ isAppliedToFormation: false, previousFormationSnapshot: null });
   },
 }));

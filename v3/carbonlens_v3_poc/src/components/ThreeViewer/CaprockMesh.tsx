@@ -21,6 +21,7 @@ export default function CaprockMesh() {
   const result       = useSimulationStore((s) => s.result)
   const isAnimating  = useSimulationStore((s) => s.isAnimating)
   const thickness    = useFormationStore((s) => s.params.thickness)
+  const gridData     = useFormationStore((s) => s.gridData)
   // BUG-04 fix: match GridReservoir's SCENE_H_BASE=0.5 formula so caprock sits at exact top cell boundary
   const h            = Math.max(0.3, 0.5 + thickness / 500)
   const CAPROCK_Y    = h / 2
@@ -37,18 +38,31 @@ export default function CaprockMesh() {
     }
   })
 
-  const edgesGeo = useMemo(() => {
+  const { capGeometry, capEdgesGeo } = useMemo(() => {
+    const polygon = gridData?.boundary_polygon
+    if (polygon && polygon.length >= 3) {
+      const SCALE = 1.5
+      const shape = new THREE.Shape()
+      shape.moveTo(polygon[0][0] * SCALE, -polygon[0][1] * SCALE)
+      for (let i = 1; i < polygon.length; i++) {
+        shape.lineTo(polygon[i][0] * SCALE, -polygon[i][1] * SCALE)
+      }
+      shape.closePath()
+      // ShapeGeometry is in XY plane; rotate to XZ (horizontal) in the mesh rotation prop
+      const capGeometry = new THREE.ShapeGeometry(shape, 8)
+      const capEdgesGeo = new THREE.EdgesGeometry(capGeometry)
+      return { capGeometry, capEdgesGeo }
+    }
     const plane = new THREE.PlaneGeometry(SCENE_W * 0.985, SCENE_W * 0.985)
-    return new THREE.EdgesGeometry(plane)
-  }, [])
+    return { capGeometry: plane, capEdgesGeo: new THREE.EdgesGeometry(plane) }
+  }, [gridData?.boundary_polygon])
 
   if (!showGridView) return null
 
   return (
     <group position={[0, -0.4, 0]}>
       {/* Filled surface — low opacity seal indicator */}
-      <mesh position={[0, CAPROCK_Y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[SCENE_W * 0.985, SCENE_W * 0.985]} />
+      <mesh geometry={capGeometry} position={[0, CAPROCK_Y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <meshBasicMaterial
           ref={matRef}
           color="#00c4a0"
@@ -61,7 +75,7 @@ export default function CaprockMesh() {
 
       {/* Edge outline — bright teal border */}
       <lineSegments
-        geometry={edgesGeo}
+        geometry={capEdgesGeo}
         position={[0, CAPROCK_Y + 0.001, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
@@ -70,7 +84,7 @@ export default function CaprockMesh() {
 
       {/* Second outline slightly below — creates a subtle depth band */}
       <lineSegments
-        geometry={edgesGeo}
+        geometry={capEdgesGeo}
         position={[0, CAPROCK_Y - 0.012, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >

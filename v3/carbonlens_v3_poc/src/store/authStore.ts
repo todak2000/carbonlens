@@ -6,6 +6,7 @@ interface AuthState {
   isAuthenticated: boolean
   login: (email: string) => boolean
   register: (email: string, displayName: string, organization: string) => void
+  loginAsDemo: () => void
   logout: () => void
   hydrate: () => void
 }
@@ -46,6 +47,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     saveUser(user)
     set({ user, isAuthenticated: true })
+  },
+
+  loginAsDemo: () => {
+    // Ephemeral guest session — not persisted to localStorage
+    const demoUser: UserProfile = {
+      email: 'demo@carbonlens',
+      displayName: 'Demo Guest',
+      organization: 'CarbonLens',
+      tier: 'free',
+      createdAt: Date.now(),
+    }
+    set({ user: demoUser, isAuthenticated: true })
   },
 
   logout: () => {

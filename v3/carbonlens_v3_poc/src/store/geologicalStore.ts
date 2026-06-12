@@ -83,6 +83,10 @@ interface GeologicalState {
   selectFault: (id: string | null) => void
 
   setModelDimensions: (widthM: number, lengthM: number) => void
+  gridNx: number
+  gridNy: number
+  gridNz: number
+  setGridDimensions: (nx: number, ny: number, nz: number) => void
   reset: () => void
 }
 
@@ -90,6 +94,9 @@ export const useGeologicalStore = create<GeologicalState>((set) => ({
   model: { ...DEFAULT_MODEL, zones: [...DEFAULT_MODEL.zones], faults: [] },
   selectedZoneId: null,
   selectedFaultId: null,
+  gridNx: 60,
+  gridNy: 60,
+  gridNz: 20,
 
   setModel: (model) => set({ model }),
 
@@ -194,9 +201,18 @@ export const useGeologicalStore = create<GeologicalState>((set) => ({
     model: { ...s.model, modelWidthM: widthM, modelLengthM: lengthM },
   })),
 
+  setGridDimensions: (nx, ny, nz) => set({
+    gridNx: Math.max(5, Math.min(100, nx)),
+    gridNy: Math.max(5, Math.min(100, ny)),
+    gridNz: Math.max(4, Math.min(30, nz)),
+  }),
+
   reset: () => set({
     model: { ...DEFAULT_MODEL, zones: [...DEFAULT_MODEL.zones], faults: [] },
     selectedZoneId: null,
     selectedFaultId: null,
+    gridNx: 60,
+    gridNy: 60,
+    gridNz: 20,
   }),
 }))

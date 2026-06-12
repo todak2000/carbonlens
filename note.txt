@@ -1,0 +1,3 @@
+RUN VALIDATION test
+
+cd v3/carbonlens_v3_poc && 'yarn test src/__tests__/audit/generateValidationReports.test.ts'

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CarbonLens Validation · Sleipner Utsira</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
+
+@page { size: A4; margin: 16mm 14mm 14mm 14mm; }
+@page :first { margin: 0; }
+@page :last  { margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 9.5pt;
+  color: #1e293b;
+  background: #ffffff;
+  line-height: 1.55;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── Typography ─────────────────────────────────────────────── */
+h1 { font-size: 24pt; color: #0d1f3c; font-weight: 800; letter-spacing: -0.5px; }
+h2 {
+  font-size: 11pt; color: #0d1f3c; font-weight: 700;
+  margin: 18px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #00c4a0;
+  display: flex; align-items: center; gap: 8px;
+}
+h2::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 14px;
+  background: #00c4a0; border-radius: 2px; flex-shrink: 0;
+}
+h3 { font-size: 9.5pt; color: #1e3a5f; font-weight: 700; margin: 12px 0 6px; }
+p { margin: 5px 0; }
+code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+/* ── Tables ─────────────────────────────────────────────────── */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 10px 0; font-size: 8.5pt;
+  border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+}
+th {
+  background: #0d1f3c; color: #ffffff;
+  padding: 7px 10px; text-align: left;
+  font-weight: 600; font-size: 8pt;
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.03em;
+}
+th:first-child { border-radius: 0; }
+td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: #f8fafc; }
+td:first-child { font-weight: 600; color: #0d1f3c; }
+
+/* ── Badge chips ────────────────────────────────────────────── */
+.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
+.badge-pass  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.badge-warn  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.badge-info  { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.badge-perm  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+.badge-struct{ background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+
+/* ── KPI card grid ──────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 12px 0; }
+.kpi-card {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 11px 13px; background: #f8fafc;
+  border-top: 3px solid #00c4a0; page-break-inside: avoid;
+}
+.kpi-label { font-size: 6.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+.kpi-value { font-size: 15pt; font-weight: 800; color: #0d1f3c; line-height: 1.1; font-family: 'IBM Plex Mono', monospace; }
+.kpi-sub { font-size: 7.5pt; color: #64748b; margin-top: 3px; }
+
+/* ── Section boxes ──────────────────────────────────────────── */
+.section-box {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 13px 15px; margin: 10px 0;
+  background: #f8fafc; page-break-inside: avoid;
+}
+.section-box.accent { border-left: 4px solid #00c4a0; }
+
+/* ── Two column grid ────────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+.three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 10px 0; }
+
+/* ── Sensitivity bar chart ──────────────────────────────────── */
+.sen-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 8pt; }
+.sen-label { width: 100px; text-align: right; color: #64748b; font-weight: 600; flex-shrink: 0; }
+.sen-track { flex: 1; height: 12px; background: #e2e8f0; border-radius: 6px; position: relative; overflow: visible; display: flex; align-items: center; }
+.sen-base  { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #0d1f3c; transform: translateX(-50%); z-index: 2; }
+.sen-neg   { position: absolute; right: 50%; top: 1px; bottom: 1px; background: #fca5a5; border-radius: 4px 0 0 4px; }
+.sen-pos   { position: absolute; left: 50%; top: 1px; bottom: 1px; background: #6ee7b7; border-radius: 0 4px 4px 0; }
+.sen-val   { width: 60px; font-size: 7pt; color: #64748b; font-family: 'IBM Plex Mono',monospace; flex-shrink: 0; }
+
+/* ── Pressure row ───────────────────────────────────────────── */
+.phase-chip {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 7pt; font-weight: 700; font-family:'IBM Plex Mono',monospace;
+}
+.phase-super { background: #dbeafe; color: #1e40af; }
+.phase-sub   { background: #fef3c7; color: #92400e; }
+
+/* ── Section separator ──────────────────────────────────────── */
+.rule { height: 1px; background: #e2e8f0; margin: 16px 0; }
+.gradient-rule { height: 3px; background: linear-gradient(90deg,#00c4a0,#3b82f6,#00c4a0); border-radius: 2px; margin: 14px 0; }
+
+/* ── Print controls ─────────────────────────────────────────── */
+.page-break { page-break-before: always; }
+.no-break { page-break-inside: avoid; }
+
+/* ── Content pages ──────────────────────────────────────────── */
+.content-page { padding: 0; }
+.page-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0 8px; border-bottom: 2px solid #00c4a0; margin-bottom: 16px;
+}
+.page-footer {
+  margin-top: 20px; padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  display: flex; justify-content: space-between;
+  font-size: 7pt; color: #94a3b8;
+}
+
+/* ── Cover / Back page (full bleed) ────────────────────────── */
+.cover-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #071629 0%, #1e3a5f 50%, #071629 100%);
+  display: flex; flex-direction: column;
+  padding: 50px 44px 40px; color: #ffffff;
+  page-break-after: always;
+}
+.back-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #051931 0%, #0d2a4a 55%, #051931 100%);
+  display: flex; flex-direction: column;
+  padding: 50px 44px 40px; color: #ffffff;
+  page-break-before: always;
+}
+.cover-label {
+  display: inline-block;
+  background: rgba(0,196,160,0.12); border: 1px solid rgba(0,196,160,0.45);
+  border-radius: 4px; padding: 4px 14px; margin-bottom: 22px;
+  font-size: 7.5pt; color: #00c4a0;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.cover-title {
+  font-size: 28pt; font-weight: 800; line-height: 1.1;
+  letter-spacing: -0.5px; margin: 0 0 12px; color: #ffffff;
+}
+.cover-sub { font-size: 12pt; color: #7dd3fc; margin: 0 0 28px; font-weight: 300; }
+.cover-divider {
+  height: 3px; width: 100px; border-radius: 2px; margin-bottom: 28px;
+  background: linear-gradient(90deg, #00c4a0, #3b82f6);
+}
+.cover-meta-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  margin-top: auto; padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.cover-meta-label {
+  font-size: 6.5pt; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px;
+}
+.cover-meta-val { font-size: 11pt; font-weight: 700; color: #ffffff; }
+.cover-meta-sub { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+.cover-pill {
+  background: rgba(251,191,36,0.15); color: #fbbf24;
+  border: 1px solid rgba(251,191,36,0.35);
+  padding: 3px 12px; border-radius: 12px;
+  font-size: 7pt; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+}
+.cover-formation-strip {
+  display: flex; gap: 36px; margin-bottom: 28px;
+}
+.cover-formation-item .label {
+  font-size: 6.5pt; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;
+}
+.cover-formation-item .val { font-size: 11.5pt; font-weight: 600; color: #ffffff; }
+.cover-formation-item .val.accent { color: #00c4a0; }
+
+/* ── Inline data highlights ─────────────────────────────────── */
+.accent { color: #00c4a0; font-weight: 600; }
+.muted  { color: #64748b; font-size: 8.5pt; }
+.flag-pass { color: #065f46; font-weight: 700; }
+.flag-warn { color: #92400e; font-weight: 700; }
+
+/* ── Interpretation callout ─────────────────────────────────── */
+.callout {
+  background: rgba(0,196,160,0.06); border-left: 3px solid #00c4a0;
+  border-radius: 0 6px 6px 0; padding: 10px 13px; margin: 8px 0; font-size: 8.5pt;
+}
+.callout p { margin: 3px 0; }
+.callout-title { font-size: 7pt; font-weight: 700; color: #00c4a0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+
+/* ── Mass balance summary ───────────────────────────────────── */
+.mass-row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 8.5pt; }
+.mass-label { width: 200px; flex-shrink: 0; }
+.mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+.mass-fill  { height: 100%; border-radius: 5px; }
+.mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="cover-page">
+  <div style="margin-bottom:auto"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.3)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="white" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
+</svg></div>
+
+  <div style="margin:auto 0;padding:36px 0">
+    <div class="cover-label">Physical Validation Audit · Formation Report</div>
+    <h1 class="cover-title">Sleipner Utsira</h1>
+    <p class="cover-sub">North Sea, Norway &nbsp;·&nbsp; EU Jurisdiction</p>
+    <div class="cover-divider"></div>
+
+    <div class="cover-formation-strip">
+      <div class="cover-formation-item">
+        <div class="label">Phase State</div>
+        <div class="val accent">SUPERCRITICAL</div>
+      </div>
+      <div class="cover-formation-item">
+        <div class="label">P50 Storage Capacity</div>
+        <div class="val">27.8 Mt CO₂</div>
+      </div>
+      <div class="cover-formation-item">
+        <div class="label">Safety Factor (Fs)</div>
+        <div class="val" style="color:#f59e0b">1.40 — MODERATE</div>
+      </div>
+      <div class="cover-formation-item">
+        <div class="label">Reservoir Depth</div>
+        <div class="val">1012 m</div>
+      </div>
+      <div class="cover-formation-item">
+        <div class="label">Temperature / Pressure</div>
+        <div class="val">37°C · 10.3 MPa</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center">
+      <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 12 June 2026</span>
+    </div>
+  </div>
+
+  <div class="cover-meta-grid">
+    <div>
+      <div class="cover-meta-label">Formation Description</div>
+      <div class="cover-meta-val" style="font-size:9pt;font-weight:400;color:#94a3b8">Saline aquifer, ~200 Bt storage potential. World's longest-running CCS project.</div>
+    </div>
+    <div>
+      <div class="cover-meta-label">Simulation Scenario</div>
+      <div class="cover-meta-val" style="font-size:9pt">1.0 Mt/yr · 20 Years</div>
+      <div class="cover-meta-sub">Theis radial flow · DOE Goodman 2011</div>
+    </div>
+    <div>
+      <div class="cover-meta-label">Report Generated</div>
+      <div class="cover-meta-val" style="font-size:9pt">12 June 2026</div>
+      <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
+    </div>
+  </div>
+</div>
+<div class="content-page" style="padding:14mm 14mm 12mm">
+  <div class="page-header">
+    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
+</svg></div>
+    <div style="text-align:right;font-size:7.5pt;color:#64748b">
+      <strong style="color:#0d1f3c">Sleipner Utsira</strong> · Physical Validation Audit<br>
+      <span style="font-family:'IBM Plex Mono',monospace">sleipner_utsira.html</span> · 12 June 2026
+    </div>
+  </div>
+
+  <h2>1 · Reservoir Input Parameters</h2>
+  <div class="two-col">
+    <table>
+      <thead><tr><th>Geological Parameter</th><th>Value</th><th>Unit</th></tr></thead>
+      <tbody>
+        <tr><td>Depth to Top</td><td class="mono">1012</td><td>m</td></tr>
+        <tr><td>Net Thickness</td><td class="mono">200</td><td>m</td></tr>
+        <tr><td>Porosity (φ)</td><td class="mono">37.0%</td><td>—</td></tr>
+        <tr><td>Permeability (k)</td><td class="mono">3000</td><td>mD</td></tr>
+        <tr><td>Reservoir Area (A)</td><td class="mono">27.0</td><td>km²</td></tr>
+        <tr><td>Net-to-Gross</td><td class="mono">90%</td><td>—</td></tr>
+        <tr><td>Geometry Type</td><td class="mono">dome</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Fluid / Geomech Parameter</th><th>Value</th><th>Unit</th></tr></thead>
+      <tbody>
+        <tr><td>Temperature (T)</td><td class="mono">37.0</td><td>°C</td></tr>
+        <tr><td>Pressure (P)</td><td class="mono">10.30</td><td>MPa</td></tr>
+        <tr><td>Salinity — Monovalent</td><td class="mono">0.050</td><td>mol/kg</td></tr>
+        <tr><td>Salinity — Bivalent</td><td class="mono">0.000</td><td>mol/kg</td></tr>
+        <tr><td>Caprock Friction (φ_f)</td><td class="mono">26.0°</td><td>—</td></tr>
+        <tr><td>Caprock Cohesion (C)</td><td class="mono">6.00</td><td>MPa</td></tr>
+        <tr><td>Biot Coefficient (α)</td><td class="mono">0.70</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>2 · Fluid Property Validation</h2>
+  <p style="font-size:8.5pt;color:#64748b;margin-bottom:8px">
+    At initial reservoir conditions: <strong>T = 37.0 °C</strong>, <strong>P = 10.30 MPa</strong>
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Physical Property</th>
+        <th>Condition</th>
+        <th>Simulated Output</th>
+        <th>Model Reference</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Phase State</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 10.30 MPa</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
+        <td>Critical point: 31.04 °C, 7.38 MPa</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>CO₂ Density</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 10.30 MPa</td>
+        <td><strong>696.74 kg/m³</strong></td>
+        <td>Span-Wagner (1996) Helmholtz EOS</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Brine Density</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 0.050 mol/kg</td>
+        <td><strong>999.24 kg/m³</strong></td>
+        <td>Garcia (2001)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Density Contrast (Δρ)</td>
+        <td class="mono" style="font-size:7.5pt">ρ_brine − ρ_CO₂</td>
+        <td><strong>302.50 kg/m³</strong></td>
+        <td>Buoyancy driver — Boait (2012)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>CO₂ Viscosity</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 10.30 MPa</td>
+        <td><strong>5.567 × 10⁻⁵ Pa·s</strong></td>
+        <td>Fenghour et al. (1998)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>CO₂ Solubility</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 10.30 MPa</td>
+        <td><strong>0.8231 mol/kg</strong></td>
+        <td>Duan-Sun (2003)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Interfacial Tension (IFT)</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, 10.30 MPa</td>
+        <td><strong>28.41 mN/m</strong></td>
+        <td>MARS ML Model (Olagunju, in prep.)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Residual Trapping (Land)</td>
+        <td class="mono" style="font-size:7.5pt">Sₘₐₓ = 0.40, C = 2.5</td>
+        <td><strong>50% of Sₘₐₓ</strong></td>
+        <td>Land (1968) formula</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Capillary Entry Pressure</td>
+        <td class="mono" style="font-size:7.5pt">Sw = 1.0, sandstone</td>
+        <td><strong>0.0100 MPa</strong></td>
+        <td>Brooks-Corey (1964)</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+      <tr>
+        <td>Effective Diffusivity (Dₑff)</td>
+        <td class="mono" style="font-size:7.5pt">37.0 °C, φ = 0.37</td>
+        <td><strong>4.795 × 10⁻¹⁰ m²/s</strong></td>
+        <td>Millington-Quirk model</td>
+        <td><span class="badge badge-pass">✓ PASS</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top:12px">
+    <div class="callout-title">Physical Interpretation</div>
+    <p>
+      CO₂ at 10.30 MPa and 37.0 °C is <strong>supercritical</strong> — above both the critical temperature (31.04 °C) and critical pressure (7.38 MPa). It behaves as a liquid-like dense phase (697 kg/m³) with gas-like mobility, maximising storage density and dissolution trapping.
+    </p>
+    <p style="margin-top:5px">
+      Density contrast Δρ = <strong>302.5 kg/m³</strong> drives buoyant plume migration.
+      IFT = <strong>28.4 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
+      Solubility = <strong>0.8231 mol/kg</strong> sets the dissolution trapping capacity.
+    </p>
+  </div>
+
+  <h2 style="margin-top:16px">1b · CO₂ Phase Diagram — Pressure vs Density &amp; IFT</h2>
+  <p style="font-size:8pt;color:#64748b;margin-bottom:6px">
+    CO₂ density (teal, left axis) and IFT (blue dashed, right axis) vs pressure at constant
+    <strong>T = 37.0 °C</strong>.
+    Amber dashed line = CO₂ critical pressure (7.38 MPa). Dot = baseline operating point.
+  </p>
+  <div style="margin:4px 0 8px"><svg width="340" height="140" viewBox="0 0 340 140" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;overflow:visible">
+  <line x1="42" y1="10" x2="42" y2="112" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="42" y1="112" x2="290" y2="112" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="290" y1="10" x2="290" y2="112" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <line x1="42" y1="112.0" x2="290" y2="112.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="61.0" x2="290" y2="61.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="10.0" x2="290" y2="10.0" stroke="#f1f5f9" stroke-width="0.8"/>
+  <line x1="95.7" y1="10" x2="95.7" y2="112" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="95.7" y="8" text-anchor="middle" font-size="6" fill="#f59e0b">Pc=7.38</text>
+  <path d="M42.0,98.1 L104.0,80.0 L166.0,32.0 L228.0,23.9 L290.0,19.3 L290.0,112.0 L42,112.0 Z" fill="rgba(0,196,160,0.08)"/>
+  <path d="M42.0,98.1 L104.0,80.0 L166.0,32.0 L228.0,23.9 L290.0,19.3" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M42.0,23.3 L104.0,42.8 L166.0,53.2 L228.0,55.4 L290.0,55.2" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+  <circle cx="166.0" cy="32.0" r="3.5" fill="#00c4a0" stroke="white" stroke-width="1.5"/>
+  <text x="39" y="115.0" text-anchor="end" font-size="6" fill="#64748b">0</text><text x="39" y="64.0" text-anchor="end" font-size="6" fill="#64748b">444</text><text x="39" y="13.0" text-anchor="end" font-size="6" fill="#64748b">888</text>
+  <text x="14" y="61" text-anchor="middle" font-size="6.5" fill="#00c4a0" transform="rotate(-90,14,61)">rho_CO2 (kg/m3)</text>
+  <text x="293" y="115.0" text-anchor="start" font-size="6" fill="#64748b">0</text><text x="293" y="64.0" text-anchor="start" font-size="6" fill="#64748b">25</text><text x="293" y="13.0" text-anchor="start" font-size="6" fill="#64748b">49</text>
+  <text x="326" y="61" text-anchor="middle" font-size="6.5" fill="#3b82f6" transform="rotate(90,326,61)">IFT (mN/m)</text>
+  <text x="42.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">5.2</text><text x="104.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">7.7</text><text x="166.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">10.3</text><text x="228.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">12.9</text><text x="290.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">15.5</text>
+  <text x="166" y="139" text-anchor="middle" font-size="6.5" fill="#64748b">Pressure (MPa)</text>
+  <rect x="210" y="10" width="78" height="26" fill="rgba(255,255,255,0.9)" rx="4" stroke="#e2e8f0" stroke-width="0.8"/>
+  <line x1="214" y1="19" x2="226" y2="19" stroke="#00c4a0" stroke-width="2"/>
+  <text x="229" y="22" font-size="6" fill="#1e293b">CO2 Density</text>
+  <line x1="214" y1="30" x2="226" y2="30" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="229" y="33" font-size="6" fill="#1e293b">IFT</text>
+</svg></div>
+
+  <h2 style="margin-top:14px">1c · 20-Year Injection Timeline</h2>
+  <p style="font-size:8pt;color:#64748b;margin-bottom:6px">
+    Injection rate (teal, left) with 5-year ramp-up and 10-year ramp-down.
+    Cumulative CO₂ stored (blue dashed, right axis).
+  </p>
+  <div style="margin:4px 0"><svg width="320" height="110" viewBox="0 0 320 110" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;overflow:visible">
+  <line x1="38" y1="88.0" x2="276" y2="88.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="38" y1="54.1" x2="276" y2="54.1" stroke="#f1f5f9" stroke-width="0.8"/><line x1="38" y1="20.2" x2="276" y2="20.2" stroke="#f1f5f9" stroke-width="0.8"/>
+  <line x1="38" y1="10" x2="38" y2="88" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="38" y1="88" x2="276" y2="88" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="276" y1="10" x2="276" y2="88" stroke="#e2e8f0" stroke-width="0.8"/>
+  <path d="M38.0,88.0 L49.9,74.4 L61.8,60.9 L73.7,47.3 L85.6,33.7 L97.5,20.2 L109.4,20.2 L121.3,20.2 L133.2,20.2 L145.1,20.2 L157.0,20.2 L168.9,27.0 L180.8,33.7 L192.7,40.5 L204.6,47.3 L216.5,54.1 L228.4,60.9 L240.3,67.7 L252.2,74.4 L264.1,81.2 L276.0,88.0 L276.0,88.0 L38,88.0 Z" fill="rgba(0,196,160,0.12)"/>
+  <path d="M38.0,88.0 L49.9,74.4 L61.8,60.9 L73.7,47.3 L85.6,33.7 L97.5,20.2 L109.4,20.2 L121.3,20.2 L133.2,20.2 L145.1,20.2 L157.0,20.2 L168.9,27.0 L180.8,33.7 L192.7,40.5 L204.6,47.3 L216.5,54.1 L228.4,60.9 L240.3,67.7 L252.2,74.4 L264.1,81.2 L276.0,88.0" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M38.0,88.0 L49.9,86.9 L61.8,84.6 L73.7,81.2 L85.6,76.7 L97.5,71.0 L109.4,65.3 L121.3,59.6 L133.2,54.0 L145.1,48.3 L157.0,42.6 L168.9,37.5 L180.8,33.0 L192.7,29.0 L204.6,25.6 L216.5,22.8 L228.4,20.5 L240.3,18.8 L252.2,17.7 L264.1,17.1 L276.0,17.1" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+  <text x="38.0" y="99" text-anchor="middle" font-size="6" fill="#64748b">Yr 0</text><text x="97.5" y="99" text-anchor="middle" font-size="6" fill="#64748b">Yr 5</text><text x="157.0" y="99" text-anchor="middle" font-size="6" fill="#64748b">Yr 10</text><text x="216.5" y="99" text-anchor="middle" font-size="6" fill="#64748b">Yr 15</text><text x="276.0" y="99" text-anchor="middle" font-size="6" fill="#64748b">Yr 20</text>
+  <text x="35" y="91.0" text-anchor="end" font-size="6" fill="#00c4a0">0.0</text><text x="35" y="57.1" text-anchor="end" font-size="6" fill="#00c4a0">0.5</text><text x="35" y="23.2" text-anchor="end" font-size="6" fill="#00c4a0">1.0</text>
+  <text x="12" y="49" text-anchor="middle" font-size="6" fill="#00c4a0" transform="rotate(-90,12,49)">Rate (Mt/yr)</text>
+  <text x="279" y="91.0" text-anchor="start" font-size="6" fill="#3b82f6">0.0</text><text x="279" y="55.9" text-anchor="start" font-size="6" fill="#3b82f6">6.2</text><text x="279" y="20.8" text-anchor="start" font-size="6" fill="#3b82f6">12.4</text>
+  <text x="306" y="49" text-anchor="middle" font-size="6" fill="#3b82f6" transform="rotate(90,306,49)">Cumul. (Mt)</text>
+  <rect x="186" y="10" width="88" height="26" fill="rgba(255,255,255,0.9)" rx="4" stroke="#e2e8f0" stroke-width="0.8"/>
+  <line x1="189" y1="19" x2="201" y2="19" stroke="#00c4a0" stroke-width="2"/>
+  <text x="204" y="22" font-size="6" fill="#1e293b">Injection Rate</text>
+  <line x1="189" y1="30" x2="201" y2="30" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="204" y="33" font-size="6" fill="#1e293b">Cumulative</text>
+</svg></div>
+
+  <div class="page-footer">
+    <span>CarbonLens v3 · Physics Engine Validation · <em>Sleipner Utsira</em></span>
+    <span>Page 1 · Generated 12 June 2026</span>
+  </div>
+</div>
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
+  <div class="page-header">
+    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
+</svg></div>
+    <div style="text-align:right;font-size:7.5pt;color:#64748b">
+      <strong style="color:#0d1f3c">Sleipner Utsira</strong> · Physical Validation Audit<br>
+      <span style="font-family:'IBM Plex Mono',monospace">sleipner_utsira.html</span> · 12 June 2026
+    </div>
+  </div>
+
+  <h2>3 · Storage Capacity &amp; Trapping (Year 20)</h2>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">P10 Low Estimate</div>
+      <div class="kpi-value">7.1 Mt</div>
+      <div class="kpi-sub">Cc = 0.51% efficiency</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">P50 Best Estimate</div>
+      <div class="kpi-value" style="color:#00c4a0">27.8 Mt</div>
+      <div class="kpi-sub">Cc = 2.00% efficiency</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">P90 High Estimate</div>
+      <div class="kpi-value">76.6 Mt</div>
+      <div class="kpi-sub">Cc = 5.50% efficiency</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Containment Probability</div>
+      <div class="kpi-value" style="color:#00c4a0">82.8%</div>
+      <div class="kpi-sub">NTG + trapped fraction</div>
+    </div>
+  </div>
+
+  <h3>3.1 CO₂ Mass Distribution — Year 20 · Active Injection: 12.50 Mt</h3>
+  <div class="two-col" style="gap:12px;margin-bottom:8px;align-items:start">
+    <div><svg width="300" height="150" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+  <path d="M70.0,40.0 L70.0,20.0 A50,50,0,0,1,115.3,91.2 L97.2,82.7 A30,30,0,0,0,70.0,40.0 Z" fill="#00c4a0" stroke="white" stroke-width="1.5"/><path d="M97.2,82.7 L115.3,91.2 A50,50,0,0,1,102.2,108.3 L89.3,93.0 A30,30,0,0,0,97.2,82.7 Z" fill="#3b82f6" stroke="white" stroke-width="1.5"/><path d="M89.3,93.0 L102.2,108.3 A50,50,0,1,1,70.0,20.0 L70.0,40.0 A30,30,0,1,0,89.3,93.0 Z" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
+  <text x="70" y="66" text-anchor="middle" font-size="8" font-weight="700" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">12.5</text>
+  <text x="70" y="78" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Mt total</text>
+  <g transform="translate(155,47)"><g transform="translate(0,0)">
+      <rect x="0" y="0" width="9" height="9" fill="#00c4a0" rx="2"/>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Residual (32.0%)</text>
+    </g><g transform="translate(0,18)">
+      <rect x="0" y="0" width="9" height="9" fill="#3b82f6" rx="2"/>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Dissolution (6.9%)</text>
+    </g><g transform="translate(0,36)">
+      <rect x="0" y="0" width="9" height="9" fill="#f59e0b" rx="2"/>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Mobile (61.1%)</text>
+    </g></g>
+</svg></div>
+    <div style="font-size:8pt;color:#64748b;line-height:1.7;padding-top:4px">
+      <p>Each mechanism solved <strong>independently</strong>. Mobile is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
+      <p style="margin-top:4px">Formation capacity utilization: <strong>5.8%</strong> (12.50 Mt / 216.76 Mt total).</p>
+      <p style="margin-top:4px">Mass balance ε = <strong>0.000 Mt</strong> (0.0% — model consistent).</p>
+      <p style="margin-top:4px">Plume radius: <strong>1242.4 m</strong> · Height: <strong>73.7 m</strong></p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Trapping Mechanism</th>
+        <th>Theoretical Capacity</th>
+        <th>20-yr Utilization</th>
+        <th>Utilization %</th>
+        <th>Physical Basis</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-perm">Structural (Closure)</span></td>
+        <td class="mono">198.683 Mt</td>
+        <td class="mono">12.500 Mt</td>
+        <td class="mono">6.3%</td>
+        <td style="font-size:7.5pt;color:#64748b">Trap geometry × NTG × φ × (1−S<sub>wi</sub>−S<sub>gr</sub>)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-perm">Residual (Capillary)</span></td>
+        <td class="mono">17.209 Mt</td>
+        <td class="mono">3.995 Mt</td>
+        <td class="mono">23.2%</td>
+        <td style="font-size:7.5pt;color:#64748b">Land (1968) snap-off · PVI×FQI sweep efficiency</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-perm">Dissolution (Brine)</span></td>
+        <td class="mono">0.863 Mt</td>
+        <td class="mono">0.863 Mt</td>
+        <td class="mono">100.0%</td>
+        <td style="font-size:7.5pt;color:#64748b">Duan-Sun (2003) + Fick + Rayleigh convection</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-perm">Mineral Precipitation</span></td>
+        <td class="mono">0.000 Mt</td>
+        <td class="mono">0.000 Mt</td>
+        <td class="mono">—</td>
+        <td style="font-size:7.5pt;color:#64748b">Negligible at ≤ 20 yr (geochemical kinetics)</td>
+      </tr>
+      <tr style="border-top:2px solid #0d1f3c">
+        <td><strong>Total Formation Capacity</strong></td>
+        <td class="mono"><strong>216.755 Mt</strong></td>
+        <td class="mono"><strong>12.500 Mt</strong></td>
+        <td class="mono"><strong>5.8%</strong></td>
+        <td style="font-size:7.5pt;color:#64748b">Hydrodynamic mobile plume: 7.641 Mt</td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="font-size:7.5pt;color:#64748b;margin-top:6px">
+    Plume radius: 1242.4 m &nbsp;·&nbsp; Plume height: 73.7 m
+    &nbsp;·&nbsp; Mobile (free-phase): 7.641 Mt (61.1% of injected)
+    &nbsp;·&nbsp; <strong style="color:#00c4a0">ε = 0.000 Mt</strong>
+    (✓ model consistent: snap-off capacity ≥ Land-predicted residual)
+  </div>
+
+  <h2 style="margin-top:16px">4 · Geomechanical Safety Assessment</h2>
+
+  <div class="two-col" style="margin-bottom:8px">
+    <div class="kpi-card" style="border-top-color:#00c4a0">
+      <div class="kpi-label">Caprock Safety Factor (Fs)</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+  <path d="M18.0,68.0 A52,52,0,0,1,44.0,23.0 L49.0,31.6 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M44.0,23.0 A52,52,0,0,1,53.9,18.5 L57.0,28.1 A42,42,0,0,0,49.0,31.6 Z" fill="#fef3c7" opacity="0.85"/><path d="M53.9,18.5 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,57.0,28.1 Z" fill="#d1fae5" opacity="0.85"/>
+  <line x1="70" y1="68" x2="64.6" y2="18.3" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">1.40</text>
+  <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Fs</text>
+  <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Safety Factor</text>
+  <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">0</text>
+  <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">3.0</text>
+</svg>
+        <div>
+          <div class="kpi-value" style="color:#00c4a0">1.397</div>
+          <div class="kpi-sub">Limit ≥ 1.20 &nbsp; <span class="badge badge-pass">✓ PASS</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card" style="border-top-color:#00c4a0">
+      <div class="kpi-label">MAIP Margin</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+  <path d="M18.0,68.0 A52,52,0,0,1,31.1,33.5 L38.6,40.1 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M31.1,33.5 A52,52,0,0,1,51.6,19.4 L55.1,28.7 A42,42,0,0,0,38.6,40.1 Z" fill="#fef3c7" opacity="0.85"/><path d="M51.6,19.4 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,55.1,28.7 Z" fill="#d1fae5" opacity="0.85"/>
+  <line x1="70" y1="68" x2="52.8" y2="21.1" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">20.45</text>
+  <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">%</text>
+  <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">MAIP Margin</text>
+  <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">-30</text>
+  <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">100.0</text>
+</svg>
+        <div>
+          <div class="kpi-value" style="color:#00c4a0">20.5%</div>
+          <div class="kpi-sub">MAIP = 12.96 MPa &nbsp; <span class="badge badge-pass">✓ PASS</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <table>
+    <thead>
+      <tr><th>Geomechanical Metric</th><th>Limit / Target</th><th>Simulated Value</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Fracture Pressure</td><td>Must exceed inj. P</td><td class="mono">14.40 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Maximum Allowable Injection Pressure (MAIP)</td><td>90% × fracture gradient</td><td class="mono">12.96 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>MAIP Safety Margin</td><td>&gt; 0%</td><td class="mono">20.5%</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">6.619 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Induced Seismicity Risk</td><td>Low</td><td><strong style="color:#92400e">MODERATE</strong></td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
+      <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">0.00163</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">0.00177 cm</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Overburden Stress (σᵥ)</td><td>Lithostat</td><td class="mono">21.76 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
+      <tr><td>Min. Horizontal Stress (σₕ)</td><td>In-situ</td><td class="mono">13.05 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
+      <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">183.43 km</td><td><span class="badge badge-info">INFO</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top:10px">
+    <div class="callout-title">Geomechanical Interpretation</div>
+    <p>
+      <strong>Safety Factor 1.40:</strong>
+      Meets the minimum regulatory threshold (1.2). Closely monitor during injection ramp-up and maintain real-time pressure surveillance.
+    </p>
+    <p style="margin-top:5px">
+      <strong>MAIP Margin 20.5%:</strong>
+      Comfortable margin between peak wellbore pressure and MAIP — low risk of pressure-induced fracturing.
+      Surface heave of <strong>0.00177 cm</strong> is within satellite InSAR detection thresholds.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>CarbonLens v3 · Physics Engine Validation · <em>Sleipner Utsira</em></span>
+    <span>Page 2 · Generated 12 June 2026</span>
+  </div>
+</div>
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
+  <div class="page-header">
+    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
+</svg></div>
+    <div style="text-align:right;font-size:7.5pt;color:#64748b">
+      <strong style="color:#0d1f3c">Sleipner Utsira</strong> · Physical Validation Audit<br>
+      <span style="font-family:'IBM Plex Mono',monospace">sleipner_utsira.html</span> · 12 June 2026
+    </div>
+  </div>
+
+  <h2>5 · Pressure Sensitivity Table</h2>
+  <p style="font-size:8.5pt;color:#64748b;margin-bottom:8px">
+    CO₂ and brine properties at constant temperature <strong>T = 37.0 °C</strong>,
+    varying pressure from 0.50× to 1.50× the baseline (10.30 MPa).
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Pressure (MPa)</th>
+        <th>Factor</th>
+        <th>CO₂ Density (kg/m³)</th>
+        <th>Brine Density (kg/m³)</th>
+        <th>CO₂ Viscosity (Pa·s)</th>
+        <th>Solubility (mol/kg)</th>
+        <th>IFT (mN/m)</th>
+        <th>Phase</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr >
+        <td class="mono">5.15</td>
+        <td class="mono">0.50×</td>
+        <td class="mono">121.2</td>
+        <td class="mono">997.3</td>
+        <td class="mono">1.705 × 10⁻⁵</td>
+        <td class="mono">0.5032</td>
+        <td class="mono">42.84</td>
+        <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
+      </tr>
+      <tr >
+        <td class="mono">7.73</td>
+        <td class="mono">0.75×</td>
+        <td class="mono">278.4</td>
+        <td class="mono">998.2</td>
+        <td class="mono">2.222 × 10⁻⁵</td>
+        <td class="mono">0.6783</td>
+        <td class="mono">33.42</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
+      </tr>
+      <tr style="background:rgba(0,196,160,0.06);font-weight:600">
+        <td class="mono">10.30</td>
+        <td class="mono">1.00×</td>
+        <td class="mono">696.7</td>
+        <td class="mono">999.2</td>
+        <td class="mono">5.567 × 10⁻⁵</td>
+        <td class="mono">0.8231</td>
+        <td class="mono">28.41</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
+      </tr>
+      <tr >
+        <td class="mono">12.88</td>
+        <td class="mono">1.25×</td>
+        <td class="mono">766.9</td>
+        <td class="mono">1000.2</td>
+        <td class="mono">6.555 × 10⁻⁵</td>
+        <td class="mono">0.9430</td>
+        <td class="mono">27.35</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
+      </tr>
+      <tr >
+        <td class="mono">15.45</td>
+        <td class="mono">1.50×</td>
+        <td class="mono">807.6</td>
+        <td class="mono">1001.2</td>
+        <td class="mono">7.228 × 10⁻⁵</td>
+        <td class="mono">1.0417</td>
+        <td class="mono">27.43</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="font-size:7.5pt;color:#64748b;margin-top:4px">
+    ★ Highlighted row = baseline conditions &nbsp;·&nbsp;
+    CO₂ density and solubility increase monotonically with pressure &nbsp;·&nbsp;
+    IFT decreases as CO₂ enters the supercritical regime
+  </div>
+
+  <h2 style="margin-top:16px">6 · Geological Parameter Sensitivity — Tornado Chart (P50, ±20%)</h2>
+  <p style="font-size:8.5pt;color:#64748b;margin-bottom:8px">
+    Impact of ±20% perturbations in key geological parameters on P50 storage capacity.
+    Green = upside (+20%), red = downside (−20%). Parameters with no capacity effect show "no change".
+  </p>
+
+  <div class="section-box" style="padding:10px 12px;margin-bottom:10px">
+    <div style="margin-bottom:8px">
+      <svg width="320" height="126" viewBox="0 0 320 126" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;overflow:visible">
+  <line x1="171" y1="10" x2="171" y2="106" stroke="#0d1f3c" stroke-width="1.2"/>
+  
+    <text x="78" y="26" text-anchor="end" font-size="7.5" fill="#1e293b">Thickness</text>
+    <rect x="82.0" y="14" width="89.0" height="16" fill="#fca5a5" rx="2"/>
+         <rect x="171.0" y="14" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
+         <text x="80.0" y="26" text-anchor="end" font-size="6" fill="#991b1b">22.3</text>
+         <text x="262.0" y="26" text-anchor="start" font-size="6" fill="#065f46">33.4</text>
+    <text x="78" y="50" text-anchor="end" font-size="7.5" fill="#1e293b">Porosity</text>
+    <rect x="82.0" y="38" width="89.0" height="16" fill="#fca5a5" rx="2"/>
+         <rect x="171.0" y="38" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
+         <text x="80.0" y="50" text-anchor="end" font-size="6" fill="#991b1b">22.3</text>
+         <text x="262.0" y="50" text-anchor="start" font-size="6" fill="#065f46">33.4</text>
+    <text x="78" y="74" text-anchor="end" font-size="7.5" fill="#1e293b">Permeability</text>
+    <text x="171" y="74" text-anchor="middle" font-size="7" fill="#94a3b8" font-style="italic">no change</text>
+    <text x="78" y="98" text-anchor="end" font-size="7.5" fill="#1e293b">Area</text>
+    <rect x="82.0" y="86" width="89.0" height="16" fill="#fca5a5" rx="2"/>
+         <rect x="171.0" y="86" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
+         <text x="80.0" y="98" text-anchor="end" font-size="6" fill="#991b1b">22.3</text>
+         <text x="262.0" y="98" text-anchor="start" font-size="6" fill="#065f46">33.4</text>
+  <text x="171" y="122" text-anchor="middle" font-size="6.5" fill="#64748b">P50 Capacity (Mt) — deviation from base</text>
+</svg>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px">
+      <div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
+          <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Thickness: 160.0 → 200.0 → 240.0 m</div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">22.27</span> / <span class="mono" style="color:#00c4a0">27.84</span> / <span class="mono">33.41 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.300</span> / <span class="mono" style="color:#00c4a0">10.300</span> / <span class="mono">10.300 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">1.397</span> / <span class="mono" style="color:#00c4a0">1.397</span> / <span class="mono">1.397</span></div>
+          <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ h)</div>
+        </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
+          <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Porosity: 29.6% → 37.0% → 44.4%</div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">22.27</span> / <span class="mono" style="color:#00c4a0">27.84</span> / <span class="mono">33.41 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.300</span> / <span class="mono" style="color:#00c4a0">10.300</span> / <span class="mono">10.300 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">1.397</span> / <span class="mono" style="color:#00c4a0">1.397</span> / <span class="mono">1.397</span></div>
+          <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ φ)</div>
+        </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
+          <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Permeability: 2400 → 3000 → 3600 mD</div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">27.84</span> / <span class="mono" style="color:#00c4a0">27.84</span> / <span class="mono">27.84 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.300</span> / <span class="mono" style="color:#00c4a0">10.300</span> / <span class="mono">10.300 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">1.397</span> / <span class="mono" style="color:#00c4a0">1.397</span> / <span class="mono">1.397</span></div>
+          <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">No capacity effect — affects ΔP only</div>
+        </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
+          <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Area: 21.6 → 27.0 → 32.4 km²</div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">22.27</span> / <span class="mono" style="color:#00c4a0">27.84</span> / <span class="mono">33.41 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.300</span> / <span class="mono" style="color:#00c4a0">10.300</span> / <span class="mono">10.300 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">1.397</span> / <span class="mono" style="color:#00c4a0">1.397</span> / <span class="mono">1.397</span></div>
+          <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ A)</div>
+        </div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
+  <table>
+    <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
+    <tbody>
+      <tr><td>CO₂ Density EOS</td><td>Span &amp; Wagner (1996) <em>J. Phys. Chem. Ref. Data</em> 25(6):1509 — accuracy ±0.05–0.5%</td></tr>
+      <tr><td>Brine Density</td><td>Garcia (2001) <em>LBNL-49023</em> — NaCl, CaCl₂ and mixed brines</td></tr>
+      <tr><td>CO₂ Viscosity</td><td>Fenghour, Wakeham &amp; Vesovic (1998) <em>JPCRD</em> 27(1):31</td></tr>
+      <tr><td>CO₂ Solubility</td><td>Duan &amp; Sun (2003) <em>Chem. Geology</em> 193(3–4):257 — salinity salting-out included</td></tr>
+      <tr><td>Interfacial Tension</td><td>MARS ML Model — Olagunju (in prep.), MSc UTP Malaysia; Georgiadis et al. (2010); Hebach et al. (2004)</td></tr>
+      <tr><td>Relative Permeability</td><td>Brooks &amp; Corey (1964) <em>USGS Prof. Paper</em></td></tr>
+      <tr><td>Residual Trapping</td><td>Land (1968) <em>Trans. AIME</em> 243:149</td></tr>
+      <tr><td>Capillary Pressure</td><td>Brooks-Corey (1964) + Millington-Quirk (1961)</td></tr>
+      <tr><td>Pressure Transient</td><td>Theis (1935) <em>Trans. AGU</em> 16:519 — radial flow with multi-well superposition</td></tr>
+      <tr><td>Storage Capacity</td><td>Goodman et al. (2011) DOE/NETL-2011/1440 — M = A·h·φ·Cc·ρ</td></tr>
+      <tr><td>Geomechanical Failure</td><td>Hubbert &amp; Willis (1957) fracture gradient + Mohr-Coulomb shear failure</td></tr>
+      <tr><td>Surface Heave</td><td>Nucleus-of-strain approximation — Teatini et al. (2011) <em>JGR</em> 116:B08204</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>CarbonLens v3 · Physics Engine Validation · <em>Sleipner Utsira</em></span>
+    <span>Page 3 · Generated 12 June 2026</span>
+  </div>
+</div>
+<div class="back-page">
+  <div style="margin-bottom:36px"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.3)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="white" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
+</svg></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1">
+    <div>
+      <div style="height:3px;background:linear-gradient(90deg,#00c4a0,#3b82f6);width:48px;border-radius:2px;margin-bottom:14px"></div>
+      <h2 style="color:white;font-size:12pt;font-weight:700;margin:0 0 10px;border:none;padding:0">About CarbonLens</h2>
+      <p style="color:#94a3b8;font-size:8.5pt;line-height:1.7;margin:0 0 10px">
+        CarbonLens is a browser-based CO₂ geological storage simulation studio purpose-built for deep saline aquifer CCS screening.
+        It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation — entirely in the browser.
+      </p>
+      <p style="color:#94a3b8;font-size:8.5pt;line-height:1.7;margin:0 0 16px">
+        Developed as MSc research at Universiti Teknologi PETRONAS, Malaysia.
+      </p>
+      <div style="padding:12px 14px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0">
+        <div style="font-size:7pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Physics Engine Models</div>
+        <div style="font-size:8pt;color:#cbd5e1">
+          Span-Wagner EOS · Garcia Brine Density · Fenghour Viscosity ·
+          Duan-Sun Solubility · MARS IFT (Olagunju) · Land Trapping ·
+          Theis Pressure · DOE Goodman Capacity · Hubbert-Willis / Mohr-Coulomb Geomechanics
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="height:3px;background:linear-gradient(90deg,#3b82f6,#00c4a0);width:48px;border-radius:2px;margin-bottom:14px"></div>
+      <h2 style="color:white;font-size:12pt;font-weight:700;margin:0 0 10px;border:none;padding:0">Key References</h2>
+      <ul style="color:#94a3b8;font-size:7.5pt;line-height:1.8;padding-left:14px;margin:0">
+        <li>Span &amp; Wagner (1996) — CO₂ EOS. <em>J. Phys. Chem. Ref. Data</em> 25(6):1509</li>
+        <li>Garcia (2001) — Brine density. <em>LBNL-49023</em></li>
+        <li>Fenghour et al. (1998) — CO₂ viscosity. <em>JPCRD</em> 27(1):31</li>
+        <li>Duan &amp; Sun (2003) — CO₂ solubility. <em>Chem. Geology</em> 193:257</li>
+        <li>Olagunju (in prep.) — IFT via MARS regression. MSc UTP Malaysia</li>
+        <li>Goodman et al. (2011) — Storage capacity. <em>IJGGC</em> 5(4):853</li>
+        <li>Theis (1935) — Radial pressure transient. <em>Trans. AGU</em> 16:519</li>
+        <li>Land (1968) — Residual trapping. <em>Trans. AIME</em> 243:149</li>
+        <li>Hubbert &amp; Willis (1957) — Fracture pressure. <em>Trans. AIME</em> 210:153</li>
+        <li>Teatini et al. (2011) — Surface heave. <em>JGR</em> 116:B08204</li>
+        <li>Brooks &amp; Corey (1964) — Relative permeability. USGS Prof. Paper</li>
+        <li>Furre et al. (2017) — Sleipner benchmark. <em>Energy Procedia</em> 114:3916</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;padding:14px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px">
+    <div style="font-size:7.5pt;font-weight:700;color:#fca5a5;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Important Disclaimer</div>
+    <p style="font-size:8pt;color:#fca5a5;line-height:1.6;margin:0">
+      This document is generated by CarbonLens Simulation Studio using scientific correlations and statistical methods.
+      All capacity estimates are preliminary screening values.
+      <strong style="color:white">This document is NOT a formal regulatory permit application</strong>
+      and has not been reviewed by a competent authority. Independent review by a qualified engineer is required.
+    </p>
+  </div>
+
+  <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:7.5pt;color:#475569">Sleipner Utsira Validation Report · 12 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
+  </div>
+</div></body>
+</html>

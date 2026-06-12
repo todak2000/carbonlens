@@ -11,7 +11,7 @@ import {
 import { useSimulationStore } from '../../store/simulationStore'
 import { useFormationStore } from '../../store/formationStore'
 
-type Tab = 'checks' | 'compare' | 'benchmark'
+type Tab = 'checks' | 'compare' | 'benchmark' | 'issues'
 
 export default function ValidationDashboard() {
   const [tab, setTab] = useState<Tab>('checks')
@@ -90,6 +90,7 @@ export default function ValidationDashboard() {
     { id: 'checks',    label: 'Checks',    redDot: checksHasFail },
     { id: 'compare',   label: 'Compare',   greenDot: compareHasPreset },
     { id: 'benchmark', label: 'Benchmark' },
+    { id: 'issues',    label: 'Issues' },
   ]
 
   return (
@@ -158,6 +159,9 @@ export default function ValidationDashboard() {
           onExport={exportSleipner}
         />
       )}
+
+      {/* ── Issues tab ───────────────────────────────────────────────────── */}
+      {tab === 'issues' && <EngineeringIssuesTab />}
     </div>
   )
 }
@@ -310,7 +314,7 @@ function SensitivityContent({
       {results.map((r) => <SensitivityRow key={r.ruleId} result={r} />)}
 
       <p className="text-[8px] text-muted/50 font-mono leading-relaxed pt-1">
-        Tolerances: capacity ±15%, pressure ±40% (Theis log-linear).
+        Tolerances: capacity ±15%, pressure ±40% (Nordbotten composite).
       </p>
     </div>
   )
@@ -640,6 +644,212 @@ function SleipnerTab({
           Click &quot;Run Validation&quot; to compare against Sleipner field data.
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Engineering Issues tab ────────────────────────────────────────────────────
+
+interface EngIssue {
+  rank: number
+  severity: 'critical' | 'high' | 'medium' | 'low'
+  site: string
+  title: string
+  current: string
+  fix: string
+  impact: string
+}
+
+const ENG_ISSUES: EngIssue[] = [
+  {
+    rank: 1,
+    severity: 'critical',
+    site: 'In Salah',
+    title: 'Wrong reservoir inputs (thickness, k, T)',
+    current: 'h=50m, k=50mD, T=85°C — published values are h=20m, k≈10mD, T=91°C',
+    fix: 'Preset corrected. P50 drops from ~0.30 Mt → ~0.12 Mt.',
+    impact: 'P50 capacity error ~2.5×; surface heave off by ~10× vs InSAR observations.',
+  },
+  {
+    rank: 2,
+    severity: 'critical',
+    site: 'Kasawari, Duyong, Rotterdam/Porthos',
+    title: 'Depleted fields computed with saline-aquifer Cc=2% method',
+    current: 'Goodman 2011 Cc=2% applied to depleted gas fields — invalid.',
+    fix: 'Presets flagged as depleted_gas; simulation now routes to gas-replacement volumetric method (Bachu 2007).',
+    impact: 'Kasawari capacity was 3.82 Mt (Goodman) vs ~71–76 Mt (gas-replacement). Porthos off by ~18 Mt.',
+  },
+  {
+    rank: 3,
+    severity: 'critical',
+    site: 'Rotterdam / Porthos P18',
+    title: 'Virgin-hydrostatic pressure assumption (31 MPa) for sub-hydrostatic depleted field',
+    current: 'P=31 MPa (virgin hydrostatic). Actual abandonment P≈2.5 MPa (sub-hydrostatic).',
+    fix: 'Preset pressure corrected to 2.5 MPa. Depleted-field capacity engine uses abandonment pressure.',
+    impact: 'Pressure regime off by 12×. Fault-slip and MAIP calculations completely wrong.',
+  },
+  {
+    rank: 4,
+    severity: 'high',
+    site: 'In Salah',
+    title: 'Surface heave prediction 10× lower than InSAR observations',
+    current: 'Nucleus-of-strain approximation gives ~1.7 mm. InSAR measured 15–20 mm at KB-502.',
+    fix: 'Input corrections (k=10mD, h=20m, T=91°C) increase estimated ΔP ~5×, raising heave estimate to ~7–10 mm — within 2× of InSAR. Fractured reservoir flag added: panel now shows compliance-adjusted estimate with ×2–10 uncertainty note.',
+    impact: 'Geomechanical risk (fault reactivation trigger) severely underestimated for fractured reservoirs.',
+  },
+  {
+    rank: 5,
+    severity: 'high',
+    site: 'North Sumatra, Malay Basin',
+    title: 'Overpressured regimes computed under hydrostatic assumption',
+    current: 'No flag for geopressured formations. Hydrostatic P used for fault-slip and MAIP.',
+    fix: 'isOverpressured flag added to schema and presets. UI should show caveat that computed numbers are lower bounds.',
+    impact: 'Fault-slip threshold and safe injection pressure underestimated for geopressured basins.',
+  },
+  {
+    rank: 6,
+    severity: 'medium',
+    site: 'Abu Dhabi Basin',
+    title: 'Sandstone permeability model applied to carbonate lithology',
+    current: 'Abu Dhabi Arab Formation is carbonate. Permeability model calibrated for sandstone.',
+    fix: 'Add lithology field (sandstone / carbonate / evaporite). Apply Lucia (1995) carbonate k-φ correlation.',
+    impact: 'Permeability and capillary pressure estimates may be off by 1–2 orders of magnitude for carbonates.',
+  },
+  {
+    rank: 7,
+    severity: 'medium',
+    site: 'All sites',
+    title: 'Safety Factor displayed without noting it is analytical (not simulation-derived)',
+    current: 'Safety Factor shown as a single number with no uncertainty or method note.',
+    fix: 'Site-specific Poisson ratio (0.22–0.33), overburden gradient (0.020–0.026 MPa/m), and stress ratio K0 (0.57–1.12) added to all presets. SF now varies 1.3–2.4 across sites. "(screening)" label added to SF display.',
+    impact: 'Regulators may treat the number as simulation-grade when it is screening-grade.',
+  },
+  {
+    rank: 8,
+    severity: 'medium',
+    site: 'Snøhvit',
+    title: 'Single preset for two distinct reservoir zones (Tubåen and Stø)',
+    current: 'Snøhvit modelled as one zone. Tubåen (original target, blocked) and Stø (backup) differ significantly.',
+    fix: 'Split into two presets: Snøhvit Tubåen (k≈10mD, depth 2600m) and Snøhvit Stø (k≈200mD, depth 2400m).',
+    impact: 'Capacity and injectivity for the correct zone (Stø) cannot be screened separately.',
+  },
+  {
+    rank: 9,
+    severity: 'medium',
+    site: 'All sites',
+    title: 'Fault-slip display has no basin-level stress context',
+    current: 'Fault-slip potential shown as a fraction with no reference to regional stress regime.',
+    fix: 'Add stress regime label (normal / strike-slip / reverse) and note that thrust-belt basins (North Sumatra) have higher fault-slip risk at lower ΔP.',
+    impact: 'Risk classification may be misleading in compressional stress regimes.',
+  },
+  {
+    rank: 10,
+    severity: 'low',
+    site: 'In Salah',
+    title: 'Carbonate capillary pressure model defaults to sandstone parameters',
+    current: 'Brooks-Corey capillary entry pressure calibrated for sandstone (Pc_entry ≈ 0.1 MPa).',
+    fix: 'For fractured carbonate (In Salah), use dual-porosity capillary model with matrix Pc_entry ≈ 0.3–0.5 MPa and fracture Pc≈0.',
+    impact: 'Residual trapping fraction overestimated; dissolution trapping rate underestimated for carbonates.',
+  },
+]
+
+const SEVERITY_COLOR: Record<EngIssue['severity'], string> = {
+  critical: 'text-error bg-error/10 border-error/40',
+  high:     'text-warning bg-warning/10 border-warning/40',
+  medium:   'text-accent bg-accent/10 border-accent/40',
+  low:      'text-muted bg-tertiary border-theme/30',
+}
+
+const SEVERITY_DOT: Record<EngIssue['severity'], string> = {
+  critical: 'bg-error',
+  high:     'bg-warning',
+  medium:   'bg-accent',
+  low:      'bg-muted',
+}
+
+function EngineeringIssuesTab() {
+  const [expanded, setExpanded] = useState<number | null>(null)
+  const bySeverity = {
+    critical: ENG_ISSUES.filter((i) => i.severity === 'critical').length,
+    high:     ENG_ISSUES.filter((i) => i.severity === 'high').length,
+    medium:   ENG_ISSUES.filter((i) => i.severity === 'medium').length,
+    low:      ENG_ISSUES.filter((i) => i.severity === 'low').length,
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Permit scope disclaimer */}
+      <div className="rounded border border-warning/40 bg-warning/5 px-3 py-2.5 space-y-1.5">
+        <div className="text-[9px] font-mono font-semibold text-warning uppercase tracking-wider flex items-center gap-1.5">
+          <AlertTriangle size={10} /> Screening grade only — not permit grade
+        </div>
+        <p className="text-[8px] font-mono text-muted leading-relaxed">
+          Permit applications require: site-specific measured P/T profiles, 3D geomechanical earth model with mapped fault inventory, quantitative Mohr-Coulomb fault-slip analysis, history-matched dynamic simulation, and a monitoring/AoR plan. Uniform Safety Factors, generic gradients, and saline-aquifer methodology applied to depleted fields would all be rejected by regulators.
+        </p>
+        <p className="text-[8px] font-mono text-muted/70 leading-relaxed">
+          This tool is appropriate for pre-feasibility screening and academic research. Estimates are ±30–50% at best. All Safety Factors carry "(screening)" label; surface heave carries ±5× uncertainty for fractured/faulted formations.
+        </p>
+      </div>
+      <p className="text-[9px] text-muted font-mono leading-relaxed">
+        Engineering validation findings ranked by impact. Critical/high items affect
+        capacity or geomechanical risk by more than 2×. Corrections already applied
+        to presets where noted.
+      </p>
+
+      {/* Summary pills */}
+      <div className="flex gap-1.5 flex-wrap">
+        {(['critical', 'high', 'medium', 'low'] as const).map((sev) => (
+          <span key={sev} className={`text-[8px] font-mono px-2 py-0.5 rounded border ${SEVERITY_COLOR[sev]}`}>
+            {bySeverity[sev]} {sev}
+          </span>
+        ))}
+      </div>
+
+      {ENG_ISSUES.map((issue) => (
+        <div
+          key={issue.rank}
+          className="rounded border border-theme/30 bg-card/50 overflow-hidden"
+        >
+          <button
+            onClick={() => setExpanded(expanded === issue.rank ? null : issue.rank)}
+            className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-tertiary/50 transition"
+          >
+            <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${SEVERITY_DOT[issue.severity]}`} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-mono text-muted">#{issue.rank}</span>
+                <span className="text-[9px] font-mono font-semibold text-primary truncate">{issue.title}</span>
+              </div>
+              <div className="text-[8px] font-mono text-muted">{issue.site}</div>
+            </div>
+            {expanded === issue.rank
+              ? <ChevronDown size={10} className="text-muted shrink-0 mt-1" />
+              : <ChevronRight size={10} className="text-muted shrink-0 mt-1" />
+            }
+          </button>
+
+          {expanded === issue.rank && (
+            <div className="px-3 pb-2.5 space-y-1.5 border-t border-theme/20 pt-2">
+              <div>
+                <span className="text-[8px] font-mono uppercase text-muted tracking-wider">Current</span>
+                <p className="text-[9px] font-mono text-secondary mt-0.5 leading-relaxed">{issue.current}</p>
+              </div>
+              <div>
+                <span className="text-[8px] font-mono uppercase text-muted tracking-wider">Fix / Status</span>
+                <p className="text-[9px] font-mono text-success mt-0.5 leading-relaxed">{issue.fix}</p>
+              </div>
+              <div>
+                <span className="text-[8px] font-mono uppercase text-muted tracking-wider">Impact if unresolved</span>
+                <p className="text-[9px] font-mono text-warning mt-0.5 leading-relaxed">{issue.impact}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <p className="text-[8px] text-muted/40 font-mono pt-1 border-t border-theme/20">
+        Sources: InSAR (KB-502 Krechba), PETRONAS Kasawari FDP, Porthos FEED (TNO), Bachu et al. (2007) IJGGC, Lucia (1995) AAPG.
+      </p>
     </div>
   )
 }

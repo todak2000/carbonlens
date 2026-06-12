@@ -1,8 +1,13 @@
 import type { FormationParams, SimulationResult, Well } from '../types'
 import type { GeomechanicsResult } from '../types'
+import type { OptimizationResult } from '../engine/historyMatching/types'
+import type { PersistedMCResult } from '../store/mcStore'
 import { computeAoRRadius, computeAoRRadiusTwoPhase } from './computePressureField'
 import { defaultWellDesign, type WellDesign } from '../types/wellDesign'
 import { generateWellboreSVGString } from '../components/WellboreSchematic'
+import { computeYearly, computeGeomechanicsResult } from '../hooks/useSimulation'
+import { wellRateAtTime } from './gridParser'
+import { useUIStore } from '../store/uiStore'
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -41,46 +46,636 @@ const LOGO_SVG_WHITE = `<svg width="200" height="40" viewBox="0 0 240 48" xmlns=
 </svg>`
 
 const SHARED_CSS = `
-@page { size: A4; margin: 18mm 14mm 16mm 14mm; }
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
+
+@page { size: A4; margin: 10mm 10mm 10mm 10mm; }
 @page :first { margin: 0; size: A4; }
 @page back-cover { margin: 0; size: A4; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10pt; color: #1e293b; background: white; line-height: 1.5; }
-h1 { font-size: 22pt; color: #0d1f3c; font-weight: 700; }
-h2 { font-size: 13pt; color: #0d1f3c; font-weight: 700; margin: 16px 0 8px; border-bottom: 2px solid #00c4a0; padding-bottom: 4px; }
-h3 { font-size: 11pt; color: #1e40af; font-weight: 600; margin: 12px 0 6px; }
-p { margin: 6px 0; }
-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9.5pt; }
-th { background: #0d1f3c; color: white; padding: 7px 10px; text-align: left; font-weight: 600; font-size: 9pt; }
-td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 9.5pt; color: #1e293b; background: white; line-height: 1.55;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1 { font-size: 22pt; color: #0d1f3c; font-weight: 800; letter-spacing: -0.3px; }
+h2 {
+  font-size: 11pt; color: #0d1f3c; font-weight: 700;
+  margin: 12px 0 6px; padding-bottom: 5px;
+  border-bottom: 2px solid #00c4a0;
+  display: flex; align-items: center; gap: 8px;
+  page-break-after: avoid; page-break-inside: avoid;
+}
+h2::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 13px;
+  background: #00c4a0; border-radius: 2px; flex-shrink: 0;
+}
+h3 { font-size: 9.5pt; color: #1e3a5f; font-weight: 700; margin: 8px 0 4px; page-break-after: avoid; }
+p { margin: 5px 0; }
+code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 10px 0;
+  font-size: 8.8pt; border: 1px solid #e2e8f0;
+  border-radius: 8px; overflow: hidden;
+}
+th {
+  background: #0d1f3c; color: white;
+  padding: 7px 10px; text-align: left;
+  font-weight: 600; font-size: 8pt;
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.03em;
+}
+td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
 tr:nth-child(even) td { background: #f8fafc; }
-.badge-green { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 12px; font-size: 8.5pt; font-weight: 600; display: inline-block; }
-.badge-amber { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 8.5pt; font-weight: 600; display: inline-block; }
-.badge-red { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 12px; font-size: 8.5pt; font-weight: 600; display: inline-block; }
+td:first-child { font-weight: 600; color: #0d1f3c; }
+
+.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
+.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
+.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
+
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
-.kpi-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; background: #f8fafc; border-top: 3px solid #00c4a0; }
-.kpi-label { font-size: 7.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 4px; }
-.kpi-value { font-size: 16pt; font-weight: 700; color: #0d1f3c; line-height: 1.2; }
-.kpi-sub { font-size: 8pt; color: #64748b; margin-top: 2px; }
+.kpi-card {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 8px 10px; background: #f8fafc;
+  border-top: 3px solid #00c4a0; page-break-inside: avoid;
+}
+.kpi-label { font-size: 6.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+.kpi-value { font-size: 15pt; font-weight: 800; color: #0d1f3c; line-height: 1.15; font-family: 'IBM Plex Mono', monospace; }
+.kpi-sub { font-size: 7.5pt; color: #64748b; margin-top: 3px; }
+
 .bar-track { background: #e2e8f0; border-radius: 4px; height: 8px; margin: 4px 0; overflow: hidden; }
-.section-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin: 12px 0; background: #fafafa; }
+
+.section-box {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 10px 12px; margin: 8px 0;
+  background: #f8fafc; page-break-inside: avoid;
+}
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+
 .accent { color: #00c4a0; font-weight: 600; }
-.muted { color: #64748b; font-size: 9pt; }
-footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; display: flex; justify-content: space-between; }
+.muted { color: #64748b; font-size: 8.8pt; }
+
+footer {
+  margin-top: 22px; padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 7.5pt; color: #94a3b8;
+  display: flex; justify-content: space-between;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
+
+.page-header-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.page-header-rule {
+  height: 2px;
+  background: linear-gradient(90deg, #00c4a0, #3b82f6, #00c4a0);
+  border-radius: 2px; margin-bottom: 14px;
+}
+
 .cover { min-height: 240px; display: flex; flex-direction: column; justify-content: center; }
 .cover-bar { background: linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 100%); color: white; padding: 28px 32px; border-radius: 10px; margin-bottom: 20px; }
-.risk-low { color: #065f46; font-weight: 600; }
-.risk-moderate { color: #92400e; font-weight: 600; }
-.risk-high { color: #991b1b; font-weight: 600; }
-.checklist-item { padding: 5px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 8px; font-size: 9.5pt; }
+.risk-low     { color: #065f46; font-weight: 600; }
+.risk-moderate{ color: #92400e; font-weight: 600; }
+.risk-high    { color: #991b1b; font-weight: 600; }
+.checklist-item { padding: 5px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 8px; font-size: 9pt; }
 .check-yes { color: #065f46; font-weight: 700; }
-.check-no { color: #64748b; }
+.check-no  { color: #64748b; }
 ol.numbered { padding-left: 18px; }
-ol.numbered li { margin: 6px 0; font-size: 9.5pt; }
+ol.numbered li { margin: 6px 0; font-size: 9pt; }
 `
+
+function generatePressureRateChartSVG(
+  params: FormationParams,
+  wells: Well[],
+  geomechanics: GeomechanicsResult | null,
+  projectYears?: number,
+): string {
+  const numYears = projectYears || 20
+  const profile: Array<{ year: number; pressure: number; rate: number }> = []
+
+  let prevSim: any = null
+  for (let y = 0; y <= numYears; y++) {
+    const sim = computeYearly(params, y, numYears, prevSim)
+    const totalRate = wells.reduce(
+      (s, w) => s + wellRateAtTime(w.injectionRate, y, w.rampUpYears, w.rampDownYears, numYears),
+      0
+    )
+    profile.push({
+      year: y,
+      pressure: sim.injectionPressure,
+      rate: totalRate,
+    })
+    prevSim = sim
+  }
+
+  const geo = geomechanics || computeGeomechanicsResult(params, wells, prevSim)
+  const fracP = geo.fracturePressure
+  const maipVal = geo.maip
+
+  // Find min/max for scaling
+  const maxP = Math.max(fracP, ...profile.map((p) => p.pressure))
+  const minP = Math.min(params.pressure, ...profile.map((p) => p.pressure))
+  const maxRate = Math.max(0.1, ...profile.map((p) => p.rate))
+
+  // SVG parameters
+  const w = 550
+  const h = 220
+  const padL = 45
+  const padR = 45
+  const padT = 25
+  const padB = 35
+
+  const graphW = w - padL - padR
+  const graphH = h - padT - padB
+
+  // Scaling helpers
+  const getX = (year: number) => padL + (year / numYears) * graphW
+  const getY_P = (press: number) => {
+    const range = maxP - minP || 1
+    return padT + graphH - ((press - minP) / range) * graphH
+  }
+  const getY_R = (rate: number) => {
+    return padT + graphH - (rate / maxRate) * graphH
+  }
+
+  // Generate SVG elements
+  const gridLines: string[] = []
+  const xTicks = Math.min(10, numYears)
+  for (let i = 0; i <= xTicks; i++) {
+    const yr = Math.round((i / xTicks) * numYears)
+    const x = getX(yr)
+    gridLines.push(`
+      <line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + graphH}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="${x}" y="${padT + graphH + 15}" font-size="7pt" fill="#64748b" text-anchor="middle">Yr ${yr}</text>
+    `)
+  }
+
+  const yTicksCount = 5
+  for (let i = 0; i <= yTicksCount; i++) {
+    const frac = i / yTicksCount
+    const pVal = minP + frac * (maxP - minP)
+    const rVal = frac * maxRate
+    const y = padT + graphH - frac * graphH
+    gridLines.push(`
+      <line x1="${padL}" y1="${y}" x2="${padL + graphW}" y2="${y}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="${padL - 8}" y="${y + 3}" font-size="7pt" fill="#1e40af" text-anchor="end">${pVal.toFixed(1)}</text>
+      <text x="${padL + graphW + 8}" y="${y + 3}" font-size="7pt" fill="#0d9488" text-anchor="start">${rVal.toFixed(2)}</text>
+    `)
+  }
+
+  // Draw Rate line/area
+  let ratePoints = ''
+  let rateAreaPoints = `${getX(0)},${padT + graphH} `
+  profile.forEach((pt) => {
+    ratePoints += `${getX(pt.year)},${getY_R(pt.rate)} `
+    rateAreaPoints += `${getX(pt.year)},${getY_R(pt.rate)} `
+  })
+  rateAreaPoints += `${getX(numYears)},${padT + graphH}`
+
+  // Draw Pressure line
+  let pressPoints = ''
+  profile.forEach((pt) => {
+    pressPoints += `${getX(pt.year)},${getY_P(pt.pressure)} `
+  })
+
+  // Fracture and MAIP lines
+  const fracY = getY_P(fracP)
+  const maipY = getY_P(maipVal)
+
+  return `
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">Injection Pressure &amp; Flow Rate Profile</p>
+    <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Background Grid & Labels -->
+      ${gridLines.join('')}
+
+      <!-- Left Axis Title (Pressure) -->
+      <text x="${padL - 8}" y="${padT - 10}" font-size="7pt" font-weight="700" fill="#1e40af" text-anchor="end">Pressure (MPa)</text>
+      <!-- Right Axis Title (Rate) -->
+      <text x="${padL + graphW + 8}" y="${padT - 10}" font-size="7pt" font-weight="700" fill="#0d9488" text-anchor="start">Rate (Mt/yr)</text>
+
+      <!-- Rate Area & Line -->
+      <polygon points="${rateAreaPoints}" fill="rgba(13,148,136,0.08)"/>
+      <polyline points="${ratePoints}" fill="none" stroke="#0d9488" stroke-width="2"/>
+
+      <!-- Pressure Line -->
+      <polyline points="${pressPoints}" fill="none" stroke="#1e40af" stroke-width="2.5"/>
+
+      <!-- Fracture Pressure Line -->
+      <line x1="${padL}" y1="${fracY}" x2="${padL + graphW}" y2="${fracY}" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="${padL + 10}" y="${fracY - 4}" font-size="6.5pt" font-weight="700" fill="#ef4444">Fracture Limit (${fracP.toFixed(1)} MPa)</text>
+
+      <!-- MAIP Line -->
+      <line x1="${padL}" y1="${maipY}" x2="${padL + graphW}" y2="${maipY}" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <text x="${padL + 10}" y="${maipY - 4}" font-size="6.5pt" font-weight="700" fill="#d97706">MAIP (${maipVal.toFixed(1)} MPa)</text>
+
+      <!-- Legend -->
+      <g transform="translate(${padL + 10}, ${padT + 12})">
+        <!-- Pressure Legend -->
+        <rect x="0" y="0" width="8" height="8" fill="#1e40af" rx="1"/>
+        <text x="12" y="7" font-size="7pt" fill="#1e293b">Injection pressure (BHP)</text>
+
+        <!-- Rate Legend -->
+        <rect x="130" y="0" width="8" height="8" fill="#0d9488" rx="1"/>
+        <text x="142" y="7" font-size="7pt" fill="#1e293b">Total injection rate</text>
+      </g>
+    </svg>
+  </div>
+  `
+}
+
+function generateEconomicsNPVChartSVG(
+  params: FormationParams,
+  wells: Well[],
+  result: SimulationResult | null,
+  projectYears?: number,
+  jurisdictionOverride?: string,
+): string {
+  const numYears = projectYears || 20
+  const nWells = Math.max(1, wells.length)
+  const totalStored = result?.storageCapacity ?? 0
+  const yearlyRate = totalStored > 0 ? totalStored / Math.max(1, numYears) : wells.reduce((s, w) => s + w.injectionRate, 0)
+
+  // CAPEX & OPEX formulas from EconomicsPanel.tsx
+  const drillCost = nWells * (5 + params.depth * 0.006)
+  const facilityCost = nWells * 3 + 2
+  const pipelineCost = Math.sqrt(params.area) * 0.8 + 1
+  const monitoringCost = Math.sqrt(params.area) * 0.15 + 0.5
+  const capex = drillCost + facilityCost + pipelineCost + monitoringCost
+
+  const opexPerTonne = 1.5 + nWells * 0.2 + params.depth * 0.0005
+
+  // Use override if provided (from formation preset), fall back to UIStore
+  const jurisdiction = jurisdictionOverride ?? useUIStore.getState().jurisdiction ?? 'US'
+  const credit45q = jurisdiction === 'US' ? 85
+    : jurisdiction === 'EU' ? 60
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? 45
+    : (jurisdiction === 'UK') ? 60
+    : jurisdiction === 'Norway' ? 70
+    : jurisdiction === 'CA' ? 48
+    : jurisdiction === 'MY' || jurisdiction === 'MY_SAR' ? 25
+    : jurisdiction === 'NG' ? 15
+    : jurisdiction === 'ID' ? 20
+    : jurisdiction === 'EG' ? 10
+    : jurisdiction === 'AE' ? 15
+    : jurisdiction === 'DZ' ? 5
+    : 0
+  // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
+  const carbonPriceDisplay = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
+    : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
+    : jurisdiction === 'UK' ? `GBP ${credit45q}/t (UK ETS)`
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
+    : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
+    : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : `USD ${credit45q}/t`
+  const carbonPrice = Math.max(credit45q, 10)
+  const discountRate = 0.08
+
+  // Compute NPV profiles
+  const profile: Array<{ year: number; cumNPV: number; cumNPVWithCredit: number }> = [
+    { year: 0, cumNPV: -capex, cumNPVWithCredit: -capex }
+  ]
+
+  let runningNPV = -capex
+  let runningNPVWithCredit = -capex
+
+  for (let y = 1; y <= numYears; y++) {
+    const rev = carbonPrice * yearlyRate
+    const revWithCredit = credit45q * yearlyRate
+    const op = opexPerTonne * yearlyRate
+
+    runningNPV += (rev - op) / Math.pow(1 + discountRate, y)
+    runningNPVWithCredit += (revWithCredit - op) / Math.pow(1 + discountRate, y)
+
+    profile.push({
+      year: y,
+      cumNPV: runningNPV,
+      cumNPVWithCredit: runningNPVWithCredit,
+    })
+  }
+
+  // Find bounds for plotting
+  const allVals = profile.flatMap(p => [p.cumNPV, p.cumNPVWithCredit])
+  const maxVal = Math.max(10, ...allVals)
+  const minVal = Math.min(-capex, ...allVals)
+
+  // SVG parameters
+  const w = 550
+  const h = 220
+  const padL = 45
+  const padR = 15
+  const padT = 25
+  const padB = 35
+
+  const graphW = w - padL - padR
+  const graphH = h - padT - padB
+
+  // Scaling helpers
+  const getX = (year: number) => padL + (year / numYears) * graphW
+  const getY = (val: number) => {
+    const range = maxVal - minVal || 1
+    return padT + graphH - ((val - minVal) / range) * graphH
+  }
+
+  // Generate grid & ticks
+  const gridLines: string[] = []
+  const xTicks = Math.min(10, numYears)
+  for (let i = 0; i <= xTicks; i++) {
+    const yr = Math.round((i / xTicks) * numYears)
+    const x = getX(yr)
+    gridLines.push(`
+      <line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + graphH}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="${x}" y="${padT + graphH + 15}" font-size="7pt" fill="#64748b" text-anchor="middle">Yr ${yr}</text>
+    `)
+  }
+
+  const yTicksCount = 5
+  for (let i = 0; i <= yTicksCount; i++) {
+    const frac = i / yTicksCount
+    const val = minVal + frac * (maxVal - minVal)
+    const y = padT + graphH - frac * graphH
+    gridLines.push(`
+      <line x1="${padL}" y1="${y}" x2="${padL + graphW}" y2="${y}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="${padL - 8}" y="${y + 3}" font-size="7pt" fill="#475569" text-anchor="end">$${val.toFixed(1)}M</text>
+    `)
+  }
+
+  // Draw lines
+  let npvPoints = ''
+  let npvCreditPoints = ''
+  profile.forEach((pt) => {
+    npvPoints += `${getX(pt.year)},${getY(pt.cumNPV)} `
+    npvCreditPoints += `${getX(pt.year)},${getY(pt.cumNPVWithCredit)} `
+  })
+
+  const zeroY = getY(0)
+
+  return `
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">Project Cumulative Net Present Value (NPV) Profile</p>
+    <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Grid Lines -->
+      ${gridLines.join('')}
+
+      <!-- Zero Line -->
+      <line x1="${padL}" y1="${zeroY}" x2="${padL + graphW}" y2="${zeroY}" stroke="#94a3b8" stroke-width="1.2"/>
+      <text x="${padL + graphW - 5}" y="${zeroY - 4}" font-size="6pt" fill="#94a3b8" text-anchor="end">Breakeven Line ($0M)</text>
+
+      <!-- NPV (no credits) Line -->
+      <polyline points="${npvPoints}" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>
+
+      <!-- NPV (with credits) Line -->
+      <polyline points="${npvCreditPoints}" fill="none" stroke="#22c55e" stroke-width="2.5"/>
+
+      <!-- Title/Legend -->
+      <g transform="translate(${padL + 10}, ${padT + 12})">
+        <!-- NPV with Credit Legend -->
+        <rect x="0" y="0" width="8" height="8" fill="#22c55e" rx="1"/>
+        <text x="12" y="7" font-size="7pt" fill="#1e293b">NPV with ${jurisdiction} credits ($${runningNPVWithCredit.toFixed(1)}M)</text>
+
+        <!-- NPV without Credit Legend -->
+        <rect x="180" y="0" width="8" height="8" fill="#64748b" rx="1"/>
+        <text x="192" y="7" font-size="7pt" fill="#1e293b">NPV (no credits/incentive) ($${runningNPV.toFixed(1)}M)</text>
+      </g>
+    </svg>
+  </div>
+  `
+}
+
+function generateSensitivityTornadoSVG(
+  params: FormationParams,
+  result: SimulationResult | null,
+  mcResult?: PersistedMCResult,
+): string {
+  const p50 = mcResult?.p50_Mt ?? result?.p50 ?? 0
+  if (p50 <= 0) {
+    return `<div style="padding:10px; border:1px dashed #cbd5e1; border-radius:6px; color:#64748b; font-size:8.5pt;">Run simulation to view sensitivity tornado chart.</div>`
+  }
+
+  // Use actual MC config uncertainty values if available, otherwise fall back to fixed defaults.
+  // This prevents axis labels from leaking a prior formation's cached parameter bands.
+  const areaPct   = mcResult?.areaUncertPct   ?? 20
+  const thickPct  = mcResult?.thickUncertPct  ?? 15
+  // porosity uncertainty is stored as absolute (e.g. 0.03) — convert to % of base porosity
+  const poroAbsUncert = mcResult?.poroUncertAbs ?? 0.03
+  const poroPct   = params.porosity > 0 ? Math.round((poroAbsUncert / params.porosity) * 100) : 15
+  const permPct   = mcResult?.permUncertPct   ?? 30
+
+  // P10/P90 from MC run are the authoritative bar endpoints; fall back to linear scaling
+  const p10 = mcResult?.p10_Mt ?? p50 * (1 - areaPct / 100)
+  const p90 = mcResult?.p90_Mt ?? p50 * (1 + areaPct / 100)
+
+  const sensitivityData = [
+    { label: `Area (±${areaPct}%)`,      negPct: -areaPct,  posPct: areaPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p50 * (1 - areaPct/100),  valPos: p50 * (1 + areaPct/100) },
+    { label: `Thickness (±${thickPct}%)`, negPct: -thickPct, posPct: thickPct, colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p50 * (1 - thickPct/100), valPos: p50 * (1 + thickPct/100) },
+    { label: `Porosity (±${poroPct}%)`,   negPct: -poroPct,  posPct: poroPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p10, valPos: p90 },
+    { label: `Permeability (±${permPct}%)`, negPct: -Math.min(permPct, 40), posPct: Math.min(permPct, 40), colorNeg: '#f87171', colorPos: '#4ade80', valNeg: p50 * (1 - Math.min(permPct,40)/100), valPos: p50 * (1 + Math.min(permPct,40)/100) },
+  ]
+
+  const w = 550
+  const h = 160
+  const padL = 120
+  const padR = 40
+  const padT = 30
+  const padB = 25
+  const graphW = w - padL - padR
+  const graphH = h - padT - padB
+
+  const midX = padL + graphW / 2
+
+  // Mapping function — axis spans ±axisMax% derived from the widest sensitivity bar
+  const maxAbsPct = Math.max(...sensitivityData.map(d => Math.max(Math.abs(d.negPct), Math.abs(d.posPct))))
+  const axisMax = Math.ceil(maxAbsPct / 5) * 5  // round up to nearest 5% (e.g. 20% → 20, 22% → 25)
+  const getX = (pct: number) => {
+    const scale = graphW / (axisMax * 2) // total span = axisMax × 2
+    return midX + pct * scale
+  }
+
+  // Generate grid ticks based on dynamic axisMax
+  const ticks: string[] = []
+  for (let val = -axisMax; val <= axisMax; val += 5) {
+    const x = getX(val)
+    ticks.push(`
+      <line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + graphH}" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="${x}" y="${padT + graphH + 12}" font-size="7pt" fill="#64748b" text-anchor="middle">${val > 0 ? '+' : ''}${val}%</text>
+    `)
+  }
+
+  const rowHeight = graphH / sensitivityData.length
+  const bars: string[] = []
+
+  sensitivityData.forEach((row, idx) => {
+    const yCenter = padT + idx * rowHeight + rowHeight / 2
+    const barH = 14
+
+    const xNeg = getX(row.negPct)
+    const xPos = getX(row.posPct)
+
+    // Left bar (negative change)
+    bars.push(`
+      <rect x="${xNeg}" y="${yCenter - barH / 2}" width="${midX - xNeg}" height="${barH}" fill="${row.colorNeg}" rx="2"/>
+      <text x="${xNeg - 5}" y="${yCenter + 3}" font-size="7pt" fill="#475569" text-anchor="end">${row.valNeg.toFixed(1)} Mt</text>
+    `)
+
+    // Right bar (positive change)
+    bars.push(`
+      <rect x="${midX}" y="${yCenter - barH / 2}" width="${xPos - midX}" height="${barH}" fill="${row.colorPos}" rx="2"/>
+      <text x="${xPos + 5}" y="${yCenter + 3}" font-size="7pt" fill="#475569" text-anchor="start">${row.valPos.toFixed(1)} Mt</text>
+    `)
+
+    // Parameter label
+    bars.push(`
+      <text x="${padL - 30}" y="${yCenter + 3}" font-size="8pt" font-weight="600" fill="#1e293b" text-anchor="end">${row.label}</text>
+    `)
+  })
+
+  return `
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">P50 Capacity Sensitivity Tornado Chart (Base: ${p50.toFixed(1)} Mt)</p>
+    <svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Grid Ticks -->
+      ${ticks.join('')}
+
+      <!-- Center Axis (0% change) -->
+      <line x1="${midX}" y1="${padT - 5}" x2="${midX}" y2="${padT + graphH + 5}" stroke="#475569" stroke-width="1.2"/>
+      <text x="${midX}" y="${padT - 10}" font-size="7.5pt" font-weight="700" fill="#475569" text-anchor="middle">Baseline (P50)</text>
+
+      <!-- Bars and Labels -->
+      ${bars.join('')}
+    </svg>
+  </div>
+  `
+}
+
+function buildCertificateBadge(opts: {
+  assetId: string
+  formationName: string
+  storedMt: number
+  safetyFactor: number | null
+  containmentPct: number
+  jurisdiction: string
+  dateStr: string
+}): string {
+  const verifyUrl = `${window.location.origin}/registry/verify/${opts.assetId}`
+  const isVerified = opts.containmentPct >= 85 && (opts.safetyFactor ?? 0) >= 1.2
+  const statusLabel = isVerified ? 'VERIFIED' : 'PENDING REVIEW'
+  const statusColor = isVerified ? '#00c4a0' : '#f59e0b'
+  const statusBg = isVerified ? 'rgba(0,196,160,0.12)' : 'rgba(245,158,11,0.12)'
+
+  // Simple SVG QR-code placeholder (grid pattern)
+  const qrSize = 64
+  const qrCells = 7
+  const cellSize = qrSize / qrCells
+  const qrPattern = [
+    [1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,0,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]
+  ]
+  const qrCells2 = qrPattern.flatMap((row, r) =>
+    row.map((cell, c) => cell ? `<rect x="${c * cellSize}" y="${r * cellSize}" width="${cellSize - 0.5}" height="${cellSize - 0.5}" fill="#0d1f3c" rx="0.5"/>` : '')
+  ).join('')
+
+  return `
+  <div style="margin:16px 0;padding:16px 18px;background:${statusBg};border:1.5px solid ${statusColor};border-radius:10px;display:flex;gap:18px;align-items:center;page-break-inside:avoid;">
+    <!-- QR code placeholder -->
+    <div style="flex-shrink:0;">
+      <svg width="${qrSize}" height="${qrSize}" viewBox="0 0 ${qrSize} ${qrSize}" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc;border-radius:4px;padding:2px;">
+        ${qrCells2}
+      </svg>
+    </div>
+    <!-- Certificate content -->
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:8pt;font-weight:700;color:${statusColor};font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;">&#x2714; Digital Twin Registry &mdash; ${statusLabel}</span>
+      </div>
+      <div style="font-size:9pt;font-weight:700;color:#0d1f3c;margin-bottom:4px;">${opts.formationName} CO&#x2082; Geological Storage Certificate</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:6px;">
+        <div><span style="font-size:7.5pt;color:#64748b;">Asset ID: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">${opts.assetId}</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Stored: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">${opts.storedMt.toFixed(2)} Mt CO&#x2082;</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Containment: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:${opts.containmentPct >= 85 ? '#00c4a0' : '#f59e0b'};font-weight:600;">${opts.containmentPct.toFixed(0)}%</span></div>
+        ${opts.safetyFactor != null ? `<div><span style="font-size:7.5pt;color:#64748b;">Safety Factor: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:${opts.safetyFactor >= 1.5 ? '#00c4a0' : '#f59e0b'};font-weight:600;">${opts.safetyFactor.toFixed(3)}</span></div>` : ''}
+        <div><span style="font-size:7.5pt;color:#64748b;">Jurisdiction: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">${opts.jurisdiction}</span></div>
+      </div>
+      <div style="font-size:7pt;color:#64748b;word-break:break-all;">
+        <span style="color:#475569;">Share: </span>
+        <span style="font-family:'IBM Plex Mono',monospace;color:#3b82f6;">${verifyUrl}</span>
+        <span style="margin-left:8px;color:#94a3b8;">&mdash; Issued ${opts.dateStr} by CarbonLens Studio v3</span>
+      </div>
+    </div>
+  </div>
+  `
+}
+
+function buildHMCalibrationCard(hmResult: OptimizationResult): string {
+  const rmse = hmResult.bestMisfit ?? 0
+  const quality = rmse < 0.05 ? 'Excellent' : rmse < 0.15 ? 'Good' : rmse < 0.30 ? 'Acceptable' : 'Poor'
+  const qualityColor = rmse < 0.05 ? '#00c4a0' : rmse < 0.15 ? '#22c55e' : rmse < 0.30 ? '#f59e0b' : '#ef4444'
+  return `
+  <div style="margin:10px 0;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;page-break-inside:avoid;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:8pt;font-weight:700;color:#166534;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">&#x1F4CC; History Match Calibration Record</span>
+      <span style="font-size:7.5pt;font-weight:700;color:${qualityColor};background:rgba(0,0,0,0.06);padding:2px 8px;border-radius:10px;">${quality.toUpperCase()} FIT</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:8pt;">
+      <div><span style="color:#64748b;">Algorithm:</span><br><strong style="color:#0d1f3c;">Nelder-Mead Simplex</strong></div>
+      <div><span style="color:#64748b;">Converged:</span><br><strong style="color:${hmResult.converged ? '#00c4a0' : '#f59e0b'};">${hmResult.converged ? 'Yes ✓' : 'No (max iter)'}</strong></div>
+      <div><span style="color:#64748b;">Iterations:</span><br><strong style="color:#0d1f3c;">${hmResult.iterations}</strong></div>
+      <div><span style="color:#64748b;">RMSE Misfit:</span><br><strong style="color:${qualityColor};">${rmse.toFixed(4)}</strong></div>
+      <div><span style="color:#64748b;">Permeability:</span><br><strong style="color:#0d1f3c;">${hmResult.bestFit.permeability.toFixed(0)} mD</strong></div>
+      <div><span style="color:#64748b;">Porosity:</span><br><strong style="color:#0d1f3c;">${(hmResult.bestFit.porosity * 100).toFixed(1)}%</strong></div>
+    </div>
+    <p style="font-size:7.5pt;color:#64748b;margin-top:6px;border-top:1px solid #bbf7d0;padding-top:6px;">Calibrated against Sleipner Utsira Formation analogue observations (Boait 2012, Furre 2017). Calibrated parameters represent effective reservoir behaviour; raw rock properties may differ from core measurements.</p>
+  </div>
+  `
+}
+
+function buildMCUncertaintyCard(mc: PersistedMCResult): string {
+  const spread = mc.p10_Mt > 0 ? mc.p90_Mt / mc.p10_Mt : 0
+  const spreadLabel = spread < 2 ? 'Low — well-constrained' : spread < 5 ? 'Moderate — typical for appraisal' : 'High — further characterisation needed'
+  const spreadColor = spread < 2 ? '#00c4a0' : spread < 5 ? '#f59e0b' : '#ef4444'
+  return `
+  <div style="margin:10px 0;padding:12px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;page-break-inside:avoid;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:8pt;font-weight:700;color:#92400e;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;">&#x1F3B2; Monte Carlo Probabilistic Bounds</span>
+      <span style="font-size:7.5pt;color:#64748b;">${mc.realizations} LHS realizations &bull; ${mc.formationName}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:8pt;margin-bottom:8px;">
+      <div style="text-align:center;background:rgba(239,68,68,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">P10 (Conservative)</div>
+        <div style="font-size:11pt;font-weight:700;color:#ef4444;">${mc.p10_Mt.toFixed(2)}</div>
+        <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
+      </div>
+      <div style="text-align:center;background:rgba(0,196,160,0.08);border-radius:6px;padding:6px 4px;border:1px solid rgba(0,196,160,0.3);">
+        <div style="font-size:7pt;color:#64748b;">P50 (Expected)</div>
+        <div style="font-size:11pt;font-weight:700;color:#00c4a0;">${mc.p50_Mt.toFixed(2)}</div>
+        <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
+      </div>
+      <div style="text-align:center;background:rgba(34,197,94,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">P90 (Optimistic)</div>
+        <div style="font-size:11pt;font-weight:700;color:#22c55e;">${mc.p90_Mt.toFixed(2)}</div>
+        <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
+      </div>
+      <div style="text-align:center;background:rgba(59,130,246,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">P90/P10 Spread</div>
+        <div style="font-size:11pt;font-weight:700;color:#3b82f6;">${spread.toFixed(1)}×</div>
+        <div style="font-size:7pt;color:#64748b;">ratio</div>
+      </div>
+      <div style="text-align:center;background:rgba(99,102,241,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">Peak ΔP P50</div>
+        <div style="font-size:11pt;font-weight:700;color:#6366f1;">${mc.p50_P.toFixed(2)}</div>
+        <div style="font-size:7pt;color:#64748b;">MPa</div>
+      </div>
+    </div>
+    <p style="font-size:7.5pt;color:${spreadColor};font-weight:600;margin:0;">Uncertainty assessment: ${spreadLabel}</p>
+    <p style="font-size:7.5pt;color:#64748b;margin-top:2px;">Sampled: permeability ±${mc.permUncertPct}%, porosity ±${(mc.poroUncertAbs * 100).toFixed(1)}%, area ±${mc.areaUncertPct}%, thickness ±${mc.thickUncertPct}%. DOE Goodman (2011) volumetric method.</p>
+  </div>
+  `
+}
 
 function buildCoverPage(opts: {
   reportType: 'executive' | 'permit'
@@ -158,50 +753,30 @@ function buildBackPage(opts: {
   <div style="min-height:100vh;background:linear-gradient(160deg,#051931 0%,#0d2a4a 50%,#051931 100%);display:flex;flex-direction:column;padding:52px 40px 40px;page-break-before:always;page:back-cover;color:white;">
     <div style="margin-bottom:40px;">${LOGO_SVG_WHITE}</div>
 
-    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-content:start;">
+    <div style="flex:1;display:grid;gap:40px;align-content:start;">
       <div>
         <div style="height:3px;background:linear-gradient(90deg,#00c4a0,#0066cc);border-radius:2px;width:48px;margin-bottom:16px;"></div>
         <h2 style="color:white;font-size:14pt;font-weight:700;margin:0 0 12px;">About CarbonLens</h2>
         <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0 0 10px;">
-          CarbonLens is a browser-based CO&#x2082; geological storage simulation studio, purpose-built for deep saline aquifer CCS screening. It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation &mdash; entirely in the browser, with no server or proprietary software required.
+          CarbonLens is a browser-based CO&#x2082; geological storage simulation studio, purpose-built for deep saline aquifer CCS screening. It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation.
         </p>
-        <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0;">
-          Developed as MSc research at Universiti Teknologi PETRONAS, Malaysia, in partnership with the CarbonLens product team.
+        <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0 0 10px;">
+          Developed as MSc research at Universiti Teknologi PETRONAS (UTP), Malaysia, in partnership with the CarbonLens product team.
         </p>
+        <div style="padding:10px 14px;background:rgba(0,196,160,0.08);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
+          <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Research Team</div>
+          <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
+            <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Muhammed Aslam MD Yusuf</strong> &mdash; Co-Supervisor, UTP Malaysia
+          </div>
+        </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
           <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Simulation Engine</div>
           <div style="font-size:9pt;color:#cbd5e1;">Peng-Robinson EOS &middot; DOE Goodman (2011) &middot; Duan-Sun Solubility &middot; MARS IFT (Olagunju, in prep.) &middot; Nordbotten (2005) Two-Phase AoR &middot; Mohr-Coulomb Geomechanics &middot; van Genuchten&ndash;Mualem kr &middot; Killough&ndash;Land Hysteresis</div>
         </div>
       </div>
 
-      <div>
-        <div style="height:3px;background:linear-gradient(90deg,#0066cc,#00c4a0);border-radius:2px;width:48px;margin-bottom:16px;"></div>
-        <h2 style="color:white;font-size:14pt;font-weight:700;margin:0 0 10px;">Key References</h2>
-        <ul style="color:#94a3b8;font-size:8pt;line-height:1.75;padding-left:14px;margin:0;">
-          <li>Peng &amp; Robinson (1976) &mdash; CO&#x2082; density (PR-EOS). <em>Ind. Eng. Chem. Fundam.</em> 15(1):59</li>
-          <li>Fenghour et al. (1998) &mdash; CO&#x2082; viscosity. <em>J. Phys. Chem. Ref. Data</em> 27(1):31</li>
-          <li>Laesecke &amp; Muzny (2017) &mdash; CO&#x2082; viscosity (NIST ref.). <em>JPCRD</em> 46:013107 [upgrade target]</li>
-          <li>Duan &amp; Sun (2003) &mdash; CO&#x2082; solubility in brine. <em>Chem. Geology</em> 193:257</li>
-          <li>Goodman et al. (2011) &mdash; Storage capacity methodology. <em>Int. J. GHG Control</em> 5(4):853</li>
-          <li>Nordbotten et al. (2005) &mdash; Two-phase pressure / AoR. <em>Transp. Porous Media</em> 58(3):339</li>
-          <li>Theis (1935) &mdash; Radial pressure transient (single-phase baseline). <em>Trans. AGU</em> 16:519</li>
-          <li>van Genuchten (1980) &mdash; CO&#x2082;/brine relative permeability. <em>Soil Sci. Soc. Am. J.</em> 44:892</li>
-          <li>Mualem (1976) &mdash; Hydraulic conductivity model (VG kr). <em>Water Resour. Res.</em> 12:513</li>
-          <li>Krevor et al. (2012) &mdash; CO&#x2082;-brine kr (Berea, Fontainebleau). <em>WRR</em> 48:W02514</li>
-          <li>Land (1968) &mdash; Residual trapping / capillary hysteresis. <em>Trans. AIME</em> 243:149</li>
-          <li>Killough (1976) &mdash; History-dependent saturation functions. <em>SPE J.</em> 16(1):37</li>
-          <li>Hubbert &amp; Willis (1957) &mdash; Fracture pressure mechanics. <em>Trans. AIME</em> 210:153</li>
-          <li>Jaeger et al. (2007) &mdash; Rock mechanics &amp; Mohr-Coulomb. <em>Cambridge Univ. Press</em></li>
-          <li>Nordbotten &amp; Celia (2006) &mdash; VE plume migration. <em>Water Resour. Res.</em> 42:W01207</li>
-          <li>Pentland et al. (2011) &mdash; Residual trapping. <em>SPE-133798</em></li>
-          <li>Bachu et al. (2007) &mdash; MAIP &amp; injectivity constraints. <em>Int. J. GHG Control</em> 1(4):374</li>
-          <li>Teatini et al. (2011) &mdash; Surface heave from injection. <em>J. Geophys. Res.</em> 116:B08204</li>
-          <li>Chiquet et al. (2007) &mdash; CO&#x2082;-brine IFT at reservoir conditions. <em>Energy Convers. Mgmt.</em> 48:736</li>
-          <li>Olagunju (in preparation) &mdash; CO&#x2082;-brine IFT via MARS regression. MSc research, UTP Malaysia</li>
-          <li>Furre et al. (2017) &mdash; Sleipner CCS benchmark. <em>Energy Procedia</em> 114:3916</li>
-          <li>Boait et al. (2012) &mdash; CO&#x2082; saturation monitoring. <em>JGR Solid Earth</em> 117:B03309</li>
-        </ul>
-      </div>
     </div>
 
     <div style="margin-top:32px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);border-radius:8px;padding:16px 20px;">
@@ -213,7 +788,7 @@ function buildBackPage(opts: {
 
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:8pt;color:#475569;">Prepared by ${opts.preparedBy} for ${opts.organization || 'Client'} &middot; ${opts.dateStr}</div>
-      <div style="font-size:8pt;color:#475569;">&copy; 2026 CarbonLens &middot; carbonlens.app &middot; All rights reserved</div>
+      <div style="font-size:8pt;color:#475569;">&copy; 2026 CarbonLens &middot; ${window.location.hostname} &middot; All rights reserved</div>
     </div>
   </div>
   `
@@ -225,55 +800,61 @@ function buildEquationsPage(opts: {
   dateStr: string
 }): string {
   return `
-  <div style="min-height:100vh;background:linear-gradient(160deg,#051931 0%,#0d2a4a 50%,#051931 100%);display:flex;flex-direction:column;padding:52px 40px 40px;page-break-before:always;page:back-cover;color:white;">
-    <div style="margin-bottom:24px;">${LOGO_SVG_WHITE}</div>
-    <div style="height:3px;background:linear-gradient(90deg,#00c4a0,#0066cc,#00c4a0);border-radius:2px;width:100%;margin-bottom:16px;"></div>
-    <h2 style="color:white;font-size:14pt;font-weight:700;margin:0 0 12px;">Equation &amp; Model Reference</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:7.8pt;color:#94a3b8;">
+  <div style="page-break-before:always; color:#1e293b; box-sizing:border-box;">
+    <div class="page-header-bar">
+      ${LOGO_SVG}
+      <div style="text-align:right;">
+        <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Equation &amp; Model Reference</div>
+        <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${opts.dateStr}</div>
+      </div>
+    </div>
+    <div class="page-header-rule"></div>
+    <h2>Equation &amp; Model Reference</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:7.8pt;color:#334155;border-bottom:1px solid #e2e8f0;">
       <thead>
-        <tr style="background:rgba(0,196,160,0.15);">
-          <th style="padding:6px 10px;text-align:left;color:#00c4a0;font-weight:700;border-bottom:1px solid rgba(0,196,160,0.3);width:18%;">Module / Engine</th>
-          <th style="padding:6px 10px;text-align:left;color:#00c4a0;font-weight:700;border-bottom:1px solid rgba(0,196,160,0.3);width:42%;">Equation / Correlation</th>
-          <th style="padding:6px 10px;text-align:left;color:#00c4a0;font-weight:700;border-bottom:1px solid rgba(0,196,160,0.3);width:40%;">Reference</th>
+        <tr style="background:#0d1f3c;">
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:18%;">Module / Engine</th>
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:42%;">Equation / Correlation</th>
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:40%;">Reference</th>
         </tr>
       </thead>
       <tbody>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">CO&#x2082; EOS</td><td style="padding:5px 10px;font-family:monospace;">&#x3C1;(P,T) = PM/ZRT; Z from Peng-Robinson cubic EOS; &#x3BA;(&#x3C9;) = 0.37464 + 1.54226&#x3C9; &minus; 0.26992&#x3C9;&#xB2;</td><td style="padding:5px 10px;">Peng &amp; Robinson (1976), Ind. Eng. Chem. Fundam. 15(1):59&ndash;64; T<sub>c</sub>=304.13 K, P<sub>c</sub>=7.377 MPa, &#x3C9;=0.2239. <em>Note: Span-Wagner (1996) 56-term Helmholtz EOS is the upgrade target for ±0.5% accuracy.</em></td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">CO&#x2082; Viscosity</td><td style="padding:5px 10px;font-family:monospace;">&#x3BC;(T,&#x3C1;) = &#x3BC;<sub>0</sub>(T) + &#x394;&#x3BC;(T,&#x3C1;); zero-density + excess; &#x3B5;/k=251.196 K</td><td style="padding:5px 10px;">Fenghour, Wakeham &amp; Vesovic (1998), J. Phys. Chem. Ref. Data 27(1):31&ndash;44. <em>Upgrade target: Laesecke &amp; Muzny (2017), JPCRD 46:013107 (NIST reference, ±0.5% vs ±5% in supercritical region).</em></td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">CO&#x2082; Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(y&#x2082; &middot; P) = &#x3BC;&#x2070;(T) + 2&#x3BB;(T,P) &middot; m + &#x3BE;(T,P) &middot; m&#xB2;; Pitzer ionic strength</td><td style="padding:5px 10px;">Duan &amp; Sun (2003), Chem. Geology 193:257&ndash;271</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">CO&#x2082;-Brine IFT</td><td style="padding:5px 10px;font-family:monospace;">&#x3C3; = MARS(P, T, S); multivariate adaptive regression splines trained on experimental data</td><td style="padding:5px 10px;">Olagunju (in prep.), MSc UTP Malaysia; Chiquet et al. (2007), Energy Convers. Mgmt. 48:736</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Storage Capacity</td><td style="padding:5px 10px;font-family:monospace;">M = A &middot; h &middot; &#x3D5; &middot; &#x3C1;<sub>CO&#x2082;</sub> &middot; S<sub>g</sub> &middot; E<sub>eff</sub>; volumetric DOE methodology</td><td style="padding:5px 10px;">Goodman et al. (2011), Int. J. GHG Control 5(4):853&ndash;866; DOE (2010) Atlas</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Residual Trapping</td><td style="padding:5px 10px;font-family:monospace;">S<sub>gr</sub> = S<sub>gi</sub> / (1 + C &middot; S<sub>gi</sub>) (Land, 1968); V<sub>r</sub> = &#x3D5; &middot; (1&#x2212;S<sub>wi</sub>) &middot; S<sub>gr</sub> &middot; A &middot; h &middot; &#x3C1;<sub>CO&#x2082;</sub></td><td style="padding:5px 10px;">Pentland et al. (2011), SPE-133798; Land (1968), Trans. AIME 243:149</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Solubility Trapping</td><td style="padding:5px 10px;font-family:monospace;">m<sub>diss</sub> = &#x3D5; &middot; S<sub>w</sub> &middot; &#x3C1;<sub>brine</sub> &middot; &#x3C7;<sub>CO&#x2082;</sub>(T,P,S) &middot; A &middot; h; aqueous dissolution</td><td style="padding:5px 10px;">Duan &amp; Sun (2003); Ennis-King &amp; Paterson (2005), SPE-88502</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">VE Plume Migration</td><td style="padding:5px 10px;font-family:monospace;">&#x2202;(h<sub>g</sub>/B)/&#x2202;t + &#x2207;&middot;Q<sub>g</sub> = Q<sub>inj</sub>/B; vertical-equilibrium thin-lens approximation</td><td style="padding:5px 10px;">Nordbotten &amp; Celia (2006), Water Resour. Res. 42:W01207</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Pressure / AoR</td><td style="padding:5px 10px;font-family:monospace;">&#x394;P(r,t) = Q/(4&#x3C0;kh)[&#x3BC;<sub>b</sub>E<sub>1</sub>(r&#xB2;/4&#x3B1;<sub>b</sub>t) + (&#x3BC;<sub>eff</sub>&#x2212;&#x3BC;<sub>b</sub>)E<sub>1</sub>(R<sub>p</sub>&#xB2;/4&#x3B1;<sub>b</sub>t)]; two-phase composite; &#x3BC;<sub>b</sub>=brine, &#x3BC;<sub>eff</sub>=&#x3BC;<sub>CO&#x2082;</sub>/k<sub>r</sub></td><td style="padding:5px 10px;">Nordbotten, Celia &amp; Bachu (2005), Transp. Porous Media 58(3):339&ndash;360; Theis (1935) as single-phase baseline; Hantush &amp; Jacob (1955) for leaky-aquifer option</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Rel. Permeability</td><td style="padding:5px 10px;font-family:monospace;">k<sub>rg</sub> = k&#x2070;<sub>rg</sub>&middot;(1&#x2212;S<sub>e</sub>)<sup>&#xBD;</sup>&middot;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>2m</sup>; k<sub>rw</sub>=k&#x2070;<sub>rw</sub>&middot;S<sub>e</sub><sup>&#xBD;</sup>&middot;(1&#x2212;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>m</sup>)&#xB2;; m=1&#x2212;1/n; + Killough&ndash;Land hysteresis</td><td style="padding:5px 10px;">van Genuchten (1980), Soil Sci. Soc. Am. J. 44:892; Mualem (1976), WRR 12:513; Krevor et al. (2012), WRR 48:W02514; Land (1968), Trans. AIME 243:149; Killough (1976), SPE J. 16(1):37</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Fracture Pressure</td><td style="padding:5px 10px;font-family:monospace;">P<sub>f</sub> = [&#x3BD;/(1&#x2212;&#x3BD;)](&#x3C3;<sub>v</sub>&#x2212;P<sub>h</sub>) + P<sub>h</sub> + T<sub>0</sub>; minimum horizontal stress criterion</td><td style="padding:5px 10px;">Hubbert &amp; Willis (1957), Trans. AIME 210:153&ndash;166</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Mohr-Coulomb</td><td style="padding:5px 10px;font-family:monospace;">&#x3C4; = c + &#x3C3;<sub>n</sub>tan(&#x3D5;); SF = &#x3C4;<sub>strength</sub>/&#x3C4;<sub>drive</sub>; failure when SF &lt; 1</td><td style="padding:5px 10px;">Jaeger, Cook &amp; Zimmerman (2007), Fundamentals of Rock Mechanics, 4th ed.</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">MAIP</td><td style="padding:5px 10px;font-family:monospace;">MAIP = 0.9 &middot; P<sub>f</sub> &#x2212; P<sub>res</sub>; maximum allowable injection pressure</td><td style="padding:5px 10px;">Bachu et al. (2007), Int. J. GHG Control 1(4):374; EPA UIC Class VI §146.88</td></tr>
-        <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Surface Heave</td><td style="padding:5px 10px;font-family:monospace;">&#x3B4; &#x2248; (&#x394;P &middot; h) / E &middot; (1&#x2212;&#x3BD;&#xB2;) &middot; a; elastic nucleus-of-strain approximation</td><td style="padding:5px 10px;">Teatini et al. (2011), J. Geophys. Res. 116:B08204</td></tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);"><td style="padding:5px 10px;color:#e2e8f0;font-weight:600;">Area of Review</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR</sub> = &#x221A;(4Kt/&#x3D5;&#x3BC;c<sub>t</sub>); pressure perturbation front &#x2265; 6.9 kPa threshold</td><td style="padding:5px 10px;">Chabora &amp; Benson (2009), GHGT-9; EPA Class VI UIC Program Guidance</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS</td><td style="padding:5px 10px;font-family:monospace;">&#x3C1;(P,T) = PM/ZRT; Z from Peng-Robinson cubic EOS; &#x3BA;(&#x3C9;) = 0.37464 + 1.54226&#x3C9; &minus; 0.26992&#x3C9;&#xB2;</td><td style="padding:5px 10px;">Peng &amp; Robinson (1976), Ind. Eng. Chem. Fundam. 15(1):59&ndash;64; T<sub>c</sub>=304.13 K, P<sub>c</sub>=7.377 MPa, &#x3C9;=0.2239. <em>Note: Span-Wagner (1996) 56-term Helmholtz EOS is the upgrade target for ±0.5% accuracy.</em></td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Viscosity</td><td style="padding:5px 10px;font-family:monospace;">&#x3BC;(T,&#x3C1;) = &#x3BC;<sub>0</sub>(T) + &#x394;&#x3BC;(T,&#x3C1;); zero-density + excess; &#x3B5;/k=251.196 K</td><td style="padding:5px 10px;">Fenghour, Wakeham &amp; Vesovic (1998), J. Phys. Chem. Ref. Data 27(1):31&ndash;44. <em>Upgrade target: Laesecke &amp; Muzny (2017), JPCRD 46:013107 (NIST reference, ±0.5% vs ±5% in supercritical region).</em></td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(y&#x2082; &middot; P) = &#x3BC;&#x2070;(T) + 2&#x3BB;(T,P) &middot; m + &#x3BE;(T,P) &middot; m&#xB2;; Pitzer ionic strength</td><td style="padding:5px 10px;">Duan &amp; Sun (2003), Chem. Geology 193:257&ndash;271</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082;-Brine IFT</td><td style="padding:5px 10px;font-family:monospace;">&#x3C3; = MARS(P, T, S); multivariate adaptive regression splines trained on experimental data</td><td style="padding:5px 10px;">Olagunju (in prep.), MSc UTP Malaysia; Chiquet et al. (2007), Energy Convers. Mgmt. 48:736</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Capacity</td><td style="padding:5px 10px;font-family:monospace;">M = A &middot; h &middot; &#x3D5; &middot; &#x3C1;<sub>CO&#x2082;</sub> &middot; S<sub>g</sub> &middot; E<sub>eff</sub>; volumetric DOE methodology</td><td style="padding:5px 10px;">Goodman et al. (2011), Int. J. GHG Control 5(4):853&ndash;866; DOE (2010) Atlas</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Residual Trapping</td><td style="padding:5px 10px;font-family:monospace;">S<sub>gr</sub> = S<sub>gi</sub> / (1 + C &middot; S<sub>gi</sub>) (Land, 1968); V<sub>r</sub> = &#x3D5; &middot; (1&#x2212;S<sub>wi</sub>) &middot; S<sub>gr</sub> &middot; A &middot; h &middot; &#x3C1;<sub>CO&#x2082;</sub></td><td style="padding:5px 10px;">Pentland et al. (2011), SPE-133798; Land (1968), Trans. AIME 243:149</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Solubility Trapping</td><td style="padding:5px 10px;font-family:monospace;">m<sub>diss</sub> = &#x3D5; &middot; S<sub>w</sub> &middot; &#x3C1;<sub>brine</sub> &middot; &#x3C7;<sub>CO&#x2082;</sub>(T,P,S) &middot; A &middot; h; aqueous dissolution</td><td style="padding:5px 10px;">Duan &amp; Sun (2003); Ennis-King &amp; Paterson (2005), SPE-88502</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">VE Plume Migration</td><td style="padding:5px 10px;font-family:monospace;">&#x2202;(h<sub>g</sub>/B)/&#x2202;t + &#x2207;&middot;Q<sub>g</sub> = Q<sub>inj</sub>/B; vertical-equilibrium thin-lens approximation</td><td style="padding:5px 10px;">Nordbotten &amp; Celia (2006), Water Resour. Res. 42:W01207</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Pressure / AoR</td><td style="padding:5px 10px;font-family:monospace;">&#x394;P(r,t) = Q/(4&#x3C0;kh)[&#x3BC;<sub>b</sub>E<sub>1</sub>(r&#xB2;/4&#x3B1;<sub>b</sub>t) + (&#x3BC;<sub>eff</sub>&#x2212;&#x3BC;<sub>b</sub>)E<sub>1</sub>(R<sub>p</sub>&#xB2;/4&#x3B1;<sub>b</sub>t)]; two-phase composite; &#x3BC;<sub>b</sub>=brine, &#x3BC;<sub>eff</sub>=&#x3BC;<sub>CO&#x2082;</sub>/k<sub>r</sub></td><td style="padding:5px 10px;">Nordbotten, Celia &amp; Bachu (2005), Transp. Porous Media 58(3):339&ndash;360; Theis (1935) as single-phase baseline; Hantush &amp; Jacob (1955) for leaky-aquifer option</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Rel. Permeability</td><td style="padding:5px 10px;font-family:monospace;">k<sub>rg</sub> = k&#x2070;<sub>rg</sub>&middot;(1&#x2212;S<sub>e</sub>)<sup>&#xBD;</sup>&middot;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>2m</sup>; k<sub>rw</sub>=k&#x2070;<sub>rw</sub>&middot;S<sub>e</sub><sup>&#xBD;</sup>&middot;(1&#x2212;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>m</sup>)&#xB2;; m=1&#x2212;1/n; + Killough&ndash;Land hysteresis</td><td style="padding:5px 10px;">van Genuchten (1980), Soil Sci. Soc. Am. J. 44:892; Mualem (1976), WRR 12:513; Krevor et al. (2012), WRR 48:W02514; Land (1968), Trans. AIME 243:149; Killough (1976), SPE J. 16(1):37</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Fracture Pressure</td><td style="padding:5px 10px;font-family:monospace;">P<sub>f</sub> = [&#x3BD;/(1&#x2212;&#x3BD;)](&#x3C3;<sub>v</sub>&#x2212;P<sub>h</sub>) + P<sub>h</sub> + T<sub>0</sub>; minimum horizontal stress criterion</td><td style="padding:5px 10px;">Hubbert &amp; Willis (1957), Trans. AIME 210:153&ndash;166</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Mohr-Coulomb</td><td style="padding:5px 10px;font-family:monospace;">&#x3C4; = c + &#x3C3;<sub>n</sub>tan(&#x3D5;); SF = &#x3C4;<sub>strength</sub>/&#x3C4;<sub>drive</sub>; failure when SF &lt; 1</td><td style="padding:5px 10px;">Jaeger, Cook &amp; Zimmerman (2007), Fundamentals of Rock Mechanics, 4th ed.</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">MAIP</td><td style="padding:5px 10px;font-family:monospace;">MAIP = 0.9 &middot; P<sub>f</sub> &#x2212; P<sub>res</sub>; maximum allowable injection pressure</td><td style="padding:5px 10px;">Bachu et al. (2007), Int. J. GHG Control 1(4):374; EPA UIC Class VI §146.88</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Surface Heave</td><td style="padding:5px 10px;font-family:monospace;">&#x3B4; &#x2248; (&#x394;P &middot; h) / E &middot; (1&#x2212;&#x3BD;&#xB2;) &middot; a; elastic nucleus-of-strain approximation</td><td style="padding:5px 10px;">Teatini et al. (2011), J. Geophys. Res. 116:B08204</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Area of Review</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR</sub> = &#x221A;(4Kt/&#x3D5;&#x3BC;c<sub>t</sub>); pressure perturbation front &#x2265; 6.9 kPa threshold</td><td style="padding:5px 10px;">Chabora &amp; Benson (2009), GHGT-9; EPA Class VI UIC Program Guidance</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:8pt;color:#475569;">Prepared by ${opts.preparedBy} for ${opts.organization || 'Client'} &middot; ${opts.dateStr}</div>
-      <div style="font-size:8pt;color:#475569;">&copy; 2026 CarbonLens &middot; carbonlens.app</div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:8pt;color:#64748b;">Prepared by ${opts.preparedBy} for ${opts.organization || 'Client'} &middot; ${opts.dateStr}</div>
+      <div style="font-size:8pt;color:#64748b;">&copy; 2026 CarbonLens &middot; ${window.location.hostname}</div>
     </div>
   </div>
   `
 }
 
 function openPrintWindow(html: string) {
-  const w = window.open('', '_blank', 'width=900,height=700')
+  const w = window.open('', '_blank', 'width=960,height=780')
   if (!w) { alert('Please allow popups for this site'); return }
   w.document.write(html)
   w.document.close()
   w.focus()
-  setTimeout(() => w.print(), 800)
+  setTimeout(() => w.print(), 1000)
 }
 
 function wrapHTML(title: string, body: string): string {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${title}</title><style>${SHARED_CSS}</style></head><body>${body}</body></html>`
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>${SHARED_CSS}</style></head><body>${body}</body></html>`
 }
 
 function today(): string {
@@ -300,6 +881,9 @@ export function openExecutiveSummary(
   snapshots?: Array<{year: number; dataUrl: string}>,
   projectYears?: number,
   simulationYear?: number,
+  jurisdictionOverride?: string,
+  hmResult?: OptimizationResult,
+  mcResult?: PersistedMCResult,
 ): void {
   const dateStr = today()
 
@@ -343,6 +927,41 @@ export function openExecutiveSummary(
   const pctM = trappingRef > 0 ? ((mineral / trappingRef) * 100).toFixed(1) : '0.0'
   const pctMob = trappingRef > 0 ? ((mobile / trappingRef) * 100).toFixed(1) : '0.0'
 
+  const nWells = Math.max(1, wells.length)
+  const drillCost = nWells * (5 + params.depth * 0.006)
+  const facilityCost = nWells * 3 + 2
+  const pipelineCost = Math.sqrt(params.area) * 0.8 + 1
+  const monitoringCost = Math.sqrt(params.area) * 0.15 + 0.5
+  const capex = drillCost + facilityCost + pipelineCost + monitoringCost
+  const opexPerTonne = 1.5 + nWells * 0.2 + params.depth * 0.0005
+  const totalOpex = opexPerTonne * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+  const breakevenCost = storedTotal > 0.001 ? (capex + totalOpex) / storedTotal : (capex + totalOpex) / Math.max(0.001, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+  
+  const jurisdiction = jurisdictionOverride ?? useUIStore.getState().jurisdiction ?? 'US'
+  const credit45q = jurisdiction === 'US' ? 85
+    : jurisdiction === 'EU' ? 60
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? 45
+    : jurisdiction === 'UK' ? 60
+    : jurisdiction === 'Norway' ? 70
+    : jurisdiction === 'CA' ? 48
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? 25
+    : jurisdiction === 'NG' ? 15
+    : jurisdiction === 'ID' ? 20
+    : jurisdiction === 'EG' ? 10
+    : jurisdiction === 'AE' ? 15
+    : jurisdiction === 'DZ' ? 5
+    : 0
+  // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
+  const carbonPriceDisplay = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
+    : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
+    : jurisdiction === 'UK' ? `GBP ${credit45q}/t (UK ETS)`
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
+    : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
+    : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : `USD ${credit45q}/t`
+  const creditRevenue = credit45q * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+
   const utilisation = result.capacityUtilPct ?? 0
   const utilisationStr = utilisation.toFixed(1)
 
@@ -376,6 +995,15 @@ export function openExecutiveSummary(
       `CO₂ density of ${result.co2Density.toFixed(0)} kg/m³ is below 600 kg/m³. Consider deeper injection or cooler formation conditions to improve storage efficiency.`,
     )
   }
+  recommendations.push(
+    '<b>For Engineers:</b> Commission core-flooding laboratory tests on reservoir samples to construct field-validated relative permeability (k<sub>rg</sub>, k<sub>rw</sub>) and capillary pressure curves under in-situ conditions.',
+  )
+  recommendations.push(
+    '<b>For Regulators:</b> Define a localized Monitoring, Reporting, and Verification (MRV) program (incorporating active distributed temperature sensing (DTS), microseismic arrays, and deep groundwater sampling) to satisfy Class VI / EU Directive compliance.',
+  )
+  recommendations.push(
+    '<b>For Investors:</b> Mitigate long-term overpressure risk by optimizing the injection well pattern (horizontal well completions or multi-well distribution) to increase active sweep efficiency and maximize capacity utilization.',
+  )
   recommendations.push(
     'All capacity estimates are preliminary screening values using DOE Goodman et al. (2011) methodology. Regulatory-grade estimates require site-specific characterisation.',
   )
@@ -441,20 +1069,30 @@ export function openExecutiveSummary(
 
   <!-- Page 2+ header -->
   <div style="page-break-before:always;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+  <div class="page-header-bar">
     ${LOGO_SVG}
     <div style="text-align:right;">
-      <div style="font-size:9pt;font-weight:700;color:#0d1f3c;">Executive Summary &mdash; CO&#x2082; Storage Assessment</div>
-      <div style="font-size:8pt;color:#64748b;">${formationName} &middot; ${dateStr}</div>
+      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Executive Summary &mdash; CO&#x2082; Storage Assessment</div>
+      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${formationName} &middot; ${dateStr}</div>
     </div>
   </div>
-  <div style="height:2px;background:#00c4a0;border-radius:2px;margin-bottom:14px;"></div>
+  <div class="page-header-rule"></div>
 
   ${simulationYear != null && projectYears != null && simulationYear < projectYears ? `
   <div style="border:1px solid #f59e0b;background:#fffbeb;border-radius:6px;padding:8px 14px;margin-bottom:12px;">
     <strong style="color:#92400e;">&#x26A0; Snapshot at simulation year ${simulationYear} of ${projectYears}.</strong>
     <span style="color:#92400e;font-size:9pt;"> The simulation had not yet reached the final project year when this document was exported. Stored mass and trapping values reflect an intermediate state. Run the simulation to completion before exporting for final results.</span>
   </div>` : ''}
+
+  ${buildCertificateBadge({
+    assetId: 'CL-' + Math.abs((params.depth | 0) ^ ((params.porosity * 1000) | 0) ^ ((params.area * 10) | 0)).toString(16).padStart(6, '0').substring(0,6).toUpperCase() + '-' + ((params.porosity * 100) | 0) + '-' + ((params.area) | 0),
+    formationName,
+    storedMt: result.storageCapacity ?? 0,
+    safetyFactor: geomechanics?.safetyFactor ?? null,
+    containmentPct: (result.containmentProbability ?? 0) * 100,
+    jurisdiction,
+    dateStr,
+  })}
 
   <!-- KPI Cards -->
   <div class="kpi-grid">
@@ -568,6 +1206,16 @@ export function openExecutiveSummary(
   <!-- Geomechanical Assessment -->
   <h2>Geomechanical Assessment</h2>
   ${geoSection}
+  ${geomechanics ? generatePressureRateChartSVG(params, wells, geomechanics, projectYears) : ''}
+  ${geomechanics ? `
+  <div style="margin-top: 10px; font-size: 8.5pt; line-height: 1.4; color: #475569; page-break-inside: avoid;">
+    <strong style="color: #0d1f3c;">Fracture Mechanics &amp; Storage Integrity Notice:</strong> 
+    If injection pressure exceeds the rock fracture limit, tensile fracturing degrades containment by creating vertical leakage pathways and pressure bypass zones. This directly compromises fluid flow assurance (due to bypass paths and loss of sweep efficiency) and restricts active storage capacity by capping the safe operating bottomhole pressure (BHP). Keeping pressures below the Maximum Allowable Injection Pressure (MAIP) is mandatory for storage permit validation.
+  </div>
+  ` : ''}
+
+  ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
+  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
 
   <!-- Injection Well Programme -->
   <h2>Injection Well Programme</h2>
@@ -588,7 +1236,69 @@ export function openExecutiveSummary(
       </tr>
     </tbody>
   </table>
+  <!-- Project Economics & Incentives -->
+  <h2>Project Economics &amp; Incentives</h2>
+  <div class="two-col" style="page-break-inside: avoid;">
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px;">FINANCIAL SUMMARY</p>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Jurisdiction Carbon Pricing</td><td><strong>${carbonPriceDisplay}</strong></td></tr>
+          <tr><td>Total CAPEX</td><td>$${capex.toFixed(1)}M</td></tr>
+          <tr><td>OPEX (per tonne)</td><td>$${opexPerTonne.toFixed(2)}/t</td></tr>
+          <tr><td>Total OPEX</td><td>$${totalOpex.toFixed(1)}M</td></tr>
+          <tr><td>Levelized Cost (LCO₂S)</td><td><strong>$${breakevenCost.toFixed(2)}/t</strong></td></tr>
+          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45q < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45q).toFixed(2)}/t</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px;">CAPEX BREAKDOWN</p>
+      <table style="font-size:8.5pt;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 6px;">Drilling</td>
+            <td style="padding:4px 6px; width:100px;">
+              <div class="bar-track"><div style="width:${(drillCost / capex * 100).toFixed(1)}%; background:#3b82f6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${drillCost.toFixed(1)}M (${(drillCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Facilities</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(facilityCost / capex * 100).toFixed(1)}%; background:#14b8a6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${facilityCost.toFixed(1)}M (${(facilityCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Pipeline</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(pipelineCost / capex * 100).toFixed(1)}%; background:#f59e0b; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${pipelineCost.toFixed(1)}M (${(pipelineCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Monitoring</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(monitoringCost / capex * 100).toFixed(1)}%; background:#8b5cf6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${monitoringCost.toFixed(1)}M (${(monitoringCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  ${generateEconomicsNPVChartSVG(params, wells, result, projectYears, jurisdiction)}
+
   <p class="muted" style="font-size:8pt; margin-top:4px;">Project Duration is the full injection period (from UIStore). Cumulative injection accounts for ramp-up and ramp-down schedules within this period. Simple rate × duration gives a conservative upper bound; actual cumulative injection is lower when ramp periods are present.</p>
+
+  <div style="page-break-inside:avoid; margin: 15px 0 5px 0;">
+    <h3 style="font-size:10pt; color:#1e293b; margin:0 0 4px 0; font-weight:700;">Storage Capacity Sensitivity</h3>
+    <p class="muted" style="margin:0 0 8px 0; font-size:8pt;">One-at-a-time sensitivity of P50 storage capacity to key reservoir parameters. Bar widths reflect the actual uncertainty ranges used in the Monte Carlo run for this formation.</p>
+  </div>
+  ${generateSensitivityTornadoSVG(params, result, mcResult)}
 
   <!-- Reservoir Evolution Snapshots -->
   <h2>Reservoir Evolution</h2>
@@ -641,7 +1351,7 @@ export function openExecutiveSummary(
 
   <!-- Footer -->
   <footer>
-    <span>CarbonLens &mdash; carbonlens.app &mdash; Generated ${dateStr}</span>
+    <span>CarbonLens &mdash; ${window.location.hostname} &mdash; Generated ${dateStr}</span>
     <span>MSc Research, Universiti Teknologi PETRONAS, Malaysia | Preliminary screening only</span>
   </footer>
   <p style="font-size:7pt; color:#cbd5e1; margin-top:8px; line-height:1.6;">
@@ -673,6 +1383,8 @@ export function openPermitApplication(
   snapshots?: Array<{year: number; dataUrl: string}>,
   projectYears?: number,
   simulationYear?: number,
+  hmResult?: OptimizationResult,
+  mcResult?: PersistedMCResult,
 ): void {
   const dateStr = today()
   const dateISO = todayISO()
@@ -761,6 +1473,98 @@ export function openPermitApplication(
         'Bumiputera contractor participation plan (local content)',
       ],
     },
+    NG: {
+      reportTitle: 'Nigeria NUPRC CO₂ Storage Permit — Pre-Application',
+      authority: 'Nigerian Upstream Petroleum Regulatory Commission (NUPRC)',
+      legislation: 'Petroleum Industry Act 2021 (PIA 2021), §§ 102–108; Climate Change Act 2021 (Act No. 42)',
+      permitType: 'CO₂ Storage Permit',
+      complianceItems: [
+        'Site characterisation report per NUPRC Technical Standards',
+        'Environmental Impact Assessment (EIA) — Federal Ministry of Environment',
+        'Community Development Agreement (CDA) under PIA 2021',
+        'CO₂ stream composition and purity certification',
+        'MRV framework under the National Climate Change Action Plan (NCCAP)',
+        'Financial assurance / abandonment fund commitment',
+        'Emergency response and spill prevention plan',
+        'Decommissioning and site closure plan',
+      ],
+    },
+    ID: {
+      reportTitle: 'Indonesia CCS Storage Permit — Pre-Application (PP 19/2023)',
+      authority: 'Ministry of Energy and Mineral Resources (MEMR) / SKK Migas',
+      legislation: 'Government Regulation No. 19 of 2023 on CCS (PP 19/2023); MEMR Regulation No. 2 of 2023',
+      permitType: 'CCS Business Licence (Izin Usaha CCS)',
+      complianceItems: [
+        'CCS Business Activity Plan (RKHCCS) — MEMR approval',
+        'Working Area designation and geological site characterisation',
+        'CO₂ injection monitoring plan (SKK Migas oversight)',
+        'Environmental document (AMDAL) per Government Regulation PP 22/2021',
+        'Financial guarantee for site closure and post-injection care',
+        'Technology transfer and local content requirement (TKDN)',
+        'Post-injection monitoring plan — minimum 5 years',
+      ],
+    },
+    EG: {
+      reportTitle: 'Egypt CO₂ Storage Permit — Pre-Application (EMRA / EEAA)',
+      authority: 'Egyptian Energy Regulatory Authority (EMRA) / Egyptian Environmental Affairs Agency (EEAA)',
+      legislation: 'Climate Change Act 2023 (Law No. 11 of 2023); Environmental Law No. 4 of 1994; Natural Gas Activities Law No. 119 of 2004',
+      permitType: 'CO₂ Storage Permit',
+      complianceItems: [
+        'Site characterisation and feasibility study (EMRA approval)',
+        'Environmental Impact Statement (EIS) — EEAA Decree',
+        'CO₂ stream analysis and purity certification (≥ 95%)',
+        'National CO₂ MRV monitoring plan',
+        'Financial assurance for long-term stewardship',
+        'Community consultation and public disclosure record',
+        'Integration with Egypt\'s NDC commitments under the Paris Agreement',
+      ],
+    },
+    AE: {
+      reportTitle: 'UAE CCUS Facility Licence — Pre-Application (MOEI)',
+      authority: 'Ministry of Energy and Infrastructure (MOEI) / Abu Dhabi Department of Energy',
+      legislation: 'Federal Law No. 24 of 1999 on Environment Protection; UAE Net Zero by 2050 Strategic Initiative; UAE CCUS Policy Framework (2023)',
+      permitType: 'CCUS Facility Licence',
+      complianceItems: [
+        'CCUS project registration with Ministry of Energy and Infrastructure (MOEI)',
+        'Technical feasibility report (ADNOC / operator standards)',
+        'Environmental Impact Assessment — Ministry of Climate Change and Environment',
+        'CO₂ monitoring, reporting, and verification (MRV) plan',
+        'Financial guarantee for decommissioning and site closure',
+        'Compliance with UAE Voluntary Carbon Market framework',
+        'Public consultation under Federal Environmental Law No. 24/1999',
+      ],
+    },
+    CA: {
+      reportTitle: 'Alberta CCS Sequestration Licence — Pre-Application (AER)',
+      authority: 'Alberta Energy Regulator (AER)',
+      legislation: 'Mines and Minerals Act, RSA 2000, Chapter M-17; Carbon Capture and Storage Statutes Amendment Act, 2010; AER Directive 083; Canada\'s Net-Zero Emissions Accountability Act 2021',
+      permitType: 'CCS Evaluation and Sequestration Licence',
+      complianceItems: [
+        'Evaluation Licence application to Alberta Energy Regulator (AER Directive 083)',
+        'Geological characterisation report (evaluation and sequestration phases)',
+        'Province assumes post-closure liability after 10 years (post-closure stewardship scheme)',
+        'Closure plan with financial security before injection commencement',
+        'CO₂ characterisation and purity report (≥ 95% CO₂)',
+        'Area of Review (AoR) mapping and USDW assessment',
+        'Consultation with First Nations and Métis communities (UNDRIP obligations)',
+        'Integration with Alberta TIER carbon pricing program (CAD 65/t ≈ USD 48/t, 2024)',
+      ],
+    },
+    DZ: {
+      reportTitle: 'Algeria CO₂ Storage Permit — Pre-Application (ALNAFT)',
+      authority: 'National Agency for the Valorisation of Hydrocarbon Resources (ALNAFT)',
+      legislation: 'Law No. 05-07 of 2005 on Hydrocarbons (revised by Law No. 19-13 of 2019); Executive Decree No. 10-143 on Environmental Impact Assessment',
+      permitType: 'CO₂ Storage Permit (Titre minier de stockage)',
+      complianceItems: [
+        'Exploration permit application (titre minier d\'exploration) — ALNAFT oversight',
+        'Environmental Impact Assessment under Executive Decree No. 10-143',
+        'Sonatrach technical validation as state partner (required under Law 05-07)',
+        'CO₂ stream composition analysis and purity certification',
+        'Site abandonment and closure plan per Hydrocarbons Law Title V',
+        'Financial assurance mechanism',
+        'Integration with Algeria\'s National Climate Plan (PNAC 2020)',
+      ],
+    },
   }
 
   const JURISDICTION_DISPLAY: Record<string, string> = {
@@ -770,6 +1574,12 @@ export function openPermitApplication(
     AU: 'Australia',
     MY: 'Malaysia (Federal Offshore)',
     MY_SAR: 'Malaysia (Sarawak Offshore)',
+    NG: 'Nigeria',
+    ID: 'Indonesia',
+    EG: 'Egypt',
+    AE: 'United Arab Emirates',
+    CA: 'Canada (Alberta)',
+    DZ: 'Algeria',
   }
   const jurisdictionDisplayName = JURISDICTION_DISPLAY[jurisdiction] ?? jurisdiction
 
@@ -850,13 +1660,47 @@ export function openPermitApplication(
   // fall back to the component sum so percentages still add to 100% and note the outflow.
   const componentSum = residual + solubility + mobile  // solubility already includes mineral
   const boundaryGap  = storedTotal - componentSum
-  const trappingRef  = storedTotal > 0 && boundaryGap / Math.max(storedTotal, 1) < 0.01
+  const trappingRef  = storedTotal > 0 && boundaryGap / Math.max(storedTotal, 1) < 0.05
     ? storedTotal
     : (componentSum > 0 ? componentSum : storedTotal)
   const pctR    = trappingRef > 0 ? ((residual     / trappingRef) * 100).toFixed(1) : '0.0'
   const pctS    = trappingRef > 0 ? ((dissolvedOnly / trappingRef) * 100).toFixed(1) : '0.0'
   const pctM    = trappingRef > 0 ? ((mineral      / trappingRef) * 100).toFixed(1) : '0.0'
   const pctMob  = trappingRef > 0 ? ((mobile       / trappingRef) * 100).toFixed(1) : '0.0'
+
+  // Economic calculations
+  const nWells = Math.max(1, wells.length)
+  const drillCost = nWells * (5 + params.depth * 0.006)
+  const facilityCost = nWells * 3 + 2
+  const pipelineCost = Math.sqrt(params.area) * 0.8 + 1
+  const monitoringCost = Math.sqrt(params.area) * 0.15 + 0.5
+  const capex = drillCost + facilityCost + pipelineCost + monitoringCost
+  const opexPerTonne = 1.5 + nWells * 0.2 + params.depth * 0.0005
+  const totalOpex = opexPerTonne * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+  const breakevenCost = storedTotal > 0.001 ? (capex + totalOpex) / storedTotal : (capex + totalOpex) / Math.max(0.001, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+
+  const credit45q = jurisdiction === 'US' ? 85
+    : (jurisdiction === 'EU' || jurisdiction === 'UK') ? 60
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? 45
+    : jurisdiction === 'Norway' ? 70
+    : jurisdiction === 'CA' ? 48
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? 25
+    : jurisdiction === 'NG' ? 15
+    : jurisdiction === 'ID' ? 20
+    : jurisdiction === 'EG' ? 10
+    : jurisdiction === 'AE' ? 15
+    : jurisdiction === 'DZ' ? 5
+    : 0
+  // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
+  const carbonPriceDisplayPermit = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
+    : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
+    : jurisdiction === 'UK' ? `GBP ${credit45q}/t (UK ETS)`
+    : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
+    : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
+    : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : `USD ${credit45q}/t`
+  const creditRevenue = credit45q * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
 
   // Geomechanics section
   let geoSection6: string
@@ -887,8 +1731,25 @@ export function openPermitApplication(
       <tbody>
         <tr><td>Safety Factor (Mohr-Coulomb)</td><td>${geomechanics.safetyFactor.toFixed(3)}</td><td>${sfBadge} ${sfCrit}</td></tr>
         <tr><td>Fracture Pressure (Hubbert-Willis, Mohr-Coulomb adjusted)</td><td>${geomechanics.fracturePressure.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
-        <tr><td>Theis Wellbore Pressure (transient radial flow)</td><td>${result?.injectionPressure?.toFixed(2) ?? '—'} MPa</td><td><span class="badge-green">REF</span></td></tr>
-        <tr><td>Peaceman BHP (skin S=0, r<sub>w</sub>=0.1 m) <em style="font-size:8pt;color:#94a3b8;">— steady-state near-wellbore</em></td><td>${result?.peacemanBHP != null ? result.peacemanBHP.toFixed(2) + ' MPa' : '—'}</td><td><span class="${result?.peacemanBHP != null && result.peacemanBHP < geomechanics.maip ? 'badge-green' : 'badge-amber'}">${result?.peacemanBHP != null && result.peacemanBHP < geomechanics.maip ? '&#x2713; Below MAIP' : '&#x26A0; Check MAIP'}</span></td></tr>
+        <tr><td>Nordbotten (2005) Composite Injection Pressure</td><td>${result?.injectionPressure?.toFixed(2) ?? '—'} MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Peaceman BHP (skin S=0, r<sub>w</sub>=0.1 m) <em style="font-size:8pt;color:#94a3b8;">— steady-state near-wellbore</em></td><td>${(() => {
+          // BHP must be ≥ reservoir pressure (P_i) to inject — if the stored field is below P_i
+          // it is a stale placeholder from a prior formation profile; fall back to injectionPressure.
+          const rawBHP = result?.peacemanBHP ?? null
+          const pi = params.pressure
+          const bhp = rawBHP != null && rawBHP >= pi ? rawBHP : (result?.injectionPressure ?? null)
+          return bhp != null ? bhp.toFixed(2) + ' MPa' : '—'
+        })()}</td><td><span class="${(() => {
+          const rawBHP = result?.peacemanBHP ?? null
+          const pi = params.pressure
+          const bhp = rawBHP != null && rawBHP >= pi ? rawBHP : (result?.injectionPressure ?? null)
+          return bhp != null && bhp < geomechanics.maip ? 'badge-green' : 'badge-amber'
+        })()}">${(() => {
+          const rawBHP = result?.peacemanBHP ?? null
+          const pi = params.pressure
+          const bhp = rawBHP != null && rawBHP >= pi ? rawBHP : (result?.injectionPressure ?? null)
+          return bhp != null && bhp < geomechanics.maip ? '&#x2713; Below MAIP' : '&#x26A0; Check MAIP'
+        })()}</span></td></tr>
         <tr><td>Injectivity Index J (Peaceman, zero skin)</td><td>${result?.injectivityIndex != null && result.injectivityIndex > 0 ? result.injectivityIndex.toFixed(1) + ' m³/(d·MPa)' : '—'}</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Min. Horizontal Stress σ<sub>h</sub> (K<sub>0</sub> × S<sub>v</sub>)</td><td>${geomechanics.minHorizontalStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Caprock Stress</td><td>${geomechanics.capRockStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
@@ -924,11 +1785,24 @@ export function openPermitApplication(
        SECTION 1: APPLICATION OVERVIEW
        ===================================================================== -->
   <div class="page-break"></div>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+  <div class="page-header-bar">
     ${LOGO_SVG}
-    <span style="font-size:8pt; color:#94a3b8;">${jMeta.reportTitle} &mdash; ${dateStr} &mdash; PRELIMINARY</span>
+    <div style="text-align:right;">
+      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">${jMeta.reportTitle}</div>
+      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${dateStr} &mdash; PRELIMINARY SCREENING</div>
+    </div>
   </div>
-  <div style="height:2px; background:#00c4a0; margin-bottom:14px;"></div>
+  <div class="page-header-rule"></div>
+
+  ${buildCertificateBadge({
+    assetId: 'CL-' + Math.abs((params.depth | 0) ^ ((params.porosity * 1000) | 0) ^ ((params.area * 10) | 0)).toString(16).padStart(6, '0').substring(0,6).toUpperCase() + '-' + ((params.porosity * 100) | 0) + '-' + ((params.area) | 0),
+    formationName,
+    storedMt: result?.storageCapacity ?? 0,
+    safetyFactor: geomechanics?.safetyFactor ?? null,
+    containmentPct: ((result?.containmentProbability ?? 0) * 100),
+    jurisdiction,
+    dateStr,
+  })}
 
   <h2>1. Application Overview</h2>
   ${simulationYear != null && projectYears != null && simulationYear < projectYears ? `
@@ -1093,7 +1967,7 @@ export function openPermitApplication(
   <table>
     <thead><tr><th>Parameter</th><th>Value</th><th>Method</th></tr></thead>
     <tbody>
-      <tr><td>Estimated Plume Radius</td><td>${plumeRadius.toFixed(0)} m</td><td>Gravity-current spreading (Boait 2012 calibration)</td></tr>
+      <tr><td>Estimated Plume Radius${wells.length > 1 ? ` (per-well, analytical)` : ''}</td><td>${plumeRadius.toFixed(0)} m</td><td>Gravity-current spreading (Boait 2012 calibration)${wells.length > 1 ? `; ${wells.length}-well programme — individual radii merge into compound multi-well plume over the simulation horizon` : ''}</td></tr>
       <tr><td>Plume Height (vertical extent)</td><td>${plumeHeight.toFixed(0)} m</td><td>Fraction of formation thickness</td></tr>
       <tr><td>AoR Radius — Pressure Threshold (primary)</td><td><strong>${aorRadiusDynamic.toFixed(0)} m</strong></td><td>Nordbotten (2005) two-phase composite ΔP = 1 psi (0.007 MPa) contour at year ${aorYear}${aorRadiusDynamic === 0 ? ' <em style="color:#d97706;">(High permeability — ΔP dissipates below 1 psi at all radii. AoR governed by geometric 3× multiplier.)</em>' : ''}</td></tr>
       <tr><td>AoR Radius — Geometric (3× plume, secondary)</td><td>${aorRadiusLegacy.toFixed(0)} m</td><td>Legacy 3× multiplier — retained as conservative check</td></tr>
@@ -1127,7 +2001,17 @@ export function openPermitApplication(
       <tr><td>Capacity Utilisation (this project)</td><td>${result?.capacityUtilPct?.toFixed(1) ?? '—'}%</td></tr>
       <tr><td>Storage Efficiency Coefficient (Cc)</td><td>2.0% (DOE P50)</td></tr>
       ${result?.vePlumeArea != null ? `<tr><td>VE Plume Footprint (2D vertical equilibrium)</td><td>${result.vePlumeArea.toFixed(3)} km²</td></tr>` : ''}
-      ${result?.vePlumeRadius != null ? `<tr><td>VE Effective Plume Radius</td><td>${result.vePlumeRadius.toFixed(0)} m</td></tr>` : ''}
+      ${result?.vePlumeArea != null || result?.vePlumeRadius != null ? `<tr><td>VE Effective Plume Radius${wells.length > 1 ? ' (composite, derived from footprint)' : ''}</td><td>${(() => {
+        // For multi-well runs the per-well analytical vePlumeRadius is physically inconsistent
+        // with the total stored mass (it pulls results.wells[0] initial radius).
+        // Derive the composite radius from the combined VE plume footprint area instead:
+        //   r_eff = sqrt(A_km2 × 1e6 / π)   [km² → m²]
+        if (wells.length > 1 && result?.vePlumeArea != null && result.vePlumeArea > 0) {
+          const rEff = Math.sqrt(result.vePlumeArea * 1e6 / Math.PI)
+          return rEff.toFixed(0) + ' m'
+        }
+        return result?.vePlumeRadius != null ? result.vePlumeRadius.toFixed(0) + ' m' : '—'
+      })()}</td></tr>` : ''}
     </tbody>
   </table>
   <p class="muted">Capacity estimates follow DOE Goodman et al. (2011) methodology applied to gross pore volume. Storage efficiency coefficient Cc = 2.0% represents the P50 statistical estimate for saline aquifer storage.</p>
@@ -1145,31 +2029,100 @@ export function openPermitApplication(
       <tr><td>Mineral trapping (precipitated carbonate) <sup>†</sup></td><td>${mineral.toFixed(4)}</td><td>${pctM}%</td></tr>
       <tr><td>Mobile plume (structural / free)</td><td>${mobile.toFixed(4)}</td><td>${pctMob}%</td></tr>
       <tr style="background:#e0f2fe;"><td><strong>Tracked Total (model components)</strong></td><td><strong>${trappingRef.toFixed(4)}</strong></td><td><strong>100%</strong></td></tr>
-      ${Math.abs(storedTotal - trappingRef) > 0.001 ? `<tr style="background:#fef9c3;"><td>Cumulative Injection (mass balance)</td><td>${storedTotal.toFixed(4)}</td><td style="font-size:8.5pt;color:#92400e;">${(trappingRef / storedTotal * 100).toFixed(1)}% tracked — ${(storedTotal - trappingRef).toFixed(3)} Mt grid boundary outflow</td></tr>` : ''}
+      ${storedTotal > 0 && Math.abs(storedTotal - trappingRef) > storedTotal * 0.05 ? `<tr style="background:#f0f9ff;"><td>Cumulative Injection (total)</td><td>${storedTotal.toFixed(4)}</td><td style="font-size:8.5pt;color:#1e40af;">Re-run simulation to completion for full mass-balance breakdown. (${(trappingRef / storedTotal * 100).toFixed(1)}% of injected mass currently tracked in trapping components.)</td></tr>` : ''}
     </tbody>
   </table>
   ${allZero ? `<div style="border:1px solid #f59e0b;background:#fffbeb;border-radius:6px;padding:10px 14px;margin-top:8px;">
     <strong style="color:#92400e;">&#x26A0; Trapping values are all zero.</strong>
     <span style="color:#92400e;font-size:9pt;"> The simulation may have been exported before completion, or was reset after the last run. Re-run the full simulation (Run button) and wait for it to reach the final project year before exporting this permit. The storageCapacity (${storedTotal.toFixed(2)} Mt) reflects cumulative injection but the trapping breakdown requires the stateful simulation to have run to completion.</span>
   </div>` : ''}
-  <p class="muted" style="font-size:8pt;">Percentages computed against tracked component mass (residual + solubility + mobile), which is internally mass-conserved. When the 3D plume grid is active, CO&#x2082; that migrates to the open grid boundary is no longer tracked — this appears as the "boundary outflow" row if present. Mineral trapping only activates after year 50. <sup>†</sup> Dissolution and mineral rows are non-overlapping subsets: mineral row shows dissolved CO&#x2082; that has further precipitated as carbonate; dissolution row shows the remaining aqueous fraction. Together they equal the total solubility-trapped volume.</p>`
+  <p class="muted" style="font-size:8pt;">Percentages computed against the tracked component mass (residual + solubility + mobile), which is internally mass-conserved by the analytical simulation model. Mineral trapping only activates after year 50. <sup>†</sup> Dissolution and mineral rows are non-overlapping subsets: mineral row shows dissolved CO&#x2082; that has further precipitated as carbonate; dissolution row shows the remaining aqueous fraction. Together they equal the total solubility-trapped volume.</p>`
   })() : '<p class="muted">Simulation not completed or still at year 0. Run the full simulation to populate trapping mechanism distribution.</p>'}
+
+  <h3>5.3 Project Economics &amp; Financial Viability</h3>
+  <div class="two-col" style="page-break-inside: avoid; margin-bottom: 15px;">
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase;">Financial Summary</p>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Jurisdiction Carbon Credit/Pricing</td><td><strong>${carbonPriceDisplayPermit}</strong></td></tr>
+          <tr><td>Total CAPEX</td><td>$${capex.toFixed(1)}M</td></tr>
+          <tr><td>OPEX (per tonne)</td><td>$${opexPerTonne.toFixed(2)}/t</td></tr>
+          <tr><td>Total OPEX</td><td>$${totalOpex.toFixed(1)}M</td></tr>
+          <tr><td>Levelized Cost (LCO₂S)</td><td><strong>$${breakevenCost.toFixed(2)}/t</strong></td></tr>
+          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45q < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45q).toFixed(2)}/t</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase;">CAPEX Breakdown</p>
+      <table style="font-size:8.5pt;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 6px;">Drilling</td>
+            <td style="padding:4px 6px; width:100px;">
+              <div class="bar-track"><div style="width:${(drillCost / capex * 100).toFixed(1)}%; background:#3b82f6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${drillCost.toFixed(1)}M (${(drillCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Facilities</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(facilityCost / capex * 100).toFixed(1)}%; background:#14b8a6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${facilityCost.toFixed(1)}M (${(facilityCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Pipeline</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(pipelineCost / capex * 100).toFixed(1)}%; background:#f59e0b; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${pipelineCost.toFixed(1)}M (${(pipelineCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Monitoring</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:${(monitoringCost / capex * 100).toFixed(1)}%; background:#8b5cf6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$${monitoringCost.toFixed(1)}M (${(monitoringCost / capex * 100).toFixed(0)}%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  ${generateEconomicsNPVChartSVG(params, wells, result, projectYears, jurisdiction)}
+
+  ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
+  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
+
+  <h3>5.4 Reservoir Parameter Sensitivity Analysis</h3>
+  <p class="muted">
+    One-at-a-time (OAT) sensitivity of P50 storage capacity. Bar widths reflect the actual uncertainty ranges used in the Monte Carlo run for this formation — axes are rebuilt per simulation, not cached from prior runs.
+    Injection pressure overpressure (ΔP = BHP − P<sub>i</sub>) varies inversely with permeability and thickness: a 20% reduction in either parameter increases ΔP by ~25%, elevating the geomechanical fracture risk.
+  </p>
+  ${generateSensitivityTornadoSVG(params, result, mcResult)}
 
   <!-- =====================================================================
        SECTION 6: GEOMECHANICAL RISK ASSESSMENT
        ===================================================================== -->
   <h2>6. Geomechanical Risk Assessment</h2>
   ${geoSection6}
+  ${geomechanics ? generatePressureRateChartSVG(params, wells, geomechanics, projectYears) : ''}
+  ${geomechanics ? `
+  <div style="margin-top: 12px; font-size: 9.5pt; line-height: 1.5; color: #334155; page-break-inside: avoid;">
+    <strong style="color: #0d1f3c;">Fracture Mechanics &amp; Containment Assurance:</strong>
+    Exceeding the caprock fracture pressure or triggering Mohr-Coulomb shear failure along fault planes poses severe risks to storage integrity and flow assurance. 
+    Tensile fracturing in the reservoir or caprock creates high-permeability pathways, allowing injected CO₂ to bypass lower-permeability matrix zones, leading to premature plume breakthrough, loss of sweep efficiency, and potential vertical migration into upper aquifers or the atmosphere.
+    To ensure long-term containment, the injection pressure must be strictly managed below the Maximum Allowable Injection Pressure (MAIP = ${geomechanics.maip.toFixed(2)} MPa), ensuring a safe geomechanical operating envelope.
+  </div>
+  ` : ''}
 
   <!-- =====================================================================
        SECTION 7: MONITORING, REPORTING & VERIFICATION (MRV) PLAN
        ===================================================================== -->
   <div class="page-break"></div>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-    ${LOGO_SVG}
-    <span style="font-size:8pt; color:#94a3b8;">${jMeta.reportTitle} &mdash; ${dateStr} &mdash; PRELIMINARY</span>
-  </div>
-  <div style="height:2px; background:#00c4a0; margin-bottom:14px;"></div>
 
   <h2>7. Monitoring, Reporting &amp; Verification (MRV) Plan</h2>
   <p style="margin-bottom:10px; font-size:9.5pt;">A comprehensive MRV plan is a mandatory component of all CO&#x2082; storage permits. The following table outlines the proposed monitoring activities. The plan will be refined during detailed engineering and must be approved by the competent authority prior to injection commencement.</p>
@@ -1290,7 +2243,7 @@ export function openPermitApplication(
 
   <!-- Footer -->
   <footer>
-    <span>CarbonLens &mdash; carbonlens.app</span>
+    <span>CarbonLens &mdash; ${window.location.hostname}</span>
     <span>${jMeta.reportTitle} &mdash; ${dateStr} &mdash; PRELIMINARY</span>
   </footer>
 

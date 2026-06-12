@@ -30,20 +30,16 @@
  */
 export function co2SolubilityDuanSun(T: number, P: number, monoSalinity: number, biSalinity: number = 0): number {
   const T_K = Math.max(298, Math.min(473, T))
-  const P_bar = Math.max(1, Math.min(300, P * 10))  // MPa → bar
+  const P_MPa = Math.max(0.1, P)
 
-  // 5-coefficient fit calibrated to Duan-Sun (2003) data for pure water.
-  // Improved over the 3-parameter version by adding P/T and P/T² terms that
-  // capture the flattening of solubility at high T and the non-linear P dependence.
-  // Calibration points: (50°C/100 bar: 1.30), (90°C/220 bar: 1.08),
-  //                     (120°C/200 bar: 0.85), (40°C/80 bar: 1.05), (150°C/300 bar: 0.65)
-  const lnM = -2.632
-    + 930.0 / T_K
-    + 0.0335 * Math.log(P_bar)
-    + 0.00421 * P_bar / T_K
-    - 1.15e-5 * P_bar / (T_K * T_K) * 1e4
+  // Calibrated Duan-Sun (2003) solubility model for pure water
+  // m_CO2 = P_MPa * exp(A + B/T_K + C*ln(P_MPa) + D*P_MPa/T_K)
+  const ln_m_ratio = -5.359134
+    + 1038.232485 / T_K
+    - 0.108431 * Math.log(P_MPa)
+    - 7.585159 * P_MPa / T_K
 
-  let m_CO2 = Math.exp(lnM)
+  let m_CO2 = P_MPa * Math.exp(ln_m_ratio)
 
   // Salinity correction — T-dependent Setschenow / Pitzer model.
   // The Duan-Sun (2003) Pitzer interaction parameter λ(T) for CO₂-NaCl varies with T.

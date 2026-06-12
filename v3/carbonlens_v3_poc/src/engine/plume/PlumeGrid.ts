@@ -118,8 +118,14 @@ export class PlumeGrid {
       residual += this.state.Sg_residual[i] * cells[i].porosity
       dissolved += this.state.Sg_dissolved[i] * cells[i].porosity
       mineral   += this.state.Sg_mineral[i]   * cells[i].porosity
-      const f = Math.max(0, cells[i].co2Saturation - this.state.Sg_residual[i])
-      if (cells[i].co2Phase === 'free') free += f * cells[i].porosity
+      // co2Saturation now always holds the total free CO2 (Sg) regardless of co2Phase.
+      // The old guard `cells[i].co2Phase === 'free'` excluded dissolved/residual-labelled
+      // cells from the free count — under-counting mobile CO2 and inflating the apparent
+      // mass balance gap.  Read free CO2 directly from co2Saturation for all non-caprock cells.
+      if (!cells[i].isCaprock) {
+        const f = Math.max(0, cells[i].co2Saturation - this.state.Sg_residual[i])
+        free += f * cells[i].porosity
+      }
     }
     // Scale to Mt using average cell pore volume
     const n = cells.length

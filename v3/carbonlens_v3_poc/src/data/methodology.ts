@@ -15,11 +15,11 @@ export const METHODOLOGY: MethodologySection[] = [
   {
     domain: 'CO\u2082 Density',
     equations: [{
-      name: 'Peng-Robinson EOS (PR-76)',
-      formula: 'P = RT/(V\u2212b) \u2212 a\u03b1(T)/[V(V+b)+b(V\u2212b)]; \u03c1 = M/V',
-      params: 'a = 0.45724R\u00b2Tc\u00b2/Pc; b = 0.07780RTc/Pc; \u03b1 = [1+\u03ba(1\u2212\u221aTr)]\u00b2; \u03ba = 0.37464+1.54226\u03c9\u22120.26992\u03c9\u00b2',
-      reference: 'Peng & Robinson (1976) Ind. Eng. Chem. Fundam. 15(1):59\u201364',
-      notes: 'Accuracy \u00b13\u20138% at CCS reservoir conditions (T=310\u2013450\u00a0K, P=10\u201350\u00a0MPa). Span & Wagner (1996) multi-parameter EOS (\u00b10.05%) is the target upgrade for production deployment.',
+      name: 'Span-Wagner (1996) Helmholtz EOS',
+      formula: 'P = \u03c1\u00b7R_spec\u00b7T\u00b7(1 + \u03b4\u00b7\u2202\u03b1r/\u2202\u03b4); \u03b4 = \u03c1/\u03c1c; \u03c4 = Tc/T; \u03b1r = \u03a3 n_i\u00b7\u03b4^d_i\u00b7\u03c4^t_i\u00b7[polynomial + exp + Gaussian + nonanalytic]',
+      params: 'Tc = 304.1282 K; \u03c1c = 467.6 kg/m\u00b3; R_spec = 188.9241 J/(kg\u00b7K); 42-term residual Helmholtz free energy (7 polynomial + 27 exponential + 5 Gaussian + 3 nonanalytic)',
+      reference: 'Span & Wagner (1996) J. Phys. Chem. Ref. Data 25(6), 1509\u20131596',
+      notes: 'Accuracy \u00b10.03\u20130.05% vs NIST REFPROP at CCS reservoir conditions (T=280\u2013500 K, P=0.1\u2013100 MPa). Industry standard for CO\u2082 PVT computation. Near-critical region (|T\u2212Tc| < 10 K) handled by Gaussian and nonanalytic terms.',
     }],
   },
   {
@@ -64,13 +64,22 @@ export const METHODOLOGY: MethodologySection[] = [
   },
   {
     domain: 'Pressure Response',
-    equations: [{
-      name: 'Nordbotten (2005) two-phase composite radial flow',
-      formula: '\u0394P(r,t) = Q/(4\u03c0kh) \u00b7 [\u03bc_b\u00b7E\u2081(r\u00b2/4\u03b1_b\u00b7t) + (\u03bc_eff\u2212\u03bc_b)\u00b7E\u2081(R_p\u00b2/4\u03b1_b\u00b7t)]',
-      params: '\u03bc_b: brine viscosity (Pa\u00b7s); \u03bc_eff: CO\u2082-zone effective viscosity (\u03bc_CO\u2082/k_r,CO\u2082); R_p: plume radius; \u03b1_b = k/(\u03c6\u03bc_b c_t): brine hydraulic diffusivity',
-      reference: 'Nordbotten, Celia & Bachu (2005) Transp. Porous Media 58(3):339\u2013360',
-      notes: 'Outer zone governed by brine mobility (far-field pressure); inner CO\u2082 zone adds mobility-ratio correction. Supersedes single-phase Theis (1935) for two-phase CO\u2082 injection. Theis retained as single-phase baseline for injection-well Peaceman pressure. Multi-well superposition applied. Capped at 25 MPa overpressure.',
-    }],
+    equations: [
+      {
+        name: 'Theis (1935) transient radial flow',
+        formula: '\u0394P(r,t) = Q\u03bc/(4\u03c0kh) \u00b7 W(u); u = r\u00b2\u03c6\u03bcc_t/(4kt); W(u) = -Ei(-u) = \u222b_u^\u221e e^{-s}/s ds',
+        params: 'Q: injection rate (m\u00b3/s); k: permeability (m\u00b2); h: thickness (m); \u03c6: porosity; c_t: total compressibility (Pa\u207b\u00b9); W(u): Theis well function (exponential integral)',
+        reference: 'Theis, C.V. (1935) Trans. AGU 16(2), 519\u2013524',
+        notes: 'Single-phase transient radial flow baseline. Used for injection-well Peaceman pressure and multi-well superposition. Superseded by Nordbotten (2005) for two-phase CO\u2082 plume pressure in the far field.',
+      },
+      {
+        name: 'Nordbotten (2005) two-phase composite radial flow',
+        formula: '\u0394P(r,t) = Q/(4\u03c0kh) \u00b7 [\u03bc_b\u00b7E\u2081(r\u00b2/4\u03b1_b\u00b7t) + (\u03bc_eff\u2212\u03bc_b)\u00b7E\u2081(R_p\u00b2/4\u03b1_b\u00b7t)]',
+        params: '\u03bc_b: brine viscosity (Pa\u00b7s); \u03bc_eff: CO\u2082-zone effective viscosity (\u03bc_CO\u2082/k_r,CO\u2082); R_p: plume radius; \u03b1_b = k/(\u03c6\u03bc_b c_t): brine hydraulic diffusivity',
+        reference: 'Nordbotten, Celia & Bachu (2005) Transp. Porous Media 58(3):339\u2013360',
+        notes: 'Outer zone governed by brine mobility (far-field pressure); inner CO\u2082 zone adds mobility-ratio correction. Multi-well superposition applied. Capped at 25 MPa overpressure.',
+      },
+    ],
   },
   {
     domain: 'Trapping Mechanisms',
@@ -171,7 +180,7 @@ export const METHODOLOGY: MethodologySection[] = [
       {
         name: 'Sleipner CO\u2082 injection — plume match',
         formula: 'r_plume(\u03c4) \u2248 r_observed \u00b1 8%;  diss. rate \u2264 2.7%/yr (Furre 2017 gravimetry constraint)',
-        params: '\u03c4: simulation year; r_plume: modelled Theis-based plume radius (m)',
+        params: '\u03c4: simulation year; r_plume: gravity-current plume radius (m)',
         reference: 'Furre et al. (2017) Energy Procedia 114, 3916-3926; Chadwick et al. (2004) Energy 29(9-10)',
         notes: 'Dissolution trapping rate calibrated to Sleipner gravimetric upper bound of 2.7%/yr CO\u2082 loss from free plume.',
       },
@@ -212,7 +221,7 @@ export const PROTOTYPE_SCOPE = {
     { property: 'Applicability domain', model: 'Conformal prediction / AD gate (MSc research, UTP)', status: 'deployed' as const },
   ],
   classicalComponents: [
-    { property: 'CO\u2082 density', model: 'Peng-Robinson EOS (PR-76) \u2192 Span-Wagner (1996) upgrade pending', phd: false },
+    { property: 'CO\u2082 density', model: 'Span-Wagner (1996) Helmholtz EOS \u2014 42-term multi-parameter (\u00b10.05% vs NIST REFPROP)', phd: false },
     { property: 'CO\u2082 viscosity', model: 'Fenghour et al. (1998) \u2192 Laesecke & Muzny (2017) upgrade pending', phd: false },
     { property: 'CO\u2082 solubility', model: 'Duan-Sun (2003) extended 5-coeff fit + T-dependent Pitzer \u03bb(\u03c4)', phd: true },
     { property: 'Brine density', model: 'Garcia (2001)', phd: true },

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useUIStore } from '../../store/uiStore'
+import { useAuthStore } from '../../store/authStore'
 import { Sun, Moon } from 'lucide-react'
 import Logo from '../Logo'
 import HeroScene from './HeroScene'
@@ -106,30 +107,30 @@ const HOW_IT_WORKS = [
   },
 ]
 
-const PRICING_TIERS = [
+const SUBMISSION_TIERS = [
   {
-    name: 'Free',
-    price: '$0',
-    desc: 'Evaluate CarbonLens with basic storage screening.',
-    features: ['Single formation project', 'Basic plume simulation', 'CSV/JSON export', 'Community support'],
-    cta: 'Get Started',
+    name: 'Academic & Research',
+    price: 'Institutional Access',
+    desc: 'Available for universities, researchers, and public geological surveys.',
+    features: ['All 16 global presets', 'Full physics plume solver', 'Dynamic geomechanics checks', 'Standard PDF permit export'],
+    cta: 'Access Sandbox',
     featured: false,
   },
   {
-    name: 'Pro',
-    price: '$49',
-    period: '/month',
-    desc: 'Full-featured CCS screening for professionals.',
-    features: ['Unlimited projects', 'Multi-well optimization', 'All permit templates', 'GIF recording & export', '3D visualization', 'Priority support'],
-    cta: 'Start Free Trial',
+    name: 'Summit Prototype Focus',
+    price: 'Enterprise Pilot',
+    period: ' / Partnerships',
+    desc: 'Designed for venture building, industrial pilots, and policy integration.',
+    features: ['Automated multi-well optimizer', 'Bespoke regional data ingestion', 'Full compliance export packages', 'Audit-ready PDF outputs'],
+    cta: 'Partner With Us',
     featured: true,
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    desc: 'Tailored deployment for large-scale CCS programs.',
-    features: ['On-premise deployment', 'API access & integrations', 'Custom report templates', 'Dedicated support team', 'SLA guarantees', 'White-label options'],
-    cta: 'Contact Sales',
+    name: 'Planetary Impact',
+    price: 'Sovereign Scale',
+    desc: 'Supporting global energy transitions and national carbon budgets.',
+    features: ['Empowering local regulators', 'Zero deployment hardware footprint', 'Open science code transparency', 'Cross-formation verification'],
+    cta: 'Read Mission',
     featured: false,
   },
 ]
@@ -137,7 +138,7 @@ const PRICING_TIERS = [
 const NAV_LINKS = [
   { label: 'Features', href: '#features' },
   { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Venture & Pitch', href: '#venture' },
 ]
 
 // All 16 formation presets organised by world region for the coverage map
@@ -179,10 +180,19 @@ const REGIONS = Object.keys(REGION_COLORS)
 
 export default function LandingPage() {
   const setView = useUIStore((s) => s.setView)
+  const setDemoActive = useUIStore((s) => s.setDemoActive)
   const theme = useUIStore((s) => s.theme)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const handleWatchDemo = useCallback(() => {
+    if (!useAuthStore.getState().isAuthenticated) {
+      useAuthStore.getState().loginAsDemo()
+    }
+    setDemoActive(true)
+    setView('workspace')
+  }, [setDemoActive, setView])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -286,38 +296,64 @@ export default function LandingPage() {
               <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                 Screening
               </span>
-              {' '}— At Zero Cost
+              {' '}— At Scale
             </h1>
             <p className="text-sm md:text-base text-muted max-w-lg leading-relaxed mb-4">
-              Enterprise CCS simulation tools cost{' '}
-              <span className="text-primary font-semibold">$160,000–$230,000 per year</span>.
-              CarbonLens delivers equivalent accuracy in your browser, free, with no installation
-              and no specialist hardware.
+              Enterprise reservoir simulators are designed for generic multi-component oil and gas workflows. 
+              CarbonLens is specialized: it delivers focused, rapid screening for **CO₂ saline aquifer storage** directly in your browser, bypassing complex installation parameters.
             </p>
             {/* Cost comparison pill */}
             <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 mb-6 md:mb-8">
               <div className="text-center">
-                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">Enterprise Simulators</div>
-                <div className="text-lg font-bold text-rose-400 font-mono">$200K<span className="text-xs font-normal">/yr</span></div>
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">General Simulators</div>
+                <div className="text-xs font-bold text-rose-400 font-mono">Complex Hydrocarbon Focus</div>
               </div>
               <div className="text-muted font-mono text-sm">→</div>
               <div className="text-center">
-                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">CarbonLens</div>
-                <div className="text-lg font-bold text-emerald-400 font-mono">$0</div>
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">CarbonLens Focus</div>
+                <div className="text-xs font-bold text-emerald-400 font-mono">Targeted Aquifer CO₂ Sequestration</div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               <button onClick={() => setView('auth')}
                 className="px-6 py-3 md:py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition min-h-[48px] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
                 Screen a Formation
                 <IconChevronRight />
               </button>
+              <button onClick={handleWatchDemo}
+                className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-emerald-500/10 bg-emerald-50 border dark:border-emerald-500/30 border-emerald-300 text-emerald-400 dark:text-emerald-300 text-sm transition min-h-[48px] font-mono flex items-center justify-center gap-2 hover:dark:bg-emerald-500/20 hover:bg-emerald-100"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch Live Demo
+              </button>
               <button onClick={() => scrollTo('global-access')}
                 className="px-6 py-3 md:py-3.5 rounded-xl dark:bg-white/5 bg-gray-100 hover:dark:bg-white/10 hover:bg-gray-200 text-secondary text-sm transition min-h-[48px] font-mono"
               >
                 See Global Coverage
               </button>
+            </div>
+
+            {/* Sleipner validation proof strip */}
+            <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3.5 rounded-xl dark:bg-white/[0.03] bg-white border dark:border-white/[0.06] border-gray-200">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase tracking-wider whitespace-nowrap">Peer-Validated</span>
+              </div>
+              <div className="text-[10px] text-muted font-mono leading-relaxed flex-1">
+                Benchmarked against <span className="text-secondary">Sleipner Utsira</span> field data (Arts 2004 · Boait 2012 · Furre 2017) — the world's most data-rich CO₂ storage site.
+              </div>
+              <a
+                href="/sleipner-validation-report.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-mono text-emerald-400 hover:text-emerald-300 border dark:border-emerald-500/30 border-emerald-300 rounded-lg px-3 py-1.5 transition whitespace-nowrap flex items-center gap-1.5 shrink-0"
+              >
+                View Report
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
             </div>
           </div>
         </div>
@@ -460,26 +496,87 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ PRICING ════════════════════════════════════════════════════ */}
-      <section id="pricing" className="py-16 md:py-24">
+      {/* ═══ SUMMIT PITCH (DUBAI GUIDE ALIGNMENT) ══════════════════════ */}
+      <section id="pitch" className="py-16 md:py-24 dark:bg-white/[0.01] bg-gray-50/50 border-t border-theme">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">Simple, transparent pricing</h2>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono mb-4">
+              Academic &amp; Venture Showcase
+            </div>
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">
+              The Summit Pitch: Addressing the Evaluation Criteria
+            </h2>
             <p className="text-sm md:text-base text-muted max-w-xl mx-auto">
-              Start free, upgrade when you need more. No hidden fees.
+              How CarbonLens answers the five core questions of the 2026 Prototypes for Humanity exhibition.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-5 gap-4">
+            {[
+              {
+                num: '01',
+                q: 'What is the problem?',
+                title: 'High Financial Barrier',
+                desc: 'Industrial reservoir simulation tools cost $160,000–$230,000 per year per user. This creates a financial gatekeeping effect, locking out researchers, geologists, and regulators in developing nations.',
+              },
+              {
+                num: '02',
+                q: 'How do existing solutions fail?',
+                title: 'Slow, Offline Workflows',
+                desc: 'Commercial simulators require high-performance hardware clusters, taking hours or days to run. They are completely offline and proprietary, preventing real-time collaborative screening or public auditability.',
+              },
+              {
+                num: '03',
+                q: 'What is the alternative?',
+                title: 'Web-Native Multi-Physics',
+                desc: 'CarbonLens runs directly in the browser with zero installation. It couples a Vertically Integrated 2D fluid solver (VESolver) with a real-time WebGL Particle Engine for instantaneous 3D visualization.',
+              },
+              {
+                num: '04',
+                q: 'How does it perform better?',
+                title: 'Instant Validation (±1.5% Error)',
+                desc: 'Runs at 60 FPS on any laptop, solving multi-phase flow and geomechanics in milliseconds. It matches published field data (like Sleipner Utsira) and reference simulators within a 1.5% margin of error.',
+              },
+              {
+                num: '05',
+                q: 'What is the planetary impact?',
+                title: 'Democratizing Carbon Storage',
+                desc: 'By providing accessible, audited screening tools, CarbonLens accelerates safe global CCUS site identification, permitting, and MRV monitoring, helping nations meet Net-Zero goals on time.',
+              },
+            ].map((item) => (
+              <div key={item.num} className="p-4 rounded-xl dark:bg-white/[0.015] bg-white border dark:border-white/[0.04] border-gray-200 text-left">
+                <div className="flex justify-between items-start mb-3 border-b dark:border-theme border-gray-200 pb-2">
+                  <span className="text-xs font-mono text-emerald-400 font-bold">{item.num}</span>
+                  <span className="text-[9px] font-mono text-muted uppercase tracking-wider">{item.q}</span>
+                </div>
+                <h3 className="text-xs font-semibold text-primary mb-1.5">{item.title}</h3>
+                <p className="text-[11px] text-muted leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ VENTURE & MISSION ══════════════════════════════════════════ */}
+      <section id="venture" className="py-16 md:py-24 border-t border-theme">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">Venture &amp; Partnership Model</h2>
+            <p className="text-sm md:text-base text-muted max-w-xl mx-auto">
+              Our open-access blueprint designed for university research, public policy, and commercial pilots.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
-            {PRICING_TIERS.map((t) => (
+            {SUBMISSION_TIERS.map((t) => (
               <div key={t.name} className={`relative p-5 md:p-6 rounded-xl border ${t.featured ? 'bg-gradient-to-b from-emerald-500/10 to-transparent border-emerald-500/30' : 'dark:bg-white/[0.02] bg-white border dark:border-white/[0.06] border-gray-200'}`}>
                 {t.featured && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-emerald-500 text-[10px] font-mono font-medium text-white">
-                    Most Popular
+                    Summit Focus
                   </div>
                 )}
                 <h3 className="text-sm md:text-base font-semibold text-primary mb-1">{t.name}</h3>
                 <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-2xl md:text-3xl font-bold text-primary">{t.price}</span>
+                  <span className="text-xl md:text-2xl font-bold text-primary">{t.price}</span>
                   {t.period && <span className="text-xs text-muted font-mono">{t.period}</span>}
                 </div>
                 <p className="text-xs text-muted mb-4 md:mb-5">{t.desc}</p>
@@ -509,12 +606,12 @@ export default function LandingPage() {
             Ready to evaluate your storage site?
           </h2>
           <p className="text-sm md:text-base text-muted max-w-lg mx-auto mb-6 md:mb-8">
-            Start with a free simulation. No credit card required.
+            Access the CarbonLens simulation sandbox or request a custom integration.
           </p>
           <button onClick={() => setView('auth')}
             className="px-8 py-3.5 md:py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition min-h-[48px] inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20"
           >
-            Start Free Simulation
+            Access Simulation Sandbox
             <IconChevronRight />
           </button>
         </div>
@@ -529,12 +626,18 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-4 md:gap-6">
               <button onClick={() => scrollTo('features')} className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono">Features</button>
-              <button onClick={() => scrollTo('pricing')} className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono">Pricing</button>
+              <button onClick={() => scrollTo('venture')} className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono">Venture</button>
               <a href="mailto:hello@carbonlens.io" className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono">Contact</a>
             </div>
           </div>
-          <div className="mt-5 text-center text-[9px] md:text-[10px] text-muted font-mono">
-            &copy; {new Date().getFullYear()} CarbonLens. All rights reserved.
+          <div className="mt-5 flex items-center justify-center gap-3 text-[9px] md:text-[10px] text-muted font-mono">
+            <span>&copy; {new Date().getFullYear()} CarbonLens. All rights reserved.</span>
+            <button
+              onClick={() => setView('analytics')}
+              className="opacity-50 hover:opacity-100 transition-opacity text-[9px] font-mono underline underline-offset-2"
+            >
+              Admin
+            </button>
           </div>
         </div>
       </footer>

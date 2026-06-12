@@ -3,6 +3,7 @@ import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
 import { GeometryType } from '../../types'
 import { parseLAS } from '../../utils/lasParser'
+import { parseEclipseDeck } from '../../utils/eclipseParser'
 import { parseCarbonGrid, generateSampleGrid } from '../../utils/gridParser'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
 import { computeOptimalRate, classifyRate, RATE_STATUS_META, RateEnvelope } from '../../utils/computeOptimalRate'
@@ -287,6 +288,7 @@ export default function FormationPanel() {
 
   const fileRef = useRef<HTMLInputElement>(null)
   const gridFileRef = useRef<HTMLInputElement>(null)
+  const eclipseFileRef = useRef<HTMLInputElement>(null)
 
   const handleLasUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -322,6 +324,86 @@ export default function FormationPanel() {
       setGeometry('gridfile')
     } catch {
       alert('Failed to parse grid file. Check the format.')
+    }
+  }
+
+  const applyLasAverages = useCallback(() => {
+    if (!las) return
+    // Average porosity from any POR* curve
+    const porCurve = las.curves.find((c) =>
+      c.curveName.toUpperCase().includes('POR')
+    )
+    // Average permeability from any PERM* curve (log-average)
+    const permCurve = las.curves.find((c) =>
+      c.curveName.toUpperCase().includes('PERM') || c.curveName.toUpperCase() === 'K'
+    )
+    const updates: Partial<import('../../types').FormationParams> = {}
+    if (porCurve && porCurve.values.length > 0) {
+      const validVals = porCurve.values.filter((v) => v > 0 && v < 1 && isFinite(v))
+      if (validVals.length > 0) {
+        updates.porosity = parseFloat(
+          (validVals.reduce((s, v) => s + v, 0) / validVals.length).toFixed(3)
+        )
+      }
+    }
+    if (permCurve && permCurve.values.length > 0) {
+      // Log-average for permeability (geometric mean)
+      const validVals = permCurve.values.filter((v) => v > 0 && isFinite(v))
+      if (validVals.length > 0) {
+        const logMean = validVals.reduce((s, v) => s + Math.log10(v), 0) / validVals.length
+        updates.permeability = parseFloat(Math.pow(10, logMean).toFixed(1))
+      }
+    }
+    if (Object.keys(updates).length > 0) setParams(updates)
+  }, [las, setParams])
+
+  const handleEclipseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    try {
+      const result = parseEclipseDeck(text)
+      if (result.errors.length > 0) {
+        alert(`Eclipse parse errors:\n${result.errors.join('\n')}`)
+        return
+      }
+      const updates: Partial<import('../../types').FormationParams> = {}
+      if (result.topDepth_m != null && result.dz_m != null && result.grid) {
+        updates.depth = Math.round(result.topDepth_m + result.dz_m * result.grid.nz / 2)
+        updates.thickness = Math.round(result.dz_m * result.grid.nz)
+      } else if (result.topDepth_m != null) {
+        updates.depth = Math.round(result.topDepth_m)
+      }
+      if (result.meanPorosity != null)    updates.porosity     = parseFloat(result.meanPorosity.toFixed(3))
+      if (result.meanPermX_mD != null)    updates.permeability = parseFloat(result.meanPermX_mD.toFixed(1))
+      if (result.initPressure_MPa != null) updates.pressure    = parseFloat(result.initPressure_MPa.toFixed(2))
+      if (result.temperature_C != null)   updates.temperature  = parseFloat(result.temperature_C.toFixed(1))
+      if (result.dx_m != null && result.dy_m != null && result.grid) {
+        // Approximate area in km²
+        const areakm2 = (result.dx_m * result.grid.nx * result.dy_m * result.grid.ny) / 1e6
+        updates.area = parseFloat(areakm2.toFixed(1))
+      }
+      if (Object.keys(updates).length > 0) setParams(updates)
+      // Import wells
+      if (result.wells.length > 0) {
+        const newWells: import('../../types').Well[] = result.wells.map((w, idx) => ({
+          id: `eclipse_well_${idx}_${Date.now()}`,
+          x: Math.max(-1.4, Math.min(1.4, ((w.i - 1) / Math.max(1, (result.grid?.nx ?? 10) - 1)) * 2 - 1)),
+          z: Math.max(-1.4, Math.min(1.4, ((w.j - 1) / Math.max(1, (result.grid?.ny ?? 10) - 1)) * 2 - 1)),
+          injectionRate: w.injectionRate_m3PerDay != null ? parseFloat((w.injectionRate_m3PerDay * 365.25 * 600 / 1e9).toFixed(2)) : 1.0,
+          label: w.name,
+          rampUpYears: 1,
+          rampDownYears: 1,
+        }))
+        setWells(newWells)
+      }
+      const applied = Object.keys(updates).length
+      const warnMsg = result.warnings.length > 0 ? `\nWarnings:\n${result.warnings.slice(0, 3).join('\n')}` : ''
+      alert(`Eclipse deck imported: ${applied} parameters applied, ${result.wells.length} well(s) loaded.${warnMsg}`)
+      // Reset file input so same file can be re-uploaded
+      if (eclipseFileRef.current) eclipseFileRef.current.value = ''
+    } catch (err) {
+      alert(`Failed to parse Eclipse deck: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -640,6 +722,30 @@ export default function FormationPanel() {
         />
       )}
 
+      {/* Eclipse .DATA Deck Import */}
+      <div className="border-t border-theme/30 pt-3">
+        <h3 className="text-[11px] text-muted font-mono flex items-center gap-1 mb-1">
+          <Upload size={12} /> Eclipse Deck (.DATA)
+        </h3>
+        <p className="text-[8px] text-muted/70 font-mono leading-relaxed mb-2">
+          Imports formation params and wells from an Eclipse E100/E300 .DATA file.
+          Reads DIMENS, DX/DY/DZ, TOPS, PORO, PERMX, PRESSURE, TEMPERATURE, WELSPECS, WCONINJE.
+        </p>
+        <input
+          ref={eclipseFileRef}
+          type="file"
+          accept=".data,.DATA,.txt"
+          onChange={handleEclipseUpload}
+          className="hidden"
+        />
+        <button
+          onClick={() => eclipseFileRef.current?.click()}
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-tertiary text-secondary text-[10px] font-mono hover:text-primary border border-theme/50 hover:border-theme transition"
+        >
+          <Upload size={11} /> Import .DATA file
+        </button>
+      </div>
+
       <div className="pt-2 border-t border-theme">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><Upload size={12} /> LAS Well Log</h3>
@@ -672,6 +778,15 @@ export default function FormationPanel() {
           <p className="text-[10px] text-muted font-mono mt-1 italic">
             No LAS loaded. Formation uses uniform porosity color from slider.
           </p>
+        )}
+        {las && (
+          <button
+            onClick={applyLasAverages}
+            className="mt-1 flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30 transition w-full justify-center"
+            title="Compute arithmetic mean porosity and geometric mean permeability from LAS curves, then populate the simulation sliders"
+          >
+            <Upload size={10} /> Apply LAS averages → simulation params
+          </button>
         )}
       </div>
     </div>

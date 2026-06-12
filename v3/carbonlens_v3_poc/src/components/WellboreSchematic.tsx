@@ -101,7 +101,7 @@ export function generateWellboreSVGString(design: WellDesign, label?: string): s
   parts.push(`<text x="${MARGIN_LEFT + TRACK_W + 26}" y="${(yRStop + yRSbot) / 2 + 4}" font-size="8" fill="${CLR.label}" font-weight="600" font-family="monospace">RESERVOIR</text>`)
 
   // ── Casing strings (draw from largest to smallest so inner strings are on top) ──
-  for (const c of design.casingStrings) {
+  design.casingStrings.forEach((c, casingIdx) => {
     const halfOD = c.outerDiameter_in * pxPerIn
     const halfID = c.innerDiameter_in * pxPerIn
     const yTop   = yOf(c.topDepth_m)
@@ -133,13 +133,14 @@ export function generateWellboreSVGString(design: WellDesign, label?: string): s
       `<rect x="${cx - halfOD}" y="${yBot - 4}" width="${halfOD * 2}" height="4" ` +
       `fill="${CLR.casingEdge}" rx="1"/>`
     )
-    // Casing label (right side, at top)
+    // Casing label (right side, staggered by index to prevent overlap at shallow tops)
+    const labelY = yTop + 10 + casingIdx * 14
     parts.push(
-      `<text x="${cx + halfOD + 6}" y="${yTop + 10}" font-size="7.5" fill="${CLR.muted}" font-family="monospace">` +
+      `<text x="${cx + halfOD + 6}" y="${labelY}" font-size="7.5" fill="${CLR.muted}" font-family="monospace">` +
       `${c.name} ${c.outerDiameter_in}"` +
       `</text>`
     )
-  }
+  })
 
   // ── Perforation / injection interval ─────────────────────────────────────
   const yPtop = yOf(design.perforationTopDepth_m)
@@ -174,11 +175,11 @@ export function generateWellboreSVGString(design: WellDesign, label?: string): s
     design.perforationBottomDepth_m,
     design.totalDepth_m,
   ]
-  const seenY = new Set<number>()
+  const seenY: number[] = []
   for (const d of depthTicks) {
     const y = Math.round(yOf(d))
-    if (seenY.has(y)) continue
-    seenY.add(y)
+    if (seenY.some(sy => Math.abs(sy - y) < 16)) continue
+    seenY.push(y)
     parts.push(`<line x1="${MARGIN_LEFT + 2}" y1="${y}" x2="${MARGIN_LEFT + TRACK_W + 20}" y2="${y}" stroke="${CLR.muted}" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/>`)
     parts.push(`<text x="${MARGIN_LEFT - 2}" y="${y + 4}" text-anchor="end" font-size="8" fill="${CLR.label}" font-family="monospace">${d.toFixed(0)}m</text>`)
   }
@@ -189,17 +190,19 @@ export function generateWellboreSVGString(design: WellDesign, label?: string): s
     `fill="${CLR.label}" font-family="monospace">${label ?? 'WELLBORE DESIGN SCHEMATIC'}</text>`
   )
 
-  // ── Legend ────────────────────────────────────────────────────────────────
-  const legX = 8
+  // ── Horizontal legend at bottom ───────────────────────────────────────────
   const legItems = [
-    { fill: `url(#cementHatch)`, label: 'Cement' },
-    { fill: CLR.casing, stroke: CLR.casingEdge, label: 'Casing' },
-    { fill: CLR.perf, opacity: '0.4', label: 'Perforations' },
+    { fill: `url(#cementHatch)`, stroke: CLR.cementEdge, opacity: '1', label: 'Cement' },
+    { fill: CLR.casing, stroke: CLR.casingEdge, opacity: '1', label: 'Casing' },
+    { fill: CLR.perf, stroke: CLR.perfEdge, opacity: '0.4', label: 'Perforations' },
   ]
+  const legY = SVG_H - 8
+  const legItemW = Math.floor((SVG_W - 16) / legItems.length)
+  parts.push(`<line x1="6" y1="${SVG_H - 20}" x2="${SVG_W - 6}" y2="${SVG_H - 20}" stroke="${CLR.muted}" stroke-width="0.5" opacity="0.35"/>`)
   legItems.forEach((item, i) => {
-    const ly = SVG_H - 52 + i * 14
-    parts.push(`<rect x="${legX}" y="${ly}" width="12" height="9" fill="${item.fill}" stroke="${item.stroke ?? 'none'}" stroke-width="0.5" opacity="${item.opacity ?? '1'}" rx="1"/>`)
-    parts.push(`<text x="${legX + 16}" y="${ly + 8}" font-size="8" fill="${CLR.muted}" font-family="monospace">${item.label}</text>`)
+    const lx = 8 + i * legItemW
+    parts.push(`<rect x="${lx}" y="${legY - 10}" width="11" height="9" fill="${item.fill}" stroke="${item.stroke ?? 'none'}" stroke-width="0.5" opacity="${item.opacity}" rx="1"/>`)
+    parts.push(`<text x="${lx + 15}" y="${legY - 1}" font-size="7.5" fill="${CLR.muted}" font-family="monospace">${item.label}</text>`)
   })
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}">${HATCH_DEF}${parts.join('')}</svg>`

@@ -37,7 +37,7 @@ export function makeCapillaryParams(
 }
 
 export function pcDrainage(Sw: number, params: CapillaryParams): number {
-  if (Sw >= 1) return 0
+  if (Sw >= 1) return params.entryPressure
   if (Sw <= params.residualWater) return params.entryPressure * PC_MAX_MULTIPLIER
   const Sw_e = (Sw - params.residualWater) / (1 - params.residualWater)
   return Math.min(

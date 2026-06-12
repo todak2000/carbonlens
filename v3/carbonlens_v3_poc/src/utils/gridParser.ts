@@ -5,6 +5,12 @@ export interface GridFileData {
   deformations: number[][]
   porosities?: number[][]
   permeabilities?: number[][]
+  /** Optional boundary polygon in normalised [-1, 1] XZ coords.
+   *  When present, the formation smooth mesh is extruded from this polygon
+   *  instead of the default rectangular box. Minimum 3 vertices.
+   *  Example: [[-0.9, -0.7], [0.8, -0.8], [1.0, 0.3], [0.2, 0.9], [-0.8, 0.5]]
+   */
+  boundary_polygon?: [number, number][]
 }
 
 export function wellRateAtTime(rate: number, t: number, rampUp: number, rampDown: number, totalYears: number): number {
@@ -33,6 +39,24 @@ export function parseCarbonGrid(text: string): GridFileData {
   if (raw.deformations.length !== raw.nz || raw.deformations[0].length !== raw.nx) {
     throw new Error(`Deformation array must be ${raw.nz}×${raw.nx}`)
   }
+  // Validate boundary_polygon if present
+  let boundary_polygon: [number, number][] | undefined
+  if (raw.boundary_polygon != null) {
+    if (
+      !Array.isArray(raw.boundary_polygon) ||
+      raw.boundary_polygon.length < 3 ||
+      !raw.boundary_polygon.every(
+        (pt: unknown) => Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === 'number' && typeof pt[1] === 'number'
+      )
+    ) {
+      throw new Error('boundary_polygon must be an array of at least 3 [x, z] pairs')
+    }
+    boundary_polygon = raw.boundary_polygon.map((pt: [number, number]) => [
+      Math.max(-1, Math.min(1, pt[0])),
+      Math.max(-1, Math.min(1, pt[1])),
+    ] as [number, number])
+  }
+
   return {
     nx: raw.nx,
     nz: raw.nz,
@@ -40,6 +64,7 @@ export function parseCarbonGrid(text: string): GridFileData {
     deformations: raw.deformations,
     porosities: raw.porosities,
     permeabilities: raw.permeabilities,
+    boundary_polygon,
   }
 }
 
@@ -60,5 +85,15 @@ export function generateSampleGrid(): GridFileData {
       deformations[iz][ix] = val
     }
   }
-  return { nx, nz, name: 'Complex Winding Channel', deformations }
+  // Non-rectangular boundary: kidney / elongated anticline shape (7 vertices, normalised -1..1)
+  const boundary_polygon: [number, number][] = [
+    [-0.85, -0.60],
+    [ 0.10, -0.90],
+    [ 0.90, -0.50],
+    [ 0.95,  0.25],
+    [ 0.40,  0.88],
+    [-0.40,  0.85],
+    [-0.90,  0.20],
+  ]
+  return { nx, nz, name: 'Complex Winding Channel', deformations, boundary_polygon }
 }

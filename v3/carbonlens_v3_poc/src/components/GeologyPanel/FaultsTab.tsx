@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Trash2, ChevronRight, AlertTriangle, CheckCircle } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Trash2, ChevronRight, AlertTriangle, CheckCircle, Upload } from 'lucide-react'
 import { useGeologicalStore } from '../../store/geologicalStore'
 import { FaultDefinition } from '../../types/geological'
 
@@ -115,8 +115,37 @@ function FaultEditor({ fault }: { fault: FaultDefinition }) {
 }
 
 export default function FaultsTab() {
-  const { model, selectedFaultId, addFault, removeFault, selectFault } = useGeologicalStore()
+  const { model, selectedFaultId, addFault, removeFault, selectFault, setModel } = useGeologicalStore()
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
+
+  const handleFaultImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const raw: unknown[] = JSON.parse(text)
+      if (!Array.isArray(raw)) throw new Error('Expected a JSON array of fault objects')
+      const newFaults: import('../../types/geological').FaultDefinition[] = raw.map((f: any, idx) => ({
+        id: `imported_fault_${Date.now()}_${idx}`,
+        name: typeof f.name === 'string' ? f.name : `Fault ${idx + 1}`,
+        positionX: typeof f.positionX === 'number' ? Math.max(0, Math.min(1, f.positionX)) : 0.5,
+        positionY: typeof f.positionY === 'number' ? Math.max(0, Math.min(1, f.positionY)) : 0.5,
+        strike: typeof f.strike === 'number' ? Math.max(0, Math.min(360, f.strike)) : 45,
+        dip: typeof f.dip === 'number' ? Math.max(15, Math.min(90, f.dip)) : 70,
+        throw: typeof f.throw === 'number' ? Math.max(1, f.throw) : 50,
+        length: typeof f.length === 'number' ? Math.max(100, f.length) : 2000,
+        sealingFactor: typeof f.sealingFactor === 'number' ? Math.max(0, Math.min(1, f.sealingFactor)) : 0.5,
+        claySmearFactor: typeof f.claySmearFactor === 'number' ? Math.max(0, Math.min(1, f.claySmearFactor)) : 0.3,
+        faultZoneThickness: typeof f.faultZoneThickness === 'number' ? Math.max(0.1, f.faultZoneThickness) : 2,
+      }))
+      setModel({ ...model, faults: [...model.faults, ...newFaults] })
+      if (importRef.current) importRef.current.value = ''
+      alert(`Imported ${newFaults.length} fault(s).`)
+    } catch (err) {
+      alert(`Fault import failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -126,12 +155,22 @@ export default function FaultsTab() {
         <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
           {model.faults.length} Fault{model.faults.length !== 1 ? 's' : ''}
         </span>
-        <button
-          onClick={() => { addFault(); setExpandedId(null) }}
-          className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded bg-accent/10 text-accent hover:bg-accent/20 transition"
-        >
-          <Plus size={11} /> Add Fault
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => { addFault(); setExpandedId(null) }}
+            className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded bg-accent/10 text-accent hover:bg-accent/20 transition"
+          >
+            <Plus size={11} /> Add
+          </button>
+          <input ref={importRef} type="file" accept=".json" onChange={handleFaultImport} className="hidden" />
+          <button
+            onClick={() => importRef.current?.click()}
+            className="flex items-center gap-1 text-[10px] font-mono px-2 py-1 rounded bg-tertiary text-muted hover:text-secondary border border-theme/40 transition"
+            title="Import faults from JSON array: [{name, positionX, positionY, strike, dip, throw, length, sealingFactor}]"
+          >
+            <Upload size={11} /> JSON
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 text-[9px] font-mono text-muted">

@@ -35,6 +35,13 @@ const GOOD_RESULT: SimulationResult = {
   ift: 30.0, adAssessment: null,
   p10: 52.0, p50: 200.0, p90: 550.0,
   storageEfficiency: 2.0,
+  structuralCapacity:     15.0,
+  residualCapacity:       20.0,
+  dissolutionCapacity:    14.0,
+  mineralCapacity:         0.0,
+  totalFormationCapacity: 49.0,
+  formationCapacityUtil:  91.8,
+  massBalanceError:        0.0,
 }
 
 const POOR_RESULT: SimulationResult = {

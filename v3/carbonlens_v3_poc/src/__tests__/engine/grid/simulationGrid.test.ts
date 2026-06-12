@@ -56,7 +56,7 @@ function makeModel(): GeologicalModel {
 }
 
 function buildGrid(): SimulationGrid {
-  const data = geologicalModelToGrid(makeModel())
+  const data = geologicalModelToGrid(makeModel(), GRID_NX, GRID_NY, GRID_NZ)
   return new SimulationGrid(data)
 }
 
@@ -67,10 +67,10 @@ describe('SimulationGrid — grid constants', () => {
     expect(GRID_NX * GRID_NY * GRID_NZ).toBe(GRID_CELL_COUNT)
   })
 
-  it('grid dimensions are 20×20×10 as per plan009', () => {
-    expect(GRID_NX).toBe(20)
-    expect(GRID_NY).toBe(20)
-    expect(GRID_NZ).toBe(10)
+  it('grid dimensions are 60×60×20 (default high-res)', () => {
+    expect(GRID_NX).toBe(60)
+    expect(GRID_NY).toBe(60)
+    expect(GRID_NZ).toBe(20)
   })
 })
 

@@ -80,6 +80,13 @@ const MOCK_RESULT: SimulationResult = {
   p50:               85.00,
   p90:              234.00,
   storageEfficiency: 2.0,
+  structuralCapacity:     8.0,
+  residualCapacity:       6.0,
+  dissolutionCapacity:    4.0,
+  mineralCapacity:        0.0,
+  totalFormationCapacity: 18.0,
+  formationCapacityUtil:  111.1,
+  massBalanceError:       0.0,
 }
 
 // ── PERMIT_TEMPLATES structure ─────────────────────────────────────────────────

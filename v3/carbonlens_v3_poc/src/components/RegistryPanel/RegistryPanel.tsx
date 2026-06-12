@@ -1,8 +1,33 @@
-import { useMemo } from 'react'
-import { Shield, Database, BadgeCheck, ArrowUpRight, Activity, PiggyBank, FileCheck } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import { Shield, Database, BadgeCheck, ArrowUpRight, Activity, PiggyBank, FileCheck, ExternalLink, Pencil } from 'lucide-react'
 import { useFormationStore } from '../../store/formationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
+
+export interface CertificateRecord {
+  assetId: string
+  savedAt: string
+  formationName: string
+  jurisdiction: string
+  depth: number
+  area: number
+  porosity: number
+  status: 'Verified' | 'Review Required' | 'Non-Compliant'
+  containmentProbability: number
+  safetyFactor: number
+  storageCapacity: number
+  totalCapacity: number
+  plumeRadius: number
+  injectionPressure: number
+  maip: number
+  maipMargin: number
+  mobilePlume: number
+  residualTrapping: number
+  solubilityTrapping: number
+  overpressureRisk: boolean
+  totalCredits: number
+  projectYears: number
+}
 
 function mockTxId(i: number): string {
   const chars = '0123456789abcdef'
@@ -13,11 +38,23 @@ function mockTxId(i: number): string {
 
 export default function RegistryPanel() {
   const params = useFormationStore((s) => s.params)
+  const activePresetName = useFormationStore((s) => s.activePresetName)
   const result = useSimulationStore((s) => s.result)
   const geomech = useSimulationStore((s) => s.geomechanics)
   const jurisdiction = useUIStore((s) => s.jurisdiction)
   const projectYears = useUIStore((s) => s.projectYears)
   const setPanel = useUIStore((s) => s.setPanel)
+  const [certSaved, setCertSaved] = useState(false)
+  const [certSavedId, setCertSavedId] = useState<string | null>(null)
+  const [formationLabel, setFormationLabel] = useState<string>('')
+  const [editingLabel, setEditingLabel] = useState(false)
+
+  // Sync label whenever the active preset changes (or on first mount)
+  useEffect(() => {
+    setFormationLabel(activePresetName ?? 'Custom Formation')
+    setCertSaved(false)
+    setCertSavedId(null)
+  }, [activePresetName])
 
   const assetId = useMemo(() => {
     const h = params.depth.toString(16).padStart(4, '0')
@@ -70,6 +107,52 @@ export default function RegistryPanel() {
     ? { label: 'Non-Compliant', color: 'bg-error border-error text-error' }
     : { label: 'Not Assessed', color: 'bg-tertiary/30 border-theme/30 text-muted' }
 
+  const certStatus: CertificateRecord['status'] = verified
+    ? 'Verified'
+    : warning
+    ? 'Review Required'
+    : 'Non-Compliant'
+
+  const handleSaveCertificate = () => {
+    if (!result || !geomech) return
+    const formationName = formationLabel.trim() || activePresetName || 'Custom Formation'
+    const record: CertificateRecord = {
+      assetId,
+      savedAt: new Date().toISOString(),
+      formationName,
+      jurisdiction,
+      depth: params.depth,
+      area: params.area,
+      porosity: params.porosity,
+      status: certStatus,
+      containmentProbability: result.containmentProbability,
+      safetyFactor: geomech.safetyFactor,
+      storageCapacity: result.storageCapacity,
+      totalCapacity: result.totalCapacity,
+      plumeRadius: result.plumeRadius,
+      injectionPressure: result.injectionPressure,
+      maip: geomech.maip,
+      maipMargin: geomech.maipMargin,
+      mobilePlume: result.mobilePlume,
+      residualTrapping: result.residualTrapping,
+      solubilityTrapping: result.solubilityTrapping,
+      overpressureRisk: result.overpressureRisk,
+      totalCredits: totalCredits,
+      projectYears,
+    }
+    const existing = (() => {
+      try { return JSON.parse(localStorage.getItem('carbonlens_certificates') ?? '{}') } catch { return {} }
+    })()
+    existing[assetId] = record
+    localStorage.setItem('carbonlens_certificates', JSON.stringify(existing))
+    setCertSaved(true)
+    setCertSavedId(assetId)
+  }
+
+  const certUrl = certSavedId
+    ? `${window.location.origin}/registry/verify/${certSavedId}`
+    : null
+
   return (
     <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-120px)]">
       <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider flex items-center gap-1.5">
@@ -96,6 +179,57 @@ export default function RegistryPanel() {
           <span>Area: {params.area}km²</span>
         </div>
       </div>
+
+      {/* Formation name for certificate */}
+      <div className="rounded px-2 py-2 border border-theme/30 bg-tertiary/20 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] text-muted font-mono uppercase tracking-wider">Formation Name</span>
+          <button
+            onClick={() => setEditingLabel((v) => !v)}
+            className="text-[9px] font-mono text-muted/60 hover:text-primary flex items-center gap-0.5 transition"
+          >
+            <Pencil size={9} /> {editingLabel ? 'done' : 'edit'}
+          </button>
+        </div>
+        {editingLabel ? (
+          <input
+            type="text"
+            value={formationLabel}
+            onChange={(e) => setFormationLabel(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && setEditingLabel(false)}
+            placeholder="Enter formation name…"
+            autoFocus
+            className="w-full bg-transparent border-b border-primary/40 text-[11px] font-mono text-primary outline-none pb-0.5 placeholder:text-muted/40"
+          />
+        ) : (
+          <div className="text-[11px] font-mono font-semibold text-primary truncate">{formationLabel || 'Custom Formation'}</div>
+        )}
+        <div className="text-[8px] text-muted/40 font-mono">Used on the certificate. Keep preset name or enter your own.</div>
+      </div>
+
+      {/* Certificate Actions */}
+      {result && geomech && (
+        <div className="flex gap-2">
+          <button
+            onClick={handleSaveCertificate}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-400 hover:bg-emerald-500/20 transition"
+          >
+            <FileCheck size={11} /> Save Certificate
+          </button>
+          <button
+            disabled={!certSaved}
+            onClick={() => certUrl && window.open(certUrl, '_blank')}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded bg-blue-500/10 border border-blue-500/30 text-[10px] font-mono text-blue-400 hover:bg-blue-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ExternalLink size={11} /> View Certificate
+          </button>
+        </div>
+      )}
+      {certSaved && certUrl && (
+        <div className="rounded px-2 py-1.5 bg-emerald-500/5 border border-emerald-500/20 text-[9px] font-mono text-emerald-400 break-all">
+          Certificate saved. Share link: <span className="text-muted">{certUrl}</span>
+        </div>
+      )}
 
       {/* Verification Summary */}
       <div className="grid grid-cols-2 gap-2">

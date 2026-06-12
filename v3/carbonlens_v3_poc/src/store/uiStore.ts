@@ -3,7 +3,7 @@ import { Jurisdiction, ColorProperty } from '../types'
 
 type Panel = 'properties' | 'formation' | 'geology' | 'simulation' | 'geomechanics' | 'economics' | 'leakage' | 'screening' | 'jurisdiction' | 'export' | 'overview' | 'registry' | 'methodology' | 'validation' | 'montecarlo' | 'historymatching'
 type Theme = 'dark' | 'light'
-type View = 'landing' | 'auth' | 'dashboard' | 'workspace'
+type View = 'landing' | 'auth' | 'dashboard' | 'workspace' | 'analytics'
 export type { Panel, Theme, View }
 
 function getInitialTheme(): Theme {

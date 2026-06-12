@@ -376,6 +376,244 @@ export const PERMIT_TEMPLATES: Record<string, PermitTemplate> = {
       return s
     },
   },
+
+  NG: {
+    id: 'NG',
+    name: 'Nigeria NUPRC CCS Storage Permit',
+    jurisdiction: 'Nigeria',
+    regulator: 'Nigerian Upstream Petroleum Regulatory Commission (NUPRC)',
+    legislation: 'Petroleum Industry Act 2021 (PIA 2021) §§ 102–108; Climate Change Act 2021 (Act No. 42)',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           Nigeria CCS Regulatory Framework',
+            '  AUTHORITY:           Nigerian Upstream Petroleum Regulatory Commission (NUPRC)',
+            '  LEGISLATION:         Petroleum Industry Act 2021 (PIA 2021), Part VI, §§ 102–108',
+            '                       Climate Change Act 2021 (Act No. 42)',
+            '  PERMIT TYPE:         CO₂ Storage Permit',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. Site characterisation report per NUPRC Technical Standards',
+            '    2. Environmental Impact Assessment (EIA) — Federal Ministry of Environment',
+            '    3. Community Development Agreement (CDA) under PIA 2021',
+            '    4. CO₂ stream composition certification',
+            '    5. MRV framework under the National Climate Change Action Plan (NCCAP)',
+            '    6. Financial assurance / abandonment fund commitment',
+            '    7. Emergency response and spill prevention plan',
+            '    8. Decommissioning and site closure plan',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
+
+  ID: {
+    id: 'ID',
+    name: 'Indonesia CCS Storage Permit — PP 19/2023',
+    jurisdiction: 'Indonesia',
+    regulator: 'Ministry of Energy and Mineral Resources (MEMR) / SKK Migas',
+    legislation: 'Government Regulation No. 19 of 2023 on CCS (PP 19/2023); MEMR Regulation No. 2 of 2023',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           Indonesia CCS Regulatory Framework',
+            '  AUTHORITY:           Ministry of Energy and Mineral Resources (MEMR) / SKK Migas',
+            '  LEGISLATION:         Government Regulation No. 19 of 2023 (PP 19/2023)',
+            '                       MEMR Regulation No. 2 of 2023 on CCS Implementation',
+            '  PERMIT TYPE:         CCS Business Licence (Izin Usaha CCS)',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. CCS Business Activity Plan (RKHCCS) — MEMR approval',
+            '    2. Working Area designation and geological site characterisation',
+            '    3. CO₂ injection monitoring plan (SKK Migas oversight)',
+            '    4. Environmental document (AMDAL) per Government Regulation PP 22/2021',
+            '    5. Financial guarantee for site closure and post-injection care',
+            '    6. Technology transfer and local content requirement (TKDN)',
+            '    7. Post-injection monitoring — minimum 5 years',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
+
+  EG: {
+    id: 'EG',
+    name: 'Egypt CO₂ Storage Permit — EMRA / EEAA',
+    jurisdiction: 'Egypt',
+    regulator: 'Egyptian Energy Regulatory Authority (EMRA) / Egyptian Environmental Affairs Agency (EEAA)',
+    legislation: 'Climate Change Act 2023 (Law No. 11 of 2023); Environmental Law No. 4 of 1994 (as amended); Natural Gas Activities Law No. 119 of 2004',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           Egypt CO₂ Geological Storage Framework',
+            '  AUTHORITY:           Egyptian Energy Regulatory Authority (EMRA)',
+            '                       Egyptian Environmental Affairs Agency (EEAA)',
+            '  LEGISLATION:         Climate Change Act 2023 (Law No. 11 of 2023)',
+            '                       Environmental Law No. 4 of 1994 (as amended)',
+            '                       Natural Gas Activities Law No. 119 of 2004',
+            '  PERMIT TYPE:         CO₂ Storage Permit',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. Site characterisation and feasibility study (EMRA approval)',
+            '    2. Environmental Impact Statement (EIS) — EEAA Decree',
+            '    3. CO₂ stream analysis and purity certification (≥95%)',
+            '    4. National CO₂ MRV monitoring plan',
+            '    5. Financial assurance for long-term stewardship',
+            '    6. Community consultation and public disclosure',
+            '    7. Integration with Egypt\'s NDC commitments under the Paris Agreement',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
+
+  AE: {
+    id: 'AE',
+    name: 'UAE CCUS Facility Licence — MOEI',
+    jurisdiction: 'United Arab Emirates',
+    regulator: 'Ministry of Energy and Infrastructure (MOEI) / Abu Dhabi Department of Energy',
+    legislation: 'Federal Law No. 24 of 1999 on Environment Protection; UAE Net Zero by 2050 Strategic Initiative; UAE CCUS Policy Framework (2023)',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           UAE CCUS Regulatory Framework',
+            '  AUTHORITY:           Ministry of Energy and Infrastructure (MOEI)',
+            '                       Abu Dhabi Department of Energy',
+            '  LEGISLATION:         Federal Law No. 24 of 1999 on Environment Protection',
+            '                       UAE Net Zero by 2050 Strategic Initiative',
+            '                       UAE CCUS Policy Framework (2023, COP28 commitment)',
+            '  PERMIT TYPE:         CCUS Facility Licence',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. CCUS project registration with MOEI',
+            '    2. Technical feasibility report (ADNOC / operator standards)',
+            '    3. Environmental Impact Assessment — Ministry of Climate Change',
+            '    4. CO₂ monitoring, reporting, and verification (MRV) plan',
+            '    5. Financial guarantee for decommissioning and site closure',
+            '    6. Compliance with UAE Voluntary Carbon Market framework',
+            '    7. Public consultation under Federal Environmental Law No. 24/1999',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
+
+  CA: {
+    id: 'CA',
+    name: 'Alberta CCS Sequestration Licence — AER',
+    jurisdiction: 'Canada (Alberta)',
+    regulator: 'Alberta Energy Regulator (AER)',
+    legislation: 'Mines and Minerals Act, RSA 2000, Chapter M-17; Carbon Capture and Storage Statutes Amendment Act, 2010; AER Directive 083; Canada\'s Net-Zero Emissions Accountability Act 2021',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           Alberta CCS Regulatory Framework',
+            '  AUTHORITY:           Alberta Energy Regulator (AER)',
+            '  LEGISLATION:         Mines and Minerals Act, RSA 2000, Chapter M-17',
+            '                       Carbon Capture and Storage Statutes Amendment Act, 2010',
+            '                       AER Directive 083 — Carbon Capture and Storage',
+            '                       Canada\'s Net-Zero Emissions Accountability Act 2021',
+            '  PERMIT TYPE:         CCS Evaluation and Sequestration Licence',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. Evaluation Licence application to AER (Directive 083)',
+            '    2. Geological characterisation report (evaluation + sequestration phases)',
+            '    3. Province assumes post-closure liability after 10 years (post-closure stewardship)',
+            '    4. Closure plan with financial security before injection start',
+            '    5. CO₂ characterisation and purity report (≥95% CO₂)',
+            '    6. Area of Review (AoR) mapping and USDW assessment',
+            '    7. Consultation with First Nations and Métis communities (UNDRIP obligations)',
+            '    8. Integration with Alberta\'s TIER carbon pricing program (CAD 65/t, 2024)',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
+
+  DZ: {
+    id: 'DZ',
+    name: 'Algeria CCS Permit — Sonatrach / ALNAFT',
+    jurisdiction: 'Algeria',
+    regulator: 'National Agency for the Valorisation of Hydrocarbon Resources (ALNAFT)',
+    legislation: 'Law No. 05-07 of 2005 on Hydrocarbons (revised by Law No. 19-13 of 2019); Executive Decree No. 10-143 on EIA',
+    sections(params, wells, result) {
+      const s: PermitSection[] = [
+        {
+          title: 'REGULATORY FRAMEWORK',
+          lines: [
+            sep,
+            '  PROGRAMME:           Algeria CCS Regulatory Framework',
+            '  AUTHORITY:           National Agency for Valorisation of Hydrocarbon Resources (ALNAFT)',
+            '                       Ministry of Energy and Mines',
+            '  LEGISLATION:         Law No. 05-07 of 2005 on Hydrocarbons',
+            '                       (revised by Law No. 19-13 of 2019)',
+            '                       Executive Decree No. 10-143 on Environmental Impact Assessment',
+            '  PERMIT TYPE:         CO₂ Storage Permit (Titre minier de stockage)',
+            '',
+            '  KEY REQUIREMENTS:',
+            '    1. Exploration permit (titre minier d\'exploration) — ALNAFT oversight',
+            '    2. EIA under Executive Decree No. 10-143',
+            '    3. Sonatrach technical validation as state partner (required under Law 05-07)',
+            '    4. CO₂ stream composition analysis and purity certification',
+            '    5. Site abandonment and closure plan',
+            '    6. Financial assurance per Hydrocarbons Law Title V',
+            '    7. Integration with Algeria\'s National Climate Plan (PNAC 2020)',
+            sep,
+          ],
+        },
+        formationSection(params),
+        caprockSection(params),
+        wellsSection(wells),
+      ]
+      if (result) s.push(resultsSection(result))
+      return s
+    },
+  },
 }
 
 export const DEFAULT_JURISDICTION = 'US'

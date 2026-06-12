@@ -1,116 +1,26 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Shuffle, Play, Download, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
-import { computeYearly } from '../../hooks/useSimulation'
+import { FORMATION_PRESETS } from '../../data/formationPresets'
+import { useMCStore } from '../../store/mcStore'
+import {
+  runMonteCarlo,
+  DEFAULT_MC_CONFIG,
+  type MCConfig,
+  type MCResult,
+  type MCRealization,
+} from '../../utils/monteCarlo'
 
-// ── Latin Hypercube Sampling ─────────────────────────────────────────────────
-function latinHypercube(n: number, d: number): number[][] {
-  const result: number[][] = Array.from({ length: n }, () => new Array(d).fill(0))
-  for (let j = 0; j < d; j++) {
-    const perm = Array.from({ length: n }, (_, i) => i)
-    for (let i = n - 1; i > 0; i--) {
-      const k = Math.floor(Math.random() * (i + 1));
-      [perm[i], perm[k]] = [perm[k], perm[i]]
-    }
-    for (let i = 0; i < n; i++) {
-      result[i][j] = (perm[i] + Math.random()) / n
-    }
-  }
-  return result
-}
-
-function percentile(sorted: number[], p: number): number {
-  const idx = Math.max(0, Math.min(sorted.length - 1, Math.floor(p * sorted.length)))
-  return sorted[idx]
-}
-
-function formatGt(v: number) { return v.toFixed(3) }
+function formatMt(v: number) { return v.toFixed(2) }
 function formatMPa(v: number) { return v.toFixed(2) }
 
-export interface MCRealization {
-  id: number
-  permMultiplier: number
-  porosityDelta: number
-  storageCapacity_Gt: number
-  peakPressure_MPa: number
-}
-
-export interface MCResult {
-  realizations: MCRealization[]
-  p10_Gt: number; p50_Gt: number; p90_Gt: number
-  p10_P: number;  p50_P: number;  p90_P: number
-  runTimeMs: number
-}
-
-// Uncertain parameters and their perturbations
-interface MCConfig {
-  permUncertPct: number      // ± % of base permeability (log-normal)
-  poroUncertAbs: number      // ± absolute porosity
-  nRealizations: number
-}
-
-const DEFAULT_CONFIG: MCConfig = {
-  permUncertPct: 30,
-  poroUncertAbs: 0.03,
-  nRealizations: 100,
-}
-
-function runMonteCarlo(config: MCConfig, baseParams: ReturnType<typeof useFormationStore.getState>['params'], projectYears: number): MCResult {
-  const { permUncertPct, poroUncertAbs, nRealizations: N } = config
-  const t0 = performance.now()
-
-  // LHS over 2 uncertain dimensions: permeability multiplier (log-space), porosity delta
-  const samples = latinHypercube(N, 2)
-  const realizations: MCRealization[] = []
-
-  for (let i = 0; i < N; i++) {
-    // Permeability: log-uniform between k*(1-pct/100) and k*(1+pct/100)
-    // Map u[0,1] → log-space multiplier
-    const logMin = Math.log(1 - permUncertPct / 100)
-    const logMax = Math.log(1 + permUncertPct / 100)
-    const permMult = Math.exp(logMin + samples[i][0] * (logMax - logMin))
-
-    // Porosity: uniform additive perturbation
-    const poroDelta = (samples[i][1] - 0.5) * 2 * poroUncertAbs
-
-    const sampledParams = {
-      ...baseParams,
-      permeability: Math.max(1, baseParams.permeability * permMult),
-      porosity: Math.max(0.01, Math.min(0.45, baseParams.porosity + poroDelta)),
-    }
-
-    // Use end-of-project year for capacity estimate
-    const result = computeYearly(sampledParams, projectYears, projectYears, null)
-
-    realizations.push({
-      id: i,
-      permMultiplier: permMult,
-      porosityDelta: poroDelta,
-      storageCapacity_Gt: result.storageCapacity,
-      peakPressure_MPa: result.injectionPressure,
-    })
-  }
-
-  const caps = [...realizations.map(r => r.storageCapacity_Gt)].sort((a, b) => a - b)
-  const press = [...realizations.map(r => r.peakPressure_MPa)].sort((a, b) => a - b)
-
-  return {
-    realizations,
-    p10_Gt: percentile(caps, 0.1),
-    p50_Gt: percentile(caps, 0.5),
-    p90_Gt: percentile(caps, 0.9),
-    p10_P: percentile(press, 0.1),
-    p50_P: percentile(press, 0.5),
-    p90_P: percentile(press, 0.9),
-    runTimeMs: performance.now() - t0,
-  }
-}
+export type { MCRealization, MCResult, MCConfig }
 
 function downloadCSV(result: MCResult) {
-  const header = 'id,permMultiplier,porosityDelta,storageCapacity_Gt,peakPressure_MPa'
+  const header = 'id,permMultiplier,porosityDelta,areaMultiplier,thicknessMultiplier,storageCapacity_Mt,peakPressure_MPa'
   const rows = result.realizations.map(r =>
-    `${r.id},${r.permMultiplier.toFixed(4)},${r.porosityDelta.toFixed(4)},${r.storageCapacity_Gt.toFixed(5)},${r.peakPressure_MPa.toFixed(3)}`
+    `${r.id},${r.permMultiplier.toFixed(4)},${r.porosityDelta.toFixed(4)},${r.areaMultiplier.toFixed(4)},${r.thicknessMultiplier.toFixed(4)},${r.storageCapacity_Mt.toFixed(4)},${r.peakPressure_MPa.toFixed(3)}`
   )
   const csv = [header, ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
@@ -145,9 +55,18 @@ function RangeBar({ p10, p50, p90, unit, fmt }: { p10: number; p50: number; p90:
 export default function MonteCarloPanel() {
   const params = useFormationStore((s) => s.params)
   const projectYears = useUIStore((s) => s.projectYears)
-  const [config, setConfig] = useState<MCConfig>(DEFAULT_CONFIG)
+  const [config, setConfig] = useState<MCConfig>(DEFAULT_MC_CONFIG)
   const [result, setResult] = useState<MCResult | null>(null)
   const [running, setRunning] = useState(false)
+  const setLastMCResult = useMCStore(s => s.setLastResult)
+
+  // Resolve formation name from presets (fingerprint by depth + porosity)
+  const formationName = useMemo(() => {
+    const preset = FORMATION_PRESETS.find(
+      (p) => p.params.depth === params.depth && p.params.porosity === params.porosity
+    )
+    return preset?.name ?? 'Custom Formation'
+  }, [params.depth, params.porosity])
 
   const run = useCallback(() => {
     setRunning(true)
@@ -156,6 +75,22 @@ export default function MonteCarloPanel() {
       try {
         const res = runMonteCarlo(config, params, projectYears)
         setResult(res)
+        setLastMCResult({
+          p10_Mt: res.p10_Mt,
+          p50_Mt: res.p50_Mt,
+          p90_Mt: res.p90_Mt,
+          p10_P: res.p10_P,
+          p50_P: res.p50_P,
+          p90_P: res.p90_P,
+          realizations: res.realizations.length,
+          runTimeMs: res.runTimeMs,
+          permUncertPct: config.permUncertPct,
+          poroUncertAbs: config.poroUncertAbs,
+          areaUncertPct: config.areaUncertPct,
+          thickUncertPct: config.thickUncertPct,
+          formationName,
+          ranAt: new Date().toISOString(),
+        })
       } finally {
         setRunning(false)
       }
@@ -173,6 +108,12 @@ export default function MonteCarloPanel() {
           <p className="text-sm font-semibold text-primary">Monte Carlo</p>
           <p className="text-[10px] text-muted">Latin Hypercube Sampling over uncertain parameters</p>
         </div>
+      </div>
+
+      {/* Formation badge */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded bg-accent/10 border border-accent/20">
+        <span className="text-[10px] text-muted font-mono uppercase tracking-wider">Formation:</span>
+        <span className="text-[11px] font-semibold text-accent font-mono">{formationName}</span>
       </div>
 
       {/* Config */}
@@ -197,6 +138,28 @@ export default function MonteCarloPanel() {
             className={sliderCls}
             onChange={e => setConfig(c => ({ ...c, poroUncertAbs: +e.target.value }))} />
           <p className="text-[10px] text-muted">φ samples [{Math.max(0.01, params.porosity - config.poroUncertAbs).toFixed(2)}, {Math.min(0.45, params.porosity + config.poroUncertAbs).toFixed(2)}]</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-muted">
+            <label>Reservoir area uncertainty</label>
+            <span className="text-primary">±{config.areaUncertPct}%</span>
+          </div>
+          <input type="range" min={5} max={60} step={5} value={config.areaUncertPct}
+            className={sliderCls}
+            onChange={e => setConfig(c => ({ ...c, areaUncertPct: +e.target.value }))} />
+          <p className="text-[10px] text-muted">Area in [{((params.area ?? 100) * (1 - config.areaUncertPct / 100)).toFixed(0)}, {((params.area ?? 100) * (1 + config.areaUncertPct / 100)).toFixed(0)}] km²</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-muted">
+            <label>Net pay thickness uncertainty</label>
+            <span className="text-primary">±{config.thickUncertPct}%</span>
+          </div>
+          <input type="range" min={5} max={50} step={5} value={config.thickUncertPct}
+            className={sliderCls}
+            onChange={e => setConfig(c => ({ ...c, thickUncertPct: +e.target.value }))} />
+          <p className="text-[10px] text-muted">Thickness in [{((params.thickness ?? 50) * (1 - config.thickUncertPct / 100)).toFixed(0)}, {((params.thickness ?? 50) * (1 + config.thickUncertPct / 100)).toFixed(0)}] m</p>
         </div>
 
         <div className="space-y-1.5">
@@ -235,8 +198,8 @@ export default function MonteCarloPanel() {
 
           {/* Storage capacity */}
           <div className="bg-card rounded-lg p-3 space-y-2 border border-theme">
-            <p className="text-[10px] text-muted uppercase tracking-wider">Storage Capacity</p>
-            <RangeBar p10={result.p10_Gt} p50={result.p50_Gt} p90={result.p90_Gt} unit="Gt" fmt={formatGt} />
+            <p className="text-[10px] text-muted uppercase tracking-wider">Storage Capacity (DOE P50 Volumetric)</p>
+            <RangeBar p10={result.p10_Mt} p50={result.p50_Mt} p90={result.p90_Mt} unit="Mt CO₂" fmt={formatMt} />
           </div>
 
           {/* Pressure builddup */}
@@ -257,10 +220,10 @@ export default function MonteCarloPanel() {
             </thead>
             <tbody className="text-primary">
               <tr className="border-b border-theme/50">
-                <td className="py-1 text-muted">Capacity (Gt)</td>
-                <td className="py-1 text-right">{formatGt(result.p10_Gt)}</td>
-                <td className="py-1 text-right font-semibold text-accent">{formatGt(result.p50_Gt)}</td>
-                <td className="py-1 text-right">{formatGt(result.p90_Gt)}</td>
+                <td className="py-1 text-muted">Capacity (Mt)</td>
+                <td className="py-1 text-right">{formatMt(result.p10_Mt)}</td>
+                <td className="py-1 text-right font-semibold text-accent">{formatMt(result.p50_Mt)}</td>
+                <td className="py-1 text-right">{formatMt(result.p90_Mt)}</td>
               </tr>
               <tr>
                 <td className="py-1 text-muted">ΔP (MPa)</td>
@@ -272,11 +235,11 @@ export default function MonteCarloPanel() {
           </table>
 
           {/* Uncertainty ratio */}
-          {result.p50_Gt > 0 && (
+          {result.p50_Mt > 0 && (
             <div className="bg-accent/5 border border-accent/20 rounded p-2.5 space-y-0.5">
               <p className="text-[10px] text-muted">P90/P10 capacity ratio (spread indicator)</p>
-              <p className="text-sm font-bold text-accent">{(result.p90_Gt / Math.max(result.p10_Gt, 1e-6)).toFixed(1)}×</p>
-              <p className="text-[10px] text-muted">{result.p90_Gt / Math.max(result.p10_Gt, 1e-6) < 2 ? 'Low uncertainty — well-constrained inputs' : result.p90_Gt / Math.max(result.p10_Gt, 1e-6) < 5 ? 'Moderate uncertainty — typical for appraisal stage' : 'High uncertainty — more characterization data needed'}</p>
+              <p className="text-sm font-bold text-accent">{(result.p90_Mt / Math.max(result.p10_Mt, 1e-6)).toFixed(1)}×</p>
+              <p className="text-[10px] text-muted">{result.p90_Mt / Math.max(result.p10_Mt, 1e-6) < 2 ? 'Low uncertainty — well-constrained inputs' : result.p90_Mt / Math.max(result.p10_Mt, 1e-6) < 5 ? 'Moderate uncertainty — typical for appraisal stage' : 'High uncertainty — more characterization data needed'}</p>
             </div>
           )}
 
@@ -290,7 +253,7 @@ export default function MonteCarloPanel() {
 
           <div className="flex items-start gap-1.5 text-[10px] text-muted bg-tertiary/40 rounded p-2">
             <AlertCircle size={11} className="mt-0.5 shrink-0" />
-            <span>LHS over permeability and porosity. Fault transmissibility and injection schedule held at base case. Extend by adding more uncertain dimensions.</span>
+            <span>LHS over 4 dimensions: permeability, porosity, reservoir area, and net pay thickness. Capacity uses DOE Goodman (2011) volumetric method. Fault transmissibility and injection schedule held at base case.</span>
           </div>
         </div>
       )}

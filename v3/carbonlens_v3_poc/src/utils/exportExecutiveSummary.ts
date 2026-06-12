@@ -493,7 +493,7 @@ export function exportExecutiveSummary(
   const brandW = doc.getTextWidth('CarbonLens')
   doc.setFont('helvetica', 'normal')
   setTxt(doc, [150, 170, 200] as const)
-  doc.text(' \u2014 carbonlens.app \u2014 Generated ' + date, M + brandW, ftY)
+  doc.text(' \u2014 ' + window.location.hostname + ' \u2014 Generated ' + date, M + brandW, ftY)
 
   // Right: institution disclaimer (single line, no MARS/ML/Sleipner reference)
   setTxt(doc, [150, 170, 200] as const)

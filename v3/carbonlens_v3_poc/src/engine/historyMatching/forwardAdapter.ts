@@ -219,43 +219,104 @@ export function runForwardModel(
     const plumeRadius = Math.sqrt(2 * cumVolM3 / (Math.PI * phi * Math.max(1, hEff)));
     const plumeHeight = h_m * 0.55 * Math.min(1, Math.sqrt(totalCum / Math.max(0.001, totalCapacity)));
 
-    // Trapping model — cumulative, stateful
-    const prevCum = prevResult
-      ? wells.reduce((s, w) => s + cumulativeAt(w, Math.max(0, year - 1), projectYears), 0)
-      : 0;
-    const incrementalCum = Math.max(0, totalCum - prevCum);
+    // ── Physics-based independent trapping capacities (mirrors useSimulation.ts) ──
+    // Each mechanism capacity is derived from formation properties + plume geometry.
+    const SWI_CONNATE_FA = 0.15;
+    const C_LAND_FA = 2.5;
+    const GEOMETRY_CLOSURE_FA: Record<string, { trapFrac: number; closureFrac: number }> = {
+      anticline: { trapFrac: 0.80, closureFrac: 0.25 },
+      dome:      { trapFrac: 0.90, closureFrac: 0.30 },
+      fault:     { trapFrac: 0.70, closureFrac: 0.20 },
+      layered:   { trapFrac: 0.55, closureFrac: 0.15 },
+      stratigraphic: { trapFrac: 0.65, closureFrac: 0.18 },
+      channel:   { trapFrac: 0.50, closureFrac: 0.12 },
+      gridfile:  { trapFrac: 0.70, closureFrac: 0.20 },
+    };
+    const S_gi_fa = ntg * (1 - SWI_CONNATE_FA);
+    const S_gr_fa = S_gi_fa / (1 + C_LAND_FA * S_gi_fa);
+    const gf_fa = GEOMETRY_CLOSURE_FA[params.geometryType] ?? { trapFrac: 0.70, closureFrac: 0.20 };
+    const A_fa = params.area * 1e6;
+    const muBrine_fa = 6e-4;
 
-    // Base trapping rate (6.5%/yr)
-    // Apply dissolutionFactor to the solubility fraction only
-    const baseSolubilityFrac = 0.4; // 40% of trapping goes to dissolution
-    const baseResidualFrac = 0.6;   // 60% to residual
+    // 1. Structural capacity
+    const V_struct_fa = A_fa * gf_fa.trapFrac * (h_m * gf_fa.closureFrac) * ntg * phi * Math.max(0, 1 - SWI_CONNATE_FA - S_gr_fa);
+    const structuralCapacity = Math.max(0, V_struct_fa * rhoCO2 / 1e9);
 
-    const trappingRate = 0.065;
-    const mobileBeforeTrapping = (prevResult?.mobilePlume ?? 0) + incrementalCum;
-    const newlyTrapped = mobileBeforeTrapping * trappingRate;
+    // 2. Residual capacity (Land snap-off in swept volume)
+    //    PVI-based sweep efficiency — avoids the algebraic cancellation where
+    //    V_swept = π×r²×h_eff×NTG×φ with r=sqrt(2V/(π×φ×h_eff)) collapses to
+    //    2×V_CO₂×NTG, making porosity and thickness cancel out entirely.
+    const V_pore_formation_fa = A_fa * h_m * ntg * phi; // total reservoir pore volume (m³)
+    const PVI_fa = cumVolM3 / Math.max(1e3, V_pore_formation_fa); // pore volumes injected
+    const FQI_fa = Math.min(2.0, Math.max(0.15, Math.sqrt(params.permeability * phi / (200 * 0.20))));
+    const E_sweep_fa = Math.min(gf_fa.trapFrac, (1 - Math.exp(-3 * PVI_fa * FQI_fa)) * gf_fa.trapFrac);
+    const V_swept_fa = V_pore_formation_fa * E_sweep_fa;
+    const residualCapacity = Math.max(0, V_swept_fa * S_gr_fa * rhoCO2 / 1e9);
 
-    // dissolutionFactor scales solubility trapping rate
-    // but we cap so that total trapping doesn't exceed 100% of newly trapped
-    const rawSolFrac = baseSolubilityFrac * dissolutionFactor;
-    const totalFrac = baseResidualFrac + rawSolFrac;
-    const solFrac = totalFrac > 0 ? rawSolFrac / totalFrac : 0.4;
-    const resFrac = totalFrac > 0 ? baseResidualFrac / totalFrac : 0.6;
+    // 3. Dissolution capacity — plume brine volume reference (mirrors useSimulation.ts)
+    const X_sat_fa = solubility * 0.044;
+    const A_contact_fa = Math.PI * plumeRadius * plumeRadius;
+    const t_sec_fa = Math.max(1, year) * 365.25 * 24 * 3600;
+    const delta_rho_fa = 2.0;
+    const Ra_fa = delta_rho_fa * 9.81 * perm_m2 * h_m / (muBrine_fa * diffusion * phi);
+    const conv_fa = Math.max(1, Math.min(20, Math.sqrt(Math.max(0, Ra_fa / 40))));
+    const D_eff_fa = diffusion * conv_fa;
+    const V_p_plume_fa = Math.max(1, Math.PI * plumeRadius * plumeRadius * plumeHeight * phi * ntg);
+    const S_g_plume_fa = Math.min(1 - 0.15, cumVolM3 / V_p_plume_fa);
+    const V_brine_fa = V_p_plume_fa * (1 - S_g_plume_fa);
+    const dissFick_fa = 2 * A_contact_fa * rhoBrine * X_sat_fa * Math.sqrt(D_eff_fa * t_sec_fa) / 1e9;
+    const t_onset_fa  = Math.max(2, 50 / Math.sqrt(params.permeability));
+    const t_yr_fa     = Math.max(1, year);
+    const f_conv_fa   = t_yr_fa <= t_onset_fa
+      ? 1.0
+      : Math.min(3.0, 1.0 + 2.0 * (t_yr_fa / t_onset_fa - 1) * Math.sqrt(params.permeability / 100));
+    const dissUpper_fa = Math.min(
+      V_brine_fa * rhoBrine * X_sat_fa / 1e9 * f_conv_fa,
+      0.35 * Math.max(0.001, totalCum),
+    );
+    const dissolutionCapacity = Math.max(0, Math.min(dissFick_fa, dissUpper_fa));
 
-    const residualTrapping = (prevResult?.residualTrapping ?? 0) + newlyTrapped * resFrac;
-    const solubilityTrapping = (prevResult?.solubilityTrapping ?? 0) + newlyTrapped * solFrac;
-    const mobilePlume = mobileBeforeTrapping - newlyTrapped;
+    // 4. Mineral capacity — formation-class-specific TST kinetics (mirrors useSimulation.ts)
+    const isCarbonate_fa  = params.lithologyClass === 'carbonate';
+    const RMAT_FA         = isCarbonate_fa ? 2710    : 2650;
+    const F_RCT_FA        = isCarbonate_fa ? 0.05    : 0.01;
+    const A_SP_FA         = isCarbonate_fa ? 0.5     : 0.1;
+    const KM_REF_FA       = isCarbonate_fa ? 1.55e-6 : 1e-9;
+    const TAU_FA          = isCarbonate_fa ? 15      : 25;
+    const CAP_FRAC_FA     = isCarbonate_fa ? 0.15    : 0.10;
+    const T_REF_FA = 383.15; const EA_FA = 62800; const RG_FA = 8.314;
+    const V_bulk_plume_fa = Math.PI * plumeRadius * plumeRadius * plumeHeight;
+    const A_reactive_fa = V_bulk_plume_fa * (1 - phi) * RMAT_FA * F_RCT_FA * A_SP_FA;
+    const k_m_T_fa = KM_REF_FA * Math.exp(-EA_FA / RG_FA * (1 / T_K - 1 / T_REF_FA));
+    const f_decay_fa = 1 - Math.exp(-Math.max(1, year) / TAU_FA);
+    const mineralCapacity = projectYears < 30 ? 0 : Math.max(0,
+      A_reactive_fa * k_m_T_fa * (100 * 365.25 * 24 * 3600) * 44.01e-12 * f_decay_fa,
+    );
+    const totalFormationCapacity = structuralCapacity + residualCapacity + dissolutionCapacity + mineralCapacity;
 
-    // Apply effective Sgr to residual trapping (scale by Sgr/0.10 — normalised to default)
-    // Sgr affects how much ends up as residual vs mobile
-    const sgrScale = Math.min(3.0, Math.max(0.1, Sgr / 0.10));
-    const residualTrappingScaled = residualTrapping * sgrScale;
+    // 5. Actual trapping — same ordering as useSimulation.ts (dissolution + mineral first)
+    const solubilityTrapping = Math.min(dissolutionCapacity, totalCum);
+    const mineralTrappingFA = projectYears < 30 ? 0 : Math.min(
+      CAP_FRAC_FA * Math.max(0.001, totalCum),
+      Math.max(0, A_reactive_fa * k_m_T_fa * t_sec_fa * 44.01e-12 * f_decay_fa),
+    );
+    const freePhaseCO2_Mt_fa = Math.max(0, totalCum - solubilityTrapping - mineralTrappingFA);
+    const f_residual_fa = S_gi_fa > 0.001 ? S_gr_fa / S_gi_fa : 0;
+    const residualTrappingScaled = freePhaseCO2_Mt_fa * f_residual_fa;
+    const mobilePlume = freePhaseCO2_Mt_fa * (1 - f_residual_fa);
+    const massBalanceError = Math.max(
+      0,
+      totalCum - (residualTrappingScaled + solubilityTrapping + mineralTrappingFA + mobilePlume),
+    );
+    const formationCapacityUtil = totalCum / Math.max(0.001, totalFormationCapacity) * 100;
 
     const capacityUtilPct = (totalCum / Math.max(0.001, totalCapacity)) * 100;
     const overpressureRisk = totalCum > capacityP90;
 
     const trappedFrac = totalCum > 0.001
-      ? (residualTrappingScaled + solubilityTrapping) / totalCum
+      ? (residualTrappingScaled + solubilityTrapping + mineralTrappingFA) / totalCum
       : 0;
+    void prevResult; // prevResult no longer needed for stateful trapping
 
     // Pressure field — simplified (no visualization overhead in forward model)
     const pressureField: Array<{ x: number; z: number; pressure: number }> = [];
@@ -279,7 +340,7 @@ export function runForwardModel(
       diffusion,
       solubilityTrapping,
       residualTrapping: residualTrappingScaled,
-      mineralTrapping: 0,
+      mineralTrapping: mineralTrappingFA,
       mobilePlume,
       containmentProbability: Math.min(0.95, 0.5 + ntg * 0.3 + trappedFrac * 0.15),
       ift,
@@ -288,6 +349,13 @@ export function runForwardModel(
       p50: totalCapacity,
       p90: capacityP90,
       storageEfficiency: 2.0,
+      structuralCapacity,
+      residualCapacity,
+      dissolutionCapacity,
+      mineralCapacity,
+      totalFormationCapacity,
+      formationCapacityUtil,
+      massBalanceError,
     };
 
     results.push(result);
