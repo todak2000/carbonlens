@@ -478,8 +478,10 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent dark:to-[#03050a] to-gray-50" />
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/3 via-transparent to-cyan-500/3" />
 
-        {/* 3D Scene */}
-        <HeroScene />
+        {/* 3D Scene — desktop only (WebGL is heavy on mobile) */}
+        <div className="hidden md:block">
+          <HeroScene />
+        </div>
 
         {/* Overlay content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 w-full pt-20 md:pt-24 pb-8 md:pb-16">
@@ -499,8 +501,8 @@ export default function LandingPage() {
               Enterprise reservoir simulators are designed for generic multi-component oil and gas workflows. 
               CarbonLens is specialized: it delivers focused, rapid screening for **CO₂ saline aquifer storage** directly in your browser, bypassing complex installation parameters.
             </p>
-            {/* Cost comparison pill */}
-            <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 mb-6 md:mb-8">
+            {/* Cost comparison pill — desktop only */}
+            <div className="hidden md:inline-flex items-center gap-3 px-4 py-2.5 rounded-xl dark:bg-white/5 bg-white border dark:border-white/10 border-gray-200 mb-6 md:mb-8">
               <div className="text-center">
                 <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-0.5">General Simulators</div>
                 <div className="text-xs font-bold text-rose-400 font-mono">Complex Hydrocarbon Focus</div>
@@ -511,7 +513,7 @@ export default function LandingPage() {
                 <div className="text-xs font-bold text-emerald-400 font-mono">Targeted Aquifer CO₂ Sequestration</div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap mb-2 md:mb-0">
               <button onClick={() => setView(user ? 'dashboard' : 'auth')}
                 className="px-6 py-3 md:py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-medium text-sm transition min-h-[48px] flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
@@ -534,8 +536,8 @@ export default function LandingPage() {
               )}
             </div>
 
-            {/* Sleipner validation proof strip */}
-            <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3.5 rounded-xl dark:bg-white/[0.03] bg-white border dark:border-white/[0.06] border-gray-200">
+            {/* Sleipner validation proof strip — desktop only */}
+            <div className="hidden md:flex mt-5 flex-col sm:flex-row items-start sm:items-center gap-3 p-3.5 rounded-xl dark:bg-white/[0.03] bg-white border dark:border-white/[0.06] border-gray-200">
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
