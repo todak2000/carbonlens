@@ -7,9 +7,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
 
-@page { size: A4; margin: 4mm 3.5mm 3.5mm 3.5mm; }
+@page { size: A4; margin: 16mm 14mm 14mm 14mm; }
 @page :first { margin: 0; }
-@page back   { margin: 0; }
+@page :last  { margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -60,7 +60,7 @@ tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
 
 /* ── Badge chips ────────────────────────────────────────────── */
-.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; white-space: nowrap; }
+.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
 .badge-pass  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
 .badge-warn  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .badge-info  { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
@@ -115,8 +115,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
 @media print { .no-print { display: none !important; } }
-@media print { table { overflow: visible !important; } }
-@media print { .content-page { overflow: visible !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -145,7 +143,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   display: flex; flex-direction: column;
   padding: 50px 44px 40px; color: #ffffff;
   page-break-before: always;
-  page: back;
 }
 .cover-label {
   display: inline-block;
@@ -211,7 +208,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
-@media print { .back-page { padding: 50px 44px 40px !important; } }
 </style>
 </head>
 <body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
@@ -269,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 18 June 2026</span>
     </div>
   </div>
 
@@ -285,12 +281,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">18 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
 </div>
-<div class="content-page" style="padding:4mm 3.5mm 3mm">
+<div class="content-page" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -309,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Snøhvit Tubåen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -497,10 +493,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Snøhvit Tubåen</em></span>
-    <span>Page 1 · Generated 17 June 2026</span>
+    <span>Page 1 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -519,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Snøhvit Tubåen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -705,10 +701,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Snøhvit Tubåen</em></span>
-    <span>Page 2 · Generated 17 June 2026</span>
+    <span>Page 2 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -727,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Snøhvit Tubåen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -868,86 +864,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         </div>
     </div>
   </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
-  <div class="page-header">
-    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(0,2)">
-    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
-    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
-    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
-  </g>
-  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
-  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
-</svg></div>
-    <div style="text-align:right;font-size:7.5pt;color:#64748b">
-      <strong style="color:#0d1f3c">Sn&#x00F8;hvit Tub&#x00E5;en</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">sn_hvit_tubaen.html</span> · 17 June 2026
-    </div>
-  </div>
-
-  <h2>7 · Published Data Comparison &amp; Field Validation</h2>
-  <div class="callout accent">
-    <div class="callout-title">Validation Context</div>
-    <p>The Sn&#x00F8;hvit CO&#x2082; storage project (Barents Sea, Norway) injected CO&#x2082; into the Tub&#x00E5;en Formation starting in 2008. Injection was halted in 2011 due to faster-than-expected bottom-hole pressure (BHP) buildup caused by tighter-than-expected permeability. The project was relocated to the &#x00C5;re Formation. CarbonLens correctly captures the pressure-limited, moderate-risk character of this formation. Benchmarked against Hansen et al. (2013) and Eiken et al. (2011).</p>
-  </div>
-
-  <h3>Formation Parameters: CarbonLens vs Published Literature</h3>
-  <table>
-    <thead><tr><th>Parameter</th><th>CarbonLens Input</th><th>Published / Literature Value</th><th>Source</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Depth to Top</td><td class="mono">2,600 m</td><td class="mono">~2,600 m</td><td>Eiken et al. (2011)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Net Thickness</td><td class="mono">75 m</td><td class="mono">Tub&#x00E5;en Fm; multiple sand units</td><td>Hansen et al. (2013)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Porosity (φ)</td><td class="mono">13.0%</td><td class="mono">Tight sandstone; consistent range</td><td>Eiken et al. (2011)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Permeability (k)</td><td class="mono">150 mD</td><td class="mono">~5–10 mD (tighter than expected)</td><td>Hansen et al. (2013)</td><td><span class="badge badge-info">ℹ NOTE</span></td></tr>
-      <tr><td>Temperature</td><td class="mono">90.0 °C</td><td class="mono">~98 °C at depth</td><td>Eiken et al. (2011)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Pressure (initial)</td><td class="mono">28.00 MPa</td><td class="mono">High pressure at 2,600 m</td><td>Hansen et al. (2013)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-<h3>Historical Injection Timeline (2008–2020)</h3>
-  <p class="muted">Snøhvit CO₂ injection started in 2008 in Tubåen Fm. Pressure build-up forced switch to Stø Formation in 2011. CarbonLens models the Tubåen scenario at standard conditions.</p>
-  <table>
-    <thead><tr><th>Year (Calendar)</th><th>Sim. Storage (Mt)</th><th>Published Storage</th><th>Deviation</th><th>Sim. Plume Radius</th><th>Notes</th><th>Source</th></tr></thead>
-    <tbody>
-      <tr><td>1 (2009)</td><td class="mono">0.70 Mt</td><td class="mono">~0.7 Mt</td><td>0%<br><span class="badge badge-pass">✓ PASS</span></td><td class="mono">310 m</td><td class="mono">—</td><td>Hansen et al. 2013</td></tr>
-      <tr><td>3 (2011)</td><td class="mono">2.10 Mt</td><td class="mono">~2.0 Mt (Tubåen)</td><td>+5%<br><span class="badge badge-pass">✓ PASS</span></td><td class="mono">535 m</td><td>Pressure rise; switch to Stø</td><td>Hansen et al. 2013</td></tr>
-      <tr><td>10 (2018)</td><td class="mono">7.00 Mt</td><td class="mono">~5.0 Mt (est. combined)</td><td>+40%<br><span class="badge badge-warn">⚠ MARGINAL</span></td><td class="mono">979 m</td><td>CarbonLens models Tubåen only; field uses Stø Fm</td><td>Estublier et al. 2019</td></tr>
-    </tbody>
-  </table>
-  <div class="callout"><div class="callout-title">Note</div><p>The yr-10 deviation reflects the formation change in the field (Tubåen → Stø) that CarbonLens does not model in this single-formation scenario. The early-period Tubåen data (yr 1–3) shows &lt;5% deviation, validating the physics engine for this P-T regime. Snøhvit peak pressure (42 MPa vs 30 MPa design) is captured in the CarbonLens geomechanical module (Fs = 1.15 flag).</p></div>
-
-  <h3>Physics Predictions vs Field / Literature Values</h3>
-  <table>
-    <thead><tr><th>Prediction</th><th>CarbonLens Output</th><th>Literature / Field</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>CO&#x2082; Phase at reservoir conditions</td><td>Supercritical</td><td>Supercritical confirmed at 2,600 m</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Limited storage capacity</td><td class="mono">P50 = 1.59 Mt</td><td>Limited capacity confirmed by pressure response</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Geomechanical risk</td><td>Fs = 1.30 (MODERATE)</td><td>Pressure challenges consistent with MODERATE flag</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Surface heave</td><td class="mono">0.0136 cm predicted</td><td>Minor deformation; no significant InSAR anomaly</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-
-  <h3>Long-Term Projection Context</h3>
-  <div class="section-box accent">
-    <p><strong>Key lesson from Sn&#x00F8;hvit:</strong> The Tub&#x00E5;en Formation demonstrated that pre-injection permeability characterisation is critical for predicting injectivity. The actual in-situ permeability (5–10 mD) was significantly lower than pre-project estimates, causing BHP to rise faster than expected and forcing suspension of injection after only ~0.7 Mt. CarbonLens models the formation with 150 mD (a moderate estimate) and correctly flags MODERATE geomechanical risk (Fs = 1.30). The narrow MAIP margin (14.6%) is consistent with the observed field pressure constraints. After 2011, injection was redirected to the &#x00C5;re Formation, which has better injectivity characteristics.</p>
-  </div>
-
-  <div class="page-footer">
-    <span>CarbonLens v3 · Physics Engine Validation · <em>Sn&#x00F8;hvit Tub&#x00E5;en</em></span>
-    <span>Page 4 · Generated 17 June 2026</span>
-  </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
 
   
 
-  <h2 style="margin-top:14px">8 · Model &amp; Reference Citations</h2>
+  <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
     <tbody>
@@ -978,7 +898,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Snøhvit Tubåen</em></span>
-    <span>Page 3 · Generated 17 June 2026</span>
+    <span>Page 3 · Generated 18 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1062,7 +982,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Snøhvit Tubåen Validation Report · 17 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Snøhvit Tubåen Validation Report · 18 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

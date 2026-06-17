@@ -7,9 +7,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
 
-@page { size: A4; margin: 4mm 3.5mm 3.5mm 3.5mm; }
+@page { size: A4; margin: 16mm 14mm 14mm 14mm; }
 @page :first { margin: 0; }
-@page back   { margin: 0; }
+@page :last  { margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -60,7 +60,7 @@ tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
 
 /* ── Badge chips ────────────────────────────────────────────── */
-.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; white-space: nowrap; }
+.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
 .badge-pass  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
 .badge-warn  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .badge-info  { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
@@ -115,8 +115,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
 @media print { .no-print { display: none !important; } }
-@media print { table { overflow: visible !important; } }
-@media print { .content-page { overflow: visible !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -145,7 +143,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   display: flex; flex-direction: column;
   padding: 50px 44px 40px; color: #ffffff;
   page-break-before: always;
-  page: back;
 }
 .cover-label {
   display: inline-block;
@@ -211,7 +208,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
-@media print { .back-page { padding: 50px 44px 40px !important; } }
 </style>
 </head>
 <body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
@@ -269,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 18 June 2026</span>
     </div>
   </div>
 
@@ -285,12 +281,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">18 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
 </div>
-<div class="content-page" style="padding:4mm 3.5mm 3mm">
+<div class="content-page" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -309,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Alberta Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -497,10 +493,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Alberta Basin</em></span>
-    <span>Page 1 · Generated 17 June 2026</span>
+    <span>Page 1 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -519,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Alberta Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -705,10 +701,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Alberta Basin</em></span>
-    <span>Page 2 · Generated 17 June 2026</span>
+    <span>Page 2 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -727,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Alberta Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -868,87 +864,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         </div>
     </div>
   </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
-  <div class="page-header">
-    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(0,2)">
-    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
-    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
-    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
-  </g>
-  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
-  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
-</svg></div>
-    <div style="text-align:right;font-size:7.5pt;color:#64748b">
-      <strong style="color:#0d1f3c">Alberta Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">alberta_basin.html</span> · 17 June 2026
-    </div>
-  </div>
-
-  <h2>7 · Published Data Comparison &amp; Field Validation</h2>
-  <div class="callout accent">
-    <div class="callout-title">Validation Context</div>
-    <p>The Alberta Basin (Alberta, Canada) contains extensive deep saline aquifer storage potential in Devonian carbonate and sandstone formations. Characterised by the Alberta Energy Regulator (AER) and subject to multiple CCS hub proposals including the Alberta Carbon Trunk Line (ACTL). CarbonLens inputs are benchmarked against published AER geological characterisation and regional CCS screening studies.</p>
-  </div>
-
-  <h3>Formation Parameters: CarbonLens vs Published Literature</h3>
-  <table>
-    <thead><tr><th>Parameter</th><th>CarbonLens Input</th><th>Published / Literature Value</th><th>Source</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Depth to Top</td><td class="mono">2,200 m</td><td class="mono">Devonian aquifer; 2,000–3,000 m typical</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Net Thickness</td><td class="mono">50 m</td><td class="mono">Variable; 30–100 m reported</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Porosity (φ)</td><td class="mono">14.0%</td><td class="mono">10–20% (Devonian reef complexes)</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Permeability (k)</td><td class="mono">50 mD</td><td class="mono">Highly variable; 1–500 mD</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Temperature</td><td class="mono">75.0 °C</td><td class="mono">~70–80 °C at 2,200 m (30 °C/km gradient)</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Pressure (initial)</td><td class="mono">22.00 MPa</td><td class="mono">Hydrostatic ~22 MPa at 2,200 m</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Salinity (monovalent)</td><td class="mono">2.800 mol/kg</td><td class="mono">High salinity brines typical for Devonian</td><td>AER (2012)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-<h3>Historical Injection Timeline (Quest CCS Analogue)</h3>
-  <p class="muted">Shell Quest CCS project injects CO₂ into the Basal Cambrian Sandstone (BCS) in Alberta since 2015 at ~0.5 Mt/yr. CarbonLens models a scaled-up Nisku/BCS scenario. Quest data provides the best analogue for Alberta Basin physics validation.</p>
-  <table>
-    <thead><tr><th>Year (Calendar)</th><th>Sim. Storage (Mt)</th><th>Quest CCS Reported</th><th>Deviation</th><th>Notes</th><th>Source</th></tr></thead>
-    <tbody>
-      <tr><td>1 (2016)</td><td class="mono">0.50 Mt</td><td class="mono">0.49 Mt</td><td>+2%<br><span class="badge badge-pass">✓ PASS</span></td><td>Quest Year 1 matching</td><td>Shell Quest Annual Report 2016</td></tr>
-      <tr><td>3 (2018)</td><td class="mono">1.50 Mt</td><td class="mono">~1.45 Mt</td><td>+3.4%<br><span class="badge badge-pass">✓ PASS</span></td><td>Continued injection</td><td>Shell Quest Annual Report 2018</td></tr>
-      <tr><td>5 (2020)</td><td class="mono">2.50 Mt</td><td class="mono">~2.4 Mt</td><td>+4.2%<br><span class="badge badge-pass">✓ PASS</span></td><td>Quest cumulative</td><td>Shell Quest Annual Report 2020</td></tr>
-      <tr><td>8 (2023)</td><td class="mono">4.00 Mt</td><td class="mono">~3.8 Mt (est.)</td><td>+5.3%<br><span class="badge badge-pass">✓ PASS</span></td><td>8 years of continuous injection</td><td>Shell Quest Annual Report 2023</td></tr>
-    </tbody>
-  </table>
-  <div class="callout"><div class="callout-title">Note</div><p>Quest CCS provides a direct field analogue for Alberta Basin BCS physics. CarbonLens deviations of 2–5% across all years confirm accurate modelling of CO₂ density, solubility, and plume migration at Alberta Basin P-T conditions. The CarbonLens scenario is a 1.5 Mt/yr scaled expansion of the Quest BCS reservoir.</p></div>
-
-  <h3>Physics Predictions vs Field / Literature Values</h3>
-  <table>
-    <thead><tr><th>Prediction</th><th>CarbonLens Output</th><th>Literature / Field</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>CO&#x2082; Phase at reservoir conditions</td><td>Supercritical</td><td>Supercritical confirmed at depth</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>P50 Storage Capacity</td><td class="mono">175.4 Mt (2,000 km² area)</td><td>Basin capacity &gt; 100 Gt (full Alberta Basin)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Geomechanical safety</td><td>Fs = 1.52 (LOW RISK)</td><td>No field injection data; modelled Fs acceptable</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-
-  <h3>Long-Term Projection Context</h3>
-  <div class="section-box accent">
-    <p><strong>Alberta Basin CCS hub context:</strong> The Alberta Basin is one of the world's most promising CCS regions, with provincial capacity estimates exceeding 100 Gt CO&#x2082; in deep saline aquifers and depleted oil and gas reservoirs. The Alberta Carbon Trunk Line (ACTL) is the world's largest CO&#x2082; pipeline and already transports CO&#x2082; for enhanced oil recovery (EOR), with transition to geological storage planned. CarbonLens P50 of 175.4 Mt for the 2,000 km² preset area is consistent with the high-capacity character of this basin. Regulatory framework is mature under the AER, making this one of the most CCS-ready jurisdictions globally.</p>
-  </div>
-
-  <div class="page-footer">
-    <span>CarbonLens v3 · Physics Engine Validation · <em>Alberta Basin</em></span>
-    <span>Page 4 · Generated 17 June 2026</span>
-  </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
 
   
 
-  <h2 style="margin-top:14px">8 · Model &amp; Reference Citations</h2>
+  <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
     <tbody>
@@ -979,7 +898,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Alberta Basin</em></span>
-    <span>Page 3 · Generated 17 June 2026</span>
+    <span>Page 3 · Generated 18 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1063,7 +982,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Alberta Basin Validation Report · 17 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Alberta Basin Validation Report · 18 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

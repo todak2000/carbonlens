@@ -7,9 +7,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
 
-@page { size: A4; margin: 4mm 3.5mm 3.5mm 3.5mm; }
+@page { size: A4; margin: 16mm 14mm 14mm 14mm; }
 @page :first { margin: 0; }
-@page back   { margin: 0; }
+@page :last  { margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -60,7 +60,7 @@ tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
 
 /* ── Badge chips ────────────────────────────────────────────── */
-.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; white-space: nowrap; }
+.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
 .badge-pass  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
 .badge-warn  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .badge-info  { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
@@ -115,8 +115,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
 @media print { .no-print { display: none !important; } }
-@media print { table { overflow: visible !important; } }
-@media print { .content-page { overflow: visible !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -145,7 +143,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   display: flex; flex-direction: column;
   padding: 50px 44px 40px; color: #ffffff;
   page-break-before: always;
-  page: back;
 }
 .cover-label {
   display: inline-block;
@@ -211,7 +208,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
-@media print { .back-page { padding: 50px 44px 40px !important; } }
 </style>
 </head>
 <body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
@@ -269,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 18 June 2026</span>
     </div>
   </div>
 
@@ -285,12 +281,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">18 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
 </div>
-<div class="content-page" style="padding:4mm 3.5mm 3mm">
+<div class="content-page" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -309,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Mount Simon</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -497,10 +493,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Mount Simon</em></span>
-    <span>Page 1 · Generated 17 June 2026</span>
+    <span>Page 1 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -519,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Mount Simon</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -705,10 +701,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Mount Simon</em></span>
-    <span>Page 2 · Generated 17 June 2026</span>
+    <span>Page 2 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -727,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Mount Simon</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -868,86 +864,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         </div>
     </div>
   </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
-  <div class="page-header">
-    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(0,2)">
-    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
-    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
-    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
-  </g>
-  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
-  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
-</svg></div>
-    <div style="text-align:right;font-size:7.5pt;color:#64748b">
-      <strong style="color:#0d1f3c">Mount Simon</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">mount_simon.html</span> · 17 June 2026
-    </div>
-  </div>
-
-  <h2>7 · Published Data Comparison &amp; Field Validation</h2>
-  <div class="callout accent">
-    <div class="callout-title">Validation Context</div>
-    <p>The Mount Simon Sandstone (Illinois Basin, USA) is the target of the Illinois Basin Decatur Project (IBDP), one of the USA's first large-scale saline aquifer CO&#x2082; storage demonstrations. Operated by the Midwest Geological Sequestration Consortium (MGSC), 3.18 Mt CO&#x2082; were injected between 2011 and 2014. CarbonLens parameters are benchmarked against Gollakota &amp; McDonald (2014) and Finley (2014).</p>
-  </div>
-
-  <h3>Formation Parameters: CarbonLens vs Published Literature</h3>
-  <table>
-    <thead><tr><th>Parameter</th><th>CarbonLens Input</th><th>Published / Literature Value</th><th>Source</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Depth to Top</td><td class="mono">2,134 m</td><td class="mono">~2,134 m</td><td>Gollakota &amp; McDonald (2014)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Net Thickness</td><td class="mono">152 m</td><td class="mono">~100–200 m</td><td>Finley (2014)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Porosity (φ)</td><td class="mono">15.0%</td><td class="mono">~22%</td><td>Gollakota &amp; McDonald (2014)</td><td><span class="badge badge-warn">⚠ REVIEW</span></td></tr>
-      <tr><td>Permeability (k)</td><td class="mono">500 mD</td><td class="mono">200–600 mD</td><td>Finley (2014)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Temperature</td><td class="mono">52.0 °C</td><td class="mono">~52 °C</td><td>Gollakota &amp; McDonald (2014)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Pressure (initial)</td><td class="mono">21.30 MPa</td><td class="mono">~21.3 MPa initial</td><td>Gollakota &amp; McDonald (2014)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-<h3>Historical Injection Timeline (2011–2014)</h3>
-  <p class="muted">Illinois Basin Decatur Project (IBDP): 1 Mt CO₂ injected over 3 years into Mount Simon Sandstone. CarbonLens calibrated against MGSC monitoring reports.</p>
-  <table>
-    <thead><tr><th>Year (Calendar)</th><th>Sim. Storage (Mt)</th><th>Published Storage</th><th>Deviation</th><th>Sim. Plume Radius</th><th>Published Estimate</th><th>Source</th></tr></thead>
-    <tbody>
-      <tr><td>1 (2012)</td><td class="mono">0.33 Mt</td><td class="mono">~0.34 Mt</td><td>-2.9%<br><span class="badge badge-pass">✓ PASS</span></td><td class="mono">165 m</td><td class="mono">~150–200 m</td><td>Leetaru et al. 2014</td></tr>
-      <tr><td>2 (2013)</td><td class="mono">0.67 Mt</td><td class="mono">~0.68 Mt</td><td>-1.5%<br><span class="badge badge-pass">✓ PASS</span></td><td class="mono">233 m</td><td class="mono">~250 m (VSP)</td><td>MGSC Annual Report 2013</td></tr>
-      <tr><td>3 (2014)</td><td class="mono">1.00 Mt</td><td class="mono">1.00 Mt</td><td>0%<br><span class="badge badge-pass">✓ PASS</span></td><td class="mono">285 m</td><td class="mono">~300 m (VSP/seismic)</td><td>Finley et al. 2014</td></tr>
-    </tbody>
-  </table>
-  <div class="callout"><div class="callout-title">Note</div><p>The Decatur Project achieved its 1 Mt target in November 2014. VSP surveys confirmed plume containment within the Mount Simon Sandstone. CarbonLens deviation &lt;3% confirms the physics engine accurately models injection rates and plume growth for this high-permeability saline aquifer.</p></div>
-
-  <h3>Physics Predictions vs Field / Literature Values</h3>
-  <table>
-    <thead><tr><th>Prediction</th><th>CarbonLens Output</th><th>Literature / Field</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>CO&#x2082; Phase at reservoir conditions</td><td>Supercritical</td><td>Supercritical confirmed</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>P50 Storage Capacity</td><td class="mono">11.7 Mt (35 km² preset)</td><td>IBDP project area is subset of full basin</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Geomechanical safety</td><td>Fs = 1.528 (LOW RISK)</td><td>No induced seismicity or caprock breach in field</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Mobile CO&#x2082; fraction</td><td class="mono">~48% by yr 20</td><td>Free-phase plume migration confirmed by seismic</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-
-  <h3>Long-Term Projection Context</h3>
-  <div class="section-box accent">
-    <p><strong>IBDP context:</strong> The Illinois Basin Decatur Project demonstrated that the Mount Simon Sandstone can safely receive and contain CO&#x2082; at commercial-scale injection rates. The CarbonLens standardised scenario (1.0 Mt/yr, 35 km² area) is well-matched to the IBDP injection rate and confirms consistency with published BHP and geomechanical outcomes. The full Illinois Basin Mount Simon formation has an estimated CO&#x2082; storage capacity of several hundred Gt, making it one of North America's largest potential CO&#x2082; repositories. CarbonLens parameters correctly reflect the IBDP characterisation with minor porosity conservatism.</p>
-  </div>
-
-  <div class="page-footer">
-    <span>CarbonLens v3 · Physics Engine Validation · <em>Mount Simon</em></span>
-    <span>Page 4 · Generated 17 June 2026</span>
-  </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
 
   
 
-  <h2 style="margin-top:14px">8 · Model &amp; Reference Citations</h2>
+  <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
     <tbody>
@@ -978,7 +898,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Mount Simon</em></span>
-    <span>Page 3 · Generated 17 June 2026</span>
+    <span>Page 3 · Generated 18 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1062,7 +982,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Mount Simon Validation Report · 17 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Mount Simon Validation Report · 18 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

@@ -7,9 +7,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
 
-@page { size: A4; margin: 4mm 3.5mm 3.5mm 3.5mm; }
+@page { size: A4; margin: 16mm 14mm 14mm 14mm; }
 @page :first { margin: 0; }
-@page back   { margin: 0; }
+@page :last  { margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -60,7 +60,7 @@ tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
 
 /* ── Badge chips ────────────────────────────────────────────── */
-.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; white-space: nowrap; }
+.badge { padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
 .badge-pass  { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
 .badge-warn  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .badge-info  { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
@@ -115,8 +115,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
 @media print { .no-print { display: none !important; } }
-@media print { table { overflow: visible !important; } }
-@media print { .content-page { overflow: visible !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -145,7 +143,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   display: flex; flex-direction: column;
   padding: 50px 44px 40px; color: #ffffff;
   page-break-before: always;
-  page: back;
 }
 .cover-label {
   display: inline-block;
@@ -211,7 +208,6 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
-@media print { .back-page { padding: 50px 44px 40px !important; } }
 </style>
 </head>
 <body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
@@ -269,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 18 June 2026</span>
     </div>
   </div>
 
@@ -285,12 +281,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">18 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
 </div>
-<div class="content-page" style="padding:4mm 3.5mm 3mm">
+<div class="content-page" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -309,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Nile Delta</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -497,10 +493,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Nile Delta</em></span>
-    <span>Page 1 · Generated 17 June 2026</span>
+    <span>Page 1 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -519,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Nile Delta</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -705,10 +701,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Nile Delta</em></span>
-    <span>Page 2 · Generated 17 June 2026</span>
+    <span>Page 2 · Generated 18 June 2026</span>
   </div>
 </div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
   <div class="page-header">
     <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -727,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Nile Delta</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 17 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 18 June 2026
     </div>
   </div>
 
@@ -868,87 +864,10 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         </div>
     </div>
   </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
-  <div class="page-header">
-    <div><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(0,2)">
-    <circle cx="21" cy="22" r="9" fill="none" stroke="#00c4a0" stroke-width="1.8"/>
-    <circle cx="21" cy="22" r="3.5" fill="#00c4a0"/>
-    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
-    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
-    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
-    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,196,160,0.18)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
-  </g>
-  <text x="48" y="23" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
-  <text x="48" y="40" font-family="'IBM Plex Mono',monospace" font-size="19" font-weight="300" fill="#00c4a0" letter-spacing="4.5">LENS</text>
-</svg></div>
-    <div style="text-align:right;font-size:7.5pt;color:#64748b">
-      <strong style="color:#0d1f3c">Nile Delta</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">nile_delta.html</span> · 17 June 2026
-    </div>
-  </div>
-
-  <h2>7 · Published Data Comparison &amp; Field Validation</h2>
-  <div class="callout accent">
-    <div class="callout-title">Validation Context</div>
-    <p>The Nile Delta (northern Egypt) formation represents a prospective CO&#x2082; storage target in one of the Mediterranean's major gas-producing regions. CO&#x2082; storage potential in the Nile Delta has been assessed by the Egyptian Natural Gas Holding Company (EGAS) and referenced in IPCC regional assessments for North Africa CCS. CarbonLens inputs are benchmarked against published Nile Delta geological characterisation and regional CCS feasibility literature.</p>
-  </div>
-
-  <h3>Formation Parameters: CarbonLens vs Published Literature</h3>
-  <table>
-    <thead><tr><th>Parameter</th><th>CarbonLens Input</th><th>Published / Literature Value</th><th>Source</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Depth to Top</td><td class="mono">2,200 m</td><td class="mono">Deep formations; 2,000–3,000 m</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Net Thickness</td><td class="mono">70 m</td><td class="mono">Sandstone sequences; variable</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Porosity (φ)</td><td class="mono">24.0%</td><td class="mono">Good-quality Nile Delta sands; ~20–28%</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Permeability (k)</td><td class="mono">300 mD</td><td class="mono">Moderate to good permeability</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Temperature</td><td class="mono">90.0 °C</td><td class="mono">~85–95 °C at 2,200 m</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Pressure (initial)</td><td class="mono">22.00 MPa</td><td class="mono">~22 MPa hydrostatic at 2,200 m</td><td>EGAS / IPCC North Africa (2021)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-<h3>Section 2 — No Historical Injection Data (Prospective Site)</h3>
-  <p class="muted">The Nile Delta (Northern Egypt) contains saline aquifer sandstone formations being evaluated for CO₂ storage as part of Egypt's energy transition plans. No CO₂ injection has occurred. CarbonLens parameters are calibrated against EGAS characterisation data.</p>
-  <table>
-    <thead><tr><th>Data Point</th><th>CarbonLens Value</th><th>Published / Regional</th><th>Source</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Reservoir Depth</td><td class="mono">2,200 m</td><td class="mono">2,000–3,000 m (deep formation target)</td><td>EGAS / IPCC North Africa 2021</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Porosity</td><td class="mono">24%</td><td class="mono">~20–28% (Nile Delta sands)</td><td>EGAS / IPCC North Africa 2021</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>CO₂ Phase (in-situ)</td><td class="mono">Supercritical</td><td class="mono">Supercritical at 2,200 m / 90 °C</td><td>PT/z analysis</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Storage Capacity</td><td class="mono">~25 Mt (20-yr scenario)</td><td class="mono">Significant potential in Miocene sands</td><td>IEAGHG North Africa Study 2021</td><td><span class="badge badge-info">ℹ PROSPECTIVE</span></td></tr>
-    </tbody>
-  </table>
-  <div class="callout"><div class="callout-title">Note</div><p>No historical CO₂ injection data for the Nile Delta. CarbonLens parameters are validated against EGAS basin characterisation and IEAGHG North Africa regional capacity studies. Egypt's energy transition strategy includes CCS potential in the Nile Delta and Mediterranean offshore zones. No commercial injection has commenced as of 2026.</p></div>
-
-  <h3>Physics Predictions vs Field / Literature Values</h3>
-  <table>
-    <thead><tr><th>Prediction</th><th>CarbonLens Output</th><th>Literature / Field</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>CO&#x2082; Phase at reservoir conditions</td><td>Supercritical (dense phase)</td><td>Supercritical confirmed at 2,200 m / 22 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>P50 Storage Capacity</td><td class="mono">64.1 Mt (350 km² preset)</td><td>Regional storage potential in Gt range (full delta)</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Geomechanical safety</td><td>Fs = 2.05 (LOW RISK)</td><td>Deep formation; high cohesion (12 MPa) gives excellent Fs</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Dissolution trapping</td><td>Active at 90 °C / 22 MPa</td><td>Expected to be significant; CO&#x2082; dissolution favoured at conditions</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-    </tbody>
-  </table>
-
-  <h3>Long-Term Projection Context</h3>
-  <div class="section-box accent">
-    <p><strong>Nile Delta CCS context:</strong> The Nile Delta is a significant gas province with multiple offshore fields (Zohr, Atoll, Nour). The region's deep formations represent high-quality CO&#x2082; storage targets with good reservoir properties and thick caprocks. Egypt's growing LNG export industry and industrial sector provide potential CO&#x2082; capture sources. The high caprock cohesion (12 MPa) incorporated in CarbonLens parameters contributes to the excellent safety factor (Fs = 2.05). Development of CCS in the Nile Delta would align with Egypt's Vision 2030 and National Climate Change Strategy, while regional cooperation frameworks under MENA climate initiatives could support cross-border CCS project development.</p>
-  </div>
-
-  <div class="page-footer">
-    <span>CarbonLens v3 · Physics Engine Validation · <em>Nile Delta</em></span>
-    <span>Page 4 · Generated 17 June 2026</span>
-  </div>
-</div>
-<div class="content-page page-break" style="padding:4mm 3.5mm 3mm">
 
   
 
-  <h2 style="margin-top:14px">8 · Model &amp; Reference Citations</h2>
+  <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
     <tbody>
@@ -979,7 +898,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Nile Delta</em></span>
-    <span>Page 3 · Generated 17 June 2026</span>
+    <span>Page 3 · Generated 18 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1063,7 +982,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Nile Delta Validation Report · 17 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Nile Delta Validation Report · 18 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>
