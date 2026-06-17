@@ -1,8 +1,9 @@
 import { FormationParams, SimulationResult } from '../types'
 import {
-  co2DensitySpanWagner, co2ViscosityFenghour,
-  co2SolubilityDuanSun, brineDensityGarcia,
+  co2DensitySpanWagner, co2DensityWithImpurities, co2ViscosityFenghour,
+  co2SolubilityDuanSun, calculateMultiSaltSolubility, brineDensityGarcia,
 } from '../engine'
+import type { MultiSaltBrine } from '../engine'
 import { computePr, computeTr, evaluateMars, scaleInput, subEquation, subScaler, supEquation, supScaler } from '../engine'
 import type { MarsInput } from '../engine/mars/types'
 
@@ -54,10 +55,19 @@ export function generateDepthProfile(
 
     const T_K = T + 273.15
     const P_Pa = P * 1e6
-    const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa)
+    const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
     const rhoBrine = brineDensityGarcia(T_K, P, params.monovalentSalinity, params.bivalentSalinity)
     const visc = co2ViscosityFenghour(T_K, rhoCO2)
-    const solubility = co2SolubilityDuanSun(T_K, P, params.monovalentSalinity, params.bivalentSalinity)
+    let solubility: number
+    if (params.saltType !== 'NaCl' && params.bivalentSalinity > 0) {
+      const brine: MultiSaltBrine = params.saltType === 'CaCl2'
+        ? { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity, m_MgCl2: 0 }
+        : { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity * 0.6, m_MgCl2: params.bivalentSalinity * 0.4 }
+      const xCO2 = calculateMultiSaltSolubility(T_K, P, brine)
+      solubility = xCO2 * 55.508 / Math.max(1e-9, 1 - xCO2)
+    } else {
+      solubility = co2SolubilityDuanSun(T_K, P, params.monovalentSalinity, params.bivalentSalinity)
+    }
     const drho = rhoBrine - rhoCO2
 
     // IFT via MARS model

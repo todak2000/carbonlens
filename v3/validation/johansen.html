@@ -114,6 +114,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 /* ── Print controls ─────────────────────────────────────────── */
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
+@media print { .no-print { display: none !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -209,7 +210,13 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
 </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+  <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Report</span>
+  <div style="display:flex;gap:8px;">
+    <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
+    <button onclick="window.location.href='index.html'" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:5px 14px;font-size:8pt;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2190; All Reports</button>
+  </div>
+</div>
 <div class="cover-page">
   <div style="margin-bottom:auto"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -258,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 12 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
     </div>
   </div>
 
@@ -274,7 +281,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">12 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
@@ -298,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Johansen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -486,7 +493,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Johansen</em></span>
-    <span>Page 1 · Generated 12 June 2026</span>
+    <span>Page 1 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -508,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Johansen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -532,7 +539,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Containment Probability</div>
-      <div class="kpi-value" style="color:#00c4a0">81.9%</div>
+      <div class="kpi-value" style="color:#00c4a0">82.4%</div>
       <div class="kpi-sub">NTG + trapped fraction</div>
     </div>
   </div>
@@ -540,25 +547,25 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <h3>3.1 CO₂ Mass Distribution — Year 20 · Active Injection: 12.50 Mt</h3>
   <div class="two-col" style="gap:12px;margin-bottom:8px;align-items:start">
     <div><svg width="300" height="150" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-  <path d="M70.0,40.0 L70.0,20.0 A50,50,0,0,1,115.7,90.4 L97.4,82.2 A30,30,0,0,0,70.0,40.0 Z" fill="#00c4a0" stroke="white" stroke-width="1.5"/><path d="M97.4,82.2 L115.7,90.4 A50,50,0,0,1,91.9,115.0 L83.1,97.0 A30,30,0,0,0,97.4,82.2 Z" fill="#3b82f6" stroke="white" stroke-width="1.5"/><path d="M83.1,97.0 L91.9,115.0 A50,50,0,1,1,70.0,20.0 L70.0,40.0 A30,30,0,1,0,83.1,97.0 Z" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
+  <path d="M70.0,40.0 L70.0,20.0 A50,50,0,0,1,117.7,84.9 L98.6,78.9 A30,30,0,0,0,70.0,40.0 Z" fill="#00c4a0" stroke="white" stroke-width="1.5"/><path d="M98.6,78.9 L117.7,84.9 A50,50,0,0,1,81.9,118.6 L77.2,99.1 A30,30,0,0,0,98.6,78.9 Z" fill="#3b82f6" stroke="white" stroke-width="1.5"/><path d="M77.2,99.1 L81.9,118.6 A50,50,0,1,1,70.0,20.0 L70.0,40.0 A30,30,0,1,0,77.2,99.1 Z" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
   <text x="70" y="66" text-anchor="middle" font-size="8" font-weight="700" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">12.5</text>
   <text x="70" y="78" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Mt total</text>
   <g transform="translate(155,47)"><g transform="translate(0,0)">
       <rect x="0" y="0" width="9" height="9" fill="#00c4a0" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Residual (31.7%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Residual (29.8%)</text>
     </g><g transform="translate(0,18)">
       <rect x="0" y="0" width="9" height="9" fill="#3b82f6" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Dissolution (11.1%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Dissolution (16.4%)</text>
     </g><g transform="translate(0,36)">
       <rect x="0" y="0" width="9" height="9" fill="#f59e0b" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Mobile (57.2%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Mobile (53.8%)</text>
     </g></g>
 </svg></div>
     <div style="font-size:8pt;color:#64748b;line-height:1.7;padding-top:4px">
       <p>Each mechanism solved <strong>independently</strong>. Mobile is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
-      <p style="margin-top:4px">Formation capacity utilization: <strong>4.9%</strong> (12.50 Mt / 257.73 Mt total).</p>
+      <p style="margin-top:4px">Formation capacity utilization: <strong>4.8%</strong> (12.50 Mt / 258.38 Mt total).</p>
       <p style="margin-top:4px">Mass balance ε = <strong>0.000 Mt</strong> (0.0% — model consistent).</p>
-      <p style="margin-top:4px">Plume radius: <strong>1805.5 m</strong> · Height: <strong>41.7 m</strong></p>
+      <p style="margin-top:4px">Plume radius: <strong>2190.7 m</strong> · Height: <strong>41.7 m</strong></p>
     </div>
   </div>
 
@@ -583,14 +590,14 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td><span class="badge badge-perm">Residual (Capillary)</span></td>
         <td class="mono">10.446 Mt</td>
-        <td class="mono">3.959 Mt</td>
-        <td class="mono">37.9%</td>
+        <td class="mono">3.726 Mt</td>
+        <td class="mono">35.7%</td>
         <td style="font-size:7.5pt;color:#64748b">Land (1968) snap-off · PVI×FQI sweep efficiency</td>
       </tr>
       <tr>
         <td><span class="badge badge-perm">Dissolution (Brine)</span></td>
-        <td class="mono">1.389 Mt</td>
-        <td class="mono">1.389 Mt</td>
+        <td class="mono">2.045 Mt</td>
+        <td class="mono">2.045 Mt</td>
         <td class="mono">100.0%</td>
         <td style="font-size:7.5pt;color:#64748b">Duan-Sun (2003) + Fick + Rayleigh convection</td>
       </tr>
@@ -603,16 +610,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </tr>
       <tr style="border-top:2px solid #0d1f3c">
         <td><strong>Total Formation Capacity</strong></td>
-        <td class="mono"><strong>257.727 Mt</strong></td>
+        <td class="mono"><strong>258.383 Mt</strong></td>
         <td class="mono"><strong>12.500 Mt</strong></td>
-        <td class="mono"><strong>4.9%</strong></td>
-        <td style="font-size:7.5pt;color:#64748b">Hydrodynamic mobile plume: 7.152 Mt</td>
+        <td class="mono"><strong>4.8%</strong></td>
+        <td style="font-size:7.5pt;color:#64748b">Hydrodynamic mobile plume: 6.729 Mt</td>
       </tr>
     </tbody>
   </table>
   <div style="font-size:7.5pt;color:#64748b;margin-top:6px">
-    Plume radius: 1805.5 m &nbsp;·&nbsp; Plume height: 41.7 m
-    &nbsp;·&nbsp; Mobile (free-phase): 7.152 Mt (57.2% of injected)
+    Plume radius: 2190.7 m &nbsp;·&nbsp; Plume height: 41.7 m
+    &nbsp;·&nbsp; Mobile (free-phase): 6.729 Mt (53.8% of injected)
     &nbsp;·&nbsp; <strong style="color:#00c4a0">ε = 0.000 Mt</strong>
     (✓ model consistent: snap-off capacity ≥ Land-predicted residual)
   </div>
@@ -694,7 +701,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Johansen</em></span>
-    <span>Page 2 · Generated 12 June 2026</span>
+    <span>Page 2 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -716,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Johansen</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">johansen.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -858,6 +865,8 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
   </div>
 
+  
+
   <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
@@ -879,7 +888,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Johansen</em></span>
-    <span>Page 3 · Generated 12 June 2026</span>
+    <span>Page 3 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -951,7 +960,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Johansen Validation Report · 12 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Johansen Validation Report · 17 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

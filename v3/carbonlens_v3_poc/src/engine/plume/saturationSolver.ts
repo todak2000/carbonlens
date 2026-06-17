@@ -122,8 +122,12 @@ export function makeSolverState(cellCount: number): SolverState {
   }
 }
 
-/** Rate function for ramp-up/down schedule (Mt/year actually flowing) */
-function effectiveRate(
+/**
+ * Rate function for ramp-up/down schedule (Mt/year actually flowing).
+ * Exported so callers can determine the active injection window for
+ * Hesse (2008) post-injection model initialisation.
+ */
+export function effectiveRate(
   rate: number,
   year: number,
   rampUp: number,
@@ -500,6 +504,16 @@ export function stepSaturation(
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // STEP 4b — Hesse post-injection flag (aggregate, no cell mutation)
+  // When all wells are shut in (effectiveRate = 0), the cell-level solver
+  // continues handling vertical buoyancy and lateral spreading for visualisation.
+  // The Hesse (2008) analytical gravity current model is evaluated separately
+  // by the simulation runner to produce permit-grade plume radius and trapping
+  // fraction outputs. See engine/plume/hessePostInjection.ts.
+  // No cell mutations here — flag is informational only.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // STEP 5 — Stress-dependent permeability & porosity evolution
   //   Pore pressure increase reduces effective stress, opening micro-fractures
   //   and increasing permeability.  Model: k = k₀ · exp(c_k · α · ΔP)
@@ -531,4 +545,34 @@ export function stepSaturation(
       cell.porosity = Math.max(0.01, Math.min(0.55, cell.porosity0 * Math.pow(kClamped, 0.3)))
     }
   }
+}
+
+// ── Hesse post-injection integration helpers ──────────────────────────────────
+
+/**
+ * Returns true when all wells have fully shut in for the given year.
+ * Used by the simulation runner to activate the Hesse post-injection model.
+ */
+export function isPostInjection(year: number, wells: WellSource[], projectYears: number): boolean {
+  return wells.every(w => effectiveRate(w.injectionRateMtPerYear, year, w.rampUpYears, w.rampDownYears, projectYears) === 0)
+}
+
+/**
+ * Compute the effective injection duration for a single well in years.
+ * Accounts for ramp-up and ramp-down periods: only counts time where
+ * effectiveRate >= 50% of nominal rate as "active injection" for the
+ * purpose of setting the Hesse model timescale t_inj.
+ *
+ * For the Hesse model, t_inj sets the dimensionless timescale.
+ * A conservative estimate: t_inj = projectYears - rampDownYears.
+ */
+export function computeInjectionDuration(well: WellSource, projectYears: number): number {
+  // Full plateau injection: from end of ramp-up to start of ramp-down
+  const plateauEnd = projectYears - well.rampDownYears
+  const plateauStart = well.rampUpYears
+  const plateau = Math.max(0, plateauEnd - plateauStart)
+
+  // Include half of ramp periods as effective injection
+  const effective = plateau + 0.5 * well.rampUpYears + 0.5 * well.rampDownYears
+  return Math.max(1, effective)
 }

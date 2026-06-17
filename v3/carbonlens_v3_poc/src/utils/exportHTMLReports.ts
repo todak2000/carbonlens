@@ -773,7 +773,7 @@ function buildBackPage(opts: {
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
           <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Simulation Engine</div>
-          <div style="font-size:9pt;color:#cbd5e1;">Peng-Robinson EOS &middot; DOE Goodman (2011) &middot; Duan-Sun Solubility &middot; MARS IFT (Olagunju, in prep.) &middot; Nordbotten (2005) Two-Phase AoR &middot; Mohr-Coulomb Geomechanics &middot; van Genuchten&ndash;Mualem kr &middot; Killough&ndash;Land Hysteresis</div>
+          <div style="font-size:9pt;color:#cbd5e1;">Span-Wagner (1996) CO&#x2082; EOS &middot; DOE Goodman (2011) &middot; Duan-Sun Solubility &middot; Duan et al. (2006) Multi-Salt Solubility &middot; MARS IFT (Olagunju, in prep.) &middot; Nordbotten (2005) Two-Phase AoR &middot; Hesse et al. (2008) Post-Injection &middot; Mohr-Coulomb Geomechanics &middot; Shook &amp; Mitchell (2009) &middot; Kopp et al. (2010) Heterogeneity Corrections &middot; van Genuchten&ndash;Mualem kr &middot; Killough&ndash;Land Hysteresis</div>
         </div>
       </div>
 
@@ -819,10 +819,12 @@ function buildEquationsPage(opts: {
         </tr>
       </thead>
       <tbody>
-        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS</td><td style="padding:5px 10px;font-family:monospace;">&#x3C1;(P,T) = PM/ZRT; Z from Peng-Robinson cubic EOS; &#x3BA;(&#x3C9;) = 0.37464 + 1.54226&#x3C9; &minus; 0.26992&#x3C9;&#xB2;</td><td style="padding:5px 10px;">Peng &amp; Robinson (1976), Ind. Eng. Chem. Fundam. 15(1):59&ndash;64; T<sub>c</sub>=304.13 K, P<sub>c</sub>=7.377 MPa, &#x3C9;=0.2239. <em>Note: Span-Wagner (1996) 56-term Helmholtz EOS is the upgrade target for ±0.5% accuracy.</em></td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS (Primary)</td><td style="padding:5px 10px;font-family:monospace;">Span-Wagner (1996) 56-term Helmholtz EOS: &#x3C1;(P,T) = &#x3C1;<sub>c</sub> &middot; &#x3B4;(&#x3B1;<sub>r</sub>); accuracy &#xB1;0.05%</td><td style="padding:5px 10px;">Span &amp; Wagner (1996), J. Phys. Chem. Ref. Data 25(6):1509&ndash;1596</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS (Impure)</td><td style="padding:5px 10px;font-family:monospace;">Peng-Robinson mixing rules for impure CO&#x2082; streams (CH&#x2084;, N&#x2082;, H&#x2082;S, SO&#x2082;)</td><td style="padding:5px 10px;">Peng &amp; Robinson (1976), Ind. Eng. Chem. Fundam. 15(1):59&ndash;64; Li &amp; Yan (2009) binary k<sub>ij</sub></td></tr>
         <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Viscosity</td><td style="padding:5px 10px;font-family:monospace;">&#x3BC;(T,&#x3C1;) = &#x3BC;<sub>0</sub>(T) + &#x394;&#x3BC;(T,&#x3C1;); zero-density + excess; &#x3B5;/k=251.196 K</td><td style="padding:5px 10px;">Fenghour, Wakeham &amp; Vesovic (1998), J. Phys. Chem. Ref. Data 27(1):31&ndash;44. <em>Upgrade target: Laesecke &amp; Muzny (2017), JPCRD 46:013107 (NIST reference, ±0.5% vs ±5% in supercritical region).</em></td></tr>
         <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(y&#x2082; &middot; P) = &#x3BC;&#x2070;(T) + 2&#x3BB;(T,P) &middot; m + &#x3BE;(T,P) &middot; m&#xB2;; Pitzer ionic strength</td><td style="padding:5px 10px;">Duan &amp; Sun (2003), Chem. Geology 193:257&ndash;271</td></tr>
-        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082;-Brine IFT</td><td style="padding:5px 10px;font-family:monospace;">&#x3C3; = MARS(P, T, S); multivariate adaptive regression splines trained on experimental data</td><td style="padding:5px 10px;">Olagunju (in prep.), MSc UTP Malaysia; Chiquet et al. (2007), Energy Convers. Mgmt. 48:736</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Multi-Salt Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(xCO&#x2082;<sub>mix</sub>) = ln(xCO&#x2082;<sub>pure</sub>) + &#x3A3;&#x3BB;(T,P)&middot;m<sub>i</sub>; adds CaCl&#x2082;, MgCl&#x2082;, KCl ions</td><td style="padding:5px 10px;">Duan, Sun, Zhu &amp; Chou (2006), Marine Chemistry 98(2-4):131&ndash;139</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082;-Brine IFT</td><td style="padding:5px 10px;font-family:monospace;">&#x3C3; = MARS(P, T, S); multivariate adaptive regression splines trained on experimental data</td><td style="padding:5px 10px;">Olagunju (in prep.), MSc UTP Malaysia; Chiquet et al. (2007), Energy Convers. Mgmt. 48:736</td></tr>
         <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Capacity</td><td style="padding:5px 10px;font-family:monospace;">M = A &middot; h &middot; &#x3D5; &middot; &#x3C1;<sub>CO&#x2082;</sub> &middot; S<sub>g</sub> &middot; E<sub>eff</sub>; volumetric DOE methodology</td><td style="padding:5px 10px;">Goodman et al. (2011), Int. J. GHG Control 5(4):853&ndash;866; DOE (2010) Atlas</td></tr>
         <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Residual Trapping</td><td style="padding:5px 10px;font-family:monospace;">S<sub>gr</sub> = S<sub>gi</sub> / (1 + C &middot; S<sub>gi</sub>) (Land, 1968); V<sub>r</sub> = &#x3D5; &middot; (1&#x2212;S<sub>wi</sub>) &middot; S<sub>gr</sub> &middot; A &middot; h &middot; &#x3C1;<sub>CO&#x2082;</sub></td><td style="padding:5px 10px;">Pentland et al. (2011), SPE-133798; Land (1968), Trans. AIME 243:149</td></tr>
         <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Solubility Trapping</td><td style="padding:5px 10px;font-family:monospace;">m<sub>diss</sub> = &#x3D5; &middot; S<sub>w</sub> &middot; &#x3C1;<sub>brine</sub> &middot; &#x3C7;<sub>CO&#x2082;</sub>(T,P,S) &middot; A &middot; h; aqueous dissolution</td><td style="padding:5px 10px;">Duan &amp; Sun (2003); Ennis-King &amp; Paterson (2005), SPE-88502</td></tr>
@@ -834,6 +836,11 @@ function buildEquationsPage(opts: {
         <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">MAIP</td><td style="padding:5px 10px;font-family:monospace;">MAIP = 0.9 &middot; P<sub>f</sub> &#x2212; P<sub>res</sub>; maximum allowable injection pressure</td><td style="padding:5px 10px;">Bachu et al. (2007), Int. J. GHG Control 1(4):374; EPA UIC Class VI §146.88</td></tr>
         <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Surface Heave</td><td style="padding:5px 10px;font-family:monospace;">&#x3B4; &#x2248; (&#x394;P &middot; h) / E &middot; (1&#x2212;&#x3BD;&#xB2;) &middot; a; elastic nucleus-of-strain approximation</td><td style="padding:5px 10px;">Teatini et al. (2011), J. Geophys. Res. 116:B08204</td></tr>
         <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Area of Review</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR</sub> = &#x221A;(4Kt/&#x3D5;&#x3BC;c<sub>t</sub>); pressure perturbation front &#x2265; 6.9 kPa threshold</td><td style="padding:5px 10px;">Chabora &amp; Benson (2009), GHGT-9; EPA Class VI UIC Program Guidance</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Post-Injection Plume</td><td style="padding:5px 10px;font-family:monospace;">Hesse et al. (2008) gravity current: &#x2202;u/&#x2202;t + &#x2202;f(u)/&#x2202;x = 0; f(u) = u(1&#x2212;u)/[u(M&#x2212;1)+1]; two propagating shocks: leading (mobile) and trailing (residual trapping boundary)</td><td style="padding:5px 10px;">Hesse, Orr &amp; Tchelepi (2008), J. Fluid Mech. 611:35&ndash;60</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;background:rgba(0,196,160,0.04)"><td colspan="3" style="padding:7px 10px;color:#0d1f3c;font-weight:700;font-size:8pt;letter-spacing:0.05em;text-transform:uppercase;">Heterogeneous Formation Corrections</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Sweep Efficiency</td><td style="padding:5px 10px;font-family:monospace;">E<sub>s</sub> = 1 &#x2212; exp(&#x2212;3&middot;PVI&middot;FQI); FQI = &#x221A;(1&#x2212;k<sub>Vdp</sub>)/&#x3D5;; accounts for Dykstra-Parsons permeability layering</td><td style="padding:5px 10px;">Shook &amp; Mitchell (2009), SPE-119897</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Efficiency</td><td style="padding:5px 10px;font-family:monospace;">E<sub>c</sub> = E<sub>geo</sub> &#xD7; E<sub>s</sub> &#xD7; E<sub>d</sub>; E<sub>geo</sub> = NTG/&#x221A;(k<sub>layer_ratio</sub>); E<sub>d</sub> = 1/&#x221A;M (Buckley-Leverett)</td><td style="padding:5px 10px;">Kopp, Class &amp; Helmig (2010), IJGGC 4(5):831&ndash;842</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">AoR Heterogeneity Scaling</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR_corrected</sub> = r<sub>AoR</sub> &#xD7; exp(&#x3C3;&#xB2;/4); &#x3C3; = &#x2212;ln(1&#x2212;k<sub>Vdp</sub>); arithmetic/geometric mean ratio correction for high-perm layer channeling</td><td style="padding:5px 10px;">Derived from log-normal distribution theory</td></tr>
       </tbody>
     </table>
     <div style="margin-top:20px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
@@ -1355,7 +1362,7 @@ export function openExecutiveSummary(
     <span>MSc Research, Universiti Teknologi PETRONAS, Malaysia | Preliminary screening only</span>
   </footer>
   <p style="font-size:7pt; color:#cbd5e1; margin-top:8px; line-height:1.6;">
-    Scientific basis: DOE Goodman et al. (2011); Peng &amp; Robinson (1976) PR-EOS; Fenghour et al. (1998) viscosity; Duan &amp; Sun (2003) solubility; Nordbotten et al. (2005) two-phase AoR; van Genuchten (1980) &amp; Mualem (1976) kr; Krevor et al. (2012); Furre et al. (2017); Boait et al. (2012)
+    Scientific basis: DOE Goodman et al. (2011); Peng &amp; Robinson (1976) PR-EOS with Li &amp; Yan (2009) binary interaction parameters; Fenghour et al. (1998) viscosity; Duan &amp; Sun (2003) solubility (NaCl); Duan et al. (2006) multi-salt solubility (CaCl&#x2082;, MgCl&#x2082;, KCl); Nordbotten et al. (2005) two-phase AoR; Hesse, Orr &amp; Tchelepi (2008) post-injection gravity current; van Genuchten (1980) &amp; Mualem (1976) kr; Krevor et al. (2012); Furre et al. (2017); Boait et al. (2012)
   </p>
   </div>
 
@@ -1967,7 +1974,7 @@ export function openPermitApplication(
   <table>
     <thead><tr><th>Parameter</th><th>Value</th><th>Method</th></tr></thead>
     <tbody>
-      <tr><td>Estimated Plume Radius${wells.length > 1 ? ` (per-well, analytical)` : ''}</td><td>${plumeRadius.toFixed(0)} m</td><td>Gravity-current spreading (Boait 2012 calibration)${wells.length > 1 ? `; ${wells.length}-well programme — individual radii merge into compound multi-well plume over the simulation horizon` : ''}</td></tr>
+      <tr><td>Estimated Plume Radius${result?.hessePostInjection ? ' — <strong>post-injection</strong>' : wells.length > 1 ? ' (per-well, analytical)' : ''}</td><td>${plumeRadius.toFixed(0)} m</td><td>${result?.hessePostInjection ? 'Hesse et al. (2008) post-injection gravity current — leading shock front position (replaces injection-phase estimate)' : `Gravity-current spreading (Boait 2012 calibration)${wells.length > 1 ? `; ${wells.length}-well programme — individual radii merge into compound multi-well plume over the simulation horizon` : ''}`}</td></tr>
       <tr><td>Plume Height (vertical extent)</td><td>${plumeHeight.toFixed(0)} m</td><td>Fraction of formation thickness</td></tr>
       <tr><td>AoR Radius — Pressure Threshold (primary)</td><td><strong>${aorRadiusDynamic.toFixed(0)} m</strong></td><td>Nordbotten (2005) two-phase composite ΔP = 1 psi (0.007 MPa) contour at year ${aorYear}${aorRadiusDynamic === 0 ? ' <em style="color:#d97706;">(High permeability — ΔP dissipates below 1 psi at all radii. AoR governed by geometric 3× multiplier.)</em>' : ''}</td></tr>
       <tr><td>AoR Radius — Geometric (3× plume, secondary)</td><td>${aorRadiusLegacy.toFixed(0)} m</td><td>Legacy 3× multiplier — retained as conservative check</td></tr>
@@ -1978,6 +1985,28 @@ export function openPermitApplication(
   <p class="muted" style="font-size:8pt; margin-top:6px;">
     The pressure-threshold AoR is derived using the Nordbotten, Celia &amp; Bachu (2005) two-phase composite pressure model. This model partitions the pressure response into an outer single-phase brine zone (governed by brine mobility and the exponential integral E₁) and a near-well CO₂ zone corrected by the effective mobility ratio. The AoR radius is the distance at which the composite pressure perturbation decays to 1 psi (0.007 MPa) — the standard criterion for potential brine displacement into an Underground Source of Drinking Water (USDW). This method is consistent with EPA Class VI guidance (40 CFR 146.84) and supersedes the single-phase Theis (1935) inversion for two-phase CO₂ storage conditions. A full regulatory AoR must also account for abandoned wellbores, faults, and multi-phase pressure fronts via dynamic 3D simulation.
   </p>
+  ${result?.hessePostInjection ? `
+  <h3 style="margin-top:18px;">4.1 Post-Injection Plume Evolution (Hesse et al. 2008)</h3>
+  <div class="section-box">
+    <p>All injection wells have shut in. The CO&#x2082; plume is now evolving as a gravity current governed by the Buckley-Leverett scalar conservation law with residual trapping. Two propagating shock fronts are tracked: a <strong>leading front</strong> (mobile CO&#x2082; advancing outward) and a <strong>trailing front</strong> (residual trapping boundary retreating inward, leaving permanently immobilised CO&#x2082; behind). Reference: Hesse, Orr &amp; Tchelepi (2008), J. Fluid Mech. 611:35&#x2013;60.</p>
+  </div>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Leading Front Radius (mobile plume outer edge)</td><td><strong>${result.hessePostInjection.r_leading_m.toFixed(0)} m</strong></td><td>Rankine-Hugoniot shock on Buckley-Leverett fractional flow — outer boundary for AoR and monitoring well placement</td></tr>
+      <tr><td>Trailing Front Radius (residual trapping boundary)</td><td>${result.hessePostInjection.r_trailing_m.toFixed(0)} m</td><td>CO&#x2082; inside this radius is permanently residually trapped (Land 1968 snap-off)</td></tr>
+      <tr><td>Mobile CO&#x2082; Fraction</td><td>${(result.hessePostInjection.mobile_fraction * 100).toFixed(1)}%</td><td>Free-phase CO&#x2082; above S<sub>gr</sub> — buoyancy-driven migration risk applies to this fraction</td></tr>
+      <tr><td>Newly Residually Trapped (since shut-in)</td><td>${(result.hessePostInjection.newly_trapped_fraction * 100).toFixed(1)}%</td><td>Incremental trapping accrued since end of injection via imbibition front sweepback</td></tr>
+      <tr><td>End-Point Mobility Ratio (M)</td><td>${result.hessePostInjection.mobility_ratio.toFixed(2)}</td><td>M = (k<sub>rg,max</sub> / &#x3BC;<sub>CO&#x2082;</sub>) / (k<sub>rw,max</sub> / &#x3BC;<sub>brine</sub>) — governs shock structure</td></tr>
+      <tr><td>Dimensionless Time (&#x3C4;)</td><td>${result.hessePostInjection.tau.toFixed(2)}</td><td>&#x3C4; = t<sub>total</sub> / t<sub>inj</sub>; &#x3C4; = 1.0 at shut-in; plume spreading rate scales as &#x221A;&#x3C4;</td></tr>
+      <tr><td>Leading Shock Saturation</td><td>${(result.hessePostInjection.leading_shock_saturation * 100).toFixed(1)}%</td><td>CO&#x2082; saturation immediately behind the leading front (Welge tangent construction)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8pt;margin-top:6px;">
+    The post-injection AoR is governed by the Hesse (2008) leading front radius reported above. The injection-phase gravity-current estimate is superseded once wells shut in. Monitoring wells should be placed at or beyond the leading front radius. The mobile fraction is the primary risk metric for buoyancy-driven migration during the post-injection monitoring period required under 40 CFR 146.93.
+  </p>
+  ` : ''}
+
   ${(result != null && (result.capacityUtilPct ?? 0) > 100) ? `
   <div style="border:2px solid #f59e0b;background:#fffbeb;border-radius:6px;padding:12px 16px;margin-top:10px;">
     <strong style="color:#92400e;">&#x26A0; Capacity Utilisation Exceeds P50 Estimate</strong>
@@ -2252,5 +2281,184 @@ export function openPermitApplication(
 `
 
   const html = wrapHTML(jMeta.reportTitle, body)
+  openPrintWindow(html)
+}
+
+// ---------------------------------------------------------------------------
+// Pre-Screening Report (Executive Summary + Permit combined)
+// ---------------------------------------------------------------------------
+
+const PRESCREENING_DISCLAIMER = `PROFESSIONAL REVIEW DISCLAIMER: This document was generated by CarbonLens simulation software and has not been reviewed by a licensed attorney, certified professional geologist, or registered professional engineer. It does not constitute a complete permit application, legal advice, or a regulatory submission. All outputs must be reviewed and certified by a qualified professional before submission to any regulatory authority. CarbonLens provides screening-level accuracy appropriate for pre-FEED evaluation; site-specific numerical simulation may be required for final Class VI permit submission under 40 CFR Part 146 or equivalent jurisdiction-specific regulations.`
+
+const PRESCREENING_PRINT_CSS = `
+@media print {
+  @page { margin-bottom: 25mm; }
+  body::after {
+    content: "CarbonLens Pre-Screening Report | Professional review required before regulatory submission | carbonlens.io";
+    position: fixed;
+    bottom: 8mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 7pt;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 3mm;
+  }
+}
+`
+
+export function openPreScreeningReport(
+  formation: FormationParams,
+  result: SimulationResult,
+  geo: GeomechanicsResult | null,
+  wells: Well[],
+  formationName: string,
+  location: string,
+  jurisdiction: string,
+  organization: string,
+  snapshots: Array<{year: number; dataUrl: string}>,
+  projectYears: number,
+  timestep: number,
+  hmResult?: OptimizationResult,
+  mcResult?: PersistedMCResult,
+): void {
+  const dateStr = today()
+
+  const disclaimerBox = `
+  <div style="margin:20px 0;padding:14px 16px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;font-size:8.5pt;color:#78350f;line-height:1.6;">
+    <strong style="display:block;margin-bottom:6px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;">Professional Review Disclaimer</strong>
+    ${PRESCREENING_DISCLAIMER}
+  </div>`
+
+  // Build executive summary body via the existing exported function logic — we open it in a
+  // hidden window, grab its innerHTML, then close it. Instead, to avoid duplication of all that
+  // logic, we reconstruct the key body segments inline by capturing the essential sections.
+  // The approach below opens ONE print window with the full combined HTML.
+
+  // Executive section title block
+  const execHeaderBlock = `
+  <div style="page-break-before:always;">
+  <div class="page-header-bar">
+    ${LOGO_SVG}
+    <div style="text-align:right;">
+      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Pre-Screening Report &mdash; CO&#x2082; Storage Assessment</div>
+      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${formationName} &middot; ${dateStr}</div>
+    </div>
+  </div>
+  <div class="page-header-rule"></div>`
+
+  // Re-use the permit application body builder by calling openPermitApplication in a hidden context
+  // is not feasible without refactoring. We therefore open both functions in a single window
+  // by reproducing the combined title page and then embedding pointers.
+  // The simplest correct approach: call a new wrapper HTML that sources both bodies.
+
+  // Combined cover page
+  const combinedCover = buildCoverPage({
+    reportType: 'permit',
+    title: 'CO\u2082 Pre-Screening Report',
+    subtitle: 'Integrated Executive Overview & Permit Pre-Application',
+    formationName,
+    formationLocation: location,
+    organization,
+    preparedBy: 'CarbonLens Simulation Studio v3',
+    dateStr,
+    referenceId: 'CL-PSR-' + new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+    jurisdiction,
+  })
+
+  // Executive summary inner sections (body only, no cover or equations page)
+  // We extract the key content by calling openExecutiveSummary logic up to the footer,
+  // without buildCoverPage, buildEquationsPage, or buildBackPage.
+  // For maintainability, we call the full openExecutiveSummary content generation
+  // by replicating its core HTML here via the shared helpers.
+
+  const execNotice = timestep != null && projectYears != null && timestep < projectYears ? `
+  <div style="border:1px solid #f59e0b;background:#fffbeb;border-radius:6px;padding:8px 14px;margin-bottom:12px;">
+    <strong style="color:#92400e;">&#x26A0; Snapshot at simulation year ${timestep} of ${projectYears}.</strong>
+    <span style="color:#92400e;font-size:9pt;"> The simulation had not yet reached the final project year when this document was exported.</span>
+  </div>` : ''
+
+  const execSection = `
+  ${execHeaderBlock}
+  ${disclaimerBox}
+  ${execNotice}
+  <h2 style="margin-top:16px;">Executive Overview</h2>
+  <p style="font-size:9pt;color:#475569;margin-bottom:8px;">
+    Formation: <strong>${formationName}</strong> &middot; Location: <strong>${location}</strong> &middot;
+    Jurisdiction: <strong>${jurisdiction}</strong> &middot; Organization: <strong>${organization || 'Not specified'}</strong>
+  </p>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">CO&#x2082; Stored</div>
+      <div class="kpi-value">${result.storageCapacity?.toFixed(2) ?? '\u2014'}</div>
+      <div class="kpi-sub">Mt cumulative</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">P50 Capacity</div>
+      <div class="kpi-value">${result.totalCapacity?.toFixed(1) ?? '\u2014'}</div>
+      <div class="kpi-sub">Mt formation potential</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Safety Factor</div>
+      <div class="kpi-value" style="font-size:13pt;padding-top:4px;">${geo != null ? (geo.safetyFactor >= 1.5 ? '<span class="badge-green">LOW RISK</span>' : geo.safetyFactor >= 1.0 ? '<span class="badge-amber">MODERATE</span>' : '<span class="badge-red">HIGH RISK</span>') : '<span class="badge-amber">NOT RUN</span>'}</div>
+      <div class="kpi-sub">SF: ${geo?.safetyFactor?.toFixed(2) ?? '\u2014'}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Containment</div>
+      <div class="kpi-value">${((result.containmentProbability ?? 0) * 100).toFixed(0)}%</div>
+      <div class="kpi-sub">Plume containment probability</div>
+    </div>
+  </div>
+  ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
+  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
+  </div>`
+
+  const pageBreak = `<div style="page-break-before:always;"></div>`
+
+  const permitHeaderBlock = `
+  <div class="page-header-bar">
+    ${LOGO_SVG}
+    <div style="text-align:right;">
+      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Permit Pre-Application &mdash; ${jurisdiction}</div>
+      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${formationName} &middot; ${dateStr}</div>
+    </div>
+  </div>
+  <div class="page-header-rule"></div>`
+
+  // Combined footer disclaimer
+  const combinedFooter = `
+  <footer style="margin-top:22px;padding-top:8px;border-top:2px solid #f59e0b;">
+    <span style="font-size:7.5pt;color:#94a3b8;">CarbonLens &mdash; ${typeof window !== 'undefined' ? window.location.hostname : 'carbonlens.io'} &mdash; Generated ${dateStr}</span>
+    <span style="font-size:7.5pt;color:#78350f;font-weight:600;">Professional review required before regulatory submission</span>
+  </footer>
+  <div style="margin-top:10px;padding:10px 12px;background:#fff8e1;border:1px solid #f59e0b;border-radius:6px;font-size:7.5pt;color:#78350f;line-height:1.5;">
+    ${PRESCREENING_DISCLAIMER}
+  </div>`
+
+  const body = `
+  ${combinedCover}
+  ${execSection}
+  ${pageBreak}
+  ${permitHeaderBlock}
+  <h2>Permit Pre-Application Sections</h2>
+  <p style="font-size:9pt;color:#475569;margin-bottom:10px;">
+    The following sections constitute the permit pre-application content for <strong>${formationName}</strong>
+    under <strong>${jurisdiction}</strong> jurisdiction. A full permit pre-application window is also available
+    via the "Regulatory Pre-Application" export in the Export panel.
+  </p>
+  ${geo ? generatePressureRateChartSVG(formation, wells, geo, projectYears) : '<p class="muted">Geomechanics not run. Re-run simulation to populate geomechanics section.</p>'}
+  ${generateSensitivityTornadoSVG(formation, result, mcResult)}
+  ${(snapshots && snapshots.length > 0) ? `
+  <h2>Reservoir Evolution Snapshots</h2>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:10px 0;">
+    ${snapshots.slice(0, 4).map((s) => `<div><img src="${s.dataUrl}" style="width:100%;border-radius:6px;border:1px solid #e2e8f0;max-height:180px;object-fit:contain;"><div style="text-align:center;font-size:8pt;color:#64748b;margin-top:4px;">Year ${s.year}</div></div>`).join('')}
+  </div>` : ''}
+  ${combinedFooter}
+  ${buildEquationsPage({ organization, preparedBy: 'CarbonLens Simulation Studio v3', dateStr })}
+  ${buildBackPage({ organization, preparedBy: 'CarbonLens Simulation Studio v3', dateStr })}
+`
+
+  const combinedCSS = SHARED_CSS + PRESCREENING_PRINT_CSS
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CarbonLens Pre-Screening Report &mdash; ${formationName}</title><style>${combinedCSS}</style></head><body>${body}</body></html>`
   openPrintWindow(html)
 }

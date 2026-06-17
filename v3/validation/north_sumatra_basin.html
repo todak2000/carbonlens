@@ -114,6 +114,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 /* ── Print controls ─────────────────────────────────────────── */
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
+@media print { .no-print { display: none !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -209,7 +210,13 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
 </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+  <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Report</span>
+  <div style="display:flex;gap:8px;">
+    <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
+    <button onclick="window.location.href='index.html'" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:5px 14px;font-size:8pt;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2190; All Reports</button>
+  </div>
+</div>
 <div class="cover-page">
   <div style="margin-bottom:auto"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -230,7 +237,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div style="margin:auto 0;padding:36px 0">
     <div class="cover-label">Physical Validation Audit · Formation Report</div>
     <h1 class="cover-title">North Sumatra Basin</h1>
-    <p class="cover-sub">Northern Sumatra, Indonesia &nbsp;·&nbsp; EU Jurisdiction</p>
+    <p class="cover-sub">Northern Sumatra, Indonesia &nbsp;·&nbsp; ID Jurisdiction</p>
     <div class="cover-divider"></div>
 
     <div class="cover-formation-strip">
@@ -240,7 +247,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </div>
       <div class="cover-formation-item">
         <div class="label">P50 Storage Capacity</div>
-        <div class="val">17.2 Mt CO₂</div>
+        <div class="val">15.4 Mt CO₂</div>
       </div>
       <div class="cover-formation-item">
         <div class="label">Safety Factor (Fs)</div>
@@ -258,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 12 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
     </div>
   </div>
 
@@ -274,7 +281,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">12 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
@@ -298,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -355,7 +362,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>CO₂ Density</td>
         <td class="mono" style="font-size:7.5pt">78.0 °C, 16.00 MPa</td>
-        <td><strong>482.85 kg/m³</strong></td>
+        <td><strong>430.89 kg/m³</strong></td>
         <td>Span-Wagner (1996) Helmholtz EOS</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -369,14 +376,14 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>Density Contrast (Δρ)</td>
         <td class="mono" style="font-size:7.5pt">ρ_brine − ρ_CO₂</td>
-        <td><strong>514.85 kg/m³</strong></td>
+        <td><strong>566.82 kg/m³</strong></td>
         <td>Buoyancy driver — Boait (2012)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>CO₂ Viscosity</td>
         <td class="mono" style="font-size:7.5pt">78.0 °C, 16.00 MPa</td>
-        <td><strong>3.636 × 10⁻⁵ Pa·s</strong></td>
+        <td><strong>3.265 × 10⁻⁵ Pa·s</strong></td>
         <td>Fenghour et al. (1998)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -390,7 +397,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>Interfacial Tension (IFT)</td>
         <td class="mono" style="font-size:7.5pt">78.0 °C, 16.00 MPa</td>
-        <td><strong>31.22 mN/m</strong></td>
+        <td><strong>32.17 mN/m</strong></td>
         <td>MARS ML Model (Olagunju, in prep.)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -421,11 +428,11 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div class="callout" style="margin-top:12px">
     <div class="callout-title">Physical Interpretation</div>
     <p>
-      CO₂ at 16.00 MPa and 78.0 °C is <strong>supercritical</strong> — above both the critical temperature (31.04 °C) and critical pressure (7.38 MPa). It behaves as a liquid-like dense phase (483 kg/m³) with gas-like mobility, maximising storage density and dissolution trapping.
+      CO₂ at 16.00 MPa and 78.0 °C is <strong>supercritical</strong> — above both the critical temperature (31.04 °C) and critical pressure (7.38 MPa). It behaves as a liquid-like dense phase (431 kg/m³) with gas-like mobility, maximising storage density and dissolution trapping.
     </p>
     <p style="margin-top:5px">
-      Density contrast Δρ = <strong>514.9 kg/m³</strong> drives buoyant plume migration.
-      IFT = <strong>31.2 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
+      Density contrast Δρ = <strong>566.8 kg/m³</strong> drives buoyant plume migration.
+      IFT = <strong>32.2 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
       Solubility = <strong>0.6713 mol/kg</strong> sets the dissolution trapping capacity.
     </p>
   </div>
@@ -442,11 +449,11 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <line x1="290" y1="10" x2="290" y2="112" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
   <line x1="42" y1="112.0" x2="290" y2="112.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="61.0" x2="290" y2="61.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="10.0" x2="290" y2="10.0" stroke="#f1f5f9" stroke-width="0.8"/>
   
-  <path d="M42.0,89.9 L104.0,70.6 L166.0,46.3 L228.0,29.5 L290.0,19.3 L290.0,112.0 L42,112.0 Z" fill="rgba(0,196,160,0.08)"/>
-  <path d="M42.0,89.9 L104.0,70.6 L166.0,46.3 L228.0,29.5 L290.0,19.3" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M42.0,23.3 L104.0,38.4 L166.0,47.7 L228.0,51.9 L290.0,54.1" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
-  <circle cx="166.0" cy="46.3" r="3.5" fill="#00c4a0" stroke="white" stroke-width="1.5"/>
-  <text x="39" y="115.0" text-anchor="end" font-size="6" fill="#64748b">0</text><text x="39" y="64.0" text-anchor="end" font-size="6" fill="#64748b">375</text><text x="39" y="13.0" text-anchor="end" font-size="6" fill="#64748b">750</text>
+  <path d="M42.0,88.2 L104.0,69.4 L166.0,48.3 L228.0,31.4 L290.0,19.3 L290.0,112.0 L42,112.0 Z" fill="rgba(0,196,160,0.08)"/>
+  <path d="M42.0,88.2 L104.0,69.4 L166.0,48.3 L228.0,31.4 L290.0,19.3" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M42.0,23.3 L104.0,37.7 L166.0,45.8 L228.0,50.2 L290.0,52.9" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+  <circle cx="166.0" cy="48.3" r="3.5" fill="#00c4a0" stroke="white" stroke-width="1.5"/>
+  <text x="39" y="115.0" text-anchor="end" font-size="6" fill="#64748b">0</text><text x="39" y="64.0" text-anchor="end" font-size="6" fill="#64748b">345</text><text x="39" y="13.0" text-anchor="end" font-size="6" fill="#64748b">690</text>
   <text x="14" y="61" text-anchor="middle" font-size="6.5" fill="#00c4a0" transform="rotate(-90,14,61)">rho_CO2 (kg/m3)</text>
   <text x="293" y="115.0" text-anchor="start" font-size="6" fill="#64748b">0</text><text x="293" y="64.0" text-anchor="start" font-size="6" fill="#64748b">25</text><text x="293" y="13.0" text-anchor="start" font-size="6" fill="#64748b">50</text>
   <text x="326" y="61" text-anchor="middle" font-size="6.5" fill="#3b82f6" transform="rotate(90,326,61)">IFT (mN/m)</text>
@@ -486,7 +493,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 1 · Generated 12 June 2026</span>
+    <span>Page 1 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -508,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -517,17 +524,17 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-label">P10 Low Estimate</div>
-      <div class="kpi-value">4.4 Mt</div>
+      <div class="kpi-value">3.9 Mt</div>
       <div class="kpi-sub">Cc = 0.51% efficiency</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P50 Best Estimate</div>
-      <div class="kpi-value" style="color:#00c4a0">17.2 Mt</div>
+      <div class="kpi-value" style="color:#00c4a0">15.4 Mt</div>
       <div class="kpi-sub">Cc = 2.00% efficiency</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P90 High Estimate</div>
-      <div class="kpi-value">47.3 Mt</div>
+      <div class="kpi-value">42.2 Mt</div>
       <div class="kpi-sub">Cc = 5.50% efficiency</div>
     </div>
     <div class="kpi-card">
@@ -556,9 +563,9 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="font-size:8pt;color:#64748b;line-height:1.7;padding-top:4px">
       <p>Each mechanism solved <strong>independently</strong>. Mobile is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
-      <p style="margin-top:4px">Formation capacity utilization: <strong>37.2%</strong> (12.50 Mt / 33.62 Mt total).</p>
+      <p style="margin-top:4px">Formation capacity utilization: <strong>40.4%</strong> (12.50 Mt / 30.93 Mt total).</p>
       <p style="margin-top:4px">Mass balance ε = <strong>0.000 Mt</strong> (0.0% — model consistent).</p>
-      <p style="margin-top:4px">Plume radius: <strong>4080.1 m</strong> · Height: <strong>21.1 m</strong></p>
+      <p style="margin-top:4px">Plume radius: <strong>5449.3 m</strong> · Height: <strong>22.3 m</strong></p>
     </div>
   </div>
 
@@ -575,16 +582,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       <tr>
         <td><span class="badge badge-perm">Structural (Closure)</span></td>
-        <td class="mono">24.770 Mt</td>
+        <td class="mono">22.104 Mt</td>
         <td class="mono">12.500 Mt</td>
-        <td class="mono">50.5%</td>
+        <td class="mono">56.6%</td>
         <td style="font-size:7.5pt;color:#64748b">Trap geometry × NTG × φ × (1−S<sub>wi</sub>−S<sub>gr</sub>)</td>
       </tr>
       <tr>
         <td><span class="badge badge-perm">Residual (Capillary)</span></td>
-        <td class="mono">4.474 Mt</td>
+        <td class="mono">4.452 Mt</td>
         <td class="mono">3.746 Mt</td>
-        <td class="mono">83.7%</td>
+        <td class="mono">84.1%</td>
         <td style="font-size:7.5pt;color:#64748b">Land (1968) snap-off · PVI×FQI sweep efficiency</td>
       </tr>
       <tr>
@@ -603,15 +610,15 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </tr>
       <tr style="border-top:2px solid #0d1f3c">
         <td><strong>Total Formation Capacity</strong></td>
-        <td class="mono"><strong>33.619 Mt</strong></td>
+        <td class="mono"><strong>30.932 Mt</strong></td>
         <td class="mono"><strong>12.500 Mt</strong></td>
-        <td class="mono"><strong>37.2%</strong></td>
+        <td class="mono"><strong>40.4%</strong></td>
         <td style="font-size:7.5pt;color:#64748b">Hydrodynamic mobile plume: 4.379 Mt</td>
       </tr>
     </tbody>
   </table>
   <div style="font-size:7.5pt;color:#64748b;margin-top:6px">
-    Plume radius: 4080.1 m &nbsp;·&nbsp; Plume height: 21.1 m
+    Plume radius: 5449.3 m &nbsp;·&nbsp; Plume height: 22.3 m
     &nbsp;·&nbsp; Mobile (free-phase): 4.379 Mt (35.0% of injected)
     &nbsp;·&nbsp; <strong style="color:#00c4a0">ε = 0.000 Mt</strong>
     (✓ model consistent: snap-off capacity ≥ Land-predicted residual)
@@ -672,7 +679,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">20.103 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Induced Seismicity Risk</td><td>Low</td><td><strong style="color:#065f46">LOW</strong></td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">0.01879</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">0.06259 cm</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">0.07014 cm</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Overburden Stress (σᵥ)</td><td>Lithostat</td><td class="mono">33.60 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
       <tr><td>Min. Horizontal Stress (σₕ)</td><td>In-situ</td><td class="mono">37.63 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
       <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">61.42 km</td><td><span class="badge badge-info">INFO</span></td></tr>
@@ -688,13 +695,13 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <p style="margin-top:5px">
       <strong>MAIP Margin 51.2%:</strong>
       Comfortable margin between peak wellbore pressure and MAIP — low risk of pressure-induced fracturing.
-      Surface heave of <strong>0.06259 cm</strong> is within satellite InSAR detection thresholds.
+      Surface heave of <strong>0.07014 cm</strong> is within satellite InSAR detection thresholds.
     </p>
   </div>
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 2 · Generated 12 June 2026</span>
+    <span>Page 2 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -716,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -743,51 +750,51 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr >
         <td class="mono">8.00</td>
         <td class="mono">0.50×</td>
-        <td class="mono">162.7</td>
+        <td class="mono">160.6</td>
         <td class="mono">995.1</td>
-        <td class="mono">2.002 × 10⁻⁵</td>
+        <td class="mono">1.996 × 10⁻⁵</td>
         <td class="mono">0.4301</td>
-        <td class="mono">43.06</td>
+        <td class="mono">43.12</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
         <td class="mono">12.00</td>
         <td class="mono">0.75×</td>
-        <td class="mono">304.8</td>
+        <td class="mono">288.0</td>
         <td class="mono">996.4</td>
-        <td class="mono">2.538 × 10⁻⁵</td>
+        <td class="mono">2.460 × 10⁻⁵</td>
         <td class="mono">0.5663</td>
-        <td class="mono">35.73</td>
+        <td class="mono">36.13</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr style="background:rgba(0,196,160,0.06);font-weight:600">
         <td class="mono">16.00</td>
         <td class="mono">1.00×</td>
-        <td class="mono">482.9</td>
+        <td class="mono">430.9</td>
         <td class="mono">997.7</td>
-        <td class="mono">3.636 × 10⁻⁵</td>
+        <td class="mono">3.265 × 10⁻⁵</td>
         <td class="mono">0.6713</td>
-        <td class="mono">31.22</td>
+        <td class="mono">32.17</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
         <td class="mono">20.00</td>
         <td class="mono">1.25×</td>
-        <td class="mono">606.7</td>
+        <td class="mono">544.7</td>
         <td class="mono">999.0</td>
-        <td class="mono">4.719 × 10⁻⁵</td>
+        <td class="mono">4.140 × 10⁻⁵</td>
         <td class="mono">0.7513</td>
-        <td class="mono">29.17</td>
+        <td class="mono">30.05</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
         <td class="mono">24.00</td>
         <td class="mono">1.50×</td>
-        <td class="mono">681.9</td>
+        <td class="mono">627.0</td>
         <td class="mono">1000.3</td>
-        <td class="mono">5.542 × 10⁻⁵</td>
+        <td class="mono">4.927 × 10⁻⁵</td>
         <td class="mono">0.8107</td>
-        <td class="mono">28.10</td>
+        <td class="mono">28.74</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
     </tbody>
@@ -812,51 +819,59 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <text x="78" y="26" text-anchor="end" font-size="7.5" fill="#1e293b">Thickness</text>
     <rect x="82.0" y="14" width="89.0" height="16" fill="#fca5a5" rx="2"/>
          <rect x="171.0" y="14" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
-         <text x="80.0" y="26" text-anchor="end" font-size="6" fill="#991b1b">13.8</text>
-         <text x="262.0" y="26" text-anchor="start" font-size="6" fill="#065f46">20.7</text>
+         <text x="80.0" y="26" text-anchor="end" font-size="6" fill="#991b1b">12.3</text>
+         <text x="262.0" y="26" text-anchor="start" font-size="6" fill="#065f46">18.4</text>
     <text x="78" y="50" text-anchor="end" font-size="7.5" fill="#1e293b">Porosity</text>
     <rect x="82.0" y="38" width="89.0" height="16" fill="#fca5a5" rx="2"/>
          <rect x="171.0" y="38" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
-         <text x="80.0" y="50" text-anchor="end" font-size="6" fill="#991b1b">13.8</text>
-         <text x="262.0" y="50" text-anchor="start" font-size="6" fill="#065f46">20.7</text>
+         <text x="80.0" y="50" text-anchor="end" font-size="6" fill="#991b1b">12.3</text>
+         <text x="262.0" y="50" text-anchor="start" font-size="6" fill="#065f46">18.4</text>
     <text x="78" y="74" text-anchor="end" font-size="7.5" fill="#1e293b">Permeability</text>
     <text x="171" y="74" text-anchor="middle" font-size="7" fill="#94a3b8" font-style="italic">no change</text>
     <text x="78" y="98" text-anchor="end" font-size="7.5" fill="#1e293b">Area</text>
     <rect x="82.0" y="86" width="89.0" height="16" fill="#fca5a5" rx="2"/>
          <rect x="171.0" y="86" width="89.0" height="16" fill="#6ee7b7" rx="2"/>
-         <text x="80.0" y="98" text-anchor="end" font-size="6" fill="#991b1b">13.8</text>
-         <text x="262.0" y="98" text-anchor="start" font-size="6" fill="#065f46">20.7</text>
+         <text x="80.0" y="98" text-anchor="end" font-size="6" fill="#991b1b">12.3</text>
+         <text x="262.0" y="98" text-anchor="start" font-size="6" fill="#065f46">18.4</text>
   <text x="171" y="122" text-anchor="middle" font-size="6.5" fill="#64748b">P50 Capacity (Mt) — deviation from base</text>
 </svg>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px">
       <div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Thickness: 36.0 → 45.0 → 54.0 m</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">13.77</span> / <span class="mono" style="color:#00c4a0">17.21</span> / <span class="mono">20.65 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
           <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.260</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.290</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ h)</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Porosity: 17.6% → 22.0% → 26.4%</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">13.77</span> / <span class="mono" style="color:#00c4a0">17.21</span> / <span class="mono">20.65 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
           <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.278</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.279</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ φ)</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Permeability: 160 → 200 → 240 mD</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">17.21</span> / <span class="mono" style="color:#00c4a0">17.21</span> / <span class="mono">17.21 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">15.36</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">15.36 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
           <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.261</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.290</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">No capacity effect — affects ΔP only</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Area: 144.0 → 180.0 → 216.0 km²</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">13.77</span> / <span class="mono" style="color:#00c4a0">17.21</span> / <span class="mono">20.65 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
           <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.278</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.278</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ A)</div>
         </div>
     </div>
   </div>
+
+  
+    <h2>&#x1F4CA; CarbonLens vs Published Literature</h2>
+    <div class="callout" style="margin-top:8px">
+      <div class="callout-title">Pre-Operational Formation</div>
+      <p>Pre-operational formation: published capacity estimates only. No long-term monitoring data available for comparison.
+      CarbonLens screening predictions are provided as engineering estimates pending field validation.</p>
+    </div>
 
   <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
@@ -879,7 +894,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 3 · Generated 12 June 2026</span>
+    <span>Page 3 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -951,7 +966,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">North Sumatra Basin Validation Report · 12 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">North Sumatra Basin Validation Report · 17 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

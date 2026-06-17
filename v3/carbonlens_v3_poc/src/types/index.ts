@@ -118,6 +118,10 @@ export interface FormationParams {
   reservoirYoungsModulus?: number       // Young's modulus [GPa] for heave calc — 5 sandstone, 15–30 carbonate (default 5)
   fracturedReservoir?: boolean          // true → apply fracture compliance factor (0.20×) to heave estimate
   lithologyClass?: 'carbonate' | 'sandstone'  // reservoir matrix type — governs mineral trapping kinetics
+  // ── Heterogeneous formation parameters ──────────────────────────────────────
+  k_Vdp?: number                       // Dykstra-Parsons permeability variation coefficient V (0 to 0.85); default 0 = homogeneous
+  k_layer_ratio?: number               // kh/kv anisotropy ratio (≥1); default 1 = isotropic
+  n_layers?: number                    // Number of permeability layers in formation; default 1 = homogeneous
 }
 
 export interface Well {
@@ -179,6 +183,13 @@ export interface SimulationResult {
   formationCapacityUtil: number   // injected / totalFormationCapacity × 100%
   // Multiphase closure diagnostics (Nordbotten & Celia 2006)
   massBalanceError: number        // ε = injected − (residual + dissolved + mobile); ≥0 for unswept CO₂
+  // Post-injection gravity current (Hesse et al. 2008) — present only when all wells have shut in
+  hessePostInjection?: import('../engine/plume/hessePostInjection').HesseResult
+  // Heterogeneous formation corrections (Shook & Mitchell 2009, Kopp et al. 2010)
+  heterogeneityCorrected?: boolean     // true when k_Vdp > 0.05
+  heterogeneityCitation?: string       // "Shook & Mitchell (2009), Kopp et al. (2010)"
+  sweepEfficiency?: number             // E_s from Shook correlation (0 to 1)
+  aorHeterogeneityFactor?: number      // multiplier on homogeneous AoR radius (≥1)
 }
 
 export interface GeomechanicsResult {

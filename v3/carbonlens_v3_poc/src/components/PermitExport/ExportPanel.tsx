@@ -7,7 +7,7 @@ import { Download, Clipboard, Check, FileJson, FileSpreadsheet, Camera, FileText
 import { downloadExportPackage, generateExcelHTML } from '../../utils/exportPackage'
 import { generateDepthProfile, generateTimeSeries, buildExportJSON } from '../../utils/profileGenerator'
 import { PERMIT_TEMPLATES, renderPermitReport, DEFAULT_JURISDICTION, PermitTemplate } from '../../utils/permitTemplates'
-import { openExecutiveSummary, openPermitApplication } from '../../utils/exportHTMLReports'
+import { openExecutiveSummary, openPermitApplication, openPreScreeningReport } from '../../utils/exportHTMLReports'
 import { openSleipnerReport } from '../../utils/exportSleipnerReport'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
 import { useHistoryMatchingStore } from '../../store/historyMatchingStore'
@@ -168,6 +168,36 @@ export default function ExportPanel() {
     openPermitApplication(fp, snap, fg, fw, presetName, preset?.location ?? 'User-defined site', reportTemplate, authSnap.user?.organization ?? '', simSnap.snapshots, uiSnap.projectYears, uiSnap.timestep, hmOptResult ?? undefined, mcResult)
   }, [reportTemplate, hmOptResult, runMCForReport])
 
+  const handleExportPreScreeningReport = useCallback(() => {
+    const simSnap = useSimulationStore.getState()
+    const uiSnap = useUIStore.getState()
+    const authSnap = useAuthStore.getState()
+    const snap = simSnap.completedResult
+    if (!snap) return
+    if (!simSnap.completedParams || !simSnap.completedWells) {
+      alert('Snapshot incomplete — please re-run the simulation to refresh the export state, then try again.')
+      return
+    }
+    const fp = simSnap.completedParams
+    const fw = simSnap.completedWells
+    const fg = simSnap.completedGeomechanics ?? simSnap.geomechanics
+    const preset = FORMATION_PRESETS.find((p) => p.params.depth === fp.depth && p.params.porosity === fp.porosity)
+    const presetName = preset?.name ?? 'Custom Formation'
+    const mcResult = runMCForReport(fp, presetName, uiSnap.projectYears)
+    openPreScreeningReport(
+      fp, snap, fg, fw,
+      presetName,
+      preset?.location ?? 'User-defined site',
+      reportTemplate,
+      authSnap.user?.organization ?? '',
+      simSnap.snapshots,
+      uiSnap.projectYears,
+      uiSnap.timestep,
+      hmOptResult ?? undefined,
+      mcResult,
+    )
+  }, [reportTemplate, hmOptResult, runMCForReport])
+
   const handleDownloadJSON = useCallback(() => {
     const profile = generateDepthProfile(params)
     const series = result ? generateTimeSeries(params, result, wells, 50) : []
@@ -211,40 +241,13 @@ export default function ExportPanel() {
         </p>
       )}
 
-      {/* Executive Summary — primary action for competition / non-technical audience */}
+      {/* CO2 Pre-Screening Report (unified executive + permit) */}
       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-1.5">
-        <p className="text-[9px] text-emerald-400 font-mono uppercase tracking-wider">Decision-Maker Report</p>
+        <p className="text-[9px] text-emerald-400 font-mono uppercase tracking-wider">CO&#x2082; Pre-Screening Report</p>
         <p className="text-[10px] text-muted leading-relaxed">
-          Single-page executive summary with verdict, capacity estimate, safety rating,
-          and recommendations — designed for ministers, investors, and regulators.
+          Unified permit pre-screening report: executive overview, AoR, storage capacity, geomechanics,
+          MRV plan, and compliance checklist. Ready to support regulatory pre-application submissions.
         </p>
-        {result && !geomechanics && (
-          <p className="text-[9px] text-amber-400 font-mono bg-amber-500/10 rounded px-2 py-1">
-            ⚠ Geomechanics will show "NOT RUN" — re-run the simulation to populate it.
-          </p>
-        )}
-        <button
-          onClick={handleExportExecutiveSummary}
-          disabled={!completedResult}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[10px] font-medium font-mono transition"
-        >
-          <FileText size={12} />
-          {isAnimating ? 'Simulation running…' : !completedResult ? 'Run simulation to completion…' : 'Executive Summary PDF'}
-        </button>
-        {!completedResult && !isAnimating && (
-          <p className="text-[9px] text-muted font-mono text-center">
-            {result ? `Complete the simulation (year ${simulationYear}/${projectYears}) to unlock.` : 'Run a simulation first to enable this export.'}
-          </p>
-        )}
-      </div>
-
-      {/* Permit Pre-Application */}
-      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 space-y-1.5">
-        <p className="text-[9px] text-blue-400 font-mono uppercase tracking-wider">Regulatory Pre-Application</p>
-        <p className="text-[10px] text-muted leading-relaxed">
-          Full permit pre-application with AoR, MRV plan, geomechanics, and compliance checklist.
-        </p>
-
         {/* Jurisdiction selector */}
         <div className="flex items-center gap-2">
           <label className="text-[9px] text-muted font-mono">Jurisdiction:</label>
@@ -258,20 +261,24 @@ export default function ExportPanel() {
             ))}
           </select>
         </div>
-
         {!geomechanics && (
           <p className="text-[9px] text-amber-400 font-mono bg-amber-500/10 rounded px-2 py-1">
-            ⚠ Section 6 (Geomechanics) will be blank — re-run the simulation to populate it.
+            ⚠ Geomechanics section will be incomplete — re-run the simulation to populate it.
           </p>
         )}
         <button
-          onClick={handleExportPermitPDF}
+          onClick={handleExportPreScreeningReport}
           disabled={!completedResult}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[10px] font-medium font-mono transition"
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[10px] font-medium font-mono transition"
         >
-          <Download size={12} />
-          {isAnimating ? 'Simulation running…' : !completedResult ? 'Run simulation to completion…' : 'Permit Pre-Application PDF'}
+          <FileText size={12} />
+          {isAnimating ? 'Simulation running…' : !completedResult ? 'Run simulation to completion…' : 'Generate Pre-Screening Report'}
         </button>
+        {!completedResult && !isAnimating && (
+          <p className="text-[9px] text-muted font-mono text-center">
+            {result ? `Complete the simulation (year ${simulationYear}/${projectYears}) to unlock.` : 'Run a simulation first to enable this export.'}
+          </p>
+        )}
       </div>
 
       {/* Other export actions */}

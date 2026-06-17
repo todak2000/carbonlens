@@ -17,9 +17,11 @@ import type { FormationParams, SimulationResult } from '../../types';
 import type { MatchableParams } from './types';
 import {
   co2DensitySpanWagner,
+  co2DensityWithImpurities,
   brineDensityGarcia,
   co2ViscosityFenghour,
   co2SolubilityDuanSun,
+  calculateMultiSaltSolubility,
   co2DiffusionCoefficient,
   determinePhase,
   computeTr,
@@ -33,6 +35,7 @@ import {
   assessApplicabilityDomain,
 } from '../index';
 import type { MarsInput } from '../mars/types';
+import type { MultiSaltBrine } from '../index';
 import { expIntegralE1 } from '../../utils/computePressureField';
 
 // A minimal well descriptor for the forward model
@@ -132,7 +135,7 @@ export function runForwardModel(
   const totalPoreVolume = A * h_m * ntg * phi;
 
   // CO2 density at initial reservoir conditions
-  const rhoCO2_init = co2DensitySpanWagner(T_K, params.pressure * 1e6);
+  const rhoCO2_init = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction);
 
   // DOE capacity coefficient framework (Goodman et al. 2011)
   const Cc_P10 = 0.0051;
@@ -156,7 +159,7 @@ export function runForwardModel(
     const currentRate = wells.reduce((s, w) => s + wellRateAt(w, year, projectYears), 0);
 
     // Pressure model: Theis transient radial flow
-    const rhoCO2_mobile = co2DensitySpanWagner(T_K, params.pressure * 1e6);
+    const rhoCO2_mobile = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction);
     const visc = co2ViscosityFenghour(T_K, rhoCO2_mobile);
     const perm_m2 = params.permeability * 9.869e-16;
     const ct = 1e-9;
@@ -180,7 +183,7 @@ export function runForwardModel(
 
     // Recompute fluid properties at injection pressure
     const P_Pa = P_t * 1e6;
-    const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa);
+    const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction);
     const rhoBrine = brineDensityGarcia(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity);
     const drho = rhoBrine - rhoCO2;
     const drho_sq = drho * drho / 1e6;
@@ -210,7 +213,16 @@ export function runForwardModel(
 
     const adAssessment = assessApplicabilityDomain(input, phase);
 
-    const solubility = co2SolubilityDuanSun(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity);
+    let solubility: number;
+    if (params.saltType !== 'NaCl' && params.bivalentSalinity > 0) {
+      const brine: MultiSaltBrine = params.saltType === 'CaCl2'
+        ? { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity, m_MgCl2: 0 }
+        : { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity * 0.6, m_MgCl2: params.bivalentSalinity * 0.4 };
+      const xCO2 = calculateMultiSaltSolubility(T_K, P_t, brine);
+      solubility = xCO2 * 55.508 / Math.max(1e-9, 1 - xCO2);
+    } else {
+      solubility = co2SolubilityDuanSun(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity);
+    }
     const diffusion = co2DiffusionCoefficient(T_K, P_t, params.porosity);
 
     // Gravity current plume radius

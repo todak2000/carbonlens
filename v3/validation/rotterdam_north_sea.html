@@ -114,6 +114,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 /* ── Print controls ─────────────────────────────────────────── */
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
+@media print { .no-print { display: none !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -209,7 +210,13 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
 </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+  <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Report</span>
+  <div style="display:flex;gap:8px;">
+    <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
+    <button onclick="window.location.href='index.html'" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:5px 14px;font-size:8pt;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2190; All Reports</button>
+  </div>
+</div>
 <div class="cover-page">
   <div style="margin-bottom:auto"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -258,7 +265,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 12 June 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 17 June 2026</span>
     </div>
   </div>
 
@@ -274,7 +281,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">12 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
@@ -298,7 +305,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Rotterdam / North Sea</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -383,7 +390,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>CO₂ Solubility</td>
         <td class="mono" style="font-size:7.5pt">100.0 °C, 2.50 MPa</td>
-        <td><strong>0.0923 mol/kg</strong></td>
+        <td><strong>0.1231 mol/kg</strong></td>
         <td>Duan-Sun (2003)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -426,7 +433,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <p style="margin-top:5px">
       Density contrast Δρ = <strong>1008.1 kg/m³</strong> drives buoyant plume migration.
       IFT = <strong>61.9 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
-      Solubility = <strong>0.0923 mol/kg</strong> sets the dissolution trapping capacity.
+      Solubility = <strong>0.1231 mol/kg</strong> sets the dissolution trapping capacity.
     </p>
   </div>
 
@@ -486,7 +493,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Rotterdam / North Sea</em></span>
-    <span>Page 1 · Generated 12 June 2026</span>
+    <span>Page 1 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -508,7 +515,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Rotterdam / North Sea</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -558,7 +565,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <p>Each mechanism solved <strong>independently</strong>. Mobile is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
       <p style="margin-top:4px">Formation capacity utilization: <strong>93.3%</strong> (12.50 Mt / 13.40 Mt total).</p>
       <p style="margin-top:4px">Mass balance ε = <strong>0.000 Mt</strong> (0.0% — model consistent).</p>
-      <p style="margin-top:4px">Plume radius: <strong>12150.5 m</strong> · Height: <strong>15.5 m</strong></p>
+      <p style="margin-top:4px">Plume radius: <strong>15670.0 m</strong> · Height: <strong>15.5 m</strong></p>
     </div>
   </div>
 
@@ -611,7 +618,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </tbody>
   </table>
   <div style="font-size:7.5pt;color:#64748b;margin-top:6px">
-    Plume radius: 12150.5 m &nbsp;·&nbsp; Plume height: 15.5 m
+    Plume radius: 15670.0 m &nbsp;·&nbsp; Plume height: 15.5 m
     &nbsp;·&nbsp; Mobile (free-phase): 4.802 Mt (38.4% of injected)
     &nbsp;·&nbsp; <strong style="color:#00c4a0">ε = 0.000 Mt</strong>
     (✓ model consistent: snap-off capacity ≥ Land-predicted residual)
@@ -694,7 +701,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Rotterdam / North Sea</em></span>
-    <span>Page 2 · Generated 12 June 2026</span>
+    <span>Page 2 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -716,7 +723,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">Rotterdam / North Sea</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 12 June 2026
+      <span style="font-family:'IBM Plex Mono',monospace">rotterdam_north_sea.html</span> · 17 June 2026
     </div>
   </div>
 
@@ -746,7 +753,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td class="mono">18.3</td>
         <td class="mono">1045.4</td>
         <td class="mono">1.857 × 10⁻⁵</td>
-        <td class="mono">0.0510</td>
+        <td class="mono">0.0728</td>
         <td class="mono">64.89</td>
         <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
       </tr>
@@ -756,7 +763,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td class="mono">27.8</td>
         <td class="mono">1045.6</td>
         <td class="mono">1.864 × 10⁻⁵</td>
-        <td class="mono">0.0723</td>
+        <td class="mono">0.0997</td>
         <td class="mono">63.40</td>
         <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
       </tr>
@@ -766,7 +773,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td class="mono">37.7</td>
         <td class="mono">1045.8</td>
         <td class="mono">1.872 × 10⁻⁵</td>
-        <td class="mono">0.0923</td>
+        <td class="mono">0.1231</td>
         <td class="mono">61.89</td>
         <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
       </tr>
@@ -776,7 +783,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td class="mono">47.9</td>
         <td class="mono">1045.9</td>
         <td class="mono">1.883 × 10⁻⁵</td>
-        <td class="mono">0.1112</td>
+        <td class="mono">0.1435</td>
         <td class="mono">60.38</td>
         <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
       </tr>
@@ -786,7 +793,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td class="mono">58.4</td>
         <td class="mono">1046.1</td>
         <td class="mono">1.895 × 10⁻⁵</td>
-        <td class="mono">0.1292</td>
+        <td class="mono">0.1612</td>
         <td class="mono">58.85</td>
         <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
       </tr>
@@ -837,6 +844,14 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
   </div>
 
+  
+    <h2>&#x1F4CA; CarbonLens vs Published Literature</h2>
+    <div class="callout" style="margin-top:8px">
+      <div class="callout-title">Pre-Operational Formation</div>
+      <p>Pre-operational formation: published capacity estimates only. No long-term monitoring data available for comparison.
+      CarbonLens screening predictions are provided as engineering estimates pending field validation.</p>
+    </div>
+
   <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
@@ -858,7 +873,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>Rotterdam / North Sea</em></span>
-    <span>Page 3 · Generated 12 June 2026</span>
+    <span>Page 3 · Generated 17 June 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -930,7 +945,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">Rotterdam / North Sea Validation Report · 12 June 2026</div>
+    <div style="font-size:7.5pt;color:#475569">Rotterdam / North Sea Validation Report · 17 June 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

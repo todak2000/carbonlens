@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use CarbonLens in your research, please cite it as below."
+title: "CarbonLens: A Browser-Native CO2 Storage Pre-Screening Tool"
+version: 0.1.0
+date-released: "2026-06-17"
+authors:
+  - family-names: Olagunju
+    given-names: Daniel T.
+    affiliation: "Universiti Teknologi PETRONAS"
+    orcid: ""
+repository-code: "https://github.com/carbonlens/carbonlens"
+abstract: >
+  CarbonLens is an open-source, browser-native CO2 geological storage screening tool
+  implementing peer-reviewed analytical physics (Nordbotten 2005, Hesse 2008, Span-Wagner 1996,
+  Duan-Sun 2003, Duan 2006, Fenghour 1998, Land 1968, Theis 1935) with heterogeneous formation
+  corrections (Shook & Mitchell 2009, Kopp et al. 2010) and a white-box MARS surrogate for
+  CO2-brine interfacial tension. Designed for pre-FEED screening, education, and regulatory
+  pre-application support.
+keywords:
+  - "CO2 storage"
+  - "carbon capture and storage"
+  - "geological storage"
+  - "CCUS"
+  - "screening tool"
+license: MIT

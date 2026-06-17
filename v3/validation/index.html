@@ -114,6 +114,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 /* ── Print controls ─────────────────────────────────────────── */
 .page-break { page-break-before: always; }
 .no-break { page-break-inside: avoid; }
+@media print { .no-print { display: none !important; } }
 
 /* ── Content pages ──────────────────────────────────────────── */
 .content-page { padding: 0; }
@@ -209,7 +210,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
 </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+  <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Suite</span>
+  <div style="display:flex;gap:8px;">
+    <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
+  </div>
+</div>
 <div class="cover-page">
   <div style="margin-bottom:auto"><svg width="180" height="38" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(0,2)">
@@ -254,7 +260,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">ALL 16 FORMATIONS · ALL PHYSICS CHECKS PASS</span>
-      <span style="font-size:7pt;color:#475569">Generated 12 June 2026</span>
+      <span style="font-size:7pt;color:#475569">Generated 17 June 2026</span>
     </div>
   </div>
 
@@ -271,7 +277,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Date</div>
-      <div class="cover-meta-val" style="font-size:9pt">12 June 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">17 June 2026</div>
       <div class="cover-meta-sub">MSc Research · Universiti Teknologi PETRONAS, Malaysia</div>
     </div>
   </div>
@@ -295,7 +301,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">CarbonLens V3 · Formation Validation Suite</strong><br>
-      All 16 Preset Formations · 12 June 2026
+      All 16 Preset Formations · 17 June 2026
     </div>
   </div>
 
@@ -309,7 +315,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0">
       <div class="kpi-card">
         <div class="kpi-label">Total P50 Capacity</div>
-        <div class="kpi-value" style="color:#00c4a0">696 Mt</div>
+        <div class="kpi-value" style="color:#00c4a0">664 Mt</div>
         <div class="kpi-sub">All 16 formations combined</div>
       </div>
       <div class="kpi-card">
@@ -341,315 +347,238 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <svg width="620" height="322" viewBox="0 0 620 322" xmlns="http://www.w3.org/2000/svg" style="font-family:'IBM Plex Sans',sans-serif;overflow:visible">
   <line x1="130" y1="10" x2="130" y2="298" stroke="#e2e8f0" stroke-width="1"/>
     <text x="130" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">0</text><line x1="239" y1="10" x2="239" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
-    <text x="239" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">47</text><line x1="348" y1="10" x2="348" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
-    <text x="348" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">93</text><line x1="456" y1="10" x2="456" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
-    <text x="456" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">140</text><line x1="565" y1="10" x2="565" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
-    <text x="565" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">186</text>
+    <text x="239" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">44</text><line x1="348" y1="10" x2="348" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
+    <text x="348" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">88</text><line x1="456" y1="10" x2="456" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
+    <text x="456" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">132</text><line x1="565" y1="10" x2="565" y2="298" stroke="#f1f5f9" stroke-width="0.6"/>
+    <text x="565" y="311" text-anchor="middle" font-size="6.5" fill="#64748b">175</text>
   <text x="126" y="22" text-anchor="end" font-size="7" fill="#1e293b">Alberta Basin</text>
     <rect x="130" y="13" width="435.0" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="569" y="22" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">186.4 Mt</text><text x="126" y="40" text-anchor="end" font-size="7" fill="#1e293b">Abu Dhabi Basin</text>
-    <rect x="130" y="31" width="177.5" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="311.46117072009895" y="40" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">76.1 Mt</text><text x="126" y="58" text-anchor="end" font-size="7" fill="#1e293b">Nile Delta</text>
-    <rect x="130" y="49" width="159.2" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="293.2422271760724" y="58" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">68.3 Mt</text><text x="126" y="76" text-anchor="end" font-size="7" fill="#1e293b">Rotterdam / North S…</text>
-    <rect x="130" y="67" width="154.3" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="288.25710629565833" y="76" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">66.1 Mt</text><text x="126" y="94" text-anchor="end" font-size="7" fill="#1e293b">In Salah</text>
-    <rect x="130" y="85" width="153.9" height="12" fill="#ef4444" rx="2" opacity="0.82"/>
-    <text x="287.87423251708964" y="94" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">66.0 Mt</text><text x="126" y="112" text-anchor="end" font-size="7" fill="#1e293b">Kasawari</text>
-    <rect x="130" y="103" width="129.5" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="263.46218628470984" y="112" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">55.5 Mt</text><text x="126" y="130" text-anchor="end" font-size="7" fill="#1e293b">Johansen</text>
-    <rect x="130" y="121" width="113.9" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
-    <text x="247.9043857085969" y="130" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">48.8 Mt</text><text x="126" y="148" text-anchor="end" font-size="7" fill="#1e293b">Niger Delta</text>
-    <rect x="130" y="139" width="113.2" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="247.1955187157923" y="148" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">48.5 Mt</text><text x="126" y="166" text-anchor="end" font-size="7" fill="#1e293b">Sleipner Utsira</text>
-    <rect x="130" y="157" width="65.0" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
-    <text x="198.95728896687575" y="166" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">27.8 Mt</text><text x="126" y="184" text-anchor="end" font-size="7" fill="#1e293b">North Sumatra Basin</text>
-    <rect x="130" y="175" width="40.1" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="174.14982098633817" y="184" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">17.2 Mt</text><text x="126" y="202" text-anchor="end" font-size="7" fill="#1e293b">Malay Basin</text>
-    <rect x="130" y="193" width="32.4" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="166.43044563492245" y="202" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">13.9 Mt</text><text x="126" y="220" text-anchor="end" font-size="7" fill="#1e293b">Mount Simon</text>
-    <rect x="130" y="211" width="29.4" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="163.3537679284705" y="220" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">12.6 Mt</text><text x="126" y="238" text-anchor="end" font-size="7" fill="#1e293b">Gorgon</text>
-    <rect x="130" y="229" width="12.4" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="146.39414131052413" y="238" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">5.3 Mt</text><text x="126" y="256" text-anchor="end" font-size="7" fill="#1e293b">Duyong</text>
-    <rect x="130" y="247" width="4.6" height="12" fill="#10b981" rx="2" opacity="0.82"/>
-    <text x="138.55086027147905" y="256" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">2.0 Mt</text><text x="126" y="274" text-anchor="end" font-size="7" fill="#1e293b">Snøhvit Tubåen</text>
-    <rect x="130" y="265" width="3.7" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
-    <text x="137.7086300716648" y="274" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">1.6 Mt</text><text x="126" y="292" text-anchor="end" font-size="7" fill="#1e293b">Otway</text>
+    <text x="569" y="22" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">175.4 Mt</text><text x="126" y="40" text-anchor="end" font-size="7" fill="#1e293b">Abu Dhabi Basin</text>
+    <rect x="130" y="31" width="175.3" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="309.3443095827856" y="40" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">70.7 Mt</text><text x="126" y="58" text-anchor="end" font-size="7" fill="#1e293b">Rotterdam / North S…</text>
+    <rect x="130" y="49" width="164.0" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="297.9521267037154" y="58" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">66.1 Mt</text><text x="126" y="76" text-anchor="end" font-size="7" fill="#1e293b">In Salah</text>
+    <rect x="130" y="67" width="163.5" height="12" fill="#ef4444" rx="2" opacity="0.82"/>
+    <text x="297.5451894042752" y="76" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">66.0 Mt</text><text x="126" y="94" text-anchor="end" font-size="7" fill="#1e293b">Nile Delta</text>
+    <rect x="130" y="85" width="158.8" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="292.8418049201911" y="94" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">64.1 Mt</text><text x="126" y="112" text-anchor="end" font-size="7" fill="#1e293b">Kasawari</text>
+    <rect x="130" y="103" width="137.6" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="271.59885219426144" y="112" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">55.5 Mt</text><text x="126" y="130" text-anchor="end" font-size="7" fill="#1e293b">Johansen</text>
+    <rect x="130" y="121" width="121.1" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
+    <text x="255.06324775736036" y="130" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">48.8 Mt</text><text x="126" y="148" text-anchor="end" font-size="7" fill="#1e293b">Niger Delta</text>
+    <rect x="130" y="139" width="103.6" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="237.5887030924705" y="148" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">41.8 Mt</text><text x="126" y="166" text-anchor="end" font-size="7" fill="#1e293b">Sleipner Utsira</text>
+    <rect x="130" y="157" width="69.0" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
+    <text x="203.0398382724415" y="166" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">27.8 Mt</text><text x="126" y="184" text-anchor="end" font-size="7" fill="#1e293b">North Sumatra Basin</text>
+    <rect x="130" y="175" width="38.1" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="172.0807016511558" y="184" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">15.4 Mt</text><text x="126" y="202" text-anchor="end" font-size="7" fill="#1e293b">Malay Basin</text>
+    <rect x="130" y="193" width="30.1" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="164.12012774394503" y="202" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">12.1 Mt</text><text x="126" y="220" text-anchor="end" font-size="7" fill="#1e293b">Mount Simon</text>
+    <rect x="130" y="211" width="29.0" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="163.04786153817514" y="220" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">11.7 Mt</text><text x="126" y="238" text-anchor="end" font-size="7" fill="#1e293b">Gorgon</text>
+    <rect x="130" y="229" width="12.6" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="146.5723612068242" y="238" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">5.1 Mt</text><text x="126" y="256" text-anchor="end" font-size="7" fill="#1e293b">Duyong</text>
+    <rect x="130" y="247" width="4.8" height="12" fill="#10b981" rx="2" opacity="0.82"/>
+    <text x="138.8368806971549" y="256" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">2.0 Mt</text><text x="126" y="274" text-anchor="end" font-size="7" fill="#1e293b">Snøhvit Tubåen</text>
+    <rect x="130" y="265" width="3.9" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
+    <text x="137.94171654070442" y="274" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">1.6 Mt</text><text x="126" y="292" text-anchor="end" font-size="7" fill="#1e293b">Otway</text>
     <rect x="130" y="283" width="0.6" height="12" fill="#f59e0b" rx="2" opacity="0.82"/>
-    <text x="134.596119811432" y="292" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">0.3 Mt</text>
+    <text x="134.5900619052634" y="292" font-size="7" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">0.2 Mt</text>
   <text x="347.5" y="320" text-anchor="middle" font-size="7" fill="#64748b">P50 Storage Capacity (Mt CO2) — ranked high to low</text>
 </svg>
   </div>
 
   <div class="gradient-rule" style="margin-top:6px"></div>
 
-  <h2>Full Data: All 16 Formations</h2>
+  <h2>Formation Summary Table</h2>
   <p style="font-size:8.5pt;color:#64748b;margin-bottom:10px">
-    Complete physics and geomechanics results for each formation.
+    All 16 formations with key metrics. Formations validated against published literature data are marked with a green badge.
   </p>
 
   <div style="overflow:auto">
-  <table style="font-size:7.8pt;min-width:900px">
+  <table style="font-size:7.8pt;min-width:700px">
     <thead>
       <tr>
         <th style="width:30px">#</th>
         <th style="min-width:160px">Formation</th>
-        <th>Depth (m)</th>
-        <th>T (°C)</th>
-        <th>P (MPa)</th>
-        <th>ρ_CO₂ (kg/m³)</th>
-        <th>Phase</th>
-        <th>P50 (Mt)</th>
-        <th>Fs</th>
-        <th>MAIP (MPa)</th>
-        <th>MAIP Margin</th>
-        <th>Heave (cm)</th>
-        <th>Seismicity</th>
+        <th>Jurisdiction</th>
+        <th>CO&#x2082; Phase</th>
+        <th>Capacity P50 (Mt)</th>
+        <th>Safety Factor</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">1</td>
       <td><a href="./sleipner_utsira.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Sleipner Utsira</a><br><span style="font-size:7pt;color:#64748b">North Sea, Norway</span></td>
-      <td class="mono" style="text-align:center">1012</td>
-      <td class="mono" style="text-align:center">37.0</td>
-      <td class="mono" style="text-align:center">10.30</td>
-      <td class="mono" style="text-align:center">696.7</td>
+      <td style="text-align:center;font-size:7pt">EU</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">27.84</td>
       <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.40</span></td>
-      <td class="mono" style="text-align:center">12.96</td>
-      <td class="mono" style="text-align:center">20.5%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00177</td>
-      <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">MODERATE</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">2</td>
       <td><a href="./mount_simon.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Mount Simon</a><br><span style="font-size:7pt;color:#64748b">Illinois Basin, USA</span></td>
-      <td class="mono" style="text-align:center">2134</td>
-      <td class="mono" style="text-align:center">52.0</td>
-      <td class="mono" style="text-align:center">21.30</td>
-      <td class="mono" style="text-align:center">788.3</td>
+      <td style="text-align:center;font-size:7pt">US</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">12.58</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">11.71</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.53</span></td>
-      <td class="mono" style="text-align:center">29.39</td>
-      <td class="mono" style="text-align:center">27.3%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00268</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">3</td>
       <td><a href="./sn_hvit_tubaen.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Snøhvit Tubåen</a><br><span style="font-size:7pt;color:#64748b">Barents Sea, Norway</span></td>
-      <td class="mono" style="text-align:center">2600</td>
-      <td class="mono" style="text-align:center">90.0</td>
-      <td class="mono" style="text-align:center">28.00</td>
-      <td class="mono" style="text-align:center">679.3</td>
+      <td style="text-align:center;font-size:7pt">EU</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">1.59</td>
       <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.30</span></td>
-      <td class="mono" style="text-align:center">33.26</td>
-      <td class="mono" style="text-align:center">14.6%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.01360</td>
-      <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">MODERATE</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">4</td>
       <td><a href="./gorgon.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Gorgon</a><br><span style="font-size:7pt;color:#64748b">Barrow Island, Australia</span></td>
-      <td class="mono" style="text-align:center">2300</td>
-      <td class="mono" style="text-align:center">65.0</td>
-      <td class="mono" style="text-align:center">23.00</td>
-      <td class="mono" style="text-align:center">737.8</td>
+      <td style="text-align:center;font-size:7pt">AU</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">5.31</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">5.07</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.51</span></td>
-      <td class="mono" style="text-align:center">31.62</td>
-      <td class="mono" style="text-align:center">26.5%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00899</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">5</td>
       <td><a href="./johansen.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Johansen</a><br><span style="font-size:7pt;color:#64748b">Norwegian North Sea, offshore Bergen, Norway</span></td>
-      <td class="mono" style="text-align:center">2700</td>
-      <td class="mono" style="text-align:center">98.0</td>
-      <td class="mono" style="text-align:center">28.50</td>
-      <td class="mono" style="text-align:center">650.9</td>
+      <td style="text-align:center;font-size:7pt">EU</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">48.82</td>
       <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.37</span></td>
-      <td class="mono" style="text-align:center">35.35</td>
-      <td class="mono" style="text-align:center">19.1%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00330</td>
-      <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">MODERATE</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">6</td>
       <td><a href="./in_salah.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">In Salah</a><br><span style="font-size:7pt;color:#64748b">Central Algeria</span></td>
-      <td class="mono" style="text-align:center">1800</td>
-      <td class="mono" style="text-align:center">91.0</td>
-      <td class="mono" style="text-align:center">10.50</td>
-      <td class="mono" style="text-align:center">215.8</td>
+      <td style="text-align:center;font-size:7pt">DZ</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">65.95</td>
       <td style="text-align:center"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">0.96</span></td>
-      <td class="mono" style="text-align:center">27.26</td>
-      <td class="mono" style="text-align:center">-16.1%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">3.76222</td>
-      <td style="text-align:center"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">HIGH</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">7</td>
       <td><a href="./kasawari.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Kasawari</a><br><span style="font-size:7pt;color:#64748b">Sarawak, Malaysia</span></td>
-      <td class="mono" style="text-align:center">1300</td>
-      <td class="mono" style="text-align:center">45.0</td>
-      <td class="mono" style="text-align:center">13.50</td>
-      <td class="mono" style="text-align:center">707.9</td>
+      <td style="text-align:center;font-size:7pt">MY</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">55.49</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.63</span></td>
-      <td class="mono" style="text-align:center">19.91</td>
-      <td class="mono" style="text-align:center">31.9%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00214</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">8</td>
       <td><a href="./duyong.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Duyong</a><br><span style="font-size:7pt;color:#64748b">Terengganu, Malaysia</span></td>
-      <td class="mono" style="text-align:center">1500</td>
-      <td class="mono" style="text-align:center">50.0</td>
-      <td class="mono" style="text-align:center">15.00</td>
-      <td class="mono" style="text-align:center">699.8</td>
+      <td style="text-align:center;font-size:7pt">MY</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">1.95</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.61</span></td>
-      <td class="mono" style="text-align:center">21.87</td>
-      <td class="mono" style="text-align:center">30.9%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.01098</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">9</td>
       <td><a href="./otway.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Otway</a><br><span style="font-size:7pt;color:#64748b">Victoria, Australia</span></td>
-      <td class="mono" style="text-align:center">2000</td>
-      <td class="mono" style="text-align:center">75.0</td>
-      <td class="mono" style="text-align:center">20.00</td>
-      <td class="mono" style="text-align:center">626.2</td>
+      <td style="text-align:center;font-size:7pt">AU</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">0.26</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">0.24</td>
       <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.44</span></td>
-      <td class="mono" style="text-align:center">26.35</td>
-      <td class="mono" style="text-align:center">22.8%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.02049</td>
-      <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">MODERATE</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">10</td>
       <td><a href="./malay_basin.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Malay Basin</a><br><span style="font-size:7pt;color:#64748b">South China Sea, Malaysia</span></td>
-      <td class="mono" style="text-align:center">1500</td>
-      <td class="mono" style="text-align:center">75.0</td>
-      <td class="mono" style="text-align:center">15.00</td>
-      <td class="mono" style="text-align:center">463.3</td>
+      <td style="text-align:center;font-size:7pt">MY</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">13.90</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">12.15</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.84</span></td>
-      <td class="mono" style="text-align:center">25.46</td>
-      <td class="mono" style="text-align:center">39.6%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.05363</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">11</td>
       <td><a href="./niger_delta.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Niger Delta</a><br><span style="font-size:7pt;color:#64748b">Niger Delta, Nigeria</span></td>
-      <td class="mono" style="text-align:center">1800</td>
-      <td class="mono" style="text-align:center">80.0</td>
-      <td class="mono" style="text-align:center">18.00</td>
-      <td class="mono" style="text-align:center">539.1</td>
+      <td style="text-align:center;font-size:7pt">NG</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">48.52</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">41.77</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.53</span></td>
-      <td class="mono" style="text-align:center">24.98</td>
-      <td class="mono" style="text-align:center">27.5%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00865</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">12</td>
       <td><a href="./north_sumatra_basin.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">North Sumatra Basin</a><br><span style="font-size:7pt;color:#64748b">Northern Sumatra, Indonesia</span></td>
-      <td class="mono" style="text-align:center">1600</td>
-      <td class="mono" style="text-align:center">78.0</td>
-      <td class="mono" style="text-align:center">16.00</td>
-      <td class="mono" style="text-align:center">482.9</td>
+      <td style="text-align:center;font-size:7pt">ID</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">17.21</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">15.36</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">2.28</span></td>
-      <td class="mono" style="text-align:center">33.87</td>
-      <td class="mono" style="text-align:center">51.2%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.06259</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">13</td>
       <td><a href="./nile_delta.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Nile Delta</a><br><span style="font-size:7pt;color:#64748b">Northern Egypt</span></td>
-      <td class="mono" style="text-align:center">2200</td>
-      <td class="mono" style="text-align:center">90.0</td>
-      <td class="mono" style="text-align:center">22.00</td>
-      <td class="mono" style="text-align:center">580.4</td>
+      <td style="text-align:center;font-size:7pt">EG</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">68.25</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">64.06</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">2.05</span></td>
-      <td class="mono" style="text-align:center">40.95</td>
-      <td class="mono" style="text-align:center">45.7%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.01195</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">14</td>
       <td><a href="./abu_dhabi_basin.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Abu Dhabi Basin</a><br><span style="font-size:7pt;color:#64748b">Abu Dhabi, UAE</span></td>
-      <td class="mono" style="text-align:center">2800</td>
-      <td class="mono" style="text-align:center">110.0</td>
-      <td class="mono" style="text-align:center">28.00</td>
-      <td class="mono" style="text-align:center">594.2</td>
+      <td style="text-align:center;font-size:7pt">AE</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">76.06</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">70.71</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">2.00</span></td>
-      <td class="mono" style="text-align:center">51.25</td>
-      <td class="mono" style="text-align:center">44.4%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.00429</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">15</td>
       <td><a href="./rotterdam_north_sea.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Rotterdam / North Sea</a><br><span style="font-size:7pt;color:#64748b">North Sea, Netherlands</span></td>
-      <td class="mono" style="text-align:center">3100</td>
-      <td class="mono" style="text-align:center">100.0</td>
-      <td class="mono" style="text-align:center">2.50</td>
-      <td class="mono" style="text-align:center">37.7</td>
+      <td style="text-align:center;font-size:7pt">EU</td>
       <td style="text-align:center"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUBCRITICAL</span></td>
       <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">66.12</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">12.60</span></td>
-      <td class="mono" style="text-align:center">34.99</td>
-      <td class="mono" style="text-align:center">91.2%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.24151</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr>
     <tr>
       <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#64748b">16</td>
       <td><a href="./alberta_basin.html" style="color:#0d1f3c;font-weight:700;text-decoration:none">Alberta Basin</a><br><span style="font-size:7pt;color:#64748b">Alberta, Canada</span></td>
-      <td class="mono" style="text-align:center">2200</td>
-      <td class="mono" style="text-align:center">75.0</td>
-      <td class="mono" style="text-align:center">22.00</td>
-      <td class="mono" style="text-align:center">665.9</td>
+      <td style="text-align:center;font-size:7pt">CA</td>
       <td style="text-align:center"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">SUPERCRITICAL</span></td>
-      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">186.45</td>
+      <td class="mono" style="text-align:center;font-weight:700;color:#0d1f3c">175.42</td>
       <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7.5pt;font-family:'IBM Plex Mono',monospace;font-weight:700">1.52</span></td>
-      <td class="mono" style="text-align:center">32.50</td>
-      <td class="mono" style="text-align:center">26.8%</td>
-      <td class="mono" style="text-align:center;font-size:7.5pt">0.08326</td>
-      <td style="text-align:center"><span style="background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-size:7pt;font-family:'IBM Plex Mono',monospace;font-weight:700">LOW</span></td>
+      <td style="text-align:center"><span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:6.5pt;font-family:'IBM Plex Mono',monospace;">SCREENING</span></td>
     </tr></tbody>
   </table>
+  </div>
+
+  <div class="gradient-rule" style="margin-top:16px"></div>
+
+  <h2>Validation Methodology</h2>
+  <div class="section-box accent">
+    <p style="font-size:8.5pt;color:#1e293b;line-height:1.7">
+      CarbonLens validation follows a tiered accuracy framework for screening-level tools:
+    </p>
+    <table style="margin-top:8px">
+      <thead><tr><th>Module</th><th>Accuracy Target</th><th>Benchmark Source</th></tr></thead>
+      <tbody>
+        <tr><td>CO&#x2082; Density (Span-Wagner)</td><td>&#xB1;0.05% vs NIST</td><td>NIST Standard Reference Data</td></tr>
+        <tr><td>CO&#x2082; Viscosity (Fenghour)</td><td>&#xB1;2% vs published</td><td>Fenghour et al. (1998) JPCRD</td></tr>
+        <tr><td>CO&#x2082; Solubility (Duan-Sun)</td><td>&#xB1;5-8% vs experimental</td><td>Duan &amp; Sun (2003)</td></tr>
+        <tr><td>Plume Radius (Nordbotten)</td><td>&#xB1;20-30% vs field monitoring</td><td>Sleipner 4D seismic surveys</td></tr>
+        <tr><td>Injection Pressure (Theis)</td><td>&#xB1;15-25% vs monitored BHP</td><td>In Salah, Mt. Simon monitoring</td></tr>
+        <tr><td>Storage Capacity (DOE P50)</td><td>Screening-level &#xB1;factor of 2</td><td>DOE/NETL Atlas (2010)</td></tr>
+        <tr><td>Geomechanics (Mohr-Coulomb)</td><td>Qualitative risk classification</td><td>SPE best practices</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:8pt;color:#64748b;margin-top:8px">
+      For the comparison tables in individual formation reports: <strong style="color:#065f46">&#x2713; PASS</strong> = within &#xB1;30% of published value;
+      <strong style="color:#92400e">&#x26A0; REVIEW</strong> = within &#xB1;50%; <strong style="color:#1e40af">&#x2139; NOTE</strong> = outside 50% (expected for screening tools on some metrics).
+    </p>
   </div>
 
   <div class="gradient-rule" style="margin-top:16px"></div>
@@ -695,7 +624,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">02 · USA</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Mount Simon</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">12.6 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">11.7 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">21.3 MPa · 52 °C</div>
       </div>
     </a>
@@ -711,7 +640,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">04 · Australia</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Gorgon</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">5.3 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">5.1 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">23.0 MPa · 65 °C</div>
       </div>
     </a>
@@ -751,7 +680,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">09 · Australia</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Otway</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">0.3 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">0.2 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">20.0 MPa · 75 °C</div>
       </div>
     </a>
@@ -759,7 +688,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">10 · Malaysia</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Malay Basin</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">13.9 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">12.1 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">15.0 MPa · 75 °C</div>
       </div>
     </a>
@@ -767,7 +696,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">11 · Nigeria</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Niger Delta</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">48.5 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">41.8 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">18.0 MPa · 80 °C</div>
       </div>
     </a>
@@ -775,7 +704,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">12 · Indonesia</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">North Sumatra Basin</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">17.2 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">15.4 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">16.0 MPa · 78 °C</div>
       </div>
     </a>
@@ -783,7 +712,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">13 · Northern Egypt</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Nile Delta</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">68.3 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">64.1 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">22.0 MPa · 90 °C</div>
       </div>
     </a>
@@ -791,7 +720,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">14 · UAE</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Abu Dhabi Basin</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">76.1 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">70.7 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">28.0 MPa · 110 °C</div>
       </div>
     </a>
@@ -807,7 +736,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#f8fafc;border-top:3px solid #00c4a0;display:block">
         <div style="font-size:7pt;color:#64748b;margin-bottom:3px">16 · Canada</div>
         <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;line-height:1.2">Alberta Basin</div>
-        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">186.4 Mt P50</div>
+        <div style="margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:7.5pt;color:#00c4a0">175.4 Mt P50</div>
         <div style="font-size:7pt;color:#64748b">22.0 MPa · 75 °C</div>
       </div>
     </a>
@@ -815,7 +744,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Formation Validation Suite · All 16 Presets</span>
-    <span>Generated 12 June 2026 · carbonlens.app</span>
+    <span>Generated 17 June 2026 · carbonlens.app</span>
   </div>
 </div>
 <div class="back-page">

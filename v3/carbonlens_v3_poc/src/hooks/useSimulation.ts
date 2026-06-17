@@ -15,12 +15,15 @@ import type { MatchableParams } from '../engine/historyMatching/types'
 import type { SimulationResult, FormationParams, GeomechanicsResult } from '../types'
 import type { MarsInput } from '../engine/mars/types'
 import {
-  co2DensitySpanWagner, brineDensityGarcia, co2ViscosityFenghour,
-  co2SolubilityDuanSun, co2DiffusionCoefficient, determinePhase,
+  co2DensitySpanWagner, co2DensityWithImpurities, brineDensityGarcia, co2ViscosityFenghour,
+  co2SolubilityDuanSun, calculateMultiSaltSolubility, co2DiffusionCoefficient, determinePhase,
   computeTr, computePr, evaluateMars, scaleInput,
   subEquation, subScaler, supEquation, supScaler,
   assessApplicabilityDomain,
 } from '../engine'
+import type { MultiSaltBrine } from '../engine'
+import { computeHessePostInjection } from '../engine/plume/hessePostInjection'
+import type { HesseResult } from '../engine/plume/hessePostInjection'
 import { cumulativeInjection, wellRateAtTime } from '../utils/gridParser'
 import { computePressureField, expIntegralE1 } from '../utils/computePressureField'
 import {
@@ -28,6 +31,7 @@ import {
   DEFAULT_WELLBORE,
 } from '../engine/plume/wellboreModel'
 import { computeHaliteRisk } from '../engine/classical/haliteRisk'
+import { computeHeterogeneityCorrections } from '../engine/classical/heterogeneityCorrection'
 import { computeDepletedFieldCapacity } from '../engine/classical/depletedFieldCapacity'
 import {
   VESolver, uniformPermField, wellToGridIndex,
@@ -53,7 +57,7 @@ export function computeYearly(
   const totalPoreVolume = A * h_m * phi
 
   // CO2 density at initial reservoir conditions
-  const rhoCO2_init = co2DensitySpanWagner(T_K, params.pressure * 1e6)
+  const rhoCO2_init = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
 
   // ── Capacity method: route by formation type ───────────────────────────────
   // Depleted gas/oil fields: gas-replacement volumetric (Bachu et al. 2007).
@@ -101,7 +105,7 @@ export function computeYearly(
   // contrast correction per Nordbotten, Celia & Bachu (2005) eq. 8.
   // Reference: Transp. Porous Media 58(3):339–360. DOI: 10.1007/s11242-004-0670-9
   const currentRate = wells.reduce((s, w) => s + wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears), 0)
-  const rhoCO2_mobile = co2DensitySpanWagner(T_K, params.pressure * 1e6)
+  const rhoCO2_mobile = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
   const visc = co2ViscosityFenghour(T_K, rhoCO2_mobile)
 
   const perm_m2 = params.permeability * 9.869e-16
@@ -155,7 +159,7 @@ export function computeYearly(
 
   // Recompute fluid properties at the injection pressure
   const P_Pa = P_t * 1e6
-  const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa)
+  const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
   const rhoBrine = brineDensityGarcia(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity)
   const drho = rhoBrine - rhoCO2
   const drho_sq = drho * drho / 1e6
@@ -188,7 +192,20 @@ export function computeYearly(
   // visc is always freshly computed in Pa·s — never read from the store
   // (the store holds mPa·s for display; reading it back without conversion would corrupt pressure calculations)
   const visc_final = visc  // Pa·s — used for pressure field computation below
-  const solubility = co2SolubilityDuanSun(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity)
+
+  // Solubility: route to Duan et al. (2006) multi-salt model for CaCl2/Mixed brines.
+  // NaCl-only brines use the existing Duan-Sun (2003) model unchanged.
+  // Conversion: calculateMultiSaltSolubility returns mole fraction → mol/kg via n_water = 55.508 mol/kg.
+  let solubility: number
+  if (params.saltType !== 'NaCl' && params.bivalentSalinity > 0) {
+    const brine: MultiSaltBrine = params.saltType === 'CaCl2'
+      ? { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity, m_MgCl2: 0 }
+      : { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity * 0.6, m_MgCl2: params.bivalentSalinity * 0.4 }
+    const xCO2 = calculateMultiSaltSolubility(T_K, P_t, brine)
+    solubility = xCO2 * 55.508 / Math.max(1e-9, 1 - xCO2)  // mole fraction → mol/kg
+  } else {
+    solubility = co2SolubilityDuanSun(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity)
+  }
   const diffusion = co2DiffusionCoefficient(T_K, P_t, params.porosity)
 
   // Gravity current radius: injected volume fills a thin layer under the seal
@@ -196,7 +213,7 @@ export function computeYearly(
   // Calibrated against Sleipner field data (Boait 2012): 650m at year 4, 1150m at year 12
   const cumVolM3 = totalCum * 1e9 / rhoCO2
   const hEff = h_m * 0.10
-  const plumeRadius = Math.sqrt(2 * cumVolM3 / (Math.PI * phi * Math.max(1, hEff)))
+  let plumeRadius = Math.sqrt(2 * cumVolM3 / (Math.PI * phi * Math.max(1, hEff)))
   const plumeHeight = h_m * 0.55 * Math.min(1, Math.sqrt(totalCum / Math.max(0.001, totalCapacity)))
 
   // ── Physics-based independent trapping capacities ────────────────────────
@@ -226,6 +243,43 @@ export function computeYearly(
   // S_gr = S_gi / (1 + C × S_gi): residual saturation on imbibition
   const S_gi = ntg * (1 - SWI_CONNATE)
   const S_gr = S_gi / (1 + C_LAND * S_gi)
+
+  // ── Hesse (2008) post-injection gravity current ───────────────────────────────
+  // When all wells have shut in, replace the injection-phase plume radius with
+  // the analytically correct leading-front position from Hesse et al. (2008).
+  // This gives permit-grade plume footprint and residual trapping fractions
+  // for the post-injection monitoring period.
+  let hesseResult: HesseResult | undefined
+  const isPostInj = wells.length > 0 && wells.every(
+    w => wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears) === 0
+  )
+  if (isPostInj) {
+    // t_inj_end: last year with positive injection (start of ramp-down for latest well)
+    const t_inj_end = Math.max(...wells.map(w => Math.max(0, projectYears - w.rampDownYears)))
+    const t_post_yr = Math.max(0, year - t_inj_end)
+    const t_inj_yr = Math.max(1, t_inj_end)
+    if (t_post_yr > 0) {
+      // Plume radius at moment of shut-in — recompute from cumulative injection at t_inj_end
+      let cumAtInjEnd = 0
+      for (const w of wells) {
+        cumAtInjEnd += cumulativeInjection(w.injectionRate, t_inj_end, w.rampUpYears, w.rampDownYears, projectYears)
+      }
+      const cumVolAtInjEnd = cumAtInjEnd * 1e9 / Math.max(1, rhoCO2_init)
+      const r_inj_m = Math.sqrt(2 * cumVolAtInjEnd / (Math.PI * phi * Math.max(1, hEff)))
+      if (r_inj_m > 0) {
+        hesseResult = computeHessePostInjection({
+          r_inj_m,
+          t_inj_yr,
+          t_post_yr,
+          S_r: S_gr,
+          mu_co2_Pa_s: visc,
+          mu_brine_Pa_s: muBrine_Pas,
+        })
+        // Override plumeRadius: Hesse leading front is the physically correct footprint
+        plumeRadius = hesseResult.r_leading_m
+      }
+    }
+  }
 
   // 1. STRUCTURAL CAPACITY — buoyant free-phase CO₂ held beneath the caprock seal.
   //    V_struct = A × trapFrac × (h × closureFrac) × NTG × φ × (1 − Swi − Sgr)
@@ -454,14 +508,47 @@ export function computeYearly(
       )
     : undefined
 
+  const k_Vdp = params.k_Vdp ?? 0
+  const heterogeneityCorrected = k_Vdp > 0.05
+  let sweepEfficiency: number | undefined
+  let aorHeterogeneityFactor: number | undefined
+  let heterogeneityCitation: string | undefined
+  let finalStorageCapacity = storageAtYear
+  let finalTotalCapacity = totalCapacity
+  let finalCapacityP10 = capacityP10
+  let finalCapacityP90 = capacityP90
+
+  if (heterogeneityCorrected) {
+    const mobilityRatio = 3.0
+    const pvi = 1.0
+    const n_layers = params.n_layers ?? 1
+    const k_layer_ratio = params.k_layer_ratio ?? 1
+    const hetResult = computeHeterogeneityCorrections(
+      k_Vdp,
+      mobilityRatio,
+      ntg,
+      n_layers,
+      k_layer_ratio,
+      pvi,
+      phi,
+    )
+    sweepEfficiency = hetResult.sweepEfficiency
+    aorHeterogeneityFactor = hetResult.aorHeterogeneityFactor
+    heterogeneityCitation = 'Shook & Mitchell (2009), Kopp et al. (2010)'
+    finalStorageCapacity = storageAtYear * hetResult.sweepEfficiency
+    finalTotalCapacity = totalCapacity * hetResult.sweepEfficiency
+    finalCapacityP10 = capacityP10 * hetResult.sweepEfficiency
+    finalCapacityP90 = capacityP90 * hetResult.sweepEfficiency
+  }
+
   return {
-    storageCapacity: storageAtYear,
-    totalCapacity,
-    capacityP10,
-    capacityP90,
+    storageCapacity: finalStorageCapacity,
+    totalCapacity: finalTotalCapacity,
+    capacityP10: finalCapacityP10,
+    capacityP90: finalCapacityP90,
     capacityUtilPct,
     overpressureRisk,
-    plumeRadius,
+    plumeRadius: aorHeterogeneityFactor != null ? plumeRadius * aorHeterogeneityFactor : plumeRadius,
     plumeHeight,
     injectionPressure: P_t,
     pressureField,
@@ -478,9 +565,9 @@ export function computeYearly(
     containmentProbability: Math.min(0.95, 0.5 + ntg * 0.3 + trappedFrac * 0.15),
     ift,
     adAssessment,
-    p10: capacityP10,
-    p50: totalCapacity,
-    p90: capacityP90,
+    p10: finalCapacityP10,
+    p50: finalTotalCapacity,
+    p90: finalCapacityP90,
     storageEfficiency: isDepletedField ? 85.0 : 2.0,  // depleted: 85% fill factor (gas-replacement P50); aquifer: DOE Goodman Cc_P50=2%
     peacemanBHP,
     injectivityIndex,
@@ -492,6 +579,11 @@ export function computeYearly(
     totalFormationCapacity,
     formationCapacityUtil,
     massBalanceError,
+    hessePostInjection: hesseResult,
+    heterogeneityCorrected,
+    heterogeneityCitation,
+    sweepEfficiency,
+    aorHeterogeneityFactor,
   }
 }
 
@@ -1045,7 +1137,7 @@ export function useSimulation(gridRef?: React.RefObject<{
       const dy_m = Math.sqrt(params.area * 1e6) / VE_NY
       const T_K   = params.temperature + 273.15
       const P_Pa  = params.pressure * 1e6
-      const rhoCO2 = co2DensitySpanWagner(T_K, P_Pa)
+      const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
       const rhoBrine = brineDensityGarcia(T_K, params.pressure, params.monovalentSalinity, params.bivalentSalinity)
       const muCO2  = co2ViscosityFenghour(T_K, rhoCO2)
       const veFluid: VEFluidProps = {
