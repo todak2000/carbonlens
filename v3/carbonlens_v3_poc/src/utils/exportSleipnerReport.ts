@@ -564,7 +564,7 @@ export function openSleipnerReport(): void {
 <div class="page-break" style="padding:8mm 16mm;">
   ${sectionHeader(LOGO_SVG, 'Section 3')}
   <h2>Section 3 — Physics Validation</h2>
-  <p class="muted">CarbonLens fluid physics vs. published field constraints and laboratory data. Span-Wagner EOS for CO₂ density; Duan-Sun (2003) for solubility; Boait (2012) analytical gravity current model.</p>
+  <p class="muted">CarbonLens fluid physics vs. published field constraints and laboratory data. Span-Wagner (1996) EOS for CO₂ density; Fenghour et al. (1998) for viscosity (full correlation); Duan-Sun (2003) for solubility (regression fit, ±5-10%); Duan et al. (2006) multi-salt extension; Boait (2012) analytical gravity current model; Hesse et al. (2008) post-injection gravity current with two propagating shocks.</p>
   <table>
     <thead>
       <tr><th>Metric</th><th>CarbonLens</th><th>Published Constraint</th><th>Reference</th><th>Assessment</th></tr>
@@ -724,14 +724,14 @@ export function openSleipnerReport(): void {
       <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
         <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Research Team</div>
         <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
-          <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Muhammed Aslam MD Yusuf</strong> &mdash; Co-Supervisor, UTP Malaysia
+          <strong style="color:white;">Daniel T. Olagunju</strong>, Author, MSc Researcher, UTP Malaysia<br>
+          <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong>, Supervisor, UTP Malaysia<br>
+          <strong style="color:white;">Dr. Muhammed Aslam MD Yusuf</strong>, Co-Supervisor, UTP Malaysia
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;">
         <div style="font-size:8pt;color:#7dd3fc;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Simulation Engine</div>
-        <div style="font-size:9pt;color:#cbd5e1;">Span-Wagner EOS (1996) &middot; Duan-Sun CO₂ Solubility (2003) &middot; MARS IFT (Olagunju, in prep.) &middot; Boait Gravity Current (2012) &middot; Nordbotten Two-Phase AoR &middot; Mohr-Coulomb Geomechanics &middot; Killough–Land Hysteresis</div>
+        <div style="font-size:9pt;color:#cbd5e1;">Span-Wagner EOS (1996) &middot; Peng-Robinson + Li &amp; Yan (2009) Impure CO₂ &middot; Fenghour et al. (1998) Viscosity &middot; Duan-Sun (2003) Solubility &middot; Duan et al. (2006) Multi-Salt &middot; MARS IFT (Olagunju, in prep.) &middot; Nordbotten (2005) Plume &middot; Hesse et al. (2008) Post-Injection &middot; van Genuchten-Mualem kr &middot; Killough (1976) Hysteresis &middot; Land (1968) Trapping &middot; Theis (1935) + E₁ Pad&eacute; AoR &middot; Shook-Mitchell (2009) Sweep &middot; Kopp et al. (2010) Storage Efficiency &middot; DOE Goodman (2011) Capacity &middot; Mohr-Coulomb + Biot Geomechanics</div>
       </div>
     </div>
   </div>

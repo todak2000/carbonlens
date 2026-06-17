@@ -419,7 +419,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
         <td>Effective Diffusivity (Dₑff)</td>
         <td class="mono" style="font-size:7.5pt">78.0 °C, φ = 0.22</td>
         <td><strong>3.107 × 10⁻¹⁰ m²/s</strong></td>
-        <td>Millington-Quirk model</td>
+        <td>Millington &amp; Quirk (1961) effective diffusivity</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
     </tbody>
@@ -877,18 +877,28 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <table>
     <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
     <tbody>
-      <tr><td>CO₂ Density EOS</td><td>Span &amp; Wagner (1996) <em>J. Phys. Chem. Ref. Data</em> 25(6):1509 — accuracy ±0.05–0.5%</td></tr>
-      <tr><td>Brine Density</td><td>Garcia (2001) <em>LBNL-49023</em> — NaCl, CaCl₂ and mixed brines</td></tr>
-      <tr><td>CO₂ Viscosity</td><td>Fenghour, Wakeham &amp; Vesovic (1998) <em>JPCRD</em> 27(1):31</td></tr>
-      <tr><td>CO₂ Solubility</td><td>Duan &amp; Sun (2003) <em>Chem. Geology</em> 193(3–4):257 — salinity salting-out included</td></tr>
-      <tr><td>Interfacial Tension</td><td>MARS ML Model — Olagunju (in prep.), MSc UTP Malaysia; Georgiadis et al. (2010); Hebach et al. (2004)</td></tr>
-      <tr><td>Relative Permeability</td><td>van Genuchten-Mualem (1980) with Killough (1976) hysteresis; Brooks &amp; Corey (1964) available for low-porosity carbonates</td></tr>
+      <tr><td>CO₂ Density (Primary)</td><td>Span &amp; Wagner (1996) <em>J. Phys. Chem. Ref. Data</em> 25(6):1509, ±0.05%</td></tr>
+      <tr><td>CO₂ Density (Impure)</td><td>Peng &amp; Robinson (1976) <em>IEC Fundam.</em> 15(1):59 + Li &amp; Yan (2009) mixing rules for CH₄, N₂, H₂S, SO₂</td></tr>
+      <tr><td>Brine Density</td><td>Garcia (2001) <em>LBNL-49023</em>, NaCl, CaCl₂ and mixed brines</td></tr>
+      <tr><td>CO₂ Viscosity</td><td>Fenghour, Wakeham &amp; Vesovic (1998) <em>JPCRD</em> 27(1):31, full correlation</td></tr>
+      <tr><td>CO₂ Solubility (NaCl)</td><td>Duan &amp; Sun (2003) <em>Chem. Geology</em> 193(3-4):257, regression fit ±5-10%</td></tr>
+      <tr><td>CO₂ Multi-Salt Solubility</td><td>Duan, Sun, Zhu &amp; Chou (2006) <em>Marine Chemistry</em> 98(2-4):131, Ca²+, Mg²+, K+</td></tr>
+      <tr><td>Interfacial Tension</td><td>MARS ML Model, Olagunju (in prep.), MSc UTP Malaysia</td></tr>
+      <tr><td>Effective Diffusivity</td><td>Millington &amp; Quirk (1961), tortuosity-corrected diffusion coefficient</td></tr>
+      <tr><td>Plume Migration</td><td>Nordbotten et al. (2005) two-phase VE plume model</td></tr>
+      <tr><td>Post-Injection Plume</td><td>Hesse, Orr &amp; Tchelepi (2008) <em>J. Fluid Mech.</em> 611:35, gravity current with two propagating shocks</td></tr>
+      <tr><td>Relative Permeability</td><td>van Genuchten-Mualem (1980) primary; Brooks &amp; Corey (1964) for carbonates</td></tr>
+      <tr><td>Hysteresis in kr</td><td>Killough (1976)</td></tr>
       <tr><td>Residual Trapping</td><td>Land (1968) <em>Trans. AIME</em> 243:149</td></tr>
+      <tr><td>Convective Dissolution</td><td>Rayleigh mixing, Ra_crit = 4π²</td></tr>
       <tr><td>Capillary Pressure</td><td>Brooks-Corey (1964)</td></tr>
-      <tr><td>Pressure Transient</td><td>Theis (1935) <em>Trans. AGU</em> 16:519 — radial flow with multi-well superposition</td></tr>
-      <tr><td>Storage Capacity</td><td>Goodman et al. (2011) DOE/NETL-2011/1440 — M = A·h·φ·Cc·ρ</td></tr>
-      <tr><td>Geomechanical Failure</td><td>Hubbert &amp; Willis (1957) fracture gradient + Mohr-Coulomb shear failure</td></tr>
-      <tr><td>Surface Heave</td><td>Nucleus-of-strain approximation — Teatini et al. (2011) <em>JGR</em> 116:B08204</td></tr>
+      <tr><td>Pressure Transient / AoR</td><td>Theis (1935) <em>Trans. AGU</em> 16:519 + E₁ Pad&eacute; approximant, stable for large u</td></tr>
+      <tr><td>Sweep Efficiency</td><td>Shook &amp; Mitchell (2009) SPE-119897, E_s = 1 - exp(-3·PVI·FQI)</td></tr>
+      <tr><td>Storage Efficiency</td><td>Kopp, Class &amp; Helmig (2010) <em>IJGGC</em> 4(5):831, E_c = E_geo × E_s × E_d</td></tr>
+      <tr><td>AoR Heterogeneity</td><td>r_AoR × exp(σ²/4), log-normal permeability distribution</td></tr>
+      <tr><td>Storage Capacity</td><td>Goodman et al. (2011) DOE/NETL-2011/1440, P10/P50/P90</td></tr>
+      <tr><td>Geomechanical Failure</td><td>Hubbert &amp; Willis (1957) fracture gradient + Mohr-Coulomb + Biot</td></tr>
+      <tr><td>Surface Heave</td><td>Nucleus-of-strain approximation, Teatini et al. (2011) <em>JGR</em> 116:B08204</td></tr>
     </tbody>
   </table>
 
@@ -928,9 +938,13 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="padding:12px 14px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0">
         <div style="font-size:7pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Physics Engine Models</div>
         <div style="font-size:8pt;color:#cbd5e1">
-          Span-Wagner EOS · Garcia Brine Density · Fenghour Viscosity ·
-          Duan-Sun Solubility · MARS IFT (Olagunju) · Land Trapping ·
-          Theis Pressure · DOE Goodman Capacity · Hubbert-Willis / Mohr-Coulomb Geomechanics
+          Span-Wagner EOS · Peng-Robinson + Li &amp; Yan (2009) Impure CO₂ · Garcia Brine Density · Fenghour Viscosity ·
+          Duan-Sun (2003) Solubility · Duan et al. (2006) Multi-Salt · MARS IFT (Olagunju) ·
+          Nordbotten (2005) Plume · Hesse et al. (2008) Post-Injection · Land (1968) Trapping ·
+          Killough (1976) Hysteresis · van Genuchten-Mualem (1980) kr · Brooks &amp; Corey (1964) kr ·
+          Millington-Quirk (1961) Diffusivity · Rayleigh Convective Mixing ·
+          Theis (1935) + E₁ Pad&eacute; AoR · Shook-Mitchell (2009) Sweep · Kopp et al. (2010) Storage Efficiency ·
+          DOE Goodman (2011) Capacity · Hubbert-Willis / Mohr-Coulomb Geomechanics
         </div>
       </div>
     </div>
@@ -939,18 +953,26 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="height:3px;background:linear-gradient(90deg,#3b82f6,#00c4a0);width:48px;border-radius:2px;margin-bottom:14px"></div>
       <h2 style="color:white;font-size:12pt;font-weight:700;margin:0 0 10px;border:none;padding:0">Key References</h2>
       <ul style="color:#94a3b8;font-size:7.5pt;line-height:1.8;padding-left:14px;margin:0">
-        <li>Span &amp; Wagner (1996) — CO₂ EOS. <em>J. Phys. Chem. Ref. Data</em> 25(6):1509</li>
-        <li>Garcia (2001) — Brine density. <em>LBNL-49023</em></li>
-        <li>Fenghour et al. (1998) — CO₂ viscosity. <em>JPCRD</em> 27(1):31</li>
-        <li>Duan &amp; Sun (2003) — CO₂ solubility. <em>Chem. Geology</em> 193:257</li>
-        <li>Olagunju (in prep.) — IFT via MARS regression. MSc UTP Malaysia</li>
-        <li>Goodman et al. (2011) — Storage capacity. <em>IJGGC</em> 5(4):853</li>
-        <li>Theis (1935) — Radial pressure transient. <em>Trans. AGU</em> 16:519</li>
-        <li>Land (1968) — Residual trapping. <em>Trans. AIME</em> 243:149</li>
-        <li>Hubbert &amp; Willis (1957) — Fracture pressure. <em>Trans. AIME</em> 210:153</li>
-        <li>Teatini et al. (2011) — Surface heave. <em>JGR</em> 116:B08204</li>
-        <li>van Genuchten-Mualem (1980) with Killough (1976) hysteresis; Brooks &amp; Corey (1964) available for low-porosity carbonates — Relative permeability</li>
-        <li>Furre et al. (2017) — Sleipner benchmark. <em>Energy Procedia</em> 114:3916</li>
+        <li>Span &amp; Wagner (1996), CO₂ EOS. <em>J. Phys. Chem. Ref. Data</em> 25(6):1509</li>
+        <li>Peng &amp; Robinson (1976) + Li &amp; Yan (2009), Impure CO₂ (CH₄, N₂, H₂S, SO₂)</li>
+        <li>Garcia (2001), Brine density. <em>LBNL-49023</em></li>
+        <li>Fenghour, Wakeham &amp; Vesovic (1998), CO₂ viscosity (full correlation). <em>JPCRD</em> 27(1):31</li>
+        <li>Duan &amp; Sun (2003), CO₂ solubility (regression fit, &plusmn;5-10%). <em>Chem. Geology</em> 193:257</li>
+        <li>Duan, Sun, Zhu &amp; Chou (2006), Multi-salt extension: Ca&sup2;+, Mg&sup2;+, K+. <em>Marine Chemistry</em> 98(2-4):131</li>
+        <li>Olagunju (in prep.), IFT via MARS regression. MSc UTP Malaysia</li>
+        <li>Nordbotten et al. (2005), Two-phase plume migration</li>
+        <li>Hesse, Orr &amp; Tchelepi (2008), Post-injection gravity current (two shocks). <em>J. Fluid Mech.</em> 611:35</li>
+        <li>Land (1968), Residual trapping. <em>Trans. AIME</em> 243:149</li>
+        <li>Killough (1976), Hysteresis in kr</li>
+        <li>van Genuchten-Mualem (1980), Primary relative permeability; Brooks &amp; Corey (1964) available for carbonates</li>
+        <li>Millington &amp; Quirk (1961), Effective diffusivity</li>
+        <li>Shook &amp; Mitchell (2009), Sweep efficiency (SPE-119897)</li>
+        <li>Kopp, Class &amp; Helmig (2010), Storage efficiency. <em>IJGGC</em> 4(5):831</li>
+        <li>Goodman et al. (2011), Storage capacity. <em>IJGGC</em> 5(4):853</li>
+        <li>Theis (1935) + E₁ Pad&eacute; approximant, Pressure transient / AoR. <em>Trans. AGU</em> 16:519</li>
+        <li>Hubbert &amp; Willis (1957), Fracture pressure. <em>Trans. AIME</em> 210:153</li>
+        <li>Teatini et al. (2011), Surface heave. <em>JGR</em> 116:B08204</li>
+        <li>Furre et al. (2017), Sleipner benchmark. <em>Energy Procedia</em> 114:3916</li>
       </ul>
     </div>
   </div>
