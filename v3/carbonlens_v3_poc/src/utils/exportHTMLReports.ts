@@ -91,9 +91,9 @@ tr:last-child td { border-bottom: none; }
 tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
 
-.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
-.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
-.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
+.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
 
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
 .kpi-card {
@@ -149,6 +149,26 @@ footer {
 ol.numbered { padding-left: 18px; }
 ol.numbered li { margin: 6px 0; font-size: 9pt; }
 `
+
+// ---------------------------------------------------------------------------
+// Snapshot selection — pick exactly 10 evenly-spaced frames from projectYears
+// ---------------------------------------------------------------------------
+function selectTenSnapshots(
+  snapshots: Array<{year: number; dataUrl: string}>,
+  projectYears: number,
+): Array<{year: number; dataUrl: string}> {
+  if (!snapshots || snapshots.length === 0) return []
+  if (snapshots.length <= 10) return snapshots
+  const count = 10
+  const step = projectYears / count
+  const targets = Array.from({ length: count }, (_, i) => Math.round((i + 1) * step))
+  const seen = new Set<number>()
+  return targets
+    .map((t) => snapshots.reduce((best, s) =>
+      Math.abs(s.year - t) < Math.abs(best.year - t) ? s : best,
+    ))
+    .filter((s) => { if (seen.has(s.year)) return false; seen.add(s.year); return true })
+}
 
 function generatePressureRateChartSVG(
   params: FormationParams,
@@ -768,7 +788,7 @@ function buildBackPage(opts: {
           <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
             <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
             <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Muhammed Aslam MD Yusuf</strong> &mdash; Co-Supervisor, UTP Malaysia
+            <strong style="color:white;">Dr. Muhammad Aslam Md Yusof</strong> &mdash; Co-Supervisor, UTP Malaysia
           </div>
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
@@ -1292,37 +1312,49 @@ function buildExecutiveSummaryBody(
 
   <!-- Reservoir Evolution Snapshots -->
   <h2>Reservoir Evolution</h2>
-  ${(snapshots && snapshots.length > 0) ? `
+  ${(() => {
+    const frames = selectTenSnapshots(snapshots ?? [], projectYears ?? 20)
+    if (frames.length === 0) return '<p class="muted" style="padding:8px 0;">No simulation snapshots available. Run a full simulation to capture reservoir evolution imagery at key years.</p>'
+    const dur = frames.length * 2  // 2s per frame, total cycle
+    const pct = (1 / frames.length) * 100
+    const holdEnd = pct - 2  // hold for most of the slot, then fade out
+    const keyframes = frames.map((_, i) => {
+      const start = (i / frames.length * 100).toFixed(1)
+      const end = ((i + 1) / frames.length * 100).toFixed(1)
+      return `.cl-evo-f:nth-child(${i+1}){animation-delay:${(i * dur / frames.length).toFixed(1)}s}`
+    }).join('')
+    return `
   <style>
+  @keyframes cl-evo-cycle {
+    0%,${holdEnd.toFixed(1)}%{opacity:1}
+    ${pct.toFixed(1)}%,100%{opacity:0}
+  }
   @media screen {
-    .cl-slideshow .cl-slide { display:none; }
-    .cl-slideshow .cl-slide.active { display:block; }
-    .cl-contact { display:none; }
-    .cl-slide-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; justify-content:center; }
+    .cl-evo-wrap{position:relative;width:100%;padding-bottom:56.25%;background:#0a1015;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;margin:8px 0;}
+    .cl-evo-f{position:absolute;inset:0;opacity:0;animation:cl-evo-cycle ${dur}s linear infinite;}
+    .cl-evo-f:nth-child(1){opacity:1;}
+    ${keyframes}
+    .cl-evo-f img{width:100%;height:100%;object-fit:contain;}
+    .cl-evo-label{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:7.5pt;color:#94a3b8;background:rgba(0,0,0,0.4);padding:2px 0;}
+    .cl-evo-grid{display:none;}
+    .cl-evo-note{font-size:7pt;color:#64748b;text-align:center;margin-top:4px;}
   }
   @media print {
-    .cl-slideshow .cl-slide { display:none; }
-    .cl-slideshow .cl-slide:first-child { display:block; }
-    .cl-slide-btns { display:none; }
-    .cl-contact { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
-    .cl-contact img { width:100%; border:1px solid #e2e8f0; border-radius:4px; }
+    .cl-evo-wrap{display:none;}
+    .cl-evo-note{display:none;}
+    .cl-evo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0;}
+    .cl-evo-grid img{width:100%;border:1px solid #e2e8f0;border-radius:4px;}
+    .cl-evo-grid div{text-align:center;font-size:6.5pt;color:#64748b;margin-top:2px;}
   }
   </style>
-  <div class="cl-slideshow" id="clSlideshow">
-    ${snapshots.map((s, i) => '<div class="cl-slide' + (i === 0 ? ' active' : '') + '"><img src="' + s.dataUrl + '" style="width:100%;border-radius:6px;border:1px solid #e2e8f0;max-height:220px;object-fit:contain;"><div style="text-align:center;font-size:8pt;color:#64748b;margin-top:4px;">Year ' + s.year + ' \u2014 Plume State</div></div>').join('')}
+  <div class="cl-evo-wrap">
+    ${frames.map((s) => `<div class="cl-evo-f"><img src="${s.dataUrl}" alt="Year ${s.year}"><div class="cl-evo-label">Year ${s.year} \u2014 CO\u2082 Plume</div></div>`).join('')}
   </div>
-  <div class="cl-slide-btns" id="clSlideBtns">
-    ${snapshots.map((s, i) => '<button onclick="clShowSlide(' + i + ')" id="clBtn' + i + '" style="padding:2px 10px;font-size:8pt;border:1px solid #e2e8f0;border-radius:12px;cursor:pointer;background:' + (i === 0 ? '#0d1f3c' : '#f8fafc') + ';color:' + (i === 0 ? 'white' : '#1e293b') + ';">Yr ' + s.year + '</button>').join('')}
-  </div>
-  <div class="cl-contact">
-    ${snapshots.map((s) => '<div><img src="' + s.dataUrl + '"><div style="text-align:center;font-size:7pt;color:#64748b;margin-top:2px;">Year ' + s.year + '</div></div>').join('')}
-  </div>
-  <script>
-  function clShowSlide(idx){
-    document.querySelectorAll('#clSlideshow .cl-slide').forEach(function(el,i){el.className='cl-slide'+(i===idx?' active':'');});
-    document.querySelectorAll('#clSlideBtns button').forEach(function(el,i){el.style.background=i===idx?'#0d1f3c':'#f8fafc';el.style.color=i===idx?'white':'#1e293b';});
-  }
-  </script>` : `<p class="muted" style="padding:8px 0;">No simulation snapshots available. Run a full simulation to capture reservoir evolution imagery at key years.</p>`}
+  <p class="cl-evo-note">Auto-advancing animation (${frames.length} frames, ${dur}s loop). Print view shows image grid.</p>
+  <div class="cl-evo-grid">
+    ${frames.map((s) => `<div><img src="${s.dataUrl}" alt="Year ${s.year}"><div>Yr ${s.year}</div></div>`).join('')}
+  </div>`
+  })()}
 
   ${result.overpressureRisk ? `
   <!-- Overpressure Risk -->
@@ -2272,37 +2304,43 @@ export function openPermitApplication(
   </div>
   <div style="height:2px; background:#00c4a0; margin-bottom:14px;"></div>
   <h2>Appendix A: Reservoir Simulation Snapshots</h2>
-  <p style="font-size:9.5pt; margin-bottom:10px;">The following images were captured from the CarbonLens 3D reservoir viewer at key simulation years. They illustrate CO&#x2082; plume migration, saturation evolution, and spatial distribution throughout the injection period.</p>
-  ${(snapshots && snapshots.length > 0) ? `
+  <p style="font-size:9.5pt; margin-bottom:10px;">The following 10 images were captured from the CarbonLens 3D reservoir viewer at evenly-spaced simulation years. They illustrate CO&#x2082; plume migration, saturation evolution, and spatial distribution throughout the injection period. Screen view: auto-advancing animation. Print view: 2&times;5 image grid.</p>
+  ${(() => {
+    const frames = selectTenSnapshots(snapshots ?? [], projectYears ?? 20)
+    if (frames.length === 0) return '<p class="muted" style="padding:8px 0;">No simulation snapshots available. Run a full simulation to generate reservoir evolution imagery.</p>'
+    const dur = frames.length * 2
+    const holdEnd = ((1 / frames.length) * 100 - 2).toFixed(1)
+    const pct = ((1 / frames.length) * 100).toFixed(1)
+    const kf = frames.map((_, i) => `.cl-app-f:nth-child(${i+1}){animation-delay:${(i * dur / frames.length).toFixed(1)}s}`).join('')
+    return `
   <style>
+  @keyframes cl-app-cycle {
+    0%,${holdEnd}%{opacity:1}
+    ${pct}%,100%{opacity:0}
+  }
   @media screen {
-    .cl-app-slideshow .cl-app-slide { display:none; }
-    .cl-app-slideshow .cl-app-slide.active { display:block; }
-    .cl-app-contact { display:none; }
-    .cl-app-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; justify-content:center; }
+    .cl-app-wrap{position:relative;width:100%;padding-bottom:56.25%;background:#0a1015;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;margin:10px 0;}
+    .cl-app-f{position:absolute;inset:0;opacity:0;animation:cl-app-cycle ${dur}s linear infinite;}
+    .cl-app-f:nth-child(1){opacity:1;}
+    ${kf}
+    .cl-app-f img{width:100%;height:100%;object-fit:contain;}
+    .cl-app-lbl{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:7.5pt;color:#94a3b8;background:rgba(0,0,0,0.45);padding:2px 0;}
+    .cl-app-grid{display:none;}
   }
   @media print {
-    .cl-app-slideshow .cl-app-slide { display:none; }
-    .cl-app-contact { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:10px 0; }
-    .cl-app-contact img { width:100%; border:1px solid #e2e8f0; border-radius:4px; }
-    .cl-app-btns { display:none; }
+    .cl-app-wrap{display:none;}
+    .cl-app-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0;}
+    .cl-app-grid img{width:100%;border:1px solid #e2e8f0;border-radius:4px;}
+    .cl-app-grid div{text-align:center;font-size:6.5pt;color:#64748b;margin-top:2px;}
   }
   </style>
-  <div class="cl-app-slideshow" id="clAppSlideshow">
-    ${snapshots.map((s, i) => '<div class="cl-app-slide' + (i === 0 ? ' active' : '') + '"><img src="' + s.dataUrl + '" style="width:100%;border-radius:6px;border:1px solid #e2e8f0;max-height:260px;object-fit:contain;"><div style="text-align:center;font-size:8.5pt;color:#64748b;margin-top:6px;">Year ' + s.year + ' \u2014 CO\u2082 Plume Distribution</div></div>').join('')}
+  <div class="cl-app-wrap">
+    ${frames.map((s) => `<div class="cl-app-f"><img src="${s.dataUrl}" alt="Year ${s.year}"><div class="cl-app-lbl">Year ${s.year} \u2014 CO\u2082 Plume Distribution</div></div>`).join('')}
   </div>
-  <div class="cl-app-btns" id="clAppBtns">
-    ${snapshots.map((s, i) => '<button onclick="clAppShow(' + i + ')" id="clAppBtn' + i + '" style="padding:2px 10px;font-size:8pt;border:1px solid #e2e8f0;border-radius:12px;cursor:pointer;background:' + (i === 0 ? '#0d1f3c' : '#f8fafc') + ';color:' + (i === 0 ? 'white' : '#1e293b') + ';">Yr ' + s.year + '</button>').join('')}
-  </div>
-  <div class="cl-app-contact">
-    ${snapshots.map((s) => '<div><img src="' + s.dataUrl + '"><div style="text-align:center;font-size:7.5pt;color:#64748b;margin-top:2px;">Year ' + s.year + '</div></div>').join('')}
-  </div>
-  <script>
-  function clAppShow(idx){
-    document.querySelectorAll('#clAppSlideshow .cl-app-slide').forEach(function(el,i){el.className='cl-app-slide'+(i===idx?' active':'');});
-    document.querySelectorAll('#clAppBtns button').forEach(function(el,i){el.style.background=i===idx?'#0d1f3c':'#f8fafc';el.style.color=i===idx?'white':'#1e293b';});
-  }
-  </script>` : `<p class="muted" style="padding:8px 0;">No simulation snapshots available. Run a full simulation to generate reservoir evolution imagery.</p>`}
+  <div class="cl-app-grid">
+    ${frames.map((s) => `<div><img src="${s.dataUrl}" alt="Year ${s.year}"><div>Yr ${s.year}</div></div>`).join('')}
+  </div>`
+  })()}
 
   <!-- Footer -->
   <footer>
@@ -2356,40 +2394,18 @@ export function openPreScreeningReport(
   hmResult?: OptimizationResult,
   mcResult?: PersistedMCResult,
 ): void {
-  const dateStr = today()
-
-  // Build the full executive narrative (KPI grid, trapping breakdown, economics, recommendations)
-  // using the shared body builder so nothing is lost or duplicated.
-  const execBody = buildExecutiveSummaryBody(
+  // Open executive summary and permit report as separate documents to avoid data repetition.
+  openExecutiveSummary(
     formation, result, geo, wells,
-    formationName, location, dateStr, jurisdiction,
-    projectYears, timestep, hmResult, mcResult, snapshots,
+    formationName, location,
+    undefined, organization,
+    snapshots, projectYears, timestep,
+    jurisdiction, hmResult, mcResult,
   )
-
-  // Disclaimer banner injected between exec summary and permit sections
-  const disclaimerBanner = `
-  <div style="margin:20px 0 0;padding:12px 16px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;font-size:8.5pt;color:#78350f;line-height:1.6;page-break-inside:avoid;">
-    <strong style="display:block;margin-bottom:4px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;">Professional Review Disclaimer</strong>
-    ${PRESCREENING_DISCLAIMER}
-  </div>`
-
-  // The preamble is the exec body + disclaimer, inserted between the cover page and Section 1
-  // of the full permit application. This gives one unified document with:
-  //   - Cover page (Pre-Screening Report branding)
-  //   - Executive overview + KPIs + trapping + economics + recommendations
-  //   - Disclaimer banner
-  //   - Section 1-10 full permit technical content
-  //   - Appendix A: Reservoir snapshots
-  //   - Equations page + Back page
-  const preamble = execBody + disclaimerBanner
-
   openPermitApplication(
     formation, result, geo, wells,
     formationName, location, jurisdiction, organization,
     snapshots, projectYears, timestep,
     hmResult, mcResult,
-    preamble,
-    'CO\u2082 Pre-Screening Report',
-    'Integrated Executive Overview \u2014 Permit Pre-Application',
   )
 }

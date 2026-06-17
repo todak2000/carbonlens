@@ -126,9 +126,9 @@ td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle
 tr:last-child td { border-bottom: none; }
 tr:nth-child(even) td { background: #f8fafc; }
 td:first-child { font-weight: 600; color: #0d1f3c; }
-.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
-.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
-.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; }
+.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
 .kpi-card {
   border: 1px solid #e2e8f0; border-radius: 8px;
@@ -515,7 +515,7 @@ export function openSleipnerReport(): void {
 <!-- ═══════════════════ SECTION 2: INJECTION TIMELINE 1996–2016 ══════════════ -->
 <div class="page-break" style="padding:8mm 16mm;">
   ${sectionHeader(LOGO_SVG, 'Section 2')}
-  <h2>Section 2 — Historical Injection Timeline (1996–2016)</h2>
+  <h2>Historical Injection Timeline (1996–2016)</h2>
   <p class="muted">CarbonLens simulation vs. published monitoring values. Injection modelled at 0.9 Mt/yr with 1-year ramp-up. Year = years since September 1996 injection start.</p>
   <table>
     <thead>
@@ -726,7 +726,7 @@ export function openSleipnerReport(): void {
         <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
           <strong style="color:white;">Daniel T. Olagunju</strong>, Author, MSc Researcher, UTP Malaysia<br>
           <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong>, Supervisor, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Muhammed Aslam MD Yusuf</strong>, Co-Supervisor, UTP Malaysia
+          <strong style="color:white;">Dr. Muhammad Aslam Md Yusof</strong>, Co-Supervisor, UTP Malaysia
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;">
