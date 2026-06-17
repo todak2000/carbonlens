@@ -9,7 +9,7 @@ import WorldMap from "./WorldMap";
 const OWNER_EMAIL = "todak2000@gmail.com";
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // '' in dev, '/carbonlens' in prod
 const RECORDED_DEMO_URL = `${BASE}/carbonlens-demo.webm`;
-const SLEIPNER_REPORT_URL = `${BASE}/sleipner-validation-report.pdf`;
+const VALIDATION_INDEX_URL = `${BASE}/validation/index.html`;
 
 // ── Icons as simple SVG components (no extra deps needed) ─────────────────────
 
@@ -735,12 +735,12 @@ export default function LandingPage() {
                 <span className="text-secondary">Mt. Simon</span> (Gollakota 2014).
               </div>
               <a
-                href={SLEIPNER_REPORT_URL}
+                href={VALIDATION_INDEX_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[10px] font-mono text-emerald-400 hover:text-emerald-300 border dark:border-emerald-500/30 border-emerald-300 rounded-lg px-3 py-1.5 transition whitespace-nowrap flex items-center gap-1.5 shrink-0"
               >
-                View Report
+                View Reports
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="10"
