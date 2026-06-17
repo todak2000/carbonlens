@@ -876,24 +876,21 @@ function todayISO(): string {
 // Executive Summary
 // ---------------------------------------------------------------------------
 
-export function openExecutiveSummary(
+function buildExecutiveSummaryBody(
   params: FormationParams,
   result: SimulationResult,
   geomechanics: GeomechanicsResult | null,
   wells: Well[],
   formationName: string,
   formationLocation: string,
-  userName?: string | null,
-  organization?: string,
-  snapshots?: Array<{year: number; dataUrl: string}>,
+  dateStr: string,
+  jurisdiction: string,
   projectYears?: number,
   simulationYear?: number,
-  jurisdictionOverride?: string,
   hmResult?: OptimizationResult,
   mcResult?: PersistedMCResult,
-): void {
-  const dateStr = today()
-
+  snapshots?: Array<{year: number; dataUrl: string}>,
+): string {
   // Safety rating
   let safetyBadge: string
   let safetyLabel: string
@@ -943,8 +940,7 @@ export function openExecutiveSummary(
   const opexPerTonne = 1.5 + nWells * 0.2 + params.depth * 0.0005
   const totalOpex = opexPerTonne * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
   const breakevenCost = storedTotal > 0.001 ? (capex + totalOpex) / storedTotal : (capex + totalOpex) / Math.max(0.001, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
-  
-  const jurisdiction = jurisdictionOverride ?? useUIStore.getState().jurisdiction ?? 'US'
+
   const credit45q = jurisdiction === 'US' ? 85
     : jurisdiction === 'EU' ? 60
     : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? 45
@@ -1057,23 +1053,10 @@ export function openExecutiveSummary(
   // Phase state
   const phaseLabel = params.temperature > 31.1 && params.pressure > 7.38 ? 'supercritical' : 'subcritical'
 
-  const preparedBy = userName ?? 'CarbonLens Simulation Studio'
-  const orgName = organization ?? ''
-  const refId = 'CL-EXEC-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  void creditRevenue
+  void carbonPriceDisplay
 
-  const body = `
-  ${buildCoverPage({
-    reportType: 'executive',
-    title: 'CO\u2082 Storage Assessment',
-    subtitle: 'Executive Summary \u2014 Preliminary Screening',
-    formationName,
-    formationLocation,
-    organization: orgName,
-    preparedBy,
-    dateStr,
-    referenceId: refId,
-  })}
-
+  return `
   <!-- Page 2+ header -->
   <div style="page-break-before:always;">
   <div class="page-header-bar">
@@ -1216,7 +1199,7 @@ export function openExecutiveSummary(
   ${geomechanics ? generatePressureRateChartSVG(params, wells, geomechanics, projectYears) : ''}
   ${geomechanics ? `
   <div style="margin-top: 10px; font-size: 8.5pt; line-height: 1.4; color: #475569; page-break-inside: avoid;">
-    <strong style="color: #0d1f3c;">Fracture Mechanics &amp; Storage Integrity Notice:</strong> 
+    <strong style="color: #0d1f3c;">Fracture Mechanics &amp; Storage Integrity Notice:</strong>
     If injection pressure exceeds the rock fracture limit, tensile fracturing degrades containment by creating vertical leakage pathways and pressure bypass zones. This directly compromises fluid flow assurance (due to bypass paths and loss of sweep efficiency) and restricts active storage capacity by capping the safe operating bottomhole pressure (BHP). Keeping pressures below the Maximum Allowable Injection Pressure (MAIP) is mandatory for storage permit validation.
   </div>
   ` : ''}
@@ -1365,6 +1348,51 @@ export function openExecutiveSummary(
     Scientific basis: DOE Goodman et al. (2011); Peng &amp; Robinson (1976) PR-EOS with Li &amp; Yan (2009) binary interaction parameters; Fenghour et al. (1998) viscosity; Duan &amp; Sun (2003) solubility (NaCl); Duan et al. (2006) multi-salt solubility (CaCl&#x2082;, MgCl&#x2082;, KCl); Nordbotten et al. (2005) two-phase AoR; Hesse, Orr &amp; Tchelepi (2008) post-injection gravity current; van Genuchten (1980) &amp; Mualem (1976) kr; Krevor et al. (2012); Furre et al. (2017); Boait et al. (2012)
   </p>
   </div>
+`
+}
+
+export function openExecutiveSummary(
+  params: FormationParams,
+  result: SimulationResult,
+  geomechanics: GeomechanicsResult | null,
+  wells: Well[],
+  formationName: string,
+  formationLocation: string,
+  userName?: string | null,
+  organization?: string,
+  snapshots?: Array<{year: number; dataUrl: string}>,
+  projectYears?: number,
+  simulationYear?: number,
+  jurisdictionOverride?: string,
+  hmResult?: OptimizationResult,
+  mcResult?: PersistedMCResult,
+): void {
+  const dateStr = today()
+  const jurisdiction = jurisdictionOverride ?? useUIStore.getState().jurisdiction ?? 'US'
+  const preparedBy = userName ?? 'CarbonLens Simulation Studio'
+  const orgName = organization ?? ''
+  const refId = 'CL-EXEC-' + new Date().toISOString().slice(0, 10).replace(/-/g, '')
+
+  const execBody = buildExecutiveSummaryBody(
+    params, result, geomechanics, wells,
+    formationName, formationLocation, dateStr, jurisdiction,
+    projectYears, simulationYear, hmResult, mcResult, snapshots,
+  )
+
+  const body = `
+  ${buildCoverPage({
+    reportType: 'executive',
+    title: 'CO\u2082 Storage Assessment',
+    subtitle: 'Executive Summary \u2014 Preliminary Screening',
+    formationName,
+    formationLocation,
+    organization: orgName,
+    preparedBy,
+    dateStr,
+    referenceId: refId,
+  })}
+
+  ${execBody}
 
   ${buildEquationsPage({ organization: orgName, preparedBy, dateStr })}
   ${buildBackPage({ organization: orgName, preparedBy, dateStr })}
@@ -1392,6 +1420,10 @@ export function openPermitApplication(
   simulationYear?: number,
   hmResult?: OptimizationResult,
   mcResult?: PersistedMCResult,
+  // Optional overrides used when called from openPreScreeningReport
+  preamble?: string,
+  coverTitle?: string,
+  coverSubtitle?: string,
 ): void {
   const dateStr = today()
   const dateISO = todayISO()
@@ -1777,8 +1809,8 @@ export function openPermitApplication(
   const body = `
   ${buildCoverPage({
     reportType: 'permit',
-    title: jMeta.reportTitle,
-    subtitle: jMeta.authority,
+    title: coverTitle ?? jMeta.reportTitle,
+    subtitle: coverSubtitle ?? jMeta.authority,
     formationName,
     formationLocation,
     organization: orgName,
@@ -1787,6 +1819,8 @@ export function openPermitApplication(
     referenceId: permitRefId,
     jurisdiction: jurisdictionDisplayName,
   })}
+
+  ${preamble ?? ''}
 
   <!-- =====================================================================
        SECTION 1: APPLICATION OVERVIEW
@@ -2280,7 +2314,7 @@ export function openPermitApplication(
   ${buildBackPage({ organization: orgName, preparedBy: 'CarbonLens Simulation Studio v3', dateStr })}
 `
 
-  const html = wrapHTML(jMeta.reportTitle, body)
+  const html = wrapHTML(coverTitle ?? jMeta.reportTitle, body)
   openPrintWindow(html)
 }
 
@@ -2324,141 +2358,38 @@ export function openPreScreeningReport(
 ): void {
   const dateStr = today()
 
-  const disclaimerBox = `
-  <div style="margin:20px 0;padding:14px 16px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;font-size:8.5pt;color:#78350f;line-height:1.6;">
-    <strong style="display:block;margin-bottom:6px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;">Professional Review Disclaimer</strong>
+  // Build the full executive narrative (KPI grid, trapping breakdown, economics, recommendations)
+  // using the shared body builder so nothing is lost or duplicated.
+  const execBody = buildExecutiveSummaryBody(
+    formation, result, geo, wells,
+    formationName, location, dateStr, jurisdiction,
+    projectYears, timestep, hmResult, mcResult, snapshots,
+  )
+
+  // Disclaimer banner injected between exec summary and permit sections
+  const disclaimerBanner = `
+  <div style="margin:20px 0 0;padding:12px 16px;background:#fff8e1;border:2px solid #f59e0b;border-radius:8px;font-size:8.5pt;color:#78350f;line-height:1.6;page-break-inside:avoid;">
+    <strong style="display:block;margin-bottom:4px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;">Professional Review Disclaimer</strong>
     ${PRESCREENING_DISCLAIMER}
   </div>`
 
-  // Build executive summary body via the existing exported function logic — we open it in a
-  // hidden window, grab its innerHTML, then close it. Instead, to avoid duplication of all that
-  // logic, we reconstruct the key body segments inline by capturing the essential sections.
-  // The approach below opens ONE print window with the full combined HTML.
+  // The preamble is the exec body + disclaimer, inserted between the cover page and Section 1
+  // of the full permit application. This gives one unified document with:
+  //   - Cover page (Pre-Screening Report branding)
+  //   - Executive overview + KPIs + trapping + economics + recommendations
+  //   - Disclaimer banner
+  //   - Section 1-10 full permit technical content
+  //   - Appendix A: Reservoir snapshots
+  //   - Equations page + Back page
+  const preamble = execBody + disclaimerBanner
 
-  // Executive section title block
-  const execHeaderBlock = `
-  <div style="page-break-before:always;">
-  <div class="page-header-bar">
-    ${LOGO_SVG}
-    <div style="text-align:right;">
-      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Pre-Screening Report &mdash; CO&#x2082; Storage Assessment</div>
-      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${formationName} &middot; ${dateStr}</div>
-    </div>
-  </div>
-  <div class="page-header-rule"></div>`
-
-  // Re-use the permit application body builder by calling openPermitApplication in a hidden context
-  // is not feasible without refactoring. We therefore open both functions in a single window
-  // by reproducing the combined title page and then embedding pointers.
-  // The simplest correct approach: call a new wrapper HTML that sources both bodies.
-
-  // Combined cover page
-  const combinedCover = buildCoverPage({
-    reportType: 'permit',
-    title: 'CO\u2082 Pre-Screening Report',
-    subtitle: 'Integrated Executive Overview & Permit Pre-Application',
-    formationName,
-    formationLocation: location,
-    organization,
-    preparedBy: 'CarbonLens Simulation Studio v3',
-    dateStr,
-    referenceId: 'CL-PSR-' + new Date().toISOString().slice(0, 10).replace(/-/g, ''),
-    jurisdiction,
-  })
-
-  // Executive summary inner sections (body only, no cover or equations page)
-  // We extract the key content by calling openExecutiveSummary logic up to the footer,
-  // without buildCoverPage, buildEquationsPage, or buildBackPage.
-  // For maintainability, we call the full openExecutiveSummary content generation
-  // by replicating its core HTML here via the shared helpers.
-
-  const execNotice = timestep != null && projectYears != null && timestep < projectYears ? `
-  <div style="border:1px solid #f59e0b;background:#fffbeb;border-radius:6px;padding:8px 14px;margin-bottom:12px;">
-    <strong style="color:#92400e;">&#x26A0; Snapshot at simulation year ${timestep} of ${projectYears}.</strong>
-    <span style="color:#92400e;font-size:9pt;"> The simulation had not yet reached the final project year when this document was exported.</span>
-  </div>` : ''
-
-  const execSection = `
-  ${execHeaderBlock}
-  ${disclaimerBox}
-  ${execNotice}
-  <h2 style="margin-top:16px;">Executive Overview</h2>
-  <p style="font-size:9pt;color:#475569;margin-bottom:8px;">
-    Formation: <strong>${formationName}</strong> &middot; Location: <strong>${location}</strong> &middot;
-    Jurisdiction: <strong>${jurisdiction}</strong> &middot; Organization: <strong>${organization || 'Not specified'}</strong>
-  </p>
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">CO&#x2082; Stored</div>
-      <div class="kpi-value">${result.storageCapacity?.toFixed(2) ?? '\u2014'}</div>
-      <div class="kpi-sub">Mt cumulative</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">P50 Capacity</div>
-      <div class="kpi-value">${result.totalCapacity?.toFixed(1) ?? '\u2014'}</div>
-      <div class="kpi-sub">Mt formation potential</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Safety Factor</div>
-      <div class="kpi-value" style="font-size:13pt;padding-top:4px;">${geo != null ? (geo.safetyFactor >= 1.5 ? '<span class="badge-green">LOW RISK</span>' : geo.safetyFactor >= 1.0 ? '<span class="badge-amber">MODERATE</span>' : '<span class="badge-red">HIGH RISK</span>') : '<span class="badge-amber">NOT RUN</span>'}</div>
-      <div class="kpi-sub">SF: ${geo?.safetyFactor?.toFixed(2) ?? '\u2014'}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Containment</div>
-      <div class="kpi-value">${((result.containmentProbability ?? 0) * 100).toFixed(0)}%</div>
-      <div class="kpi-sub">Plume containment probability</div>
-    </div>
-  </div>
-  ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
-  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
-  </div>`
-
-  const pageBreak = `<div style="page-break-before:always;"></div>`
-
-  const permitHeaderBlock = `
-  <div class="page-header-bar">
-    ${LOGO_SVG}
-    <div style="text-align:right;">
-      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Permit Pre-Application &mdash; ${jurisdiction}</div>
-      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">${formationName} &middot; ${dateStr}</div>
-    </div>
-  </div>
-  <div class="page-header-rule"></div>`
-
-  // Combined footer disclaimer
-  const combinedFooter = `
-  <footer style="margin-top:22px;padding-top:8px;border-top:2px solid #f59e0b;">
-    <span style="font-size:7.5pt;color:#94a3b8;">CarbonLens &mdash; ${typeof window !== 'undefined' ? window.location.hostname : 'carbonlens.io'} &mdash; Generated ${dateStr}</span>
-    <span style="font-size:7.5pt;color:#78350f;font-weight:600;">Professional review required before regulatory submission</span>
-  </footer>
-  <div style="margin-top:10px;padding:10px 12px;background:#fff8e1;border:1px solid #f59e0b;border-radius:6px;font-size:7.5pt;color:#78350f;line-height:1.5;">
-    ${PRESCREENING_DISCLAIMER}
-  </div>`
-
-  const body = `
-  ${combinedCover}
-  ${execSection}
-  ${pageBreak}
-  ${permitHeaderBlock}
-  <h2>Permit Pre-Application Sections</h2>
-  <p style="font-size:9pt;color:#475569;margin-bottom:10px;">
-    The following sections constitute the permit pre-application content for <strong>${formationName}</strong>
-    under <strong>${jurisdiction}</strong> jurisdiction. A full permit pre-application window is also available
-    via the "Regulatory Pre-Application" export in the Export panel.
-  </p>
-  ${geo ? generatePressureRateChartSVG(formation, wells, geo, projectYears) : '<p class="muted">Geomechanics not run. Re-run simulation to populate geomechanics section.</p>'}
-  ${generateSensitivityTornadoSVG(formation, result, mcResult)}
-  ${(snapshots && snapshots.length > 0) ? `
-  <h2>Reservoir Evolution Snapshots</h2>
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:10px 0;">
-    ${snapshots.slice(0, 4).map((s) => `<div><img src="${s.dataUrl}" style="width:100%;border-radius:6px;border:1px solid #e2e8f0;max-height:180px;object-fit:contain;"><div style="text-align:center;font-size:8pt;color:#64748b;margin-top:4px;">Year ${s.year}</div></div>`).join('')}
-  </div>` : ''}
-  ${combinedFooter}
-  ${buildEquationsPage({ organization, preparedBy: 'CarbonLens Simulation Studio v3', dateStr })}
-  ${buildBackPage({ organization, preparedBy: 'CarbonLens Simulation Studio v3', dateStr })}
-`
-
-  const combinedCSS = SHARED_CSS + PRESCREENING_PRINT_CSS
-  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CarbonLens Pre-Screening Report &mdash; ${formationName}</title><style>${combinedCSS}</style></head><body>${body}</body></html>`
-  openPrintWindow(html)
+  openPermitApplication(
+    formation, result, geo, wells,
+    formationName, location, jurisdiction, organization,
+    snapshots, projectYears, timestep,
+    hmResult, mcResult,
+    preamble,
+    'CO\u2082 Pre-Screening Report',
+    'Integrated Executive Overview \u2014 Permit Pre-Application',
+  )
 }
