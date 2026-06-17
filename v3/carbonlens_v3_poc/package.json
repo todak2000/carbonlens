@@ -9,9 +9,10 @@
     "deploy": "yarn build && gh-pages -d dist",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run && yarn sync:validation",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "sync:validation": "cp -r ../validation/. ./public/validation/"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
