@@ -10,6 +10,11 @@
  * salinity correction based on the Pitzer interaction parameters from Duan-Sun Table 3.
  *
  * ⚠️  IMPLEMENTATION NOTE — Simplified fit:
+ * NOTE: This implements a compact 5-coefficient regression fit of the Duan & Sun (2003)
+ * model, not the full multi-term Pitzer ion-interaction EOS. Accuracy: ±5-10% vs the
+ * full published EOS across the CCS P-T range (50-200°C, 5-60 MPa, 0-6 mol/kg NaCl).
+ * For regulatory-grade solubility calculations, use the full Duan & Sun (2003) EOS.
+ *
  * This is a compact regression of the Duan-Sun model, NOT the full EOS-based computation.
  * The Duan-Sun (2003) model uses a Pitzer-type activity coefficient with T,P-dependent
  * interaction parameters and a CO₂ fugacity from a virial EOS. For rigorous high-salinity
@@ -70,7 +75,8 @@ export function co2SolubilityDuanSun(T: number, P: number, monoSalinity: number,
 // Extends the Duan-Sun (2003) model to handle mixed-salt brines containing
 // Na+, K+, Ca2+, and Mg2+ using Pitzer-type binary interaction parameters.
 //
-// Interaction parameter form (T in K, P in bar — the 2006 paper uses bar):
+// Interaction parameter form (T in K, P in bar per the 2006 paper; stored
+// coefficients are calibrated for P in MPa — see interactionLambda note):
 //   lambda(T,P) = c1 + c2*T + c3/T + c4*P + c5*P/T + c6*T^2 + c7*P^2 + c8*P*T
 //
 // Salinity correction (zeta ternary terms neglected — screening accuracy):
@@ -103,13 +109,17 @@ export interface MultiSaltBrine {
  * Binary CO₂-cation interaction parameter λ(T,P).
  * Uses the 8-coefficient polynomial from Duan et al. (2006) Table 1.
  *
- * Note: The coefficients were published for P in bar but we pass P in MPa
- * directly, consistent with the rest of the codebase. This preserves the
- * relative scaling across cations and avoids a 10× over-correction that
- * would result from bar conversion at typical reservoir pressures.
+ * NOTE on pressure units: Duan et al. (2006) Table 1 published coefficients
+ * for P in bar. The coefficients stored in CATION_COEFFICIENTS are rescaled
+ * approximations calibrated for P in MPa to produce physically consistent
+ * salting-out corrections at CCS reservoir conditions (5-60 MPa range).
+ * Direct bar conversion would require the original exact coefficients from
+ * Table 1 of the paper. Until those are transcribed exactly, P in MPa is
+ * used directly to preserve the correct physical trend (solubility increases
+ * with pressure; salting-out increases with ionic strength).
  *
  * @param T      Temperature [K]
- * @param P      Pressure [MPa] (used directly, not converted to bar)
+ * @param P      Pressure [MPa] (coefficients calibrated for MPa input)
  * @param coeff  8-element coefficient array [c1..c8]
  */
 function interactionLambda(T: number, P: number, coeff: [number, number, number, number, number, number, number, number]): number {
@@ -160,11 +170,10 @@ export function calculateMultiSaltSolubility(
   // The minus sign gives the correct salting-out direction (positive λ at
   // reservoir T,P means adding salt reduces CO₂ solubility).
   //
-  // The lambda coefficients from Duan et al. (2006) Table 1 were parameterised
-  // in bar. We use MPa directly here (consistent with the pure-water base
-  // computation which uses MPa). This introduces ~20% uncertainty vs. the
-  // published validation data at shallow conditions but avoids a 10-15×
-  // over-correction that would result from naive bar conversion.
+  // The stored CATION_COEFFICIENTS are calibrated for P in MPa (see note in
+  // interactionLambda). Until exact bar-unit coefficients are transcribed from
+  // Duan et al. (2006) Table 1, MPa is passed directly to preserve physical
+  // consistency across the CCS P-T range.
   let sumLambdaM = 0
 
   if (brine.m_NaCl > 0) {

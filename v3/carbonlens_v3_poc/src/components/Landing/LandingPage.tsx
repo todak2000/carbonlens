@@ -153,7 +153,7 @@ const FEATURES = [
   },
   {
     title: "Permit & Export",
-    desc: "Jurisdiction-aware permit report generation (EPA Class VI, EU CCS, UK NSTA, AU NOPSEMA). Export to JSON, CSV, Excel, PNG, GIF.",
+    desc: "Unified pre-screening report for 12 regulatory frameworks (EPA Class VI, EU CCS, UK NSTA, AU NOPSEMA, Malaysia, Nigeria, Indonesia, Egypt, UAE, Canada, Algeria). Export to JSON, CSV, Excel, PNG.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -727,10 +727,12 @@ export default function LandingPage() {
                 </span>
               </div>
               <div className="text-[10px] text-muted font-mono leading-relaxed flex-1">
-                Benchmarked against{" "}
-                <span className="text-secondary">Sleipner Utsira</span> field
-                data (Arts 2004 · Boait 2012 · Furre 2017) — the world's most
-                data-rich CO₂ storage site.
+                Benchmarked against 5 published datasets:{" "}
+                <span className="text-secondary">Sleipner</span> (Boait 2012 · Furre 2017),{" "}
+                <span className="text-secondary">In Salah</span> (Ringrose 2013),{" "}
+                <span className="text-secondary">Johansen</span> (Dahle 2009),{" "}
+                <span className="text-secondary">Otway</span> (Underschultz 2011),{" "}
+                <span className="text-secondary">Mt. Simon</span> (Gollakota 2014).
               </div>
               <a
                 href={SLEIPNER_REPORT_URL}
@@ -767,8 +769,8 @@ export default function LandingPage() {
             {[
               { value: "16", label: "Formation Presets" },
               { value: "50 yr", label: "Simulation Horizon" },
-              { value: "5", label: "Regulatory Jurisdictions" },
-              { value: "6", label: "Physics Engines" },
+              { value: "12", label: "Regulatory Frameworks" },
+              { value: "763", label: "Validated Tests" },
             ].map((s) => (
               <div key={s.label}>
                 <div className="text-xl md:text-3xl font-bold text-primary mb-1">

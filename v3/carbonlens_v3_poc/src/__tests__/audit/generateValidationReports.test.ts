@@ -920,7 +920,7 @@ function buildBackPage(preset: (typeof FORMATION_PRESETS)[0]): string {
         <li>Land (1968) — Residual trapping. <em>Trans. AIME</em> 243:149</li>
         <li>Hubbert &amp; Willis (1957) — Fracture pressure. <em>Trans. AIME</em> 210:153</li>
         <li>Teatini et al. (2011) — Surface heave. <em>JGR</em> 116:B08204</li>
-        <li>Brooks &amp; Corey (1964) — Relative permeability. USGS Prof. Paper</li>
+        <li>van Genuchten-Mualem (1980) with Killough (1976) hysteresis; Brooks &amp; Corey (1964) available for low-porosity carbonates — Relative permeability</li>
         <li>Furre et al. (2017) — Sleipner benchmark. <em>Energy Procedia</em> 114:3916</li>
       </ul>
     </div>
@@ -1417,9 +1417,9 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
       <tr><td>CO₂ Viscosity</td><td>Fenghour, Wakeham &amp; Vesovic (1998) <em>JPCRD</em> 27(1):31</td></tr>
       <tr><td>CO₂ Solubility</td><td>Duan &amp; Sun (2003) <em>Chem. Geology</em> 193(3–4):257 — salinity salting-out included</td></tr>
       <tr><td>Interfacial Tension</td><td>MARS ML Model — Olagunju (in prep.), MSc UTP Malaysia; Georgiadis et al. (2010); Hebach et al. (2004)</td></tr>
-      <tr><td>Relative Permeability</td><td>Brooks &amp; Corey (1964) <em>USGS Prof. Paper</em></td></tr>
+      <tr><td>Relative Permeability</td><td>van Genuchten-Mualem (1980) with Killough (1976) hysteresis; Brooks &amp; Corey (1964) available for low-porosity carbonates</td></tr>
       <tr><td>Residual Trapping</td><td>Land (1968) <em>Trans. AIME</em> 243:149</td></tr>
-      <tr><td>Capillary Pressure</td><td>Brooks-Corey (1964) + Millington-Quirk (1961)</td></tr>
+      <tr><td>Capillary Pressure</td><td>Brooks-Corey (1964)</td></tr>
       <tr><td>Pressure Transient</td><td>Theis (1935) <em>Trans. AGU</em> 16:519 — radial flow with multi-well superposition</td></tr>
       <tr><td>Storage Capacity</td><td>Goodman et al. (2011) DOE/NETL-2011/1440 — M = A·h·φ·Cc·ρ</td></tr>
       <tr><td>Geomechanical Failure</td><td>Hubbert &amp; Willis (1957) fracture gradient + Mohr-Coulomb shear failure</td></tr>
@@ -1885,7 +1885,7 @@ ${senTable}
 | CO₂ Viscosity | Fenghour, Wakeham & Vesovic (1998) *JPCRD* 27(1):31 |
 | CO₂ Solubility | Duan & Sun (2003) *Chem. Geology* 193:257 |
 | IFT (MARS ML) | Olagunju (in prep.), MSc UTP Malaysia |
-| Relative Permeability | Brooks & Corey (1964) USGS Prof. Paper |
+| Relative Permeability | van Genuchten-Mualem (1980) with Killough (1976) hysteresis; Brooks & Corey (1964) available for low-porosity carbonates |
 | Residual Trapping | Land (1968) *Trans. AIME* 243:149 |
 | Pressure Transient | Theis (1935) *Trans. AGU* 16:519 |
 | Storage Capacity | Goodman et al. (2011) DOE/NETL-2011/1440 |
