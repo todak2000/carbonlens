@@ -93,6 +93,7 @@ export interface WellSource {
   injectionRateMtPerYear: number
   rampUpYears: number
   rampDownYears: number
+  perforations?: import('../../types').Perforation[]
 }
 
 /** Per-cell solver state (allocated once, reused across steps) */
@@ -174,7 +175,7 @@ export function stepSaturation(
   nx: number,
   ny: number,
   nz: number,
-  dims: { totalThicknessM: number; modelWidthM: number; modelLengthM: number },
+  dims: { totalThicknessM: number; modelWidthM: number; modelLengthM: number; dxArr?: Float32Array; dzArr?: Float32Array },
   fluid: FluidProps,
   wells: WellSource[],
   year: number,
@@ -192,9 +193,12 @@ export function stepSaturation(
   const Sgr_override = overrides?.Sgr_override
   const landConstant_override = overrides?.landConstant_override ?? LAND_C
 
-  const dz = dims.totalThicknessM / nz        // cell height, metres
-  const dx = dims.modelWidthM / nx             // cell width,  metres
-  const dy = dims.modelLengthM / ny            // cell depth,  metres
+  const dxUniform = dims.modelWidthM / nx
+  const dzUniform = dims.totalThicknessM / nz
+  const getDx = (i: number) => dims.dxArr ? dims.dxArr[i] : dxUniform
+  const getDz = (k: number) => dims.dzArr ? dims.dzArr[k] : dzUniform
+  const dx = dxUniform        // representative cell width for INJECTION_RADIUS calc
+  const dy = dims.modelLengthM / ny
 
   // Physical injection zone radius, normalised to domain half-width.
   // Two competing requirements:
@@ -205,12 +209,8 @@ export function stepSaturation(
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const INJECTION_RADIUS = Math.max(100 / (dims.modelWidthM / 2), 1.5 / nx)
 
-  // Cell-size-scaled lateral spread limiter.
-  // Target: no more than 0.10 saturation change per 200 m-equivalent cell per year.
-  // For 450 m cells (27 km / 60): 0.044 -- prevents plume reaching domain boundary.
-  // For 200 m cells (12 km / 60): 0.10  -- preserves existing behaviour.
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  const MAX_LAT_DELTA = Math.min(0.20, 0.10 * (200 / Math.max(50, dx)))
+  // Cell-size-scaled lateral spread limiter (per-column when non-uniform)
+  const MAX_LAT_DELTA_FN = (i: number) => Math.min(0.20, 0.10 * (200 / Math.max(50, getDx(i))))
 
   // Helper: flat index from grid coords
   const idx = (i: number, j: number, k: number) => k * ny * nx + j * nx + i
@@ -228,56 +228,58 @@ export function stepSaturation(
     // Convert Mt/year → m³/year at reservoir CO2 density
     const qVol = (qMt * 1e9) / co2Density   // m³/year
 
-    // Gather injection zone cells (lower INJECTION_ZONE_FRAC of reservoir, active)
-    const kInjMin = Math.floor(nz * (1 - INJECTION_ZONE_FRAC))
-    const injCells: number[] = []
+    // Build perforation intervals for this well
+    const perfs = well.perforations && well.perforations.length > 0
+      ? well.perforations
+      : [{ topFrac: 1 - INJECTION_ZONE_FRAC, bottomFrac: 1.0, flowFraction: 1.0 }]
 
-    for (let k = kInjMin; k < nz; k++) {
-      for (let j = 0; j < ny; j++) {
-        for (let i = 0; i < nx; i++) {
-          const cell = cells[idx(i, j, k)]
-          if (!cell.activeForInjection || cell.isCaprock) continue
-          // well.x and well.z are in the same normalised space as centerX / centerY
-          const ddx = cell.centerX - well.x
-          const ddy = cell.centerY - well.z
-          const dist = Math.sqrt(ddx * ddx + ddy * ddy)
-          if (dist <= INJECTION_RADIUS) injCells.push(cell.instanceId)
+    for (const perf of perfs) {
+      const kMin = Math.floor(nz * perf.topFrac)
+      const kMax = Math.ceil(nz * perf.bottomFrac)
+      const qPerf = qVol * perf.flowFraction
+      const injCells: number[] = []
+
+      for (let k = kMin; k < kMax; k++) {
+        for (let j = 0; j < ny; j++) {
+          for (let i = 0; i < nx; i++) {
+            const cell = cells[idx(i, j, k)]
+            if (!cell.activeForInjection || cell.isCaprock) continue
+            const ddx = cell.centerX - well.x
+            const ddy = cell.centerY - well.z
+            const dist = Math.sqrt(ddx * ddx + ddy * ddy)
+            if (dist <= INJECTION_RADIUS) injCells.push(cell.instanceId)
+          }
         }
       }
-    }
 
-    if (injCells.length === 0) continue
+      if (injCells.length === 0) continue
 
-    // ── Peaceman log-radial injection weighting ────────────────────────────
-    // Distribute volume weighted by ln(re/r), matching the true log-linear
-    // pressure profile in radial Darcy flow (Peaceman 1978).
-    // This concentrates injected CO₂ near the well (physically correct) and
-    // is equivalent to AMR near-wellbore refinement for the injection term.
-    const weights: number[] = []
-    let totalWeight = 0
-    for (const cid of injCells) {
-      const cell = cells[cid]
-      const ddx = cell.centerX - well.x; const ddy = cell.centerY - well.z
-      const r = Math.sqrt(ddx * ddx + ddy * ddy)
-      const w = peacemanInjectionWeight(r, INJECTION_RADIUS)
-      weights.push(w)
-      totalWeight += w
-    }
-    if (totalWeight <= 0) {
-      // Fallback: uniform distribution
+      const weights: number[] = []
+      let totalWeight = 0
       for (const cid of injCells) {
         const cell = cells[cid]
-        const poreVol = (dims.modelWidthM / nx) * (dims.modelLengthM / ny) * (dims.totalThicknessM / nz) * cell.porosity
-        delta[cid] += qVol / (injCells.length * poreVol)
+        const ddx = cell.centerX - well.x; const ddy = cell.centerY - well.z
+        const r = Math.sqrt(ddx * ddx + ddy * ddy)
+        const w = peacemanInjectionWeight(r, INJECTION_RADIUS)
+        weights.push(w)
+        totalWeight += w
       }
-    } else {
-      for (let wi = 0; wi < injCells.length; wi++) {
-        const cid = injCells[wi]
-        const cell = cells[cid]
-        const poreVol = (dims.modelWidthM / nx) * (dims.modelLengthM / ny) * (dims.totalThicknessM / nz) * cell.porosity
-        // Weight normalised so total mass is conserved
-        const dSg = (qVol * weights[wi] / totalWeight) / poreVol
-        delta[cid] += dSg
+      if (totalWeight <= 0) {
+        for (const cid of injCells) {
+          const cell = cells[cid]
+          const ci = cell.i; const ck = cell.k
+          const poreVol = getDx(ci) * (dims.modelLengthM / ny) * getDz(ck) * cell.porosity
+          delta[cid] += qPerf / (injCells.length * poreVol)
+        }
+      } else {
+        for (let wi = 0; wi < injCells.length; wi++) {
+          const cid = injCells[wi]
+          const cell = cells[cid]
+          const ci = cell.i; const ck = cell.k
+          const poreVol = getDx(ci) * (dims.modelLengthM / ny) * getDz(ck) * cell.porosity
+          const dSg = (qPerf * weights[wi] / totalWeight) / poreVol
+          delta[cid] += dSg
+        }
       }
     }
   }
@@ -313,10 +315,11 @@ export function stepSaturation(
         const v_buoy = (kv_m2 * kr / co2Viscosity) * deltaRho * G  // m/s
 
         // Volume fraction of cell moved upward (accumulated over sub-steps)
+        const dz_k = getDz(k)
         let dSgTotal = 0
         let SgRemaining = Sg
         for (let sub = 0; sub < nSubsteps; sub++) {
-          let dSgSub = (v_buoy * dtSub / dz)
+          let dSgSub = (v_buoy * dtSub / dz_k)
           dSgSub = Math.min(dSgSub, SgRemaining * 0.6, MAX_BUOY_DELTA / nSubsteps)
           if (dSgSub <= 0) break
           dSgTotal += dSgSub
@@ -359,16 +362,13 @@ export function stepSaturation(
 
         const kh_m2 = cell.kHorizontal * 9.869e-16
         const kr = krGasHysteretic(Sg, state.Sg_max[cell.instanceId])
-        // Effective lateral diffusivity [m²/s]
-        // Near caprock: physics-based gravity current model (Nordbotten & Celia 2006)
-        //   D_gc = k_h × kr × Δρ × g × h_CO2 / (μ × φ)
-        //   where h_CO2 ≈ Sg × dz is the local CO2 column thickness contribution.
-        // Deeper reservoir: simplified gradient-driven term.
+        const dx_i = getDx(i)
+        const dz_k2 = getDz(k)
+        const latDeltaMax = MAX_LAT_DELTA_FN(i)
         let D_eff: number
         if (isNearCaprock && deltaRho > 0 && Sg > 0.001) {
-          // CFL stability limit for explicit 1-year step
-          const D_cfl = dx * dx / (4 * DT)
-          const D_gc = (kh_m2 * kr * deltaRho * G * Sg * dz) / (co2Viscosity * Math.max(0.01, cell.porosity))
+          const D_cfl = dx_i * dx_i / (4 * DT)
+          const D_gc = (kh_m2 * kr * deltaRho * G * Sg * dz_k2) / (co2Viscosity * Math.max(0.01, cell.porosity))
           D_eff = Math.min(D_gc, D_cfl)
         } else {
           D_eff = (kh_m2 * kr) / co2Viscosity * 1.5
@@ -396,10 +396,10 @@ export function stepSaturation(
           const cLeft = cells[idx(i - 1, j, k)]
           if (!cLeft.isCaprock) {
             const SgL = Math.max(0, cLeft.co2Saturation + delta[cLeft.instanceId])
-            const flux = D_eff * (Sg - SgL) * DT / (dx * dx)
-            const dSgX = Math.min(Math.abs(flux), MAX_LAT_DELTA) * Math.sign(flux)
+            const flux = D_eff * (Sg - SgL) * DT / (dx_i * dx_i)
+            const dSgX = Math.min(Math.abs(flux), latDeltaMax) * Math.sign(flux)
 
-            const dSgTotal = dSgX + capFlux(cLeft, dx)
+            const dSgTotal = dSgX + capFlux(cLeft, dx_i)
             const blocked = dSgTotal * Math.min(cell.faultTransmX, cLeft.faultTransmX)
             delta[cell.instanceId]   -= blocked
             delta[cLeft.instanceId]  += blocked * (cell.porosity / Math.max(0.001, cLeft.porosity))
@@ -412,7 +412,7 @@ export function stepSaturation(
           if (!cFront.isCaprock) {
             const SgF = Math.max(0, cFront.co2Saturation + delta[cFront.instanceId])
             const flux = D_eff * (Sg - SgF) * DT / (dy * dy)
-            const dSgY = Math.min(Math.abs(flux), MAX_LAT_DELTA) * Math.sign(flux)
+            const dSgY = Math.min(Math.abs(flux), latDeltaMax) * Math.sign(flux)
 
             const dSgTotal = dSgY + capFlux(cFront, dy)
             const blocked = dSgTotal * Math.min(cell.faultTransmY, cFront.faultTransmY)
@@ -466,7 +466,7 @@ export function stepSaturation(
       state.Sg_dissolved[cid],
       cell.porosity,
       cell.kHorizontal,
-      dz,
+      getDz(cell.k),
       G,
       MU_BRINE,
       DT,
@@ -563,6 +563,103 @@ export function stepSaturation(
       cell.porosity = Math.max(0.01, Math.min(0.55, cell.porosity0 * Math.pow(kClamped, 0.3)))
     }
   }
+}
+
+export function stepSaturationIMPES(
+  cells: GridCell[],
+  state: SolverState,
+  nx: number,
+  ny: number,
+  nz: number,
+  dims: { totalThicknessM: number; modelWidthM: number; modelLengthM: number; dxArr?: Float32Array; dzArr?: Float32Array },
+  fluid: FluidProps,
+  wells: WellSource[],
+  year: number,
+  projectYears: number,
+  overrides?: SaturationSolverOverrides,
+  gsIterations = 60,
+): void {
+  const cellCount = nx * ny * nz
+  if (cellCount === 0) return
+
+  const { co2Density, co2Viscosity } = fluid
+  const MU_CO2 = co2Viscosity
+  const dxUniform = dims.modelWidthM / nx
+  const dzUniform = dims.totalThicknessM / nz
+  const getDxI = (i: number) => dims.dxArr ? dims.dxArr[i] : dxUniform
+  const getDzK = (k: number) => dims.dzArr ? dims.dzArr[k] : dzUniform
+  const idxFn = (i: number, j: number, k: number) => k * ny * nx + j * nx + i
+
+  const P = new Float32Array(cellCount)
+  const P_init = fluid.pressureIncrease ?? 0
+  P.fill(P_init)
+
+  const Q = new Float32Array(cellCount)
+  const INJECR = Math.max(100 / (dims.modelWidthM / 2), 1.5 / nx)
+  const kInjMin = Math.floor(nz * (1 - 0.40))
+  for (const well of wells) {
+    const qMt = effectiveRate(well.injectionRateMtPerYear, year, well.rampUpYears, well.rampDownYears, projectYears)
+    if (qMt <= 0) continue
+    const qVol = (qMt * 1e9) / co2Density
+    const injCells: number[] = []
+    for (let k = kInjMin; k < nz; k++) {
+      for (let j = 0; j < ny; j++) {
+        for (let i = 0; i < nx; i++) {
+          const cell = cells[idxFn(i, j, k)]
+          if (!cell.activeForInjection || cell.isCaprock) continue
+          const ddx = cell.centerX - well.x, ddy = cell.centerY - well.z
+          if (Math.sqrt(ddx*ddx + ddy*ddy) <= INJECR) injCells.push(cell.instanceId)
+        }
+      }
+    }
+    if (injCells.length > 0) {
+      const qPerCell = qVol / injCells.length / (365.25 * 24 * 3600)
+      for (const cid of injCells) Q[cid] += qPerCell
+    }
+  }
+
+  const lambda = new Float32Array(cellCount)
+  for (const cell of cells) {
+    const Sg = cell.co2Saturation
+    const Sw = 1 - Sg
+    const krg = Math.max(0, Sg > 0 ? Sg * Sg : 0)
+    const krw = Math.max(0, Sw * Sw)
+    lambda[cell.instanceId] = cell.kHorizontal * 1e-15 * (krg / MU_CO2 + krw / MU_BRINE)
+  }
+
+  for (let iter = 0; iter < gsIterations; iter++) {
+    for (let k = 0; k < nz; k++) {
+      for (let j = 0; j < ny; j++) {
+        for (let i = 0; i < nx; i++) {
+          const cid = idxFn(i, j, k)
+          const cell = cells[cid]
+          if (cell.isCaprock) continue
+
+          const dxi = getDxI(i)
+          const dzk = getDzK(k)
+          const dyi = dims.modelWidthM / ny
+
+          let aSum = 0, bSum = 0
+          if (i > 0)    { const nb = idxFn(i-1,j,k); const T = (lambda[cid]+lambda[nb])/2 / (dxi*dxi); aSum += T; bSum += T*P[nb] }
+          if (i < nx-1) { const nb = idxFn(i+1,j,k); const T = (lambda[cid]+lambda[nb])/2 / (dxi*dxi); aSum += T; bSum += T*P[nb] }
+          if (j > 0)    { const nb = idxFn(i,j-1,k); const T = (lambda[cid]+lambda[nb])/2 / (dyi*dyi); aSum += T; bSum += T*P[nb] }
+          if (j < ny-1) { const nb = idxFn(i,j+1,k); const T = (lambda[cid]+lambda[nb])/2 / (dyi*dyi); aSum += T; bSum += T*P[nb] }
+          if (k > 0)    { const nb = idxFn(i,j,k-1); const T = (cell.kVertical*1e-15)*((lambda[cid]+lambda[nb])/2/(lambda[cid]||1)) / (dzk*dzk); aSum += T; bSum += T*P[nb] }
+          if (k < nz-1) { const nb = idxFn(i,j,k+1); const T = (cell.kVertical*1e-15)*((lambda[cid]+lambda[nb])/2/(lambda[cid]||1)) / (dzk*dzk); aSum += T; bSum += T*P[nb] }
+
+          if (aSum > 0) {
+            P[cid] = (bSum + Q[cid] * 1e6) / aSum
+          }
+        }
+      }
+    }
+  }
+
+  for (const cell of cells) {
+    cell.pressure = P[cell.instanceId]
+  }
+
+  stepSaturation(cells, state, nx, ny, nz, dims, fluid, wells, year, projectYears, overrides)
 }
 
 // ── Hesse post-injection integration helpers ──────────────────────────────────

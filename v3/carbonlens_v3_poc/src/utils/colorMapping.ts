@@ -48,6 +48,49 @@ export function saturationToColor(
 }
 
 /**
+ * Map CO2 density (kg/m3) from in-situ PVT field → RGB colour.
+ * Used when colorProperty === 'co2Density' during an active simulation.
+ * Purple = subcritical / low density gas phase (< 300 kg/m3)
+ * Teal   = intermediate supercritical (~500 kg/m3)
+ * Navy   = dense supercritical near injection zone (> 750 kg/m3)
+ */
+export function pvtDensityToColor(density_kgm3: number): [number, number, number] {
+  const t = Math.max(0, Math.min(1, (density_kgm3 - 150) / 750))
+  const PURPLE: [number, number, number] = [0.55, 0.12, 0.75]  // gas-phase / subcritical
+  const TEAL:   [number, number, number] = [0.08, 0.68, 0.65]  // mid supercritical
+  const NAVY:   [number, number, number] = [0.05, 0.18, 0.55]  // dense near-well
+  if (t < 0.45) return lerp3(PURPLE, TEAL, t / 0.45)
+  return lerp3(TEAL, NAVY, (t - 0.45) / 0.55)
+}
+
+/**
+ * Map injection pressure above initial reservoir pressure → RGB colour.
+ * Blue = ambient / no pressure perturbation
+ * Yellow-red = high overpressure zone near injection well
+ */
+export function pressureFieldToColor(P_MPa: number, P_init_MPa: number): [number, number, number] {
+  const dP = Math.max(0, P_MPa - P_init_MPa)
+  const t  = Math.max(0, Math.min(1, dP / Math.max(1, P_init_MPa * 0.4)))
+  const COOL:   [number, number, number] = [0.08, 0.35, 0.75]  // ambient pressure
+  const WARM:   [number, number, number] = [0.90, 0.80, 0.10]  // moderate overpressure
+  const HOT:    [number, number, number] = [0.88, 0.12, 0.12]  // high overpressure
+  if (t < 0.5) return lerp3(COOL, WARM, t / 0.5)
+  return lerp3(WARM, HOT, (t - 0.5) / 0.5)
+}
+
+/**
+ * Map Mohr-Coulomb safety factor → RGB colour for geomechanical overlay.
+ * Green (> 2.0) = safe; Yellow-orange (1.0-2.0) = marginal; Red (< 1.0) = failed.
+ */
+export function safetyFactorToColor(sf: number): [number, number, number] {
+  if (sf >= 2.0) return [0.06, 0.72, 0.50]   // safe green
+  if (sf >= 1.5) return [0.35, 0.75, 0.20]   // good
+  if (sf >= 1.2) return [0.85, 0.78, 0.08]   // caution yellow
+  if (sf >= 1.0) return [0.90, 0.42, 0.05]   // warning orange
+  return [0.86, 0.10, 0.10]                   // failed red
+}
+
+/**
  * Map cell geology properties → RGB colour for the pre-simulation property view.
  * Blends lithology base colour with porosity brightness.
  */

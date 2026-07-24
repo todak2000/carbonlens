@@ -1,4 +1,4 @@
-export type ColorProperty = 'porosity' | 'permeability' | 'salinity' | 'ift' | 'co2Density' | 'solubility' | 'depth' | 'custom'
+export type ColorProperty = 'porosity' | 'permeability' | 'salinity' | 'ift' | 'co2Density' | 'solubility' | 'depth' | 'pressure' | 'geomechanics' | 'custom'
 export type GeometryType = 'anticline' | 'dome' | 'fault' | 'layered' | 'stratigraphic' | 'channel' | 'gridfile'
 export type SaltType = 'NaCl' | 'CaCl2' | 'Mixed'
 export type FormationType = 'saline_aquifer' | 'depleted_gas' | 'depleted_oil' | 'hybrid'
@@ -130,6 +130,14 @@ export interface FormationParams {
   // instead of the raw formation permeability. Back-calculated from a field anchor point
   // using the Boait (2012) inversion. Units: mD.
   k_eff_calibrated_mD?: number
+  geothermalGradient?: number   // °C per 100m depth (typical 2.5-4.0); if set, overrides temperature at reservoir midpoint
+  surfaceTemperatureC?: number  // surface reference temperature °C (default 15); only used with geothermalGradient
+}
+
+export interface Perforation {
+  topFrac: number
+  bottomFrac: number
+  flowFraction: number
 }
 
 export interface Well {
@@ -140,6 +148,7 @@ export interface Well {
   label: string
   rampUpYears: number
   rampDownYears: number
+  perforations?: Perforation[]
 }
 
 export interface PressureFieldPoint {
@@ -200,6 +209,23 @@ export interface SimulationResult {
   aorHeterogeneityFactor?: number      // multiplier on homogeneous AoR radius (≥1)
   // Physics regime classification (Nordbotten & Celia 2006, NETL 2015)
   formationRegime?: import('../engine/classical/formationRegimeClassifier').FormationRegime
+  // ── In-situ PVT field statistics (co2PVTTable.ts) ───────────────────────────
+  // Computed from the spatial pressure field at each simulation year.
+  // Replaces the single-point density assumption with a field-average from
+  // Span-Wagner EOS evaluated at local pressure for each pressure field point.
+  pvtStats?: import('../engine/pvt/co2PVTTable').PVTFieldStats
+  // ── Wellbore hydraulics (hydrostatic BHP) ───────────────────────────────────
+  // Complementary to peacemanBHP (reservoir-side Darcy pressure).
+  // hydrostaticBHP = WHP + rho_CO2 * g * depth — what you see at the perforations
+  // when injecting at a given wellhead pressure. Useful for surface facility design
+  // and for checking that the wellhead can sustain the required injection pressure.
+  hydrostaticBHP_MPa?: number
+  // Margin between fracture pressure and the higher of (peacemanBHP, hydrostaticBHP).
+  // Positive = safe; negative = fracture risk at current injection rate or WHP.
+  bhpMargin_MPa?: number
+  temperatureAtTopC?: number    // T at reservoir top from geothermal gradient
+  temperatureAtBaseC?: number   // T at reservoir base from geothermal gradient
+  tubingFrictionDrop_MPa?: number  // Darcy-Weisbach friction loss along injection tubing (MPa)
 }
 
 export interface GeomechanicsResult {

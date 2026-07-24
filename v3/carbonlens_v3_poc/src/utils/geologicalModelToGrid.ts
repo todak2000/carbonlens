@@ -37,6 +37,27 @@ export interface SimulationGridData {
   totalThicknessM: number
   minDepthM: number
   maxDepthM: number
+  dxArr: Float32Array
+  dyArr: Float32Array
+  dzArr: Float32Array
+}
+
+function makeRefinedSpacing(n: number, totalLength: number, refinementRatio = 3.0): Float32Array {
+  const arr = new Float32Array(n)
+  let sum = 0
+  const raw = new Float32Array(n)
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n
+    const cosBell = Math.cos(Math.PI * (t - 0.5))
+    // Inverted cosine-bell: center cells are finest (smallest), boundary cells coarsest.
+    // cosBell = 1 at center, 0 at boundaries.
+    // raw = 1 at center (fine), refinementRatio at boundaries (coarse).
+    raw[i] = 1 + (refinementRatio - 1) * (1 - cosBell * cosBell)
+    sum += raw[i]
+  }
+  const scale = totalLength / sum
+  for (let i = 0; i < n; i++) arr[i] = raw[i] * scale
+  return arr
 }
 
 // Simple LCG pseudo-random for deterministic noise
@@ -108,6 +129,9 @@ export function geologicalModelToGrid(
       totalThicknessM: 0,
       minDepthM: 0,
       maxDepthM: 0,
+      dxArr: makeRefinedSpacing(nx, model.modelWidthM),
+      dyArr: makeRefinedSpacing(ny, model.modelLengthM),
+      dzArr: new Float32Array(nz).fill(1),
     }
   }
 
@@ -116,16 +140,26 @@ export function geologicalModelToGrid(
   const maxDepthM = lastZone.topDepth + lastZone.thickness
   const totalThicknessM = maxDepthM - minDepthM
 
+  const dxArr = makeRefinedSpacing(nx, model.modelWidthM)
+  const dyArr = makeRefinedSpacing(ny, model.modelLengthM)
+  const dzArr = makeRefinedSpacing(nz, totalThicknessM)
+
+  const xCum = new Float32Array(nx + 1)
+  const yCum = new Float32Array(ny + 1)
+  const zCum = new Float32Array(nz + 1)
+  for (let i = 0; i < nx; i++) xCum[i + 1] = xCum[i] + dxArr[i]
+  for (let j = 0; j < ny; j++) yCum[j + 1] = yCum[j] + dyArr[j]
+  for (let k = 0; k < nz; k++) zCum[k + 1] = zCum[k] + dzArr[k]
+
   const cells: GridCell[] = []
   let instanceId = 0
 
   for (let k = 0; k < nz; k++) {
     for (let j = 0; j < ny; j++) {
       for (let i = 0; i < nx; i++) {
-        // Cell centre in normalised coords (0–1 within model)
-        const cx = (i + 0.5) / nx  // 0–1
-        const cy = (j + 0.5) / ny  // 0–1
-        const cz = (k + 0.5) / nz  // 0 = top, 1 = base
+        const cx = (xCum[i] + xCum[i + 1]) / 2 / model.modelWidthM
+        const cy = (yCum[j] + yCum[j + 1]) / 2 / model.modelLengthM
+        const cz = (zCum[k] + zCum[k + 1]) / 2 / totalThicknessM
 
         // Real depth of cell centre
         const depthM = minDepthM + cz * totalThicknessM
@@ -201,5 +235,5 @@ export function geologicalModelToGrid(
     }
   }
 
-  return { cells, nx, ny, nz, modelWidthM: model.modelWidthM, modelLengthM: model.modelLengthM, totalThicknessM, minDepthM, maxDepthM }
+  return { cells, nx, ny, nz, modelWidthM: model.modelWidthM, modelLengthM: model.modelLengthM, totalThicknessM, minDepthM, maxDepthM, dxArr, dyArr, dzArr }
 }

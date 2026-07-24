@@ -10,6 +10,7 @@ import type { LithologyType } from '../../types/geological'
 import { SimulationGrid } from '../grid/SimulationGrid'
 import {
   stepSaturation,
+  stepSaturationIMPES,
   makeSolverState,
   SolverState,
   FluidProps,
@@ -50,6 +51,7 @@ export class PlumeGrid {
       injectionRateMtPerYear: w.injectionRate,
       rampUpYears: w.rampUpYears,
       rampDownYears: w.rampDownYears,
+      perforations: w.perforations,
     }))
     this.state = makeSolverState(grid.cells.length)
 
@@ -65,13 +67,12 @@ export class PlumeGrid {
   }
 
   /** Advance the plume by one simulation year */
-  step(year: number, result: SimulationResult | null): void {
+  step(year: number, result: SimulationResult | null, useIMPES = false): void {
     this._currentYear = year
     if (year <= 0) return
 
     const fluid = this._fluidFromResult(result)
 
-    // Build solver overrides from history matching matchableParams if set
     const solverOverrides: SaturationSolverOverrides | undefined = this._matchableOverrides
       ? {
           kvKhRatio: this._matchableOverrides.kvKhRatio,
@@ -80,17 +81,22 @@ export class PlumeGrid {
         }
       : undefined
 
-    stepSaturation(
+    const dims = {
+      totalThicknessM: this.grid.totalThicknessM,
+      modelWidthM:     this.grid.modelWidthM,
+      modelLengthM:    this.grid.modelLengthM,
+      dxArr:           this.grid.dxArr,
+      dzArr:           this.grid.dzArr,
+    }
+
+    const solver = useIMPES ? stepSaturationIMPES : stepSaturation
+    solver(
       this.grid.cells,
       this.state,
       this.grid.nx,
       this.grid.ny,
       this.grid.nz,
-      {
-        totalThicknessM: this.grid.totalThicknessM,
-        modelWidthM:     this.grid.modelWidthM,
-        modelLengthM:    this.grid.modelLengthM,
-      },
+      dims,
       fluid,
       this.wells,
       year,

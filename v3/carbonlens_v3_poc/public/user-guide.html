@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarbonLens - User Guide 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #0d9488; --teal-light: #14b8a6; --teal-pale: #f0fdfa;
+      --navy: #0f172a; --navy-mid: #1e293b; --slate: #334155;
+      --text: #1e293b; --text-secondary: #475569; --text-muted: #94a3b8;
+      --border: #e2e8f0; --bg: #ffffff; --bg-alt: #f8fafc;
+    }
+    body { font-family: system-ui,-apple-system,'Segoe UI',sans-serif; color: var(--text); background: var(--bg); line-height: 1.7; font-size: 10.5pt; }
+    body.has-bar { padding-top: 48px; }
+
+    /* TOP BAR */
+    .dl-bar { position:fixed; top:0; left:0; right:0; background:var(--navy); padding:10px 32px; display:flex; align-items:center; justify-content:space-between; z-index:200; box-shadow:0 2px 12px rgba(0,0,0,0.3); }
+    .dl-bar-left { display:flex; align-items:center; gap:16px; }
+    .dl-bar-logo { display:flex; align-items:center; gap:8px; }
+    .dl-bar-logo span { color:var(--teal-light); font-size:11pt; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; }
+    .dl-bar p { color:rgba(255,255,255,0.45); font-size:8pt; font-family:monospace; }
+    .dl-btn { background:var(--teal); color:white; border:none; padding:8px 20px; border-radius:4px; font-size:9pt; font-weight:600; cursor:pointer; }
+    .dl-btn:hover { background:var(--teal-light); }
+    .dl-bar-links { display:flex; gap:20px; align-items:center; }
+    .dl-bar-links a { color:rgba(255,255,255,0.55); font-size:8.5pt; font-family:monospace; text-decoration:none; }
+    .dl-bar-links a:hover { color:var(--teal-light); }
+
+    /* LAYOUT */
+    .guide-layout { display:flex; min-height:100vh; }
+
+    /* LEFT TOC */
+    .guide-toc { width:250px; min-width:250px; background:var(--bg-alt); border-right:1px solid var(--border); padding:20px 0 40px; position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; flex-shrink:0; }
+    .guide-toc-title { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); padding:0 18px 10px; border-bottom:1px solid var(--border); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .guide-toc a { display:block; padding:5px 18px; font-size:8pt; color:var(--text-secondary); text-decoration:none; border-left:2px solid transparent; line-height:1.4; }
+    .guide-toc a:hover { color:var(--teal); background:var(--teal-pale); border-left-color:var(--teal); }
+    .guide-toc a.active { color:var(--teal); background:var(--teal-pale); border-left-color:var(--teal); font-weight:600; }
+    .guide-toc .toc-sub { padding-left:30px; font-size:7.5pt; color:var(--text-muted); }
+    .toc-section-header { font-size:7pt; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); padding:10px 18px 3px; }
+
+    /* MAIN CONTENT */
+    .guide-content { flex:1; max-width:820px; padding:36px 52px 80px; min-width:0; }
+
+    /* SECTIONS */
+    section { padding-top:36px; border-top:1px solid var(--border); margin-top:36px; }
+    section:first-of-type { border-top:none; margin-top:0; padding-top:0; }
+
+    /* HEADINGS */
+    .section-number { font-size:8pt; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--teal); margin-bottom:4px; }
+    h1.section-title { font-size:17pt; font-weight:700; color:var(--navy); padding-bottom:10px; border-bottom:2px solid var(--teal); margin-bottom:16px; }
+    h2.sub-title { font-size:11pt; font-weight:600; color:var(--navy); margin:24px 0 10px; }
+    h3.sub-sub-title { font-size:10pt; font-weight:600; color:var(--slate); margin:18px 0 8px; }
+    p { margin-bottom:10px; color:var(--text-secondary); font-size:9.5pt; }
+
+    /* FIGURE PLACEHOLDER */
+    .figure-placeholder { margin:20px 0; border:2px dashed var(--border); border-radius:8px; background:var(--bg-alt); padding:36px 20px; text-align:center; }
+    .fp-label { font-size:14pt; font-weight:700; color:var(--text-muted); font-family:monospace; margin-bottom:6px; }
+    .fp-desc { font-size:8.5pt; color:var(--text-muted); font-style:italic; }
+
+    /* CALLOUT */
+    .callout { background:var(--teal-pale); border-left:3px solid var(--teal); padding:14px 18px; margin:16px 0; border-radius:0 6px 6px 0; }
+    .callout p { font-size:9pt; margin:0; color:var(--slate); }
+
+    /* WARN */
+    .warn-box { background:#fff7ed; border:1px solid #fed7aa; border-left:3px solid #f97316; border-radius:0 6px 6px 0; padding:12px 16px; margin:14px 0; }
+    .warn-box p { font-size:9pt; color:#9a3412; margin:0; }
+
+    /* INFO */
+    .info-box { background:#eff6ff; border:1px solid #bfdbfe; border-left:3px solid #3b82f6; border-radius:0 6px 6px 0; padding:12px 16px; margin:14px 0; }
+    .info-box p { font-size:9pt; color:#1e40af; margin:0; }
+
+    /* FLOW STEPS */
+    .flow-steps { margin:16px 0; display:flex; flex-direction:column; gap:0; }
+    .flow-step { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+    .flow-step:last-child { border-bottom:none; }
+    .flow-step-num { width:26px; height:26px; background:var(--teal); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9pt; font-weight:700; flex-shrink:0; margin-top:2px; }
+    .flow-step-body h4 { font-size:9.5pt; font-weight:600; color:var(--navy); margin-bottom:3px; }
+    .flow-step-body p { font-size:8.5pt; color:var(--text-secondary); margin:0; }
+
+    /* TABLES */
+    .table-wrap { margin:20px 0; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+    .table-title { background:var(--navy); color:white; padding:9px 14px; font-size:8pt; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; }
+    table { width:100%; border-collapse:collapse; font-size:9pt; }
+    thead th { background:var(--navy-mid); color:white; padding:9px 12px; text-align:left; font-weight:600; font-size:8.5pt; }
+    tbody tr:nth-child(even) { background:var(--bg-alt); }
+    tbody td { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); font-size:8.5pt; }
+
+    /* LISTS */
+    ul.doc-list { margin:10px 0 14px 20px; color:var(--text-secondary); }
+    ul.doc-list li { margin-bottom:6px; font-size:9pt; }
+
+    /* NEW BADGE */
+    .new-badge { display:inline-block; background:#dcfce7; color:#166534; font-size:7pt; font-weight:700; padding:1px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:0.08em; vertical-align:middle; margin-left:5px; }
+
+    /* HIGHLIGHT BOX */
+    .highlight-box { background:var(--navy); color:white; border-radius:8px; padding:24px 28px; margin:24px 0; }
+    .highlight-box .hb-title { font-size:10pt; font-weight:700; color:var(--teal-light); margin-bottom:10px; }
+    .highlight-box p { color:rgba(255,255,255,0.7); font-size:9pt; margin:0; }
+
+    /* GLOSSARY */
+    .glossary-term { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .glossary-term:last-child { border-bottom:none; }
+    .gt-key { font-weight:700; color:var(--navy); min-width:140px; font-size:9pt; flex-shrink:0; }
+    .gt-def { font-size:9pt; color:var(--text-secondary); }
+
+    /* REFERENCES */
+    .references p { margin-bottom:9px; padding-left:22px; text-indent:-22px; font-size:8.5pt; color:var(--text-secondary); line-height:1.6; }
+
+    /* DOC FOOTER */
+    .doc-footer { margin-top:60px; padding-top:18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:8pt; color:var(--text-muted); }
+  </style>
+</head>
+<body class="has-bar">
+
+<!-- TOP BAR -->
+<div class="dl-bar">
+  <div class="dl-bar-left">
+    <div class="dl-bar-logo">
+      <svg width="22" height="22" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#0d9488"/><circle cx="20" cy="20" r="7" fill="none" stroke="white" stroke-width="2"/><circle cx="20" cy="20" r="3" fill="white"/><circle cx="6" cy="20" r="4" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/><circle cx="34" cy="20" r="4" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/></svg>
+      <span>CarbonLens</span>
+    </div>
+    <p>User Guide / v2.0 / July 2026</p>
+  </div>
+  <div class="dl-bar-links">
+    <a href="whitepaper.html" target="_blank">Whitepaper</a>
+    <a href="validation/index.html" target="_blank">Validation</a>
+    <button class="dl-btn" onclick="window.history.back()">Go to Dashboard</button>
+  </div>
+</div>
+
+<div class="guide-layout">
+
+  <!-- LEFT SIDEBAR TOC -->
+  <nav class="guide-toc" id="toc">
+    <div class="guide-toc-title">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Table of Contents
+    </div>
+    <div class="toc-section-header">Overview</div>
+    <a href="#s1">1. Introduction</a>
+    <a href="#s2">2. Platform Architecture</a>
+    <a href="#s3">3. Getting Started</a>
+    <div class="toc-section-header">Input Stages</div>
+    <a href="#s4">4. Geological Model Builder</a>
+    <a class="toc-sub" href="#s4-1">4.1 Stratigraphic Zones</a>
+    <a class="toc-sub" href="#s4-2">4.2 Fault Definition</a>
+    <a class="toc-sub" href="#s4-3">4.3 Grid Resolution</a>
+    <a href="#s5">5. Formation and Well Properties</a>
+    <a class="toc-sub" href="#s5-1">5.1 Reservoir Parameters</a>
+    <a class="toc-sub" href="#s5-2">5.2 Geothermal Gradient</a>
+    <a class="toc-sub" href="#s5-3">5.3 Well Configuration</a>
+    <a class="toc-sub" href="#s5-4">5.4 Perforation Intervals</a>
+    <a href="#s6">6. Fluid Properties</a>
+    <div class="toc-section-header">Simulation</div>
+    <a href="#s7">7. Running Simulations</a>
+    <a class="toc-sub" href="#s7-1">7.1 Solver Selection</a>
+    <a class="toc-sub" href="#s7-2">7.2 IMPES Mode</a>
+    <a href="#s8">8. 3D Reservoir Viewer</a>
+    <a class="toc-sub" href="#s8-1">8.1 Grid vs Mesh View</a>
+    <a class="toc-sub" href="#s8-2">8.2 Colour Modes</a>
+    <a class="toc-sub" href="#s8-3">8.3 Simulation HUD</a>
+    <a class="toc-sub" href="#s8-4">8.4 Fault Planes</a>
+    <div class="toc-section-header">Analysis Panels</div>
+    <a href="#s9">9. Geomechanics</a>
+    <a href="#s10">10. Leakage Risk</a>
+    <a href="#s11">11. Screening and Ranking</a>
+    <a href="#s12">12. Monte Carlo UQ</a>
+    <a href="#s13">13. History Matching</a>
+    <a href="#s14">14. Economics</a>
+    <a href="#s15">15. Jurisdiction and Compliance</a>
+    <div class="toc-section-header">Output</div>
+    <a href="#s16">16. Export and Permits</a>
+    <a href="#s17">17. Registry</a>
+    <a href="#s18">18. Validation Reports</a>
+    <div class="toc-section-header">Reference</div>
+    <a href="#s19">19. Glossary</a>
+    <a href="#refs">References</a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="guide-content">
+
+    <!-- COVER HEADING -->
+    <div style="padding-bottom:32px;border-bottom:2px solid var(--teal);margin-bottom:8px;">
+      <div style="font-size:8pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;">CarbonLens / User Guide</div>
+      <h1 style="font-size:26pt;font-weight:700;color:var(--navy);line-height:1.15;margin-bottom:12px;">CarbonLens User Guide</h1>
+      <p style="font-size:12pt;color:var(--text-secondary);margin-bottom:16px;">Complete step-by-step guide to pre-feasibility CO&#8322; storage simulation</p>
+      <div style="display:flex;gap:24px;font-size:8.5pt;color:var(--text-muted);font-family:monospace;">
+        <span>Version 2.0 / July 2026</span>
+        <span>Daniel T. Olagunju, Universiti Teknologi PETRONAS</span>
+      </div>
+    </div>
+
+    <!-- S1: INTRODUCTION -->
+    <section id="s1">
+      <div class="section-number">Section 1</div>
+      <h1 class="section-title">Introduction</h1>
+      <p>CarbonLens is a browser-based CO&#8322; storage simulation studio that enables pre-feasibility analysis of geological storage sites without requiring any software installation. All computation runs locally in your browser using optimised JavaScript, with no data sent to any server.</p>
+      <p>The platform covers the complete pre-feasibility workflow from geological model construction through to permit-ready export packages, encompassing reservoir characterisation, physics-based fluid simulation, geomechanical safety assessment, economic analysis, and jurisdiction-specific regulatory compliance checking.</p>
+      <div class="callout">
+        <p><strong>What CarbonLens is:</strong> A screening and pre-feasibility tool for CO&#8322; geological storage. Validated against 20 years of Sleipner monitoring data and 15 additional global benchmarks.</p>
+      </div>
+      <div class="warn-box">
+        <p><strong>What CarbonLens is not:</strong> A replacement for Eclipse CO2STORE, CMG GEM, or TOUGH2/ECO2N for final-stage certification on committed injection projects. CarbonLens results should be followed by full-field simulation before injection permit approval on major projects.</p>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #1]</div>
+        <div class="fp-desc">Full CarbonLens dashboard overview showing the 14-panel sidebar, 3D reservoir viewer with active CO&#8322; plume, and the Simulation HUD panels on the left</div>
+      </div>
+      <h2 class="sub-title">Who This Guide Is For</h2>
+      <ul class="doc-list">
+        <li><strong>CCUS engineers and consultants:</strong> Rapid multi-site screening, AoR delineation, permit pre-application packages</li>
+        <li><strong>Academic researchers:</strong> Physics-based CO&#8322; storage teaching, sensitivity studies, MSc/PhD project support</li>
+        <li><strong>Regulators and national energy bodies:</strong> Site screening for national CCS capacity assessments, regulatory pre-screening documentation</li>
+        <li><strong>Petroleum engineers:</strong> Depleted field repurposing assessment, injectivity analysis, geomechanical risk screening</li>
+      </ul>
+    </section>
+
+    <!-- S2: ARCHITECTURE -->
+    <section id="s2">
+      <div class="section-number">Section 2</div>
+      <h1 class="section-title">Platform Architecture</h1>
+      <p>CarbonLens runs two co-existing physics solvers that are automatically selected based on the simulation mode. Both run entirely in the browser without WebAssembly or server calls.</p>
+      <div class="table-wrap">
+        <div class="table-title">Table 1 - Physics Solvers</div>
+        <table>
+          <thead><tr><th>Solver</th><th>Type</th><th>When used</th><th>Reference</th></tr></thead>
+          <tbody>
+            <tr><td>3D saturation solver</td><td>Explicit FD (or IMPES)</td><td>Grid View simulation</td><td>Peaceman 1978, Land 1968</td></tr>
+            <tr><td>VE gravity current</td><td>2D vertically integrated</td><td>Long-timescale plume spread</td><td>Nordbotten and Celia 2006</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 class="sub-title">Core Physical Models</h2>
+      <ul class="doc-list">
+        <li><strong>CO&#8322; density:</strong> Span-Wagner (1996) equation of state, precomputed as a 20x40 (T, P) lookup table with bilinear interpolation</li>
+        <li><strong>CO&#8322; viscosity:</strong> Fenghour et al. (1998), co-tabulated with density</li>
+        <li><strong>CO&#8322; solubility in brine:</strong> Duan-Sun (2003) extended to NaCl/CaCl2 mixtures with methane and nitrogen impurities</li>
+        <li><strong>Residual trapping:</strong> Land (1968) snap-off model with Killough (1976) capillary hysteresis</li>
+        <li><strong>Geomechanics:</strong> Mohr-Coulomb failure criterion, Hubbert-Willis (1957) fracture pressure, Byerlee (1978) friction</li>
+        <li><strong>Dissolution:</strong> Duan-Sun solubility budget with Neufeld et al. (2010) convective mixing enhancement</li>
+        <li><strong>Mineral trapping:</strong> Lasaga (1984) kinetic precipitation (active from year 20 onward)</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #2]</div>
+        <div class="fp-desc">Architecture diagram showing data flow from geological model through physics engines to visualisation and export</div>
+      </div>
+    </section>
+
+    <!-- S3: GETTING STARTED -->
+    <section id="s3">
+      <div class="section-number">Section 3</div>
+      <h1 class="section-title">Getting Started</h1>
+      <p>CarbonLens is accessed through the web app. After signing in, you land on the Overview panel. The left sidebar contains all 14 workflow panels organised into sequential stages. Panels unlock as earlier stages are completed.</p>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><h4>Sign in</h4><p>Use your registered email and password. The app creates a local project database in your browser automatically.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><h4>Create a new project</h4><p>Click "New Project" in the Registry panel or from the Overview dashboard. Enter a project name and optional description.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><h4>Select jurisdiction</h4><p>Choose the applicable regulatory framework from the Jurisdiction panel. This determines permit templates, AoR methodology, and capacity calculation conventions.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><h4>Build the geological model</h4><p>Define stratigraphic zones, faults, and grid resolution in the Geology panel (Stage 1).</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-body"><h4>Enter formation parameters</h4><p>Specify reservoir dimensions, rock properties, fluid conditions, geothermal gradient, and well layout in the Formation panel (Stage 2).</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">6</div><div class="flow-step-body"><h4>Run simulation and review results</h4><p>Click "Run Simulation" in the Simulation panel. Results appear across all downstream panels automatically.</p></div></div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #3]</div>
+        <div class="fp-desc">Dashboard sidebar showing all 14 panels with stage labels, lock indicators, and active panel highlight</div>
+      </div>
+    </section>
+
+    <!-- S4: GEOLOGY -->
+    <section id="s4">
+      <div class="section-number">Section 4</div>
+      <h1 class="section-title">Geological Model Builder</h1>
+      <p>The Geological Model Builder constructs the 3D stratigraphic and structural framework that the simulation grid is built from. It operates through three tabs: Stratigraphy, Faults, and Property Preview.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #4]</div>
+        <div class="fp-desc">Geology panel showing the three tabs (Stratigraphy, Faults, Property Preview) with the stratigraphy tab active and two zones defined</div>
+      </div>
+
+      <h2 class="sub-title" id="s4-1">4.1 Stratigraphic Zones</h2>
+      <p>Zones are defined from top to bottom. The uppermost zone should be the caprock seal, followed by the injection reservoir intervals. Each zone requires:</p>
+      <ul class="doc-list">
+        <li><strong>Name and lithology:</strong> Sandstone, shale, carbonate, or evaporite/salt</li>
+        <li><strong>Top depth (m) and thickness (m):</strong> Depths are in metres below surface</li>
+        <li><strong>Porosity mean and standard deviation:</strong> Spatially correlated variation is applied via fractional Brownian motion noise</li>
+        <li><strong>kH (horizontal permeability, mD) and kV/kH ratio:</strong> Controls Darcy flow rate and buoyancy-driven vertical migration</li>
+        <li><strong>Capillary entry pressure (MPa):</strong> Sealing capacity of the zone</li>
+        <li><strong>Wettability:</strong> Water-wet (default for most sandstones), mixed, or oil-wet (certain carbonates)</li>
+        <li><strong>Active for injection flag:</strong> Only zones with this enabled receive CO&#8322; from injection wells</li>
+        <li><strong>Is caprock flag:</strong> Zones with this flag act as the impermeable seal and are coloured grey in the 3D viewer</li>
+      </ul>
+      <div class="callout">
+        <p><strong>Tip:</strong> Always define at least one caprock zone (isCaprock = true) above the injection zone. Without a caprock, the simulation has no structural trap and CO&#8322; will migrate upward indefinitely.</p>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #5]</div>
+        <div class="fp-desc">Stratigraphic zone editor showing a two-zone model: 50m shale caprock and 150m sandstone reservoir with porosity and permeability inputs</div>
+      </div>
+
+      <h2 class="sub-title" id="s4-2">4.2 Fault Definition</h2>
+      <p>Faults are added in the Faults tab. Each fault definition controls both the 3D visual representation (semi-transparent plane in the viewer) and the flow physics (transmissibility multipliers on cell faces). Parameters include:</p>
+      <ul class="doc-list">
+        <li><strong>Position X/Y (0-1):</strong> Normalised model coordinates. (0.5, 0.5) = model centre</li>
+        <li><strong>Strike (degrees 0-360):</strong> Horizontal orientation of the fault trace</li>
+        <li><strong>Dip (degrees 0-90):</strong> Inclination from horizontal; 90 = vertical fault</li>
+        <li><strong>Throw (m):</strong> Vertical displacement across the fault plane</li>
+        <li><strong>Length (m):</strong> Along-strike extent of the fault</li>
+        <li><strong>Sealing Factor (0-1):</strong> 0 = perfectly sealing (transmissibility = 0), 1 = fully open (transmissibility = 1)</li>
+        <li><strong>Clay Smear Factor (0-1):</strong> Additional sealing from clay gouge. Effective sealing = max(sealingFactor, claySmearFactor)</li>
+        <li><strong>Fault Zone Thickness (m):</strong> Controls how many grid cells the fault intersects</li>
+      </ul>
+      <p>In the 3D viewer, sealing faults (sealingFactor less than 0.3) are shown as red semi-transparent planes; open faults (greater than 0.7) as green; partially sealing as amber. A fault trace line marks the intersection with the top surface.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #6]</div>
+        <div class="fp-desc">Fault definition panel showing two faults: one sealing (red, sealingFactor 0.1) and one partially open (amber, sealingFactor 0.5) with strike/dip inputs</div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #7]</div>
+        <div class="fp-desc">3D viewer showing fault planes: red semi-transparent sealing fault crossing the anticline, green open fault at the boundary, both with dip rotation applied</div>
+      </div>
+
+      <h2 class="sub-title" id="s4-3">4.3 Grid Resolution and Non-Uniform Spacing</h2>
+      <p>Grid dimensions are set as Nx x Ny x Nz (default 60 x 60 x 20 = 72,000 cells, maximum 100 x 100 x 30 = 300,000 cells). Higher resolutions increase accuracy at the cost of simulation time.</p>
+      <p><strong>Non-uniform Cartesian spacing</strong> <span class="new-badge">v2.0</span> is applied automatically. A cosine-bell refinement function generates cells that are up to 3x finer near the grid centre (where injection wells are typically located) and coarser at domain boundaries. This is equivalent to near-well adaptive mesh refinement without increasing the total cell count or changing the solver topology.</p>
+      <div class="info-box">
+        <p>Non-uniform spacing improves near-well BHP accuracy, injection saturation gradients, and dissolution rate estimation. The spatial variation in cell width is visible in Grid View as narrower columns near the centre and wider columns at the boundary.</p>
+      </div>
+      <p>The <strong>Property Preview</strong> tab shows the geological grid coloured by lithology, permeability, or fault transmissibility before any simulation is run. This is useful for verifying that zone boundaries, fault intersections, and permeability heterogeneity are as intended.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #8]</div>
+        <div class="fp-desc">Grid view showing non-uniform cell spacing: visibly narrower cells at the centre (near injection well) and wider cells at the domain boundary</div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #9]</div>
+        <div class="fp-desc">Property Preview tab showing permeability distribution across the grid with warm tan colour for high-k sandstone and cool grey for low-k caprock</div>
+      </div>
+    </section>
+
+    <!-- S5: FORMATION -->
+    <section id="s5">
+      <div class="section-number">Section 5</div>
+      <h1 class="section-title">Formation and Well Properties</h1>
+      <p>The Formation panel (Stage 2) defines the quantitative reservoir parameters used in all physics calculations. It is organised into 6 steps accessed via a step wizard.</p>
+
+      <h2 class="sub-title" id="s5-1">5.1 Reservoir Dimensions and Rock Properties</h2>
+      <ul class="doc-list">
+        <li><strong>Depth to reservoir top (m):</strong> Minimum 800 m for supercritical CO&#8322; storage (P greater than 7.38 MPa required)</li>
+        <li><strong>Total thickness (m):</strong> Gross formation thickness including all zones</li>
+        <li><strong>Area (km&#178;):</strong> Lateral footprint; controls total pore volume</li>
+        <li><strong>Net-to-Gross ratio:</strong> Fraction of gross thickness that is porous reservoir (vs. interbedded shales)</li>
+        <li><strong>Geometry type:</strong> Anticline, dome, fault, layered, stratigraphic, channel, or uploaded gridfile</li>
+        <li><strong>Porosity (fraction) and permeability (mD):</strong> Formation-average values used in capacity and injectivity calculations</li>
+        <li><strong>Dykstra-Parsons Vdp coefficient (0-0.85):</strong> Permeability variation; 0 = homogeneous, 0.85 = highly heterogeneous</li>
+        <li><strong>kH/kV anisotropy ratio:</strong> Ratio of horizontal to vertical permeability (greater than or equal to 1)</li>
+        <li><strong>Connate water saturation Swi:</strong> Irreducible water saturation (default 0.15)</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #10]</div>
+        <div class="fp-desc">Formation panel Step 1 showing reservoir dimension inputs (depth, thickness, area) with a live capacity estimate updating as values change</div>
+      </div>
+
+      <h2 class="sub-title">5.2 Fluid Conditions</h2>
+      <ul class="doc-list">
+        <li><strong>Initial pressure (MPa):</strong> Hydrostatic pressure at reservoir depth; auto-computes from depth if left blank</li>
+        <li><strong>Temperature (°C):</strong> Formation-average reservoir temperature (overridden by geothermal gradient when set)</li>
+        <li><strong>Monovalent salinity (mol/kg):</strong> NaCl equivalent concentration; reduces CO&#8322; solubility</li>
+        <li><strong>Bivalent salinity (mol/kg):</strong> CaCl&#8322; equivalent; affects Duan-Sun solubility calculation</li>
+        <li><strong>Salt type:</strong> NaCl, CaCl&#8322;, or Mixed</li>
+        <li><strong>Methane and nitrogen fractions:</strong> CO&#8322; stream impurities that affect Span-Wagner density via impurity mixing rules</li>
+      </ul>
+
+      <h2 class="sub-title" id="s5-2">5.3 Geothermal Gradient <span class="new-badge">v2.0</span></h2>
+      <p>Instead of manually computing and entering reservoir temperature, you can specify the geothermal gradient. CarbonLens then auto-derives the temperature at each relevant depth.</p>
+      <ul class="doc-list">
+        <li><strong>Surface Reference Temperature (°C):</strong> Typical values: 10-15°C (temperate regions), 25-30°C (tropical/equatorial). Default 15°C.</li>
+        <li><strong>Geothermal Gradient (°C per 100m):</strong> Typical values: 2.5 (stable cratons), 3.0 (Southeast Asia, North Sea), 3.5 (tectonically active regions), 4.0+ (volcanic margins)</li>
+      </ul>
+      <p>When both fields are set, a live display shows the computed reservoir midpoint temperature. The PVT engine uses a per-pressure-point temperature estimate derived from hydrostatic depth, replacing the previous single isothermal assumption. The Simulation HUD shows the temperature range from reservoir top to base.</p>
+      <div class="callout">
+        <p><strong>Example:</strong> For a formation at 2000m depth in Peninsular Malaysia with surface T = 27°C and gradient = 3.0°C/100m: reservoir midpoint T = 27 + 3.0 x 2000/100 = 87°C. This is entered automatically once the two gradient parameters are set.</p>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #11]</div>
+        <div class="fp-desc">Geothermal gradient input fields showing surface reference temperature (27°C), gradient (3.0°C/100m), and the live-computed reservoir midpoint temperature (87°C)</div>
+      </div>
+
+      <h2 class="sub-title">5.4 Geomechanical Parameters</h2>
+      <ul class="doc-list">
+        <li><strong>Caprock friction angle (degrees) and cohesion (MPa):</strong> Mohr-Coulomb strength parameters for the sealing formation</li>
+        <li><strong>Biot coefficient (0-1):</strong> Poroelastic coupling between pore pressure and effective stress (default 0.7 for sandstone)</li>
+        <li><strong>Poisson ratio:</strong> Lateral strain response (default 0.30)</li>
+        <li><strong>Overburden gradient (MPa/m):</strong> Vertical stress gradient (default 0.023 MPa/m)</li>
+        <li><strong>Stress ratio K0 (sigma-h / sigma-v):</strong> Horizontal-to-vertical stress ratio; extensional basins ~0.55-0.65, compressional ~0.90-1.20</li>
+        <li><strong>Young's modulus (GPa):</strong> Controls the surface heave calculation (sandstone ~5 GPa, carbonate ~15-30 GPa)</li>
+        <li><strong>Fractured reservoir flag:</strong> Applies a 0.20x fracture compliance correction to the heave estimate</li>
+        <li><strong>Lithology class:</strong> Sandstone or carbonate; governs the mineral trapping kinetic rate constant</li>
+      </ul>
+
+      <h2 class="sub-title" id="s5-3">5.5 Well Configuration</h2>
+      <p>Up to 8 injection wells can be defined. Each well requires:</p>
+      <ul class="doc-list">
+        <li><strong>Position (X, Z):</strong> Normalised scene coordinates -1 to 1. (0, 0) = model centre</li>
+        <li><strong>Injection rate (Mt/year):</strong> Mass of CO&#8322; injected per year at plateau</li>
+        <li><strong>Label:</strong> Descriptive name shown in the 3D viewer</li>
+        <li><strong>Ramp-up years:</strong> Number of years to linearly increase from 0 to full rate</li>
+        <li><strong>Ramp-down years:</strong> Number of years to linearly decrease from full rate to 0 before final shut-in</li>
+      </ul>
+      <p>During simulation, the Peaceman (1978) log-radial injection weighting distributes the injection volume across cells within the injection radius, concentrating CO&#8322; near the wellbore to produce physically realistic near-well saturation profiles.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #12]</div>
+        <div class="fp-desc">Well configuration panel showing two wells with different positions, injection rates, and ramp schedules, plus the well positions visible in the 3D canvas preview</div>
+      </div>
+
+      <h2 class="sub-title" id="s5-4">5.6 Perforation Intervals <span class="new-badge">v2.0</span></h2>
+      <p>By default, CO&#8322; is injected into the lower 40% of each active reservoir zone (typical for buoyancy-driven storage in saline aquifers). For more precise control, each well can specify custom perforation intervals.</p>
+      <p>Each perforation interval defines:</p>
+      <ul class="doc-list">
+        <li><strong>Top fraction (0.0-1.0):</strong> 0.0 = reservoir top, 1.0 = reservoir base</li>
+        <li><strong>Bottom fraction (0.0-1.0):</strong> Must be greater than top fraction</li>
+        <li><strong>Flow fraction (%):</strong> Percentage of the well's total injection rate assigned to this interval</li>
+      </ul>
+      <p>All flow fractions across a well's perforation intervals must sum to 100%. The UI displays a validation warning if they do not. Multiple intervals allow modelling zone-selective injection strategies common in thick carbonate reservoirs and in multi-zone saline aquifer sequences.</p>
+      <div class="callout">
+        <p><strong>Example:</strong> A 200m thick formation with a high-permeability basal zone. Define two intervals: 0.0-0.5 (top half, 20% flow) and 0.5-1.0 (basal zone, 80% flow). CO&#8322; is preferentially placed in the more permeable zone for better injectivity.</p>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #13]</div>
+        <div class="fp-desc">Perforation interval editor showing two intervals with top/bottom depth fraction sliders and flow fraction inputs. Total flow fraction validation shows 100% (green).</div>
+      </div>
+    </section>
+
+    <!-- S6: FLUID PROPERTIES -->
+    <section id="s6">
+      <div class="section-number">Section 6</div>
+      <h1 class="section-title">Fluid Properties Panel</h1>
+      <p>The Fluid Properties panel is a read-only computed panel showing in-situ CO&#8322; and brine properties at the specified reservoir temperature and pressure. Values update automatically when formation parameters change. No inputs are required here.</p>
+      <ul class="doc-list">
+        <li><strong>CO&#8322; density (kg/m&#179;):</strong> From Span-Wagner (1996) EOS at reservoir T and P</li>
+        <li><strong>CO&#8322; viscosity (Pa.s):</strong> From Fenghour et al. (1998)</li>
+        <li><strong>Brine density (kg/m&#179;):</strong> Garcia (2001) mixing rule for CO&#8322;-saturated brine</li>
+        <li><strong>CO&#8322; solubility (mol/kg):</strong> Duan-Sun (2003) at reservoir salinity</li>
+        <li><strong>Diffusion coefficient (m&#178;/s):</strong> Molecular diffusion in brine</li>
+        <li><strong>Interfacial tension (mN/m):</strong> CO&#8322;-brine IFT; relevant to capillary entry pressure</li>
+        <li><strong>Phase state:</strong> Supercritical (T and P both above critical point) or subcritical (gas phase; storage efficiency significantly reduced)</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #14]</div>
+        <div class="fp-desc">Fluid Properties panel showing all computed values for a 2000m saline aquifer at 87°C and 20 MPa with a supercritical phase state indicator</div>
+      </div>
+    </section>
+
+    <!-- S7: SIMULATION -->
+    <section id="s7">
+      <div class="section-number">Section 7</div>
+      <h1 class="section-title">Running Simulations</h1>
+      <p>The Simulation panel controls the full solver chain. Simulation runs natively in the browser with no server calls. A typical 50-year project at 60x60x20 resolution completes in 2-5 seconds.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #15]</div>
+        <div class="fp-desc">Simulation panel showing the Run Simulation button, project duration input, animation speed selector, IMPES toggle, and the simulation status indicator showing "Running..."</div>
+      </div>
+
+      <h2 class="sub-title" id="s7-1">7.1 Simulation Controls</h2>
+      <ul class="doc-list">
+        <li><strong>Project Duration (years):</strong> Total injection and post-injection monitoring period (10-500 years)</li>
+        <li><strong>Run Simulation:</strong> Executes the full solver chain and generates all results</li>
+        <li><strong>Pause / Resume:</strong> Pauses the animation at the current timestep</li>
+        <li><strong>Stop:</strong> Halts a running simulation</li>
+        <li><strong>Animation Speed (1x, 2x, 5x, 10x):</strong> Controls playback speed of the CO&#8322; plume animation in the 3D viewer</li>
+        <li><strong>Reset:</strong> Clears all results and returns to the pre-simulation state</li>
+      </ul>
+      <p>The solver chain executes in sequence: storage screening, DOE capacity calculation (P10/P50/P90), pressure field computation, PVT field statistics, geomechanical assessment, plume grid simulation, and post-injection gravity current (Hesse et al. 2008) if all wells have shut in.</p>
+
+      <h2 class="sub-title" id="s7-2">7.2 IMPES Solver Mode <span class="new-badge">v2.0</span></h2>
+      <p>CarbonLens provides two time integration schemes selectable via the IMPES toggle in the Simulation panel:</p>
+      <div class="table-wrap">
+        <div class="table-title">Table 2 - Solver Comparison</div>
+        <table>
+          <thead><tr><th>Scheme</th><th>Default</th><th>CFL constraint</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td>Explicit forward-Euler</td><td>Yes</td><td>Yes (CFL-adaptive sub-stepping)</td><td>k less than 500 mD, standard grids</td></tr>
+            <tr><td>IMPES (Gauss-Seidel)</td><td>No</td><td>No (60-iteration pressure solve per year)</td><td>k greater than 500 mD, fine grids, high injection rates</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>IMPES (Implicit Pressure, Explicit Saturation) solves the pressure field implicitly via 60 Gauss-Seidel iterations per timestep, removing the pressure CFL stability constraint. The saturation update then proceeds explicitly using the pressure-derived fluxes.</p>
+      <div class="callout">
+        <p><strong>When to use IMPES:</strong> Enable it when simulating high-permeability formations (k greater than 500 mD), fine grids (greater than 80x80x25), or high injection rates where the explicit scheme may require many sub-steps and become slow.</p>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #16]</div>
+        <div class="fp-desc">IMPES toggle button in the Simulation panel showing "OFF" state (explicit) and "ON" state (IMPES active, highlighted in teal)</div>
+      </div>
+    </section>
+
+    <!-- S8: 3D VIEWER -->
+    <section id="s8">
+      <div class="section-number">Section 8</div>
+      <h1 class="section-title">3D Reservoir Viewer</h1>
+      <p>The 3D Reservoir Viewer is the central visual workspace. It displays the reservoir as either a smooth mesh or a cellular grid, with live CO&#8322; plume animation, HUD overlays, and multiple colour property modes.</p>
+
+      <h2 class="sub-title" id="s8-1">8.1 Grid View vs Smooth Mesh View</h2>
+      <p>The view mode is toggled with the Grid/Mesh button in the top-right of the 3D canvas:</p>
+      <ul class="doc-list">
+        <li><strong>Smooth Mesh View:</strong> Shows the reservoir as a continuous geometric surface (anticline, dome, fault trap, etc.). Best for visualising structural geometry and geological context.</li>
+        <li><strong>Grid View:</strong> Reveals the simulation as discrete coloured cells. Required for the Simulation HUD overlays, cell-level property inspection, and visualising the CO&#8322; plume at cell resolution. Non-uniform cell spacing is visible here.</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #17]</div>
+        <div class="fp-desc">Side-by-side comparison: Smooth Mesh View (left, anticline geometry) vs Grid View (right, discrete cells coloured by CO&#8322; phase with plume visible)</div>
+      </div>
+
+      <h2 class="sub-title" id="s8-2">8.2 Colour Property Modes</h2>
+      <p>Click the property selector buttons above the 3D canvas to change the cell colouring:</p>
+      <div class="table-wrap">
+        <div class="table-title">Table 3 - Colour Property Modes</div>
+        <table>
+          <thead><tr><th>Mode</th><th>Colour scale</th><th>Physics source</th><th>When useful</th></tr></thead>
+          <tbody>
+            <tr><td>Porosity</td><td>Dark (low) to bright (high)</td><td>Geological model</td><td>Pre-simulation QC</td></tr>
+            <tr><td>Permeability</td><td>Cool grey (tight) to warm tan (permeable)</td><td>Geological model</td><td>Flow path assessment</td></tr>
+            <tr><td>Depth</td><td>Blue gradient</td><td>Formation geometry</td><td>Depth verification</td></tr>
+            <tr><td>CO&#8322; Density</td><td>Purple (subcritical) to teal to navy (dense)</td><td>Span-Wagner PVT table</td><td>Near-well density variation</td></tr>
+            <tr><td>Pressure <span class="new-badge">v2.0</span></td><td>Cool blue (ambient) to red (overpressure)</td><td>Pressure field solver</td><td>Pressure front propagation</td></tr>
+            <tr><td>Geomechanics SF <span class="new-badge">v2.0</span></td><td>Green (safe) to yellow to red (failure risk)</td><td>Mohr-Coulomb + pressure field</td><td>Spatial geomechanical risk</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <strong>Geomechanics SF</strong> mode colours each cell by its local estimated Mohr-Coulomb safety factor. Cells near the injection well, which experience the highest overpressure, are coloured towards red (low SF). Cells far from the well, where pressure excess is minimal, retain the global safety factor (green). This provides a spatial risk map without running a separate geomechanical simulation.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #18]</div>
+        <div class="fp-desc">Grid view in Geomechanics SF colour mode: red cells near the injection well (high overpressure, low SF), transitioning to green at the domain boundary</div>
+      </div>
+
+      <h2 class="sub-title" id="s8-3">8.3 Simulation HUD Panels</h2>
+      <p>When Grid View is active after a simulation has been run, five overlay panels appear in the bottom-left of the 3D canvas. They update live as the animation plays.</p>
+
+      <h3 class="sub-sub-title">Year Counter</h3>
+      <p>Shows the current simulation year versus total project duration, with a teal-to-blue progress bar. The timestep slider at the top centre of the canvas allows jumping to any year.</p>
+
+      <h3 class="sub-sub-title">CO&#8322; Phase Distribution</h3>
+      <p>A stacked bar showing the breakdown of stored CO&#8322; mass across the four trapping mechanisms at the current timestep: Structural (caprock), Residual (Land snap-off), Dissolved (Duan-Sun), and Mineral (Lasaga kinetic). Percentages are displayed in a legend below the bar.</p>
+
+      <h3 class="sub-sub-title">Cell Legend</h3>
+      <p>Colour codes for cell states in CO&#8322; phase view: Brine (dark navy), Structural Trapping (red), Residual (green), Dissolved (teal), Mineral (amber), Caprock (grey), Imbibition front (purple).</p>
+
+      <h3 class="sub-sub-title">In-situ CO&#8322; Density Panel <span class="new-badge">v2.0</span></h3>
+      <p>Reports spatial CO&#8322; density variation from the Span-Wagner PVT lookup table evaluated at each pressure field point:</p>
+      <ul class="doc-list">
+        <li><strong>Min density (kg/m&#179;):</strong> At the plume edge where pressure is lowest; indicates subcritical risk</li>
+        <li><strong>Mean density (kg/m&#179;):</strong> Pressure-field-weighted average; compared to baseline single-point estimate</li>
+        <li><strong>Max density (kg/m&#179;):</strong> Near the injection well at peak pressure</li>
+        <li><strong>Capacity adjustment (%):</strong> Ratio of true field-average density to baseline; positive = denser than assumed (more mass per pore volume)</li>
+        <li><strong>Temperature range:</strong> When geothermal gradient is set, shows T at reservoir top to T at reservoir base</li>
+        <li><strong>Subcritical warning:</strong> A yellow badge appears when any pressure field point is below 7.38 MPa (CO&#8322; critical pressure), indicating possible gas-phase CO&#8322; with significantly reduced storage efficiency</li>
+      </ul>
+
+      <h3 class="sub-sub-title">Wellbore BHP Panel <span class="new-badge">v2.0</span></h3>
+      <ul class="doc-list">
+        <li><strong>Peaceman BHP (MPa):</strong> Reservoir-side Darcy pressure from log-radial well model (Peaceman 1978)</li>
+        <li><strong>Hydrostatic BHP (MPa):</strong> WHP (10 MPa default) + CO&#8322; column weight = WHP + rho x g x depth / 1e6</li>
+        <li><strong>Tubing friction delta-P (MPa):</strong> Darcy-Weisbach single-phase CO&#8322; friction in 4-inch nominal tubing, computed from total injection rate using the Blasius correlation</li>
+        <li><strong>Fracture margin (MPa):</strong> Fracture pressure minus the higher of Peaceman BHP and total arrival BHP; positive (green) = safe; negative (red) = fracture risk</li>
+      </ul>
+      <div class="warn-box">
+        <p><strong>Fracture risk warning:</strong> When the fracture margin is negative, a red warning badge appears: "BHP exceeds fracture pressure. Reduce injection rate or WHP." Reduce the per-well injection rate or increase formation thickness to resolve this.</p>
+      </div>
+
+      <h3 class="sub-sub-title">Geomechanical Safety Panel</h3>
+      <p>Only shown when geomechanics data is available:</p>
+      <ul class="doc-list">
+        <li><strong>Mohr-Coulomb Safety Factor:</strong> Colour-coded: greater than 2.0 = green (safe), 1.5-2.0 = light green, 1.2-1.5 = yellow (caution), 1.0-1.2 = orange (warning), less than 1.0 = red (failure)</li>
+        <li><strong>MAIP margin (MPa):</strong> Headroom between current injection pressure and the Maximum Allowable Injection Pressure</li>
+        <li><strong>Seismicity risk:</strong> LOW / MODERATE / HIGH based on Coulomb failure function change on optimally oriented faults</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #19]</div>
+        <div class="fp-desc">All five HUD panels visible in Grid View: Year Counter (top), Phase Distribution bar, Cell Legend, In-situ PVT panel, Wellbore BHP panel, and Geomechanical Safety panel</div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #20]</div>
+        <div class="fp-desc">Wellbore BHP panel close-up showing Peaceman BHP (orange), Hydrostatic BHP (cyan), Tubing Friction delta-P (yellow), and Fracture Margin (green) rows</div>
+      </div>
+
+      <h2 class="sub-title" id="s8-4">8.4 Fault Plane Visualisation</h2>
+      <p>When faults are defined in the Geological Model Builder, semi-transparent planes appear in the 3D viewer representing each fault geometrically. The plane colour corresponds to the effective sealing factor: red (sealing less than 0.3), green (open greater than 0.7), amber (partially sealing). A trace line marks the fault's intersection with the reservoir top surface. The dip angle is applied as a rotation of the plane in 3D space.</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #21]</div>
+        <div class="fp-desc">Fault planes visible in 3D grid view: one red sealing fault (vertical) and one green open fault (dipping at 70 degrees) with trace lines at the top surface</div>
+      </div>
+    </section>
+
+    <!-- S9: GEOMECHANICS -->
+    <section id="s9">
+      <div class="section-number">Section 9</div>
+      <h1 class="section-title">Geomechanics Panel</h1>
+      <p>The Geomechanics panel provides a detailed breakdown of formation integrity and induced seismicity risk. Results are computed automatically after each simulation run from the formation's stress state and the pressure field.</p>
+      <ul class="doc-list">
+        <li><strong>Caprock stress (MPa) and fracture pressure (MPa):</strong> Vertical effective stress on the caprock and the pressure at which hydraulic fracturing initiates</li>
+        <li><strong>Mohr-Coulomb Safety Factor:</strong> The ratio of available shear strength to applied shear stress</li>
+        <li><strong>MAIP and MAIP margin (MPa):</strong> Maximum Allowable Injection Pressure and headroom to fracture</li>
+        <li><strong>Fault slip potential (dCFF, MPa):</strong> Coulomb Failure Function change on optimally oriented faults; positive = increased failure probability</li>
+        <li><strong>Surface heave (mm):</strong> Estimated poroelastic surface uplift from pore pressure increase (Young's modulus and Biot coefficient dependent)</li>
+        <li><strong>Induced seismicity risk:</strong> Low / Moderate / High classification</li>
+        <li><strong>Friction angle, cohesion, Biot coefficient, and overburden stress</strong> are also displayed for transparency</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #22]</div>
+        <div class="fp-desc">Geomechanics panel showing all computed values including the Mohr-Coulomb safety factor (1.82, light green), MAIP margin (+4.3 MPa), and seismicity risk (LOW)</div>
+      </div>
+    </section>
+
+    <!-- S10: LEAKAGE -->
+    <section id="s10">
+      <div class="section-number">Section 10</div>
+      <h1 class="section-title">Leakage Risk Panel</h1>
+      <p>The Leakage Risk panel provides a probabilistic assessment of CO&#8322; leakage pathways through and around the caprock seal. It draws on the simulation result, geomechanical assessment, and formation properties.</p>
+      <ul class="doc-list">
+        <li><strong>Caprock integrity score:</strong> Combined assessment of caprock thickness, entry pressure, and fracture margin</li>
+        <li><strong>Area of Review (AoR):</strong> Radius within which pressure perturbations may affect existing wells or surface features (corrected for formation heterogeneity when Vdp is set)</li>
+        <li><strong>Leakage probability:</strong> Probabilistic estimate from Monte Carlo analysis of key uncertainties</li>
+        <li><strong>Risk category:</strong> Low / Moderate / High with jurisdiction-specific threshold values</li>
+        <li><strong>Recommended monitoring programme:</strong> Suggested monitoring technologies based on risk level and injection volume</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #23]</div>
+        <div class="fp-desc">Leakage risk panel showing caprock integrity score, AoR radius, leakage probability distribution, and risk classification with recommended monitoring actions</div>
+      </div>
+    </section>
+
+    <!-- S11: SCREENING -->
+    <section id="s11">
+      <div class="section-number">Section 11</div>
+      <h1 class="section-title">Screening and Site Ranking</h1>
+      <p>The Screening panel evaluates the site against a 12-criterion technical suitability matrix aligned with DOE/NETL best practices and the CarbonSAFE screening methodology.</p>
+      <ul class="doc-list">
+        <li>Criteria include: depth (supercritical CO&#8322; requirement), formation temperature, permeability, caprock integrity, salinity, area, overpressure risk, and geomechanical safety</li>
+        <li>Each criterion returns Pass / Marginal / Fail with the actual value vs threshold</li>
+        <li>A weighted suitability score (0-100) summarises overall site quality</li>
+        <li>DOE P10/P50/P90 storage capacity estimates are displayed with the full formula breakdown</li>
+        <li>The site is benchmarked against the 20 validated formations in the CarbonLens database</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #24]</div>
+        <div class="fp-desc">Screening panel showing the 12-criterion pass/fail matrix with colour-coded badges, suitability score (78/100), and DOE capacity estimates (P10: 45 Mt, P50: 120 Mt, P90: 330 Mt)</div>
+      </div>
+    </section>
+
+    <!-- S12: MONTE CARLO -->
+    <section id="s12">
+      <div class="section-number">Section 12</div>
+      <h1 class="section-title">Monte Carlo Uncertainty Quantification</h1>
+      <p>The Monte Carlo panel runs 500 simulation realisations over user-defined parameter distributions to characterise storage capacity uncertainty. Results feed the P10/P50/P90 estimates used in permit applications.</p>
+      <ul class="doc-list">
+        <li><strong>Sampled parameters:</strong> Porosity, permeability, depth, thickness, and area can each be assigned a distribution (uniform or normal with mean and standard deviation)</li>
+        <li><strong>Output:</strong> Cumulative distribution function of storage capacity (Mt)</li>
+        <li><strong>Tornado chart:</strong> Ranks parameters by their contribution to total uncertainty variance</li>
+        <li><strong>P10/P50/P90 extraction:</strong> Capacity percentiles extracted directly from the empirical CDF</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #25]</div>
+        <div class="fp-desc">Monte Carlo panel showing the capacity CDF histogram with P10/P50/P90 markers, the tornado chart ranking porosity as the highest contributor to uncertainty, and the 500-run progress bar</div>
+      </div>
+    </section>
+
+    <!-- S13: HISTORY MATCHING -->
+    <section id="s13">
+      <div class="section-number">Section 13</div>
+      <h1 class="section-title">History Matching</h1>
+      <p>The History Matching panel enables calibration of the simulation against field monitoring observations. This is used when injection has already begun and monitoring data (seismic-derived plume radii, gravimetric CO&#8322; mass estimates) are available.</p>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><h4>Import observations</h4><p>Upload a CSV file or manually enter observed plume radius (m) and injected CO&#8322; mass (Mt) at each year of available monitoring data.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><h4>Run inversion</h4><p>CarbonLens uses the Boait (2012) analytical inversion to back-calculate a calibrated effective permeability k_eff from the observed plume radius at a reference year.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><h4>Review fit quality</h4><p>The residual plot shows simulated vs observed plume radius over time. RMSE and R&#178; are computed. Acceptable match: RMSE less than 20% of the mean observed radius.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><h4>Lock calibrated parameters</h4><p>Accept the k_eff value. It is stored in the formation parameters and used for all subsequent forward projections.</p></div></div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #26]</div>
+        <div class="fp-desc">History matching panel showing observation import table, residual plot with simulated (dashed) and observed (dots) plume radius vs year, RMSE display, and the calibrated k_eff value</div>
+      </div>
+    </section>
+
+    <!-- S14: ECONOMICS -->
+    <section id="s14">
+      <div class="section-number">Section 14</div>
+      <h1 class="section-title">Economics Panel</h1>
+      <p>The Economics panel computes project financial metrics based on the simulated storage volume and user-defined cost and revenue inputs.</p>
+      <ul class="doc-list">
+        <li><strong>CO&#8322; credit price (USD/tonne):</strong> Market or regulated price for CO&#8322; storage credits</li>
+        <li><strong>Capital cost (MUSD):</strong> Upfront investment (wells, compression, surface facilities)</li>
+        <li><strong>Operating cost (USD/tonne CO&#8322; injected/year):</strong> Annual operating expenditure per unit of CO&#8322; stored</li>
+        <li><strong>Discount rate (%):</strong> For NPV calculation</li>
+        <li><strong>NPV (MUSD), IRR (%), and payback period (years):</strong> Computed over the project life</li>
+        <li><strong>Sensitivity chart:</strong> NPV vs CO&#8322; price over a range showing breakeven price</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #27]</div>
+        <div class="fp-desc">Economics panel showing NPV ($42M), IRR (14%), payback period (8 years), and the CO&#8322; price sensitivity chart with breakeven at $35/tonne highlighted</div>
+      </div>
+    </section>
+
+    <!-- S15: JURISDICTION -->
+    <section id="s15">
+      <div class="section-number">Section 15</div>
+      <h1 class="section-title">Jurisdiction and Regulatory Compliance</h1>
+      <p>The Jurisdiction panel selects the applicable regulatory framework. This affects permit template content, AoR calculation methodology, capacity reporting conventions, and safety threshold values used throughout the platform.</p>
+      <div class="table-wrap">
+        <div class="table-title">Table 4 - Supported Jurisdictions</div>
+        <table>
+          <thead><tr><th>Jurisdiction</th><th>Regulatory framework</th><th>AoR methodology</th></tr></thead>
+          <tbody>
+            <tr><td>United States</td><td>EPA UIC Class VI (40 CFR Part 146)</td><td>Pressure front radius (NETL)</td></tr>
+            <tr><td>European Union</td><td>CCS Directive 2009/31/EC</td><td>Migration footprint (Annex I)</td></tr>
+            <tr><td>Malaysia</td><td>DOE Environmental Quality Act</td><td>Plume radius x 1.5 safety factor</td></tr>
+            <tr><td>Australia</td><td>OPGGS Act / NOPSEMA</td><td>Containment footprint assessment</td></tr>
+            <tr><td>Norway</td><td>Petroleum Act / NPD guidelines</td><td>Pressure compartment analysis</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #28]</div>
+        <div class="fp-desc">Jurisdiction toggle panel showing 5 flag buttons, with Malaysia selected (highlighted), and the jurisdiction-specific permit requirements and capacity methodology displayed below</div>
+      </div>
+    </section>
+
+    <!-- S16: EXPORT -->
+    <section id="s16">
+      <div class="section-number">Section 16</div>
+      <h1 class="section-title">Export and Permits</h1>
+      <p>The Export panel produces all documentation outputs from the simulation results. Four export types are available:</p>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-body"><h4>HTML Validation Report</h4><p>A comprehensive multi-section pre-feasibility report including formation parameters, simulation outputs (capacity, trapping breakdown, plume dimensions), geomechanical assessment, screening matrix, and an explicit validation conclusion. Matches the format of the public validation reports at validation/index.html.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-body"><h4>Permit Documentation Package</h4><p>A jurisdiction-specific permit application document pre-filled with project parameters, capacity estimates, AoR delineation, monitoring plan, and risk assessment. Exported as a printable HTML document.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-body"><h4>Certificate PDF</h4><p>A signed storage capacity certificate with project name, site parameters, P50 storage capacity, geomechanical safety factor, and containment probability. Suitable for submission to voluntary carbon registries.</p></div></div>
+        <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-body"><h4>Export Package (ZIP)</h4><p>A complete bundle including all three above documents plus raw simulation data in JSON format, the methodology reference card, and project metadata. Suitable for handover to a drilling or project management team.</p></div></div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #29]</div>
+        <div class="fp-desc">Export panel showing four export buttons with brief descriptions, a preview of the permit template header, and a success notification after a PDF certificate is generated</div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #30]</div>
+        <div class="fp-desc">Example HTML Validation Report cover showing formation name, jurisdiction, simulation date, and the pass/fail summary table for 12 screening criteria</div>
+      </div>
+    </section>
+
+    <!-- S17: REGISTRY -->
+    <section id="s17">
+      <div class="section-number">Section 17</div>
+      <h1 class="section-title">Registry</h1>
+      <p>The Registry panel provides persistent project storage, loading, and sharing. Projects are saved to the browser's local IndexedDB database and optionally shared via a public link.</p>
+      <ul class="doc-list">
+        <li><strong>Save project:</strong> Saves all formation parameters, well configuration, simulation results, and geomechanics to the local database</li>
+        <li><strong>Load project:</strong> Restores a saved project and all its results without re-running the simulation</li>
+        <li><strong>Visibility toggle:</strong> Private (default) or Shared. Shared projects are listed in the public registry and accessible to other users</li>
+        <li><strong>Tags:</strong> Add classification tags (e.g. "saline aquifer", "Malaysia", "validated") for filtering</li>
+        <li><strong>Project comparison:</strong> Select multiple projects from the list to compare P50 capacity, screening score, and geomechanical safety factor side by side</li>
+        <li><strong>Delete:</strong> Permanently removes a project from the local database</li>
+      </ul>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #31]</div>
+        <div class="fp-desc">Registry panel showing a list of 4 saved projects with status badges, visibility toggles, tag chips, and a comparison panel on the right showing P50 capacity bar chart</div>
+      </div>
+    </section>
+
+    <!-- S18: VALIDATION -->
+    <section id="s18">
+      <div class="section-number">Section 18</div>
+      <h1 class="section-title">Validation Reports</h1>
+      <p>CarbonLens has been validated against 20 published storage sites across 5 continents. All validation reports are publicly accessible without signing in at <code>validation/index.html</code>.</p>
+      <div class="highlight-box">
+        <div class="hb-title">Sleipner-Utsira: Primary Validation Benchmark</div>
+        <p>CarbonLens achieves 100% alignment with 20 years of Sleipner monitoring data across 7 key metrics (plume radius, CO&#8322; density, injection pressure, solubility trapping fraction, containment probability, geomechanical safety factor, and residual trapping fraction) within accepted scientific tolerance for a screening-level model.</p>
+      </div>
+      <p>Each validation report contains: the formation parameters used, CarbonLens simulation outputs, a side-by-side comparison table with published field data, and an explicit validation conclusion with pass/marginal/fail ratings. The full methodology is documented in the Technical White Paper (Section 5).</p>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #32]</div>
+        <div class="fp-desc">Validation index page showing 20 formation cards with region flags, pass rates, and links to individual reports; Sleipner highlighted as the primary benchmark</div>
+      </div>
+      <div class="figure-placeholder">
+        <div class="fp-label">[Image #33]</div>
+        <div class="fp-desc">Individual Sleipner validation report showing the 7-metric comparison table with PASS badges, validation conclusion paragraph, and published vs simulated plume radius comparison</div>
+      </div>
+    </section>
+
+    <!-- S19: GLOSSARY -->
+    <section id="s19">
+      <div class="section-number">Section 19</div>
+      <h1 class="section-title">Glossary</h1>
+      <div class="glossary-term"><span class="gt-key">AoR</span><span class="gt-def">Area of Review: the zone within which pressure perturbations from injection may affect existing infrastructure or create leakage pathways</span></div>
+      <div class="glossary-term"><span class="gt-key">BHP</span><span class="gt-def">Bottomhole Pressure: the pressure at the wellbore at reservoir depth, combining hydrostatic column, tubing friction, and Darcy drawdown</span></div>
+      <div class="glossary-term"><span class="gt-key">CFL</span><span class="gt-def">Courant-Friedrichs-Lewy stability condition: the timestep limit for explicit finite-difference solvers based on the ratio of cell size to flow velocity</span></div>
+      <div class="glossary-term"><span class="gt-key">Critical point (CO&#8322;)</span><span class="gt-def">The thermodynamic state above which CO&#8322; is supercritical: temperature greater than 31.1°C and pressure greater than 7.38 MPa</span></div>
+      <div class="glossary-term"><span class="gt-key">EOS</span><span class="gt-def">Equation of State: a thermodynamic relationship used to compute fluid density and viscosity from temperature and pressure</span></div>
+      <div class="glossary-term"><span class="gt-key">IMPES</span><span class="gt-def">Implicit Pressure, Explicit Saturation: a time integration scheme where the pressure equation is solved implicitly (removing the CFL pressure constraint) and saturation is updated explicitly from the result</span></div>
+      <div class="glossary-term"><span class="gt-key">k_eff</span><span class="gt-def">Effective permeability: the calibrated permeability value back-calculated from field monitoring data using the Boait (2012) plume inversion, used to correct for sub-grid heterogeneity</span></div>
+      <div class="glossary-term"><span class="gt-key">MAIP</span><span class="gt-def">Maximum Allowable Injection Pressure: the injection pressure above which hydraulic fracturing of the caprock or reservoir may initiate</span></div>
+      <div class="glossary-term"><span class="gt-key">mD</span><span class="gt-def">Millidarcy: unit of permeability. 1 mD is approximately 10^-15 m&#178;</span></div>
+      <div class="glossary-term"><span class="gt-key">Mohr-Coulomb SF</span><span class="gt-def">Safety Factor from Mohr-Coulomb failure criterion: ratio of available shear strength (cohesion + normal stress x tan(friction angle)) to applied shear stress</span></div>
+      <div class="glossary-term"><span class="gt-key">Mt</span><span class="gt-def">Megatonne: 10^9 kg. Unit for CO&#8322; storage capacity and injection rate</span></div>
+      <div class="glossary-term"><span class="gt-key">Peaceman BHP</span><span class="gt-def">Reservoir-side wellbore pressure calculated using the Peaceman (1978) log-radial Darcy model, accounting for radial pressure drawdown around the injection well</span></div>
+      <div class="glossary-term"><span class="gt-key">PVT</span><span class="gt-def">Pressure-Volume-Temperature: the characterisation of fluid properties (density, viscosity, compressibility) as a function of in-situ reservoir conditions</span></div>
+      <div class="glossary-term"><span class="gt-key">Residual trapping</span><span class="gt-def">Capillary trapping of CO&#8322; as disconnected ganglia in pore throats during brine imbibition, described by the Land (1968) snap-off model</span></div>
+      <div class="glossary-term"><span class="gt-key">Structural trapping</span><span class="gt-def">CO&#8322; accumulation beneath an impermeable caprock seal, analogous to oil and gas trap geometry</span></div>
+      <div class="glossary-term"><span class="gt-key">Supercritical CO&#8322;</span><span class="gt-def">CO&#8322; above its critical temperature (31.1°C) and pressure (7.38 MPa), exhibiting liquid-like density (600-900 kg/m&#179;) and gas-like viscosity. Target state for efficient geological storage.</span></div>
+      <div class="glossary-term"><span class="gt-key">Transmissibility multiplier</span><span class="gt-def">A scaling factor (0-1) applied to the flow transmissibility between two adjacent grid cells to represent the effect of a fault or low-permeability barrier without explicitly gridding the fault geometry</span></div>
+      <div class="glossary-term"><span class="gt-key">VE solver</span><span class="gt-def">Vertically Integrated (VE) solver: a 2D gravity current model that collapses the 3D plume into a depth-averaged representation, following Nordbotten and Celia (2006)</span></div>
+      <div class="glossary-term"><span class="gt-key">Vdp</span><span class="gt-def">Dykstra-Parsons coefficient: a dimensionless measure of permeability variation (0 = perfectly homogeneous, 0.85 = highly heterogeneous). Used to apply Shook and Mitchell (2009) sweep efficiency corrections.</span></div>
+      <div class="glossary-term"><span class="gt-key">WHP</span><span class="gt-def">Wellhead Pressure: the pressure at the surface injection point before the hydrostatic CO&#8322; column adds weight during descent to reservoir depth. Default 10 MPa in CarbonLens.</span></div>
+    </section>
+
+    <!-- REFERENCES -->
+    <section id="refs">
+      <div class="section-number">References</div>
+      <h1 class="section-title">References</h1>
+      <div class="references">
+        <p>Bachu S. et al. (2007). CO&#8322; storage capacity estimation: Methodology and gaps. <em>International Journal of Greenhouse Gas Control</em>, 1(4), 430-443.</p>
+        <p>Boait F.C. et al. (2012). Spatial and temporal evolution of injected CO&#8322; at the Sleipner Field, North Sea. <em>Journal of Geophysical Research</em>, 117, B03309.</p>
+        <p>Byerlee J. (1978). Friction of rocks. <em>Pure and Applied Geophysics</em>, 116(4-5), 615-626.</p>
+        <p>Duan Z. and Sun R. (2003). An improved model calculating CO&#8322; solubility in pure water and aqueous NaCl solutions. <em>Chemical Geology</em>, 193, 257-271.</p>
+        <p>Fenghour A., Wakeham W.A. and Vesovic V. (1998). The viscosity of carbon dioxide. <em>Journal of Physical and Chemical Reference Data</em>, 27(1), 31-39.</p>
+        <p>Garcia J.E. (2001). Density of aqueous solutions of CO&#8322;. <em>Lawrence Berkeley National Laboratory Report LBNL-49023</em>.</p>
+        <p>Goodman A. et al. (2011). US DOE methodology for the development of geologic storage potential for carbon dioxide at the national and regional scale. <em>DOE/NETL-2011/1440</em>.</p>
+        <p>Hesse M.A. et al. (2008). Gravity currents with residual trapping. <em>Journal of Fluid Mechanics</em>, 611, 35-60.</p>
+        <p>Hubbert M.K. and Willis D.G. (1957). Mechanics of hydraulic fracturing. <em>Transactions of the AIME</em>, 210, 153-168.</p>
+        <p>Killough J.E. (1976). Reservoir simulation with history-dependent saturation functions. <em>SPE Journal</em>, 16(1), 37-48.</p>
+        <p>Land C.S. (1968). Calculation of imbibition relative permeability for two- and three-phase flow from rock properties. <em>Transactions of the AIME</em>, 243, 149-156.</p>
+        <p>Lasaga A.C. (1984). Chemical kinetics of water-rock interactions. <em>Journal of Geophysical Research</em>, 89(B6), 4009-4025.</p>
+        <p>NETL (2015). Best Practices: Site Screening, Site Selection, and Site Characterization for Geologic Storage Projects. <em>DOE/NETL-2015/1632</em>.</p>
+        <p>Neufeld J.A. et al. (2010). Convective dissolution of carbon dioxide in saline aquifers. <em>Geophysical Research Letters</em>, 37, L22404.</p>
+        <p>Nordbotten J.M. and Celia M.A. (2006). Similarity solutions for fluid injection into confined aquifers. <em>Water Resources Research</em>, 42, W01407.</p>
+        <p>Peaceman D.W. (1978). Interpretation of well-block pressures in numerical reservoir simulation. <em>SPE Journal</em>, 18(3), 183-194.</p>
+        <p>Shook G.M. and Mitchell K.M. (2009). A robust measure of heterogeneity for ranking earth models: The F-PHI curve and dynamic Lorenz coefficient. <em>SPE Annual Technical Conference</em>, SPE 124625.</p>
+        <p>Span R. and Wagner W. (1996). A new equation of state for carbon dioxide covering the fluid region from the triple-point temperature to 1100 K at pressures up to 800 MPa. <em>Journal of Physical and Chemical Reference Data</em>, 25(6), 1509-1596.</p>
+      </div>
+    </section>
+
+    <div class="doc-footer">
+      <span>CarbonLens User Guide / v2.0 / July 2026</span>
+      <span>Daniel T. Olagunju, Universiti Teknologi PETRONAS, Malaysia</span>
+    </div>
+
+  </div><!-- end guide-content -->
+</div><!-- end guide-layout -->
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const links    = document.querySelectorAll('.guide-toc a[href^="#"]');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

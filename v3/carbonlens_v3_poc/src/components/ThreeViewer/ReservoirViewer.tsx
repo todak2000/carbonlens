@@ -8,6 +8,8 @@ import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
 import { GeometryType, ColorProperty, LasState, Well } from '../../types'
 import { fbm } from '../../utils/noise'
+import { lookupCO2Density } from '../../engine/pvt/co2PVTTable'
+import { pvtDensityToColor, pressureFieldToColor } from '../../utils/colorMapping'
 import { useSimulation } from '../../hooks/useSimulation'
 import { wellRateAtTime, cumulativeInjection } from '../../utils/gridParser'
 import { getDeformation, getGridDeformation } from '../../utils/deformation'
@@ -148,14 +150,32 @@ function propertyValueAt(
     return range.min + val * (range.max - range.min)
   }
 
-  if (property === 'ift' || property === 'co2Density' || property === 'solubility') {
-    let mean: number
-    if (property === 'ift') mean = result?.ift ?? 30
-    else if (property === 'co2Density') mean = result?.co2Density ?? 600
-    else mean = result?.solubility ?? 0.5
+  if (property === 'co2Density') {
+    // During simulation: derive density from local pressure via PVT lookup table.
+    // This shows actual spatial density variation (denser near well, lighter at edges)
+    // rather than a single average value with stochastic noise.
+    if (result?.pressureField && result.pressureField.length > 0) {
+      let nearestP = result.injectionPressure
+      let minDist  = Infinity
+      for (const pt of result.pressureField) {
+        const dist = Math.abs(pt.x - x) + Math.abs(pt.z - z)
+        if (dist < minDist) { minDist = dist; nearestP = pt.pressure }
+      }
+      return lookupCO2Density(params.temperature, nearestP)
+    }
+    // Pre-simulation fallback: average + noise
+    const mean   = result?.co2Density ?? 600
     const spread = 0.4
-    const base = (mean - range.min) / (range.max - range.min)
-    const val = Math.max(0, Math.min(1, base + (field - 0.5) * spread))
+    const base   = (mean - range.min) / (range.max - range.min)
+    const val    = Math.max(0, Math.min(1, base + (field - 0.5) * spread))
+    return range.min + val * (range.max - range.min)
+  }
+
+  if (property === 'ift' || property === 'solubility') {
+    const mean   = property === 'ift' ? (result?.ift ?? 30) : (result?.solubility ?? 0.5)
+    const spread = 0.4
+    const base   = (mean - range.min) / (range.max - range.min)
+    const val    = Math.max(0, Math.min(1, base + (field - 0.5) * spread))
     return range.min + val * (range.max - range.min)
   }
 
@@ -165,6 +185,9 @@ function propertyValueAt(
 }
 
 function valueToColor(value: number, property: ColorProperty): [number, number, number] {
+  // CO2 density uses the PVT-aware palette (purple low → teal mid → navy high)
+  if (property === 'co2Density') return pvtDensityToColor(value)
+
   const range = PROP_RANGES[property]
   const t = property === 'permeability'
     ? (Math.log10(Math.max(0.1, value)) - Math.log10(range.min)) / (Math.log10(range.max) - Math.log10(range.min))

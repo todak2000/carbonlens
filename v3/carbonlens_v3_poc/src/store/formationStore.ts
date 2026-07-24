@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { FormationParams, GeometryType, SaltType, Well, LasState } from '../types'
+import { FormationParams, GeometryType, SaltType, Well, LasState, Perforation } from '../types'
 import { GridFileData } from '../utils/gridParser'
 import { sanitizeFormationParams, sanitizeWellPosition, sanitizeWellRate, sanitizeWellSchedule } from '../utils/validateParams'
 import { useUIStore } from './uiStore'
@@ -17,7 +17,8 @@ interface FormationState {
   las: LasState | null
   gridData: GridFileData | null
   wellCounter: number
-  activePresetName: string | null  // name of the last loaded preset, null if default/custom
+  activePresetName: string | null
+  useIMPES: boolean
   setParams: (partial: Partial<FormationParams>) => void
   setGeometry: (type: GeometryType) => void
   setSaltType: (type: SaltType) => void
@@ -32,8 +33,10 @@ interface FormationState {
   updateWellPosition: (id: string, x: number, z: number) => void
   updateWellLabel: (id: string, label: string) => void
   updateWellSchedule: (id: string, rampUp: number, rampDown: number) => void
+  updateWellPerforations: (id: string, perforations: Perforation[]) => void
   setLas: (las: LasState | null) => void
   setGridData: (data: GridFileData | null) => void
+  toggleIMPES: () => void
 }
 
 const DEFAULTS: FormationParams = {
@@ -68,6 +71,7 @@ export const useFormationStore = create<FormationState>((set) => ({
   gridData: null,
   wellCounter: 1,
   activePresetName: null,
+  useIMPES: false,
 
   setParams: (partial) => set((s) => ({
     params: sanitizeFormationParams({ ...s.params, ...partial }),
@@ -159,6 +163,11 @@ export const useFormationStore = create<FormationState>((set) => ({
     }))
   },
 
+  updateWellPerforations: (id, perforations) => set((s) => ({
+    wells: s.wells.map((w) => w.id === id ? { ...w, perforations } : w),
+  })),
+
   setLas: (las) => set({ las }),
   setGridData: (data) => set({ gridData: data }),
+  toggleIMPES: () => set((s) => ({ useIMPES: !s.useIMPES })),
 }))

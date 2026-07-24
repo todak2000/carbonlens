@@ -2,8 +2,10 @@ import { useRef, useMemo, useEffect, forwardRef, useImperativeHandle } from 'rea
 import * as THREE from 'three'
 import { useGeologicalStore } from '../../store/geologicalStore'
 import { useSimulationStore } from '../../store/simulationStore'
+import { useUIStore } from '../../store/uiStore'
 import { geologicalModelToGrid } from '../../utils/geologicalModelToGrid'
 import { SimulationGrid, GRID_MAX_CELLS } from '../../engine/grid/SimulationGrid'
+import type { PressureFieldPoint } from '../../types'
 
 // ── Scene scale constants (match existing ReservoirViewer coordinate space) ─
 const SCENE_W = 3.0   // XZ full width (matches existing w=3 in FormationMesh)
@@ -28,6 +30,10 @@ const GridReservoir = forwardRef<GridReservoirHandle>((_, ref) => {
   const gridNy   = useGeologicalStore((s) => s.gridNy)
   const gridNz   = useGeologicalStore((s) => s.gridNz)
   const result   = useSimulationStore((s) => s.result)
+  const colorProperty = useUIStore((s) => s.colorProperty)
+  const geomechanics  = useSimulationStore((s) => s.geomechanics)
+  const pressureField = useSimulationStore((s) => s.result?.pressureField) as PressureFieldPoint[] | undefined
+  const initPressure  = useSimulationStore((s) => s.result?.injectionPressure)
 
   // ── Build grid from geological model ──────────────────────────────────────
   const gridData = useMemo(
@@ -42,56 +48,69 @@ const GridReservoir = forwardRef<GridReservoirHandle>((_, ref) => {
   useEffect(() => { gridRef.current = simGrid }, [simGrid])
 
   // ── Scene dimensions ───────────────────────────────────────────────────────
-  const { sceneH, cw, cd, ch } = useMemo(() => {
+  const sceneH = useMemo(() => {
     const totalM = gridData.totalThicknessM
-    const sceneH = totalM > 0 ? Math.max(0.3, SCENE_H_BASE + totalM / 500) : SCENE_H_BASE
-    const { cw, cd, ch } = simGrid.cellSceneDimensions(SCENE_W, sceneH)
-    return { sceneH, cw, cd, ch }
-  }, [gridData.totalThicknessM, simGrid])
+    return totalM > 0 ? Math.max(0.3, SCENE_H_BASE + totalM / 500) : SCENE_H_BASE
+  }, [gridData.totalThicknessM])
 
-  // ── Cell box geometry (shared across all instances) ───────────────────────
-  const boxGeo = useMemo(
-    () => new THREE.BoxGeometry(cw * (1 - CELL_GAP), ch * (1 - CELL_GAP), cd * (1 - CELL_GAP)),
-    [cw, ch, cd],
-  )
+  // ── Unit box geometry (per-instance scale applied in matrix effect) ────────
+  const boxGeo = useMemo(() => new THREE.BoxGeometry(1, 1, 1), [])
 
-  // ── Set instance matrices (positions) when grid changes ───────────────────
+  // ── Set instance matrices (positions + scale) when grid changes ───────────
   useEffect(() => {
     const mesh = meshRef.current
     if (!mesh || gridData.cells.length === 0) return
 
     const matrix = new THREE.Matrix4()
-    const hw = SCENE_W / 2     // half-width for centering
+    const hw = SCENE_W / 2
+    const sceneWidths  = simGrid.cellSceneWidths(SCENE_W)
+    const sceneDepths  = simGrid.cellSceneDepths(SCENE_W)
+    const sceneHeights = simGrid.cellSceneHeights(sceneH)
 
     for (const cell of gridData.cells) {
-      // centerX/centerY/centerZ are in [-1, 1] range (from geologicalModelToGrid)
-      const px =  cell.centerX * hw        // -1.5 → 1.5
-      const py =  cell.centerZ * (sceneH / 2)  // centerZ: 1=top, -1=base
-      const pz =  cell.centerY * hw        // -1.5 → 1.5
-      matrix.makeTranslation(px, py, pz)
+      const px =  cell.centerX * hw
+      const py =  cell.centerZ * (sceneH / 2)
+      const pz =  cell.centerY * hw
+      const cw_i = sceneWidths[cell.i]
+      const cd_j = sceneDepths[cell.j]
+      const ch_k = sceneHeights[cell.k]
+      matrix.makeScale(cw_i * (1 - CELL_GAP), ch_k * (1 - CELL_GAP), cd_j * (1 - CELL_GAP))
+      matrix.setPosition(px, py, pz)
       mesh.setMatrixAt(cell.instanceId, matrix)
     }
     mesh.instanceMatrix.needsUpdate = true
-    // Hide any instances beyond the current cell count (from a previous larger grid)
     const scale0 = new THREE.Matrix4().scale(new THREE.Vector3(0, 0, 0))
     for (let id = gridData.cells.length; id < GRID_MAX_CELLS; id++) {
       mesh.setMatrixAt(id, scale0)
     }
-  }, [gridData, sceneH])
+  }, [gridData, sceneH, simGrid])
 
-  // ── Apply initial colors (geology/lithology view) ─────────────────────────
+  // ── Apply colors ──────────────────────────────────────────────────────────
   useEffect(() => {
     const mesh = meshRef.current
     if (!mesh || gridData.cells.length === 0) return
-    simGrid.applyColorsToMesh(mesh, result ? 'co2' : 'geology')
-  }, [simGrid, result, gridData])
+    if (colorProperty === 'geomechanics' && geomechanics && pressureField && initPressure != null) {
+      simGrid.applyGeomechColors(mesh, pressureField, geomechanics, initPressure)
+    } else {
+      simGrid.applyColorsToMesh(mesh, result ? 'co2' : 'geology')
+    }
+  }, [simGrid, result, gridData, colorProperty, geomechanics, pressureField, initPressure])
 
   // ── Expose handle for Phase 2 solver ──────────────────────────────────────
   useImperativeHandle(ref, () => ({
     updateCO2Colors: () => {
       const mesh = meshRef.current
-      if (!mesh || !gridRef.current) return
-      gridRef.current.applyColorsToMesh(mesh, 'co2')
+      const grid = gridRef.current
+      if (!mesh || !grid) return
+      const cp = useUIStore.getState().colorProperty
+      const geo = useSimulationStore.getState().geomechanics
+      const pf = useSimulationStore.getState().result?.pressureField
+      const ip = useSimulationStore.getState().result?.injectionPressure
+      if (cp === 'geomechanics' && geo && pf && ip != null) {
+        grid.applyGeomechColors(mesh, pf, geo, ip)
+      } else {
+        grid.applyColorsToMesh(mesh, 'co2')
+      }
     },
     get grid() { return gridRef.current },
   }))

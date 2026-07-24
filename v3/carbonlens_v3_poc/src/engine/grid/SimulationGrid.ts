@@ -1,6 +1,7 @@
 import { GridCell, SimulationGridData } from '../../utils/geologicalModelToGrid'
-import { saturationToColor, lithologyToColor } from '../../utils/colorMapping'
+import { saturationToColor, lithologyToColor, safetyFactorToColor } from '../../utils/colorMapping'
 import * as THREE from 'three'
+import type { PressureFieldPoint, GeomechanicsResult } from '../../types'
 
 export const GRID_NX = 60
 export const GRID_NY = 60
@@ -24,6 +25,9 @@ export class SimulationGrid {
   readonly totalThicknessM: number
   readonly minDepthM: number
   readonly maxDepthM: number
+  readonly dxArr: Float32Array
+  readonly dyArr: Float32Array
+  readonly dzArr: Float32Array
 
   // Flat index lookup: index(i,j,k) = k*ny*nx + j*nx + i
   private readonly _idx: (i: number, j: number, k: number) => number
@@ -38,6 +42,9 @@ export class SimulationGrid {
     this.totalThicknessM = data.totalThicknessM
     this.minDepthM      = data.minDepthM
     this.maxDepthM      = data.maxDepthM
+    this.dxArr          = data.dxArr
+    this.dyArr          = data.dyArr
+    this.dzArr          = data.dzArr
     const nx = data.nx, ny = data.ny
     this._idx = (i, j, k) => k * ny * nx + j * nx + i
   }
@@ -102,5 +109,52 @@ export class SimulationGrid {
       cd: sceneW / this.ny,
       ch: sceneH / this.nz,
     }
+  }
+
+  cellSceneWidths(sceneW: number): Float32Array {
+    const arr = new Float32Array(this.nx)
+    for (let i = 0; i < this.nx; i++) arr[i] = (this.dxArr[i] / this.modelWidthM) * sceneW
+    return arr
+  }
+
+  cellSceneDepths(sceneW: number): Float32Array {
+    const arr = new Float32Array(this.ny)
+    for (let j = 0; j < this.ny; j++) arr[j] = (this.dyArr[j] / this.modelLengthM) * sceneW
+    return arr
+  }
+
+  cellSceneHeights(sceneH: number): Float32Array {
+    const arr = new Float32Array(this.nz)
+    for (let k = 0; k < this.nz; k++) arr[k] = (this.dzArr[k] / this.totalThicknessM) * sceneH
+    return arr
+  }
+
+  applyGeomechColors(
+    mesh: THREE.InstancedMesh,
+    pressureField: PressureFieldPoint[],
+    geomechanics: GeomechanicsResult,
+    initPressureMPa: number,
+  ): void {
+    const color = new THREE.Color()
+    const globalSF = geomechanics.safetyFactor
+    const maxExcess = geomechanics.maip - initPressureMPa
+
+    for (const cell of this.cells) {
+      let nearestP = initPressureMPa
+      let minDist = Infinity
+      for (const pt of pressureField) {
+        const dx = pt.x - cell.centerX
+        const dz = pt.z - cell.centerY
+        const d = dx * dx + dz * dz
+        if (d < minDist) { minDist = d; nearestP = pt.pressure }
+      }
+      const excess = Math.max(0, nearestP - initPressureMPa)
+      const fraction = maxExcess > 0 ? Math.min(1, excess / maxExcess) : 0
+      const localSF = globalSF - fraction * Math.max(0, globalSF - 1.0)
+      const rgb = safetyFactorToColor(localSF)
+      color.setRGB(rgb[0], rgb[1], rgb[2])
+      mesh.setColorAt(cell.instanceId, color)
+    }
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
   }
 }

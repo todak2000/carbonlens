@@ -27,6 +27,8 @@ export default function SimulationPanel() {
   const clearBaseline = useSimulationStore((s) => s.clearBaseline)
   const baselineResult = useSimulationStore((s) => s.baselineResult)
   const { runAnimation, pauseSimulation, resumeSimulation } = useSimulation()
+  const useIMPES = useFormationStore((s) => s.useIMPES)
+  const toggleIMPES = useFormationStore((s) => s.toggleIMPES)
 
   const [projectCountry, setProjectCountry] = useState('')
   const [inputsVerified, setInputsVerified] = useState(false)
@@ -295,16 +297,32 @@ export default function SimulationPanel() {
       )}
 
       {!hasFailures && !isAnimating && status === 'idle' && (
-        <button
-          disabled={!inputsVerified || isLocked}
-          onClick={() => guardedAction(() => {
-            setValidation(liveValidation)
-            runAnimation()
-          })}
-          className="btn-primary w-full flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Play size={13} /> Run Simulation
-        </button>
+        <div className="space-y-2">
+          <button
+            disabled={!inputsVerified || isLocked}
+            onClick={() => guardedAction(() => {
+              setValidation(liveValidation)
+              runAnimation()
+            })}
+            className="btn-primary w-full flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Play size={13} /> Run Simulation
+          </button>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleIMPES}
+                className={`relative w-8 h-4 rounded-full transition-colors ${useIMPES ? 'bg-accent' : 'bg-gray-600'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${useIMPES ? 'translate-x-4' : ''}`} />
+              </button>
+              <span className="text-[10px] font-mono text-secondary">IMPES Solver</span>
+            </div>
+            <span className="text-[9px] font-mono text-muted" title="IMPES removes CFL limit. Recommended for k > 500 mD or fine grids.">
+              {useIMPES ? 'On' : 'Off'}
+            </span>
+          </div>
+        </div>
       )}
 
       {isAnimating && (

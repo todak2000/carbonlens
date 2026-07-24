@@ -1032,25 +1032,48 @@
         </table>
       </div>
 
-      <h2 class="sub-title">8.5 Documented Limitations</h2>
-      <p>Scientific credibility requires transparent acknowledgement of model scope. The following limitations apply to CarbonLens and define the boundary between appropriate and inappropriate use.</p>
+      <h2 class="sub-title">8.5 Documented Limitations and Resolution Status</h2>
+      <p>Scientific credibility requires transparent acknowledgement of model scope. The following limitations applied to CarbonLens at initial release, together with their current resolution status following the v2.0 enhancement cycle.</p>
       <ul class="doc-list">
-        <li><strong>Structured Cartesian grid:</strong> CarbonLens cannot represent faults geometrically (as plane objects with throw, dip, and segment connectivity) or reproduce the pinch-outs and irregular stratigraphy captured by corner-point geometry in Eclipse and Petrel. Faults are represented as transmissibility multipliers on cell faces, which is adequate for screening but not for detailed fault seal analysis</li>
-        <li><strong>Explicit time integration:</strong> The explicit forward-Euler scheme is constrained by the CFL stability limit. For very high-permeability formations (k &gt; 500 mD) or fine grids, this requires many sub-steps and may be slower than a fully implicit scheme. Commercial simulators (Eclipse, CMG) use fully implicit or IMPES schemes that have no intrinsic timestep stability limit</li>
-        <li><strong>No in-situ EOS coupling:</strong> CO&#8322; density and viscosity are computed from formation-average temperature and pressure inputs at the start of simulation, not updated per-cell per-timestep as pressure and temperature evolve. This is appropriate for the pressure ranges typical of deep saline aquifer injection but introduces error in strongly pressure-sensitive regimes</li>
-        <li><strong>Isothermal assumption:</strong> CarbonLens does not model heat transport. Temperature is specified as a formation-average input. For projects near geothermal gradients or with significant Joule-Thomson cooling at the wellbore, dedicated thermal-compositional simulation is required</li>
-        <li><strong>No multisegment wellbore hydraulics:</strong> The Peaceman well model distributes injection volume using log-radial weighting but does not model tubing pressure drop, wellhead constraints, or downhole flow control devices</li>
-        <li><strong>Stochastic heterogeneity, not geostatistical:</strong> Property fields are spatially correlated via fractional Brownian motion (fBm) noise seeded from stratigraphic zone parameters. This is not equivalent to variogram-based sequential Gaussian simulation or pluriGaussian facies modelling as implemented in Petrel</li>
+        <li><strong>Structured Cartesian grid (partially addressed, v2.0):</strong> Corner-point geometry and irregular stratigraphy remain beyond scope. Non-uniform Cartesian spacing now provides up to 3&#215; finer cells near the injection well via cosine-bell refinement. Fault planes are rendered geometrically in the 3D viewer with dip, strike, and sealing colour. Transmissibility multipliers on cell faces remain the flow representation, consistent with TOUGH2/ECO2N.</li>
+        <li><strong>Explicit time integration (addressed, v2.0):</strong> An IMPES (Implicit Pressure, Explicit Saturation) solver option removes the pressure CFL stability constraint via 60-iteration Gauss-Seidel per timestep. The explicit scheme remains the default for k &lt; 500 mD; IMPES is recommended for higher-permeability targets or fine grids.</li>
+        <li><strong>No in-situ EOS coupling (addressed, v2.0):</strong> A precomputed 20&#215;40 Span-Wagner density and Fenghour viscosity lookup table evaluates per-pressure-point CO&#8322; density from the spatial pressure field at each simulation year. The 3D HUD reports field-minimum, field-mean, and field-maximum in-situ density, capacity correction factor, and subcritical zone warnings.</li>
+        <li><strong>Isothermal assumption (partially addressed, v2.0):</strong> A geothermal gradient input (&#176;C/100 m) and surface reference temperature allow reservoir temperature to auto-compute at midpoint depth and to be applied per pressure-field point via hydrostatic depth estimation. Full energy-balance heat transport remains outside scope.</li>
+        <li><strong>No multisegment wellbore hydraulics (largely addressed, v2.0):</strong> Peaceman BHP, hydrostatic wellbore column, and Darcy-Weisbach single-phase tubing friction (Blasius correlation, 4-inch nominal tubing) are computed and displayed live. Each well now supports multiple depth-fraction perforation intervals with individual flow-fraction assignments. Full multi-phase tubing-flow correlations remain a future enhancement.</li>
+        <li><strong>3D rendering vs geomechanical model (addressed, v2.0):</strong> A spatial geomechanical colour mode colours each grid cell by local estimated safety factor derived from local pressure excess. The live HUD geomechanical panel displays Mohr-Coulomb safety factor, MAIP margin, and induced seismicity risk at each simulation year.</li>
+        <li><strong>Grid resolution fixed at design time (addressed, v2.0):</strong> Non-uniform cosine-bell Cartesian spacing provides effective near-well refinement without increasing cell count or solver complexity.</li>
+        <li><strong>Stochastic heterogeneity, not geostatistical (remaining):</strong> Property fields are spatially correlated via fractional Brownian motion noise. Variogram-based sequential Gaussian simulation or pluriGaussian facies modelling is not implemented and remains a known scope boundary.</li>
       </ul>
 
       <div class="callout">
         <p><strong>Appropriate use statement:</strong> CarbonLens is designed for pre-feasibility screening, rapid multi-site comparison, regulatory pre-screening documentation, academic training, and regulatory capacity building. It is not a replacement for full field development simulation on committed injection projects. The appropriate workflow is CarbonLens for screening followed by TOUGH2, Eclipse CO2STORE, or CMG GEM for final-stage certification where required by the relevant regulatory body.</p>
       </div>
 
-      <h2 class="sub-title">8.6 Summary Statement for Technical Audiences</h2>
+      <h2 class="sub-title">8.6 v2.0 Enhancements Summary</h2>
+      <p>The following capabilities were added in the v2.0 release cycle, directly addressing the limitations documented in Section 8.5:</p>
+      <div class="table-wrap">
+        <div class="table-title">Table 8 &#8212; v2.0 New Capabilities</div>
+        <table>
+          <thead><tr><th>Capability</th><th>Category</th><th>Limitation addressed</th></tr></thead>
+          <tbody>
+            <tr><td>Span-Wagner PVT lookup table (20&#215;40 grid, bilinear interpolation)</td><td>Physics engine</td><td>In-situ EOS coupling</td></tr>
+            <tr><td>Spatial pressure-field PVT statistics and HUD display</td><td>Visualisation</td><td>In-situ EOS coupling</td></tr>
+            <tr><td>Geothermal gradient input with per-point temperature estimation</td><td>Physics / UX</td><td>Isothermal assumption</td></tr>
+            <tr><td>Hydrostatic BHP + Darcy-Weisbach tubing friction (Blasius)</td><td>Physics engine</td><td>Wellbore hydraulics</td></tr>
+            <tr><td>Multisegment perforated completions (depth-fraction intervals)</td><td>Physics engine</td><td>Wellbore hydraulics</td></tr>
+            <tr><td>IMPES pressure solver (Gauss-Seidel, 60 iterations per year)</td><td>Solver</td><td>Explicit time integration / CFL</td></tr>
+            <tr><td>Non-uniform cosine-bell Cartesian grid spacing (3&#215; refinement)</td><td>Grid</td><td>Fixed grid resolution</td></tr>
+            <tr><td>Spatial geomechanical safety factor colour mode</td><td>Visualisation</td><td>3D rendering vs geomechanical model</td></tr>
+            <tr><td>Live geomechanical HUD panel (SF, MAIP margin, seismicity risk)</td><td>Visualisation</td><td>3D rendering vs geomechanical model</td></tr>
+            <tr><td>Fault plane 3D geometry (dip, strike, sealing colour, trace line)</td><td>Visualisation</td><td>Structured Cartesian grid</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-title">8.7 Summary Statement for Technical Audiences</h2>
       <div class="highlight-box">
-        <div class="hb-title">Technical One-Line Summary</div>
-        <p>CarbonLens uses a purpose-built CO&#8322;/brine two-phase finite-difference solver with a Vertically Integrated mode based on Nordbotten and Celia (2006), implementing all four CO&#8322; trapping mechanisms simultaneously in a browser, with Peaceman well weighting, Land-Killough capillary hysteresis, Duan-Sun solubility, and stress-dependent geomechanics, optimised for rapid pre-feasibility screening rather than full-field certification.</p>
+        <div class="hb-title">Technical One-Line Summary (v2.0)</div>
+        <p>CarbonLens uses a purpose-built CO&#8322;/brine two-phase finite-difference solver with a Vertically Integrated mode based on Nordbotten and Celia (2006), implementing all four CO&#8322; trapping mechanisms simultaneously in a browser, with Peaceman well weighting, Land-Killough capillary hysteresis, Duan-Sun solubility, Span-Wagner PVT lookup tables, stress-dependent geomechanics, IMPES time integration, non-uniform Cartesian grid spacing, multisegment perforated completions, geothermal gradient temperature profiles, and Darcy-Weisbach tubing hydraulics: optimised for rapid pre-feasibility screening rather than full-field certification.</p>
       </div>
     </section>
 

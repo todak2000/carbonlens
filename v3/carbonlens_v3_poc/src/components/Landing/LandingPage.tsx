@@ -243,6 +243,7 @@ const NAV_LINKS = [
 ];
 
 const WHITEPAPER_URL = `${BASE}/whitepaper.html`;
+const USER_GUIDE_URL = `${BASE}/user-guide.html`;
 
 const FAQ_TABS = ['Academic', 'Industry', 'Regulator'] as const
 type FaqTab = typeof FAQ_TABS[number]
@@ -550,6 +551,14 @@ export default function LandingPage() {
             >
               White Paper
             </a>
+            <a
+              href={USER_GUIDE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-secondary hover:text-primary transition font-mono tracking-wider uppercase"
+            >
+              User Guide
+            </a>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -661,6 +670,14 @@ export default function LandingPage() {
               className="block w-full text-left text-xs text-secondary hover:text-primary transition font-mono tracking-wider uppercase py-2"
             >
               White Paper
+            </a>
+            <a
+              href={USER_GUIDE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-left text-xs text-secondary hover:text-primary transition font-mono tracking-wider uppercase py-2"
+            >
+              User Guide
             </a>
             <hr className="border-theme" />
             {user ? (
@@ -1299,6 +1316,14 @@ export default function LandingPage() {
               >
                 FAQ
               </button>
+              <a
+                href={USER_GUIDE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono"
+              >
+                User Guide
+              </a>
               <a
                 href="mailto:hello@carbonlens.io"
                 className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono"

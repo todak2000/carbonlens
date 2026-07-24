@@ -450,6 +450,19 @@ export default function Sidebar() {
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
           </button>
 
+          {/* User Guide link */}
+          <a
+            href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/user-guide.html`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-tertiary text-muted"
+            title="Open User Guide"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </a>
+
           {/* Sign Out */}
           <button
             onClick={() => { logout(); setView('landing') }}

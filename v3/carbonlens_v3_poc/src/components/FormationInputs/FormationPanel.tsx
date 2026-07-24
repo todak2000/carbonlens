@@ -182,6 +182,7 @@ export default function FormationPanel() {
   const updateWellPosition = useFormationStore((s) => s.updateWellPosition)
   const updateWellLabel = useFormationStore((s) => s.updateWellLabel)
   const updateWellSchedule = useFormationStore((s) => s.updateWellSchedule)
+  const updateWellPerforations = useFormationStore((s) => s.updateWellPerforations)
 
   const projectYears = useUIStore((s) => s.projectYears)
   const setProjectYears = useUIStore((s) => s.setProjectYears)
@@ -626,6 +627,42 @@ export default function FormationPanel() {
                   onChange={(v) => setParams({ temperature: v })} badge={criterionStatus('temperature')} />
 
                 <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-muted font-mono">Geothermal Gradient (°C/100m)</span>
+                    <span className="text-secondary font-mono">{params.geothermalGradient ?? '—'}</span>
+                  </div>
+                  <input type="number" step={0.1} min={1} max={8}
+                    value={params.geothermalGradient ?? ''}
+                    placeholder="e.g. 3.0"
+                    onChange={(e) => {
+                      const v = e.target.value === '' ? undefined : parseFloat(e.target.value)
+                      setParams({ geothermalGradient: v })
+                    }}
+                    className="w-full rounded bg-tertiary border border-theme/30 px-2 py-1 text-[11px] font-mono text-secondary" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-0.5">
+                    <span className="text-muted font-mono">Surface Reference T (°C)</span>
+                    <span className="text-secondary font-mono">{params.surfaceTemperatureC ?? '—'}</span>
+                  </div>
+                  <input type="number" step={1} min={0} max={40}
+                    value={params.surfaceTemperatureC ?? ''}
+                    placeholder="e.g. 15"
+                    onChange={(e) => {
+                      const v = e.target.value === '' ? undefined : parseFloat(e.target.value)
+                      setParams({ surfaceTemperatureC: v })
+                    }}
+                    className="w-full rounded bg-tertiary border border-theme/30 px-2 py-1 text-[11px] font-mono text-secondary" />
+                </div>
+
+                {params.geothermalGradient != null && params.surfaceTemperatureC != null && (
+                  <div className="text-[10px] font-mono text-teal-400 bg-teal-500/10 border border-teal-500/20 rounded px-2 py-1">
+                    Reservoir midpoint T: {(params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100).toFixed(1)}°C
+                  </div>
+                )}
+
+                <div>
                   <label className="text-[11px] text-muted font-mono block mb-1.5 uppercase tracking-wider font-bold">Salt Type</label>
                   <div className="flex gap-1.5">
                     {(['NaCl', 'CaCl2', 'Mixed'] as const).map((t) => (
@@ -822,6 +859,63 @@ export default function FormationPanel() {
                         <input type="range" min={1} max={Math.floor(projectYears / 3)} step={1}
                           value={w.rampDownYears} onChange={(e) => updateWellSchedule(w.id, w.rampUpYears, parseFloat(e.target.value))} className="w-full" />
                       </div>
+                    </div>
+                    <div className="mt-2 border-t border-theme/20 pt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-mono text-muted uppercase tracking-wider">Perforation Intervals</span>
+                        <button
+                          onClick={() => {
+                            const existing = w.perforations ?? [{ topFrac: 0.6, bottomFrac: 1.0, flowFraction: 1.0 }]
+                            updateWellPerforations(w.id, [...existing, { topFrac: 0.6, bottomFrac: 1.0, flowFraction: 0 }])
+                          }}
+                          className="text-[9px] font-mono text-accent hover:text-accent-hover px-1.5 py-0.5 rounded border border-accent/30 hover:border-accent/60 transition"
+                        >+ Add</button>
+                      </div>
+                      {(w.perforations ?? [{ topFrac: 0.6, bottomFrac: 1.0, flowFraction: 1.0 }]).map((perf, pi) => {
+                        const perfs = w.perforations ?? [{ topFrac: 0.6, bottomFrac: 1.0, flowFraction: 1.0 }]
+                        return (
+                          <div key={pi} className="flex items-center gap-1 mb-1">
+                            <span className="text-[9px] font-mono text-muted w-4">{pi+1}.</span>
+                            <input type="number" min={0} max={100} step={1}
+                              value={Math.round(perf.topFrac * 100)}
+                              onChange={(e) => {
+                                const updated = perfs.map((p, i) => i === pi ? { ...p, topFrac: parseFloat(e.target.value) / 100 } : p)
+                                updateWellPerforations(w.id, updated)
+                              }}
+                              className="w-12 rounded bg-tertiary border border-theme/30 px-1 py-0.5 text-[9px] font-mono text-secondary" />
+                            <span className="text-[9px] text-muted">%</span>
+                            <span className="text-[9px] text-muted">-</span>
+                            <input type="number" min={0} max={100} step={1}
+                              value={Math.round(perf.bottomFrac * 100)}
+                              onChange={(e) => {
+                                const updated = perfs.map((p, i) => i === pi ? { ...p, bottomFrac: parseFloat(e.target.value) / 100 } : p)
+                                updateWellPerforations(w.id, updated)
+                              }}
+                              className="w-12 rounded bg-tertiary border border-theme/30 px-1 py-0.5 text-[9px] font-mono text-secondary" />
+                            <span className="text-[9px] text-muted">%</span>
+                            <input type="number" min={0} max={100} step={1}
+                              value={Math.round(perf.flowFraction * 100)}
+                              onChange={(e) => {
+                                const updated = perfs.map((p, i) => i === pi ? { ...p, flowFraction: parseFloat(e.target.value) / 100 } : p)
+                                updateWellPerforations(w.id, updated)
+                              }}
+                              className="w-12 rounded bg-tertiary border border-theme/30 px-1 py-0.5 text-[9px] font-mono text-secondary" />
+                            <span className="text-[9px] text-muted">%q</span>
+                            {perfs.length > 1 && (
+                              <button onClick={() => updateWellPerforations(w.id, perfs.filter((_, i) => i !== pi))}
+                                className="text-[9px] text-red-400 hover:text-red-300 ml-auto">x</button>
+                            )}
+                          </div>
+                        )
+                      })}
+                      {(() => {
+                        const perfs = w.perforations ?? [{ topFrac: 0.6, bottomFrac: 1.0, flowFraction: 1.0 }]
+                        const totalFrac = perfs.reduce((s, p) => s + p.flowFraction, 0)
+                        const fracOk = Math.abs(totalFrac - 1) < 0.01
+                        return !fracOk ? (
+                          <div className="text-[9px] font-mono text-amber-400">Flow fractions sum to {(totalFrac * 100).toFixed(0)}% (must be 100%)</div>
+                        ) : null
+                      })()}
                     </div>
                   </div>
                 )

@@ -41,6 +41,7 @@ import {
   type VEFluidProps, type VEWellSource,
 } from '../engine/ve'
 import { solveFDPressure } from '../engine/ve/FDPressureSolver'
+import { computePVTFieldStats } from '../engine/pvt/co2PVTTable'
 
 // VE grid dimensions — 60×60 matches MRST benchmark resolution (500 m/cell on 30 km domain)
 // Increasing from the original 40×40 (750 m/cell) unlocks lateral plume spreading:
@@ -48,6 +49,18 @@ import { solveFDPressure } from '../engine/ve/FDPressureSolver'
 // to neighbours within 20 years, producing a constant single-cell footprint.
 const VE_NX = 60
 const VE_NY = 60
+
+function tubingFrictionMPa(injRateMtPerYear: number, rhoCO2: number, mu: number, depth: number): number {
+  if (injRateMtPerYear <= 0) return 0
+  const D = 0.1016
+  const A = Math.PI * D * D / 4
+  const Q_m3s = (injRateMtPerYear * 1e9 / rhoCO2) / (365.25 * 24 * 3600)
+  const v = Q_m3s / A
+  const Re = rhoCO2 * v * D / Math.max(mu, 1e-6)
+  const f = Re > 4000 ? 0.184 * Math.pow(Re, -0.2) : (Re > 0 ? 64 / Re : 0)
+  const dP_Pa = f * (depth / D) * rhoCO2 * v * v / 2
+  return dP_Pa / 1e6
+}
 
 export function computeYearly(
   params: FormationParams,
@@ -58,6 +71,16 @@ export function computeYearly(
   const wells = useFormationStore.getState().wells
 
   const T_K = params.temperature + 273.15
+  const effectiveTempC = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100
+    : params.temperature
+  const T_K_eff = effectiveTempC + 273.15
+  const temperatureAtTopC = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? params.surfaceTemperatureC + params.geothermalGradient * params.depth / 100
+    : undefined
+  const temperatureAtBaseC = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness) / 100
+    : undefined
   const A = params.area * 1e6
   const h_m = params.thickness
   const phi = params.porosity
@@ -84,7 +107,7 @@ export function computeYearly(
   // Fix 3: clamp pressure to valid EOS range (0.5–80 MPa) before calling Span-Wagner
   // Fix 4: honour co2DensityOverride for benchmark / validation runs
   const P_init_clamped = Math.max(0.5e6, Math.min(80e6, params.pressure * 1e6))
-  const rhoCO2_init_eos = co2DensityWithImpurities(T_K, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2_init_eos = co2DensityWithImpurities(T_K_eff, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
   const rhoCO2_init = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
     ? params.co2DensityOverride
     : (Number.isFinite(rhoCO2_init_eos) && rhoCO2_init_eos > 0 && rhoCO2_init_eos < 1100
@@ -104,7 +127,7 @@ export function computeYearly(
   if (isDepletedField && params.giip != null && params.abandonmentPressure != null) {
     const depleted = computeDepletedFieldCapacity(
       params.giip,
-      T_K,
+      T_K_eff,
       params.pressure,          // initial (pre-depletion) reservoir pressure
       params.abandonmentPressure,
     )
@@ -138,13 +161,13 @@ export function computeYearly(
   // Reference: Transp. Porous Media 58(3):339–360. DOI: 10.1007/s11242-004-0670-9
   const currentRate = wells.reduce((s, w) => s + wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears), 0)
   // Fix 3+4: EOS guard and density override applied to the mobile-phase density used for pressure calc
-  const rhoCO2_mobile_eos = co2DensityWithImpurities(T_K, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2_mobile_eos = co2DensityWithImpurities(T_K_eff, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
   const rhoCO2_mobile = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
     ? params.co2DensityOverride
     : (Number.isFinite(rhoCO2_mobile_eos) && rhoCO2_mobile_eos > 0 && rhoCO2_mobile_eos < 1100
         ? rhoCO2_mobile_eos
         : 700)
-  const visc = co2ViscosityFenghour(T_K, rhoCO2_mobile)
+  const visc = co2ViscosityFenghour(T_K_eff, rhoCO2_mobile)
 
   const perm_m2 = params.permeability * 9.869e-16
   const ct = 1e-9
@@ -200,19 +223,19 @@ export function computeYearly(
   const P_t_safe = Number.isFinite(P_t) ? P_t : params.pressure
   const P_Pa = Math.max(0.5e6, Math.min(80e6, P_t_safe * 1e6))
   // Fix 4: honour density override; otherwise use EOS with finite-value guard
-  const rhoCO2_eos = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2_eos = co2DensityWithImpurities(T_K_eff, P_Pa, params.methaneFraction, params.nitrogenFraction)
   const rhoCO2 = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
     ? params.co2DensityOverride
     : (Number.isFinite(rhoCO2_eos) && rhoCO2_eos > 0 && rhoCO2_eos < 1100
         ? rhoCO2_eos
         : 700)
-  const rhoBrine = brineDensityGarcia(T_K, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
+  const rhoBrine = brineDensityGarcia(T_K_eff, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
   const drho = rhoBrine - rhoCO2
   const drho_sq = drho * drho / 1e6
 
-  const phase = determinePhase(T_K, P_t_safe, params.methaneFraction, params.nitrogenFraction)
+  const phase = determinePhase(T_K_eff, P_t_safe, params.methaneFraction, params.nitrogenFraction)
   const Pr = computePr(P_t_safe, params.methaneFraction, params.nitrogenFraction)
-  const Tr = computeTr(T_K, params.methaneFraction, params.nitrogenFraction)
+  const Tr = computeTr(T_K_eff, params.methaneFraction, params.nitrogenFraction)
 
   const input: MarsInput = {
     Pr, Tr,
@@ -247,12 +270,12 @@ export function computeYearly(
     const brine: MultiSaltBrine = params.saltType === 'CaCl2'
       ? { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity, m_MgCl2: 0 }
       : { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity * 0.6, m_MgCl2: params.bivalentSalinity * 0.4 }
-    const xCO2 = calculateMultiSaltSolubility(T_K, P_t_safe, brine)
+    const xCO2 = calculateMultiSaltSolubility(T_K_eff, P_t_safe, brine)
     solubility = xCO2 * 55.508 / Math.max(1e-9, 1 - xCO2)  // mole fraction → mol/kg
   } else {
-    solubility = co2SolubilityDuanSun(T_K, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
+    solubility = co2SolubilityDuanSun(T_K_eff, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
   }
-  const diffusion = co2DiffusionCoefficient(T_K, P_t_safe, params.porosity)
+  const diffusion = co2DiffusionCoefficient(T_K_eff, P_t_safe, params.porosity)
 
   // Gravity current radius: injected volume fills a thin layer under the seal
   // r = sqrt(2·V / (π·φ·h_eff)) where h_eff ≈ 10% of formation thickness
@@ -420,7 +443,7 @@ export function computeYearly(
   const V_bulk_plume  = Math.PI * plumeRadius * plumeRadius * plumeHeight
   const M_rock_kg     = V_bulk_plume * (1 - phi) * RMAT
   const A_reactive    = M_rock_kg * F_REACTIVE * A_SPEC
-  const k_m_T         = KM_REF * Math.exp(-EA_J_MOL / R_GAS * (1 / T_K - 1 / T_REF_MIN_K))
+  const k_m_T         = KM_REF * Math.exp(-EA_J_MOL / R_GAS * (1 / T_K_eff - 1 / T_REF_MIN_K))
   const f_decay       = 1 - Math.exp(-Math.max(1, year) / TAU_YR)
   // Capacity = 100-yr integrated rate × decay; zero for projectYears < 30
   const mineralCapacity = projectYears < 30 ? 0 : Math.max(0,
@@ -555,6 +578,31 @@ export function computeYearly(
       )
     : undefined
 
+  // ── In-situ PVT field statistics ─────────────────────────────────────────────
+  // Use the spatial pressure field (already computed) to derive per-point CO2
+  // density via the Span-Wagner lookup table. Reports min/max/mean density and
+  // flags any subcritical (gas-phase) zones.
+  const pvtGeothermalConfig = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? { gradient_per100m: params.geothermalGradient, surfaceT_C: params.surfaceTemperatureC, topDepthM: params.depth, thicknessM: params.thickness }
+    : undefined
+  const pvtStats = computePVTFieldStats(pressureField, effectiveTempC, rhoCO2, pvtGeothermalConfig)
+
+  // ── Tubing friction (Darcy-Weisbach) ─────────────────────────────────────────
+  const totalRateMtPerYear = wells.reduce((sum, w) => sum + w.injectionRate, 0)
+  const tubingFrictionDrop_MPa = tubingFrictionMPa(totalRateMtPerYear, rhoCO2, visc_final, params.depth)
+
+  // ── Hydrostatic wellbore BHP ──────────────────────────────────────────────────
+  // Surface-to-reservoir pressure: WHP + hydrostatic column of CO2 in the tubing.
+  // Complements peacemanBHP (reservoir-side Darcy pressure drawdown) with a
+  // surface-facility perspective: "given a wellhead injection pressure, what arrives
+  // at the perforations?"
+  // WHP default: 10 MPa — typical surface CO2 injection line pressure.
+  const WHP_MPA = 10
+  const hydrostaticBHP_MPa = WHP_MPA + (rhoCO2 * 9.81 * params.depth) / 1e6
+  const fracPressure_MPa = (params.overburdenGradient ?? 0.023) * params.depth
+  // Safety margin: fracture pressure minus the more demanding of the two BHP estimates.
+  const bhpMargin_MPa = fracPressure_MPa - Math.max(peacemanBHP, hydrostaticBHP_MPa)
+
   const k_Vdp = params.k_Vdp ?? 0
   const heterogeneityCorrected = k_Vdp > 0.05
   let sweepEfficiency: number | undefined
@@ -632,6 +680,12 @@ export function computeYearly(
     sweepEfficiency,
     aorHeterogeneityFactor,
     formationRegime,
+    pvtStats,
+    hydrostaticBHP_MPa,
+    bhpMargin_MPa,
+    temperatureAtTopC,
+    temperatureAtBaseC,
+    tubingFrictionDrop_MPa,
   }
 }
 
@@ -1000,7 +1054,8 @@ export function useSimulation(gridRef?: React.RefObject<{
       let newResult = analyticalNew
 
       if (st.plumeGrid) {
-        st.plumeGrid.step(year, newResult)
+        const useIMPES = useFormationStore.getState().useIMPES
+        st.plumeGrid.step(year, newResult, useIMPES)
         const tb = st.plumeGrid.trappingBreakdown()
         const plumeSum = tb.freeMt + tb.residualMt + tb.dissolvedMt + tb.mineralMt
         // Only override analytical trapping when PlumeGrid values are non-zero AND conserve
