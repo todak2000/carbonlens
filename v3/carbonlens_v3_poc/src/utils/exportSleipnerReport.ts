@@ -26,6 +26,7 @@ import { co2DensitySpanWagner } from '../engine/classical/density'
 import { co2SolubilityDuanSun } from '../engine/classical/solubility'
 import { useFormationStore } from '../store/formationStore'
 import type { FormationParams } from '../types'
+import { renderPhysicsFootnote } from '../data/modelRegistry'
 
 // ── Sleipner Benchmark Parameters ────────────────────────────────────────────
 
@@ -564,7 +565,7 @@ export function openSleipnerReport(): void {
 <div class="page-break" style="padding:8mm 16mm;">
   ${sectionHeader(LOGO_SVG, 'Section 3')}
   <h2>Section 3 — Physics Validation</h2>
-  <p class="muted">CarbonLens fluid physics vs. published field constraints and laboratory data. Span-Wagner (1996) EOS for CO₂ density; Fenghour et al. (1998) for viscosity (full correlation); Duan-Sun (2003) for solubility (regression fit, ±5-10%); Duan et al. (2006) multi-salt extension; Boait (2012) analytical gravity current model; Hesse et al. (2008) post-injection gravity current with two propagating shocks.</p>
+  <p class="muted">CarbonLens fluid physics vs. published field constraints and laboratory data. ${renderPhysicsFootnote()}</p>
   <table>
     <thead>
       <tr><th>Metric</th><th>CarbonLens</th><th>Published Constraint</th><th>Reference</th><th>Assessment</th></tr>
@@ -637,7 +638,7 @@ export function openSleipnerReport(): void {
       <div class="kpi-sub">Calendar year 2036</div>
     </div>
     <div class="kpi-card" style="border-top-color:#3b82f6;">
-      <div class="kpi-label">Mobile Plume @ Yr 40</div>
+      <div class="kpi-label">Structural Trapping @ Yr 40</div>
       <div class="kpi-value">${r40.mobilePlume.toFixed(1)} Mt</div>
       <div class="kpi-sub">${r40.storageCapacity > 0 ? ((r40.mobilePlume/r40.storageCapacity)*100).toFixed(0) : 0}% of total</div>
     </div>
@@ -726,7 +727,7 @@ export function openSleipnerReport(): void {
         <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
           <strong style="color:white;">Daniel T. Olagunju</strong>, Author, MSc Researcher, UTP Malaysia<br>
           <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong>, Supervisor, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Muhammad Aslam Md Yusof</strong>, Co-Supervisor, UTP Malaysia
+          <strong style="color:white;">Dr. Berihun Negash Mamo</strong>, Advisor, UTP Malaysia
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;">

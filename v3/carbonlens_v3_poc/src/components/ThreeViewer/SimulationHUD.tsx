@@ -34,10 +34,10 @@ export default function SimulationHUD() {
   const sum = mobile + residual + dissolved + mineral || 1
 
   const bars: TrapBar[] = [
-    { label: 'Free CO₂',  color: '#ef4444', pct: (mobile    / sum) * 100 },
-    { label: 'Residual',  color: '#10b981', pct: (residual  / sum) * 100 },
-    { label: 'Dissolved', color: '#14b8a6', pct: (dissolved / sum) * 100 },
-    { label: 'Mineral',   color: '#b45309', pct: (mineral   / sum) * 100 },
+    { label: 'Structural Trapping (caprock)', color: '#ef4444', pct: (mobile    / sum) * 100 },
+    { label: 'Residual',                      color: '#10b981', pct: (residual  / sum) * 100 },
+    { label: 'Dissolved',                     color: '#14b8a6', pct: (dissolved / sum) * 100 },
+    { label: 'Mineral',                       color: '#b45309', pct: (mineral   / sum) * 100 },
   ]
 
   const yearPct = Math.min(100, (timestep / Math.max(1, projectYears)) * 100)
@@ -107,14 +107,15 @@ export default function SimulationHUD() {
         style={{ background: 'rgba(6,12,20,0.80)', backdropFilter: 'blur(4px)', border: '1px solid rgba(21,37,53,0.8)' }}
       >
         <p className="text-[9px] font-mono text-muted uppercase tracking-wider mb-1.5">Cell Legend</p>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+        <div className="flex flex-col gap-0.5">
           {[
             { color: '#0d2137', label: 'Brine' },
-            { color: '#ef4444', label: 'Free CO₂' },
+            { color: '#ef4444', label: 'Structural Trapping (caprock)' },
             { color: '#10b981', label: 'Residual' },
             { color: '#14b8a6', label: 'Dissolved' },
             { color: '#b45309', label: 'Mineral' },
             { color: '#64748b', label: 'Caprock' },
+            { color: '#8c33bf', label: 'Imbibition front' },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />

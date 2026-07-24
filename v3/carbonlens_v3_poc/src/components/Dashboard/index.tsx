@@ -6,7 +6,7 @@ import { useUIStore } from '../../store/uiStore'
 import { createDefaultProject } from '../../data/defaultProject'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
 import { db, migrateFromLocalStorage, StoredProject } from '../../db/projectDb'
-import { Lock, LogOut, PlusCircle, Sun, Moon, X, ChevronRight, ChevronLeft, Check } from 'lucide-react'
+import { Lock, PlusCircle, Sun, Moon, X, ChevronRight, ChevronLeft, Check } from 'lucide-react'
 import Logo from '../Logo'
 import ProjectCard from './ProjectCard'
 import type { GeometryType } from '../../types'
@@ -116,18 +116,17 @@ interface WizardData {
   country: string
   geometry: string
   template: typeof FORMATION_PRESETS[0] | null
+  isCustom: boolean   // true = user chose "build from scratch", no preset params loaded
 }
 
-const EMPTY_WIZARD: WizardData = { name: '', country: '', geometry: '', template: null }
+const EMPTY_WIZARD: WizardData = { name: '', country: '', geometry: '', template: null, isCustom: false }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const user        = useAuthStore((s) => s.user)
-  const logout      = useAuthStore((s) => s.logout)
   const loadFormation = useFormationStore((s) => s.load)
   const setPanel    = useUIStore((s) => s.setPanel)
-  const setView     = useUIStore((s) => s.setView)
   const theme       = useUIStore((s) => s.theme)
   const toggleTheme = useUIStore((s) => s.toggleTheme)
   const [projects, setProjects]   = useState<StoredProject[]>([])
@@ -146,42 +145,84 @@ export default function Dashboard() {
     migrateFromLocalStorage().then(() => loadProjects())
   }, [loadProjects])
 
-  // ── Create from completed wizard ──────────────────────────────────────────
-  const createProject = useCallback(async (preset?: typeof FORMATION_PRESETS[0], customWizard?: WizardData) => {
-    const base   = createDefaultProject()
-    const source = customWizard ?? null
+  // ── Preset Country Mapper ─────────────────────────────────────────────────
+  const getCountryFromPreset = useCallback((presetName: string): string => {
+    switch (presetName) {
+      case 'Sleipner Utsira':
+      case 'Snøhvit Tubåen':
+      case 'Johansen':
+        return 'Norway'
+      case 'Mount Simon':
+        return 'United States'
+      case 'Gorgon':
+      case 'Otway':
+        return 'Australia'
+      case 'In Salah':
+        return 'Algeria'
+      case 'Kasawari':
+      case 'Duyong':
+      case 'Malay Basin':
+        return 'Malaysia'
+      case 'Niger Delta':
+        return 'Nigeria'
+      case 'North Sumatra Basin':
+        return 'Indonesia'
+      case 'Nile Delta':
+        return 'Egypt'
+      case 'Abu Dhabi Basin':
+        return 'United Arab Emirates'
+      case 'Rotterdam / North Sea':
+        return 'Netherlands'
+      case 'Alberta Basin':
+        return 'Canada'
+      default:
+        return 'Norway'
+    }
+  }, [])
 
-    if (preset && !source) {
-      // Fast path: "From Preset" — use preset as-is
-      base.name      = preset.name
-      base.formation = { ...preset.params }
-    } else if (preset && source) {
-      // Custom formation: use template params, apply name + geometry
-      base.name      = source.name.trim()
+  // ── Create from completed wizard ──────────────────────────────────────────
+  // New step order: Step 1 = Foundation, Step 2 = Name+Country, Step 3 = Geometry
+  const createProject = useCallback(async (wizardData: WizardData) => {
+    const base = createDefaultProject()
+
+    // User-provided name always wins — never the preset name
+    base.name = wizardData.name.trim()
+
+    if (wizardData.isCustom) {
+      // Custom path: start with blank defaults, no preset geometry
+      base.formation = { ...base.formation, geometryType: (wizardData.geometry || 'anticline') as GeometryType }
+    } else if (wizardData.template) {
+      // Preset-based: apply preset params then override with user's chosen geometry
       base.formation = {
-        ...preset.params,
-        geometryType: source.geometry as GeometryType,
+        ...wizardData.template.params,
+        geometryType: (wizardData.geometry || wizardData.template.params.geometryType) as GeometryType,
       }
     }
 
     base.id = crypto.randomUUID()
-    const project: StoredProject = { ...base, snapshots: [], thumbnail: null }
+    const project: StoredProject = {
+      ...base,
+      snapshots: [],
+      thumbnail: null,
+      country: wizardData.country,
+      presetId: wizardData.isCustom ? null : (wizardData.template?.name ?? null),
+    }
     await db.projects.put(project)
     await loadProjects()
-    loadFormation(project.formation)
+    // Pass presetId so formationStore.activePresetName is set correctly from the start
+    loadFormation(project.formation, undefined, project.presetId ?? undefined)
 
     useUIStore.getState().setCurrentProjectId(project.id)
     useUIStore.getState().setCurrentProjectName(project.name)
     useUIStore.getState().setView('workspace')
-    setPanel('formation')   // land on formation panel so user can tweak
+    setPanel('formation')
+
+    if (project.name && project.country && project.formation) {
+      useUIStore.getState().setStageComplete('stage1', true)
+    }
 
     closeWizard()
   }, [loadProjects, loadFormation, setPanel])
-
-  // ── Preset fast-path ──────────────────────────────────────────────────────
-  const createFromPreset = useCallback((p: typeof FORMATION_PRESETS[0]) => {
-    createProject(p)
-  }, [createProject])
 
   // ── Wizard helpers ─────────────────────────────────────────────────────────
   const openWizard = () => {
@@ -200,16 +241,25 @@ export default function Dashboard() {
     setWizardStep(1)
   }
 
+  // Step 1: foundation must be chosen (preset or custom)
   const validateStep1 = () => {
     const e: typeof errors = {}
-    if (!wizard.name.trim())  e.name    = 'Formation name is required'
-    if (!wizard.country)       e.country = 'Please select a country with a saline aquifer'
+    if (!wizard.template && !wizard.isCustom) e.template = 'Please select a foundational formation or choose Custom'
     return e
   }
 
+  // Step 2: name + country
   const validateStep2 = () => {
     const e: typeof errors = {}
-    if (!wizard.geometry) e.geometry = 'Please select a geometry type'
+    if (!wizard.name.trim()) e.name    = 'Project name is required'
+    if (!wizard.country)      e.country = 'Please select a country with a saline aquifer'
+    return e
+  }
+
+  // Step 3: geometry (only required for non-custom, or custom must still pick one)
+  const validateStep3 = () => {
+    const e: typeof errors = {}
+    if (!wizard.geometry) e.geometry = 'Please select a structural geometry'
     return e
   }
 
@@ -228,29 +278,48 @@ export default function Dashboard() {
   }
 
   const finishWizard = () => {
-    if (!wizard.template) {
-      setErrors({ template: 'Please select a template formation to base your parameters on' })
-      return
-    }
-    createProject(wizard.template, wizard)
+    const e = validateStep3()
+    if (Object.keys(e).length) { setErrors(e); return }
+    createProject(wizard)
   }
 
   // ── Open existing project ─────────────────────────────────────────────────
   const openProject = (project: StoredProject) => {
-    loadFormation(project.formation)
+    // Restore presetId so FormationPanel highlights the active preset on re-open
     if (project.wells?.length) {
-      useFormationStore.getState().load(project.formation, project.wells)
+      useFormationStore.getState().load(project.formation, project.wells, project.presetId ?? undefined)
+    } else {
+      loadFormation(project.formation, undefined, project.presetId ?? undefined)
     }
     if (project.simulationResult) {
-      useSimulationStore.getState().setResult(project.simulationResult)
-    }
-    if (project.geomechanicsResult) {
+      // Use restoreCompleted so status becomes 'complete' and ResultDisplay renders
+      // without requiring the user to re-run the simulation on every open.
+      useSimulationStore.getState().restoreCompleted(
+        project.simulationResult,
+        project.wells ?? [],
+        project.formation,
+        project.geomechanicsResult ?? null,
+      )
+    } else if (project.geomechanicsResult) {
       useSimulationStore.getState().setGeomechanics(project.geomechanicsResult)
     }
     useUIStore.getState().setCurrentProjectId(project.id)
     useUIStore.getState().setCurrentProjectName(project.name)
     useUIStore.getState().setView('workspace')
     setPanel('overview')
+
+    // Restore or infer stage completion states
+    const hasSim = !!project.simulationResult
+    // Stored projects might have stageCompletion field or we infer it
+    const storedStages = (project as any).stageCompletion
+    const initialStages = storedStages || {
+      stage1: !!(project.name && project.country),
+      stage2: hasSim,
+      stage3: hasSim,
+      stage4: hasSim,
+      stage5: hasSim,
+    }
+    useUIStore.getState().setStageCompleteAll(initialStages)
   }
 
   const deleteProject = async (id: string) => {
@@ -278,10 +347,6 @@ export default function Dashboard() {
             <Lock size={10} />
             {user?.tier}
           </span>
-          <button onClick={() => { logout(); setView('landing') }} className="flex items-center gap-1 text-xs text-muted hover:text-secondary font-mono">
-            <LogOut size={12} />
-            <span className="hidden sm:inline">Sign Out</span>
-          </button>
         </div>
       </header>
 
@@ -318,7 +383,7 @@ export default function Dashboard() {
           style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
           onClick={closeWizard}
         >
-          <div className="relative w-full max-w-2xl rounded-2xl border border-theme flex flex-col shadow-2xl bg-card max-h-[80vh]"
+          <div className="relative w-full max-w-2xl rounded-2xl border border-theme flex flex-col shadow-2xl bg-card max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}>
 
             {/* ── Wizard header ── */}
@@ -328,9 +393,9 @@ export default function Dashboard() {
                   New Project · Step {wizardStep} of 3
                 </div>
                 <div className="text-sm font-semibold text-primary">
-                  {wizardStep === 1 && 'Formation Identity'}
-                  {wizardStep === 2 && 'Structural Geometry'}
-                  {wizardStep === 3 && 'Select a Template Formation'}
+                  {wizardStep === 1 && 'Select Foundational Formation'}
+                  {wizardStep === 2 && 'Project Identity'}
+                  {wizardStep === 3 && 'Structural Geometry'}
                 </div>
               </div>
               <button onClick={closeWizard} className="p-2 rounded-lg bg-tertiary hover:bg-card text-muted hover:text-primary transition">
@@ -345,165 +410,152 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 1: Formation name + Country
-                ══════════════════════════════════════════════════════════════════ */}
             <div className="flex-1 overflow-y-auto">
-            {wizardStep === 1 && (
-              <div className="p-6 space-y-5">
-                <p className="text-xs text-muted font-mono leading-relaxed">
-                  Every project starts with a real formation identity. Provide a name and pick the country where the saline aquifer is located — CarbonLens uses this to apply the right regulatory framework and benchmarks.
-                </p>
 
-                {/* Formation name */}
-                <div>
-                  <label className="block text-[10px] font-mono text-secondary uppercase tracking-wider mb-1.5">
-                    Formation Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="e.g. Berkshire Deep Saline, Permian Aquifer-7…"
-                    className="input-field w-full"
-                    value={wizard.name}
-                    onChange={(e) => setWizard((w) => ({ ...w, name: e.target.value }))}
-                    onKeyDown={(e) => e.key === 'Enter' && nextStep()}
-                  />
-                  {errors.name && <p className="text-[10px] text-red-400 font-mono mt-1">{errors.name}</p>}
-                </div>
-
-                {/* Country */}
-                <div>
-                  <label className="block text-[10px] font-mono text-secondary uppercase tracking-wider mb-1.5">
-                    Country <span className="text-red-400">*</span>
-                    <span className="ml-2 text-muted normal-case tracking-normal">— must be a country with characterised saline aquifers</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Search countries…"
-                    className="input-field w-full mb-2"
-                    value={countrySearch}
-                    onChange={(e) => setCountrySearch(e.target.value)}
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
-                    {filteredCountries.length === 0 && (
-                      <p className="col-span-3 text-[10px] text-muted font-mono py-3 text-center">
-                        No match — only countries with documented saline aquifer potential are listed.
-                      </p>
-                    )}
-                    {filteredCountries.map((c) => (
-                      <button key={c}
-                        onClick={() => setWizard((w) => ({ ...w, country: c }))}
-                        className={`text-left px-3 py-2 rounded-lg text-[11px] font-mono transition border ${
-                          wizard.country === c
-                            ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
-                            : 'bg-tertiary border-transparent hover:border-theme text-muted hover:text-primary'
-                        }`}>
-                        {wizard.country === c && <Check size={9} className="inline mr-1 text-emerald-400" />}
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                  {errors.country && <p className="text-[10px] text-red-400 font-mono mt-1">{errors.country}</p>}
-                </div>
-              </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 2: Geometry type
-                ══════════════════════════════════════════════════════════════════ */}
-            {wizardStep === 2 && (
-              <div className="p-6 space-y-4">
-                <p className="text-xs text-muted font-mono leading-relaxed">
-                  Choose the structural setting that best describes <span className="text-primary font-semibold">{wizard.name}</span> in <span className="text-primary font-semibold">{wizard.country}</span>. This controls how the plume solver models CO₂ migration and trapping geometry.
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {GEOMETRY_OPTIONS.map((g) => (
-                    <button key={g.id}
-                      onClick={() => setWizard((w) => ({ ...w, geometry: g.id }))}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition text-center ${
-                        wizard.geometry === g.id
-                          ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
-                          : 'bg-tertiary border-transparent hover:border-theme text-muted hover:text-primary'
-                      }`}>
-                      <div className={`${wizard.geometry === g.id ? 'text-emerald-400' : 'text-muted'}`}>
-                        {g.icon}
-                      </div>
-                      <span className="text-[11px] font-semibold font-mono leading-tight">{g.label}</span>
-                      <span className="text-[9px] text-muted leading-tight">{g.desc}</span>
-                    </button>
-                  ))}
-                </div>
-                {errors.geometry && <p className="text-[10px] text-red-400 font-mono">{errors.geometry}</p>}
-              </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 3: Template preset
-                ══════════════════════════════════════════════════════════════════ */}
-            {wizardStep === 3 && (
-              <div className="p-6 space-y-4">
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex gap-2.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <p className="text-[10px] text-amber-300/80 font-mono leading-relaxed">
-                    Select a validated formation as the parameter starting point for <strong className="text-amber-200">{wizard.name}</strong>. Choose the geologically closest analogue — you can fine-tune every parameter (depth, porosity, permeability, pressure…) on the Formation panel once the project is created.
+              {/* ══ STEP 1: Foundation Selection ══ */}
+              {wizardStep === 1 && (
+                <div className="p-6 space-y-4">
+                  <p className="text-xs text-muted font-mono leading-relaxed">
+                    Choose a <strong className="text-primary">foundational formation</strong> to base your project parameters on, or start completely from scratch with a Custom Formation. Presets are validated geological analogues — every parameter can be adjusted after project creation.
                   </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-                  {FORMATION_PRESETS.map((p) => (
-                    <button key={p.name}
-                      onClick={() => setWizard((w) => ({ ...w, template: p }))}
-                      className={`text-left p-3 rounded-xl border transition ${
-                        wizard.template?.name === p.name
-                          ? 'bg-emerald-500/15 border-emerald-500/50'
-                          : 'bg-tertiary border-transparent hover:border-theme'
-                      }`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className={`text-xs font-semibold font-mono ${wizard.template?.name === p.name ? 'text-emerald-300' : 'text-primary'}`}>
-                            {p.name}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[52vh] overflow-y-auto pr-1">
+                    {FORMATION_PRESETS.map((p) => {
+                      const isSelected = !wizard.isCustom && wizard.template?.name === p.name
+                      return (
+                        <button key={p.name}
+                          onClick={() => setWizard((w) => ({ ...w, template: p, isCustom: false }))}
+                          className={`text-left p-3 rounded-xl border transition ${
+                            isSelected
+                              ? 'bg-emerald-500/15 border-emerald-500/60 ring-1 ring-emerald-500/40'
+                              : 'bg-tertiary border-transparent hover:border-theme/60'
+                          }`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className={`text-xs font-semibold font-mono ${isSelected ? 'text-emerald-300' : 'text-primary'}`}>{p.name}</div>
+                              <div className="text-[10px] text-muted mt-0.5">{p.location}</div>
+                            </div>
+                            {isSelected && (
+                              <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                                <Check size={9} className="text-white" />
+                              </span>
+                            )}
                           </div>
-                          <div className="text-[10px] text-muted mt-0.5">{p.location}</div>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="text-[9px] font-mono text-muted">{p.params.depth} m</span>
+                            <span className="text-[9px] font-mono text-muted">φ {(p.params.porosity * 100).toFixed(0)}%</span>
+                            <span className="text-[9px] font-mono text-muted">{p.params.permeability} mD</span>
+                            <span className="text-[9px] font-mono text-muted capitalize">{p.params.geometryType}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                    {/* Custom Formation tile */}
+                    <button
+                      onClick={() => setWizard((w) => ({ ...w, template: null, isCustom: true }))}
+                      className={`text-left p-3 rounded-xl border transition col-span-1 sm:col-span-2 ${
+                        wizard.isCustom
+                          ? 'bg-violet-500/15 border-violet-500/60 ring-1 ring-violet-500/40'
+                          : 'bg-tertiary border-dashed border-theme/40 hover:border-violet-500/40'
+                      }`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className={`text-xs font-semibold font-mono flex items-center gap-2 ${wizard.isCustom ? 'text-violet-300' : 'text-primary'}`}>
+                            <span className={`text-base ${wizard.isCustom ? 'text-violet-400' : 'text-muted'}`}>✦</span>
+                            Custom Formation
+                            <span className="text-[9px] font-normal font-mono text-muted">— build from scratch</span>
+                          </div>
+                          <div className="text-[10px] text-muted mt-0.5">Start with blank default parameters. Define every property yourself in the Formation panel.</div>
                         </div>
-                        {wizard.template?.name === p.name && (
-                          <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                        {wizard.isCustom && (
+                          <span className="shrink-0 w-4 h-4 rounded-full bg-violet-500 flex items-center justify-center">
                             <Check size={9} className="text-white" />
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="text-[9px] font-mono text-muted">{p.params.depth} m</span>
-                        <span className="text-[9px] font-mono text-muted">φ {(p.params.porosity * 100).toFixed(0)}%</span>
-                        <span className="text-[9px] font-mono text-muted">{p.params.permeability} mD</span>
-                        <span className="text-[9px] font-mono text-muted capitalize">{p.params.geometryType}</span>
-                      </div>
                     </button>
-                  ))}
+                  </div>
+                  {errors.template && <p className="text-[10px] text-red-400 font-mono">{errors.template}</p>}
                 </div>
-                {errors.template && <p className="text-[10px] text-red-400 font-mono">{errors.template}</p>}
-              </div>
-            )}
+              )}
 
-            {/* ── "Or pick a preset directly" shortcut ── */}
-            {wizardStep === 1 && (
-              <div className="px-6 pb-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1 h-px bg-theme" />
-                  <span className="text-[10px] font-mono text-muted">or jump straight to a preset</span>
-                  <div className="flex-1 h-px bg-theme" />
+              {/* ══ STEP 2: Project Name + Country ══ */}
+              {wizardStep === 2 && (
+                <div className="p-6 space-y-5">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-mono border ${
+                    wizard.isCustom ? 'bg-violet-500/10 border-violet-500/30 text-violet-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  }`}>
+                    {wizard.isCustom ? '✦ Custom Formation' : `Foundation: ${wizard.template?.name}`}
+                  </div>
+                  <p className="text-xs text-muted font-mono leading-relaxed">
+                    Give your project a meaningful name and select the country where the target saline aquifer is located.
+                  </p>
+                  <div>
+                    <label className="block text-[10px] font-mono text-secondary uppercase tracking-wider mb-1.5">
+                      Project Name <span className="text-red-400">*</span>
+                    </label>
+                    <input type="text" autoFocus placeholder="e.g. Berkshire Deep Saline, Permian Aquifer-7…"
+                      className="input-field w-full"
+                      value={wizard.name}
+                      onChange={(e) => setWizard((w) => ({ ...w, name: e.target.value }))}
+                      onKeyDown={(e) => e.key === 'Enter' && nextStep()} />
+                    {errors.name && <p className="text-[10px] text-red-400 font-mono mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-mono text-secondary uppercase tracking-wider mb-1.5">
+                      Country <span className="text-red-400">*</span>
+                      <span className="ml-2 text-muted normal-case tracking-normal">— must be a country with characterised saline aquifers</span>
+                    </label>
+                    <input type="text" placeholder="Search countries…" className="input-field w-full mb-2"
+                      value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                      {filteredCountries.length === 0 && (
+                        <p className="col-span-3 text-[10px] text-muted font-mono py-3 text-center">No match — only countries with documented saline aquifer potential are listed.</p>
+                      )}
+                      {filteredCountries.map((c) => (
+                        <button key={c} onClick={() => setWizard((w) => ({ ...w, country: c }))}
+                          className={`text-left px-3 py-2 rounded-lg text-[11px] font-mono transition border ${
+                            wizard.country === c ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-tertiary border-transparent hover:border-theme text-muted hover:text-primary'
+                          }`}>
+                          {wizard.country === c && <Check size={9} className="inline mr-1 text-emerald-400" />}
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.country && <p className="text-[10px] text-red-400 font-mono mt-1">{errors.country}</p>}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {FORMATION_PRESETS.map((p) => (
-                    <button key={p.name} onClick={() => createFromPreset(p)}
-                      className="text-left p-2.5 rounded-lg bg-tertiary hover:bg-card border border-theme text-xs min-h-[44px] transition">
-                      <div className="font-medium text-primary font-mono text-[11px]">{p.name}</div>
-                      <div className="text-[9px] text-muted mt-0.5">{p.location}</div>
-                    </button>
-                  ))}
+              )}
+
+              {/* ══ STEP 3: Structural Geometry ══ */}
+              {wizardStep === 3 && (
+                <div className="p-6 space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono border ${
+                      wizard.isCustom ? 'bg-violet-500/10 border-violet-500/30 text-violet-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    }`}>{wizard.isCustom ? '✦ Custom' : wizard.template?.name}</span>
+                    {wizard.name && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono border bg-tertiary border-theme/30 text-secondary">{wizard.name}</span>}
+                    {wizard.country && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono border bg-tertiary border-theme/30 text-secondary">{wizard.country}</span>}
+                  </div>
+                  <p className="text-xs text-muted font-mono leading-relaxed">
+                    Choose the structural geometry for <span className="text-primary font-semibold">{wizard.name || 'your project'}</span>. This controls how the plume solver models CO₂ migration.
+                    {!wizard.isCustom && wizard.template && <span className="text-muted"> Preset default: <strong className="text-secondary">{wizard.template.params.geometryType}</strong> — override here if needed.</span>}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {GEOMETRY_OPTIONS.map((g) => (
+                      <button key={g.id} onClick={() => setWizard((w) => ({ ...w, geometry: g.id }))}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition text-center ${
+                          wizard.geometry === g.id ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300' : 'bg-tertiary border-transparent hover:border-theme text-muted hover:text-primary'
+                        }`}>
+                        <div className={wizard.geometry === g.id ? 'text-emerald-400' : 'text-muted'}>{g.icon}</div>
+                        <span className="text-[11px] font-semibold font-mono leading-tight">{g.label}</span>
+                        <span className="text-[9px] text-muted leading-tight">{g.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {errors.geometry && <p className="text-[10px] text-red-400 font-mono">{errors.geometry}</p>}
                 </div>
-              </div>
-            )}
+              )}
+
             </div>{/* end scrollable body */}
 
             {/* ── Wizard footer ── */}
@@ -515,29 +567,24 @@ export default function Dashboard() {
                     <ChevronLeft size={13} /> Back
                   </button>
                 ) : (
-                  <button onClick={closeWizard}
-                    className="px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">
-                    Cancel
-                  </button>
+                  <button onClick={closeWizard} className="px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">Cancel</button>
                 )}
               </div>
-
-              {/* Step indicators */}
               <div className="flex items-center gap-1.5">
                 {[1, 2, 3].map((s) => (
                   <div key={s} className={`w-1.5 h-1.5 rounded-full transition-all ${s === wizardStep ? 'bg-emerald-400 w-4' : s < wizardStep ? 'bg-emerald-400/50' : 'bg-white/15'}`} />
                 ))}
               </div>
-
               <div>
                 {wizardStep < 3 ? (
                   <button onClick={nextStep}
-                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-mono transition">
+                    disabled={wizardStep === 1 && !wizard.template && !wizard.isCustom}
+                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
                     Next <ChevronRight size={13} />
                   </button>
                 ) : (
                   <button onClick={finishWizard}
-                    disabled={!wizard.template}
+                    disabled={!wizard.geometry}
                     className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
                     <Check size={13} /> Create Project
                   </button>

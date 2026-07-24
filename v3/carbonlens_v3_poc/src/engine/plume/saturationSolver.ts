@@ -196,6 +196,22 @@ export function stepSaturation(
   const dx = dims.modelWidthM / nx             // cell width,  metres
   const dy = dims.modelLengthM / ny            // cell depth,  metres
 
+  // Physical injection zone radius, normalised to domain half-width.
+  // Two competing requirements:
+  //   1. Physical minimum: at least 100 m (plausible wellbore influence zone).
+  //   2. Grid minimum: at least 1.5 cell-widths (1.5/nx normalised) so that
+  //      the nearest cell centre is always within the injection zone regardless
+  //      of where the well falls relative to cell boundaries.
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  const INJECTION_RADIUS = Math.max(100 / (dims.modelWidthM / 2), 1.5 / nx)
+
+  // Cell-size-scaled lateral spread limiter.
+  // Target: no more than 0.10 saturation change per 200 m-equivalent cell per year.
+  // For 450 m cells (27 km / 60): 0.044 -- prevents plume reaching domain boundary.
+  // For 200 m cells (12 km / 60): 0.10  -- preserves existing behaviour.
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  const MAX_LAT_DELTA = Math.min(0.20, 0.10 * (200 / Math.max(50, dx)))
+
   // Helper: flat index from grid coords
   const idx = (i: number, j: number, k: number) => k * ny * nx + j * nx + i
 
@@ -243,7 +259,7 @@ export function stepSaturation(
       const cell = cells[cid]
       const ddx = cell.centerX - well.x; const ddy = cell.centerY - well.z
       const r = Math.sqrt(ddx * ddx + ddy * ddy)
-      const w = peacemanInjectionWeight(r)
+      const w = peacemanInjectionWeight(r, INJECTION_RADIUS)
       weights.push(w)
       totalWeight += w
     }
@@ -491,6 +507,8 @@ export function stepSaturation(
       cell.co2Phase = 'mineral'
     } else if (state.Sg_dissolved[cid] > 0.008) {
       cell.co2Phase = 'dissolved'
+    } else if (state.inImbibition[cid] === 1 && state.Sg_residual[cid] > 0.005 && Sg > 0) {
+      cell.co2Phase = 'imbibition'
     } else if (state.Sg_residual[cid] > 0.005 && freeFinal < 0.01) {
       cell.co2Phase = 'residual'
     } else if (Sg > 0.003) {

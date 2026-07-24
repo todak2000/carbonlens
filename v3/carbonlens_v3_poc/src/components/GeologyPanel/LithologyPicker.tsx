@@ -26,7 +26,7 @@ export default function LithologyPicker({ value, onChange }: Props) {
               className="w-3 h-3 rounded-sm shrink-0"
               style={{ backgroundColor: d.color }}
             />
-            <span className="text-[10px] font-mono truncate">{d.label}</span>
+            <span className="text-xs font-mono truncate">{d.label}</span>
           </button>
         )
       })}

@@ -16,7 +16,7 @@ export interface GridCell {
   faultTransmX: number  // transmissibility multiplier on +X face
   faultTransmY: number  // transmissibility multiplier on +Y face
   co2Saturation: number
-  co2Phase: 'none' | 'free' | 'residual' | 'dissolved' | 'mineral'
+  co2Phase: 'none' | 'free' | 'residual' | 'dissolved' | 'mineral' | 'imbibition'
   pressure: number
   centerX: number       // normalised model coords -1 to 1
   centerY: number

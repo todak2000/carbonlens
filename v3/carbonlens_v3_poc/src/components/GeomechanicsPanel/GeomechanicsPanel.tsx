@@ -1,12 +1,13 @@
-import { useMemo, useRef, useEffect, useCallback } from 'react'
+import { useMemo, useRef, useEffect, useCallback, useState } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
-import { AlertTriangle, CheckCircle, AlertCircle, ArrowUp, Gauge, Zap, Drill, Activity, Brain } from 'lucide-react'
+import { AlertTriangle, CheckCircle, AlertCircle, ArrowUp, Gauge, Zap, Drill, Activity, Brain, Shield } from 'lucide-react'
 import { computeWellboreDiagnostics, DEFAULT_WELLBORE } from '../../engine/plume/wellboreModel'
 import { assessFaultReactivation } from '../../engine/plume/faultReactivation'
 import type { FaultGeometry, StressState, FaultRockProperties } from '../../engine/plume/faultReactivation'
 import { autoOptimizeWells } from '../../utils/autoOptimize'
+import { computeCaprockSealCapacity } from '../../engine/classical/caprockSealCapacity'
 
 const POISSON = 0.30
 const OG = 0.023
@@ -19,13 +20,17 @@ interface MohrData {
 }
 
 function computeMohr(sv: number, s3: number, pp: number, dp: number, alpha: number, phiDeg: number, C: number): MohrData {
+  // Ensure principal stress ordering: σ₁ ≥ σ₃ so deviatoric radius is always ≥ 0.
+  // When Sh > Sv (thrust regime), swap so the Mohr circle is valid.
+  const s1 = Math.max(sv, s3)
+  const s3eff = Math.min(sv, s3)
   const phi = phiDeg * Math.PI / 180
   const mu = Math.tan(phi)
-  const sm_init = (sv + s3) / 2 - alpha * pp
+  const sm_init = (s1 + s3eff) / 2 - alpha * pp
   const sm_curr = sm_init - alpha * dp
-  const R = (sv - s3) / 2
+  const R = (s1 - s3eff) / 2
   const safety = C + sm_curr * mu - R
-  return { sv, s3, pp, dp, alpha, phiDeg, cohesion: C, sigmaM_init: sm_init, sigmaM_curr: sm_curr, radius: R, safetyMargin: safety, dcff: mu * dp, failed: safety < 0 }
+  return { sv: s1, s3: s3eff, pp, dp, alpha, phiDeg, cohesion: C, sigmaM_init: sm_init, sigmaM_curr: sm_curr, radius: R, safetyMargin: safety, dcff: mu * dp, failed: safety < 0 }
 }
 
 function estimateInjPressure(params: { pressure: number; porosity: number; permeability: number; thickness: number }, wells: { injectionRate: number; rampUpYears: number; rampDownYears: number }[]): number {
@@ -115,7 +120,7 @@ function drawMC(canvas: HTMLCanvasElement, d: MohrData, isDark: boolean) {
   ctx.textAlign = 'left'; ctx.fillText(`C=${d.cohesion.toFixed(1)}`, toX(0) + 4, toY(tau0) + 3)
 
   const icX = toX(d.sigmaM_init); const icY = toY(0)
-  const icR = (d.radius / xMax) * pw
+  const icR = Math.max(0, (d.radius / xMax) * pw)
   ctx.strokeStyle = iniC; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.5
   ctx.beginPath(); ctx.arc(icX, icY, icR, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1
   ctx.fillStyle = iniC; ctx.beginPath(); ctx.arc(icX, icY, 2, 0, Math.PI * 2); ctx.fill()
@@ -167,6 +172,10 @@ export default function GeomechanicsPanel() {
   const simResult = useSimulationStore((s) => s.result)
   const setGeomechanics = useSimulationStore((s) => s.setGeomechanics)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  // ── Caprock Seal Capacity local state ────────────────────────────────────
+  const [caprockPoreThroatNm, setCaprockPoreThroatNm] = useState(20)
+  const [contactAngleDeg, setContactAngleDeg] = useState(0)
 
   const depth = params.depth
   const pp = params.pressure
@@ -239,6 +248,24 @@ export default function GeomechanicsPanel() {
 
   const seisRisk: 'low' | 'moderate' | 'high' = sf > 1.5 ? 'low' : sf > 1.2 ? 'moderate' : 'high'
   const slipPot = Math.min(1, Math.max(0, (injPres - pp) / (fracPres - pp) * (1 - params.biotCoefficient * 0.3)))
+
+  // ── Caprock Seal Capacity (Leverett 1941) ────────────────────────────────────
+  const sealCapacity = useMemo(() => {
+    const iftMNm = simResult?.ift != null ? simResult.ift : 28
+    const co2DensityKgm3 = simResult?.co2Density ?? 700
+    const brineDensityKgm3 = simResult?.brineDensity ?? 1020
+    const currentColumnHeightM = simResult?.plumeHeight ?? 0
+    return computeCaprockSealCapacity({
+      iftMNm,
+      caprockPoreThroatNm,
+      contactAngleDeg,
+      co2DensityKgm3,
+      brineDensityKgm3,
+      formationAreaKm2: params.area,
+      caprockPorosityFraction: 0.05,
+      currentColumnHeightM,
+    })
+  }, [simResult, caprockPoreThroatNm, contactAngleDeg, params.area])
 
   // ── Wellbore Diagnostics (Peaceman 1978) ────────────────────────────────────
   const wellboreDx = useMemo(() => {
@@ -374,320 +401,244 @@ export default function GeomechanicsPanel() {
   }, [capFrac, fracPres, sf, seisRisk, slipPot, heaveM, mData, params.caprockFriction, params.caprockCohesion, params.biotCoefficient, sv, sh, maip, maipMargin, presFrontR])
 
   return (
-    <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-120px)]">
-      <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider">Geomechanics</h2>
-
-      {/* ── Geomechanics Optimizer ──────────────────────────────────────────── */}
-      <div className={`rounded border p-2.5 space-y-2 ${
-        geoChecks.allOk
-          ? 'border-success/30 bg-success/5'
-          : 'border-accent/30 bg-accent/5'
-      }`}>
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Brain size={11} className={geoChecks.allOk ? 'text-success' : 'text-accent'} />
-            <span className="text-[10px] font-mono font-semibold text-primary uppercase tracking-wider">
-              All Constraints
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-theme/20 pb-4">
+        <div>
+          <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">Geomechanical Containment Safety</h1>
+          <p className="text-xs text-muted font-mono mt-0.5">Stage 2: Target Aquifer &amp; Caprock Integrity Assessment</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {geoChecks.allOk ? (
+            <span className="text-[10px] font-mono font-bold bg-success/15 text-success border border-success/40 px-3 py-1 rounded">
+              ✓ PASS: 6 / 6 Constraints Safe
             </span>
-          </div>
-          {geoChecks.allOk
-            ? <span className="text-[9px] text-success font-mono font-semibold">✓ All 6 checks pass</span>
-            : <span className="text-[9px] text-error font-mono font-semibold">{geoChecks.failing.length} / 6 failing</span>
-          }
-        </div>
-
-        {/* Check rows */}
-        <div className="space-y-0.5">
-          {geoChecks.items.map((c) => (
-            <div key={c.id} className={`flex items-start gap-2 px-2 py-1 rounded text-[10px] font-mono ${
-              c.ok ? 'text-secondary' : 'bg-error/8 border border-error/25'
-            }`}>
-              <span className={`shrink-0 mt-px ${c.ok ? 'text-success' : 'text-error'}`}>{c.ok ? '✓' : '✕'}</span>
-              <span className={`w-28 shrink-0 ${c.ok ? 'text-muted' : 'text-primary font-semibold'}`}>{c.label}</span>
-              <span className={`text-[9px] leading-tight ${c.ok ? 'text-muted/60' : 'text-error/80'}`}>{c.detail}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Binding constraint explanation + parameter guidance */}
-        {!geoChecks.allOk && paramGuidance && (
-          <div className="bg-tertiary/60 rounded p-2 space-y-1.5 border border-theme/20">
-            <div className="text-[9px] font-mono text-muted uppercase tracking-wider font-semibold">Root cause</div>
-            <p className="text-[9px] font-mono text-secondary/90 leading-relaxed">
-              All checks constrain <span className="text-primary font-semibold">wellbore injection pressure</span>.
-              Binding: <span className="text-warning font-semibold">{geoChecks.binding.label}</span>{' '}
-              (ceiling <span className="text-warning">{geoChecks.binding.ceiling.toFixed(1)} MPa</span>,
-              max ΔP = <span className="text-warning">{paramGuidance.maxDP.toFixed(1)} MPa</span>).
-              Current wellbore P: <span className="text-error">{injPres.toFixed(1)} MPa</span>.
-            </p>
-            {paramGuidance.needsMore ? (
-              <div className="space-y-0.5">
-                <div className="text-[9px] font-mono text-accent font-semibold">To safely inject at 1 Mt/yr/well:</div>
-                <div className="text-[9px] font-mono text-accent/80">→ Permeability ≥ {paramGuidance.kMin_mD.toFixed(0)} mD (now {params.permeability} mD)</div>
-                <div className="text-[9px] font-mono text-accent/80">→ Or thickness ≥ {Math.ceil(paramGuidance.hMin_m)} m (now {params.thickness} m)</div>
-                <div className="text-[9px] font-mono text-muted/60 italic">Thicker/more-permeable rock spreads pressure → lower wellbore ΔP.</div>
-              </div>
-            ) : (
-              <p className="text-[9px] font-mono text-accent/90">→ {geoChecks.binding.fix}</p>
-            )}
-          </div>
-        )}
-        {!geoChecks.allOk && (
-          <button
-            onClick={() => {
-              const nWells = Math.max(1, wells.length)
-              const opt = autoOptimizeWells(params, nWells, wells)
-              setWells(opt.wells)
-            }}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded bg-accent/20 border border-accent/40 text-accent hover:bg-accent/30 active:bg-accent/50 text-[10px] font-mono font-semibold transition"
-          >
-            <Brain size={11} /> Apply Geomechanics-Safe Rate
-          </button>
-        )}
-      </div>
-
-      {/* Mohr-Coulomb Canvas */}
-      <div>
-        <h3 className="text-[10px] text-muted font-mono mb-1">Mohr-Coulomb Failure</h3>
-        <canvas ref={canvasRef} className="w-full rounded border border-theme/30" style={{ minHeight: 270 }} />
-      </div>
-
-      {/* Mohr Controls */}
-      <div className="space-y-2 bg-tertiary/30 rounded p-2 border border-theme/20">
-        <div>
-          <label className="text-[9px] text-muted font-mono flex justify-between">
-            <span>Friction Angle</span><span>{params.caprockFriction}°</span>
-          </label>
-          <input type="range" min={15} max={45} step={0.5} value={params.caprockFriction}
-            onChange={(e) => setParams({ caprockFriction: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full accent-amber bg-tertiary appearance-none cursor-pointer" />
-        </div>
-        <div>
-          <label className="text-[9px] text-muted font-mono flex justify-between">
-            <span>Cohesion</span><span>{params.caprockCohesion.toFixed(1)} MPa</span>
-          </label>
-          <input type="range" min={0} max={15} step={0.1} value={params.caprockCohesion}
-            onChange={(e) => setParams({ caprockCohesion: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full accent-amber bg-tertiary appearance-none cursor-pointer" />
-        </div>
-        <div>
-          <label className="text-[9px] text-muted font-mono flex justify-between">
-            <span>Biot Coeff.</span><span>{params.biotCoefficient.toFixed(2)}</span>
-          </label>
-          <input type="range" min={0.4} max={1.0} step={0.01} value={params.biotCoefficient}
-            onChange={(e) => setParams({ biotCoefficient: parseFloat(e.target.value) })}
-            className="w-full h-1.5 rounded-full accent-amber bg-tertiary appearance-none cursor-pointer" />
-        </div>
-      </div>
-
-      {/* Mohr Metrics */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${mData.failed ? 'bg-error border-error text-error' : 'bg-success border-success text-success'}`}>
-          <span className="uppercase tracking-wider text-[8px] opacity-70">Status</span>
-          <div className="mt-0.5 font-bold">{mData.failed ? 'FAILED' : 'Stable'}</div>
-        </div>
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/30">
-          <span className="text-[8px] text-muted font-mono uppercase tracking-wider">Safety Margin</span>
-          <div className="text-[13px] font-mono font-bold text-primary">{mData.safetyMargin.toFixed(2)} MPa</div>
-        </div>
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/30">
-          <span className="text-[8px] text-muted font-mono uppercase tracking-wider">ΔCFF</span>
-          <div className="text-[13px] font-mono font-bold text-primary">+{mData.dcff.toFixed(3)} MPa</div>
-        </div>
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/30">
-          <span className="text-[8px] text-muted font-mono uppercase tracking-wider">ΔP at well</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-[13px] font-mono font-bold text-primary">{dp.toFixed(2)} MPa</span>
-            <span title="Estimated from current formation parameters"><Zap size={8} className="text-warning" /></span>
-          </div>
-          {simP !== null && Math.abs(simP - estP) > 0.01 && (
-            <span className="text-[7px] text-muted/50 font-mono block">Sim result: {simP.toFixed(2)} MPa (stale)</span>
+          ) : (
+            <span className="text-[10px] font-mono font-bold bg-error/15 text-error border border-error/40 px-3 py-1 rounded">
+              ✕ ALERT: {geoChecks.failing.length} Failing Safety Limits
+            </span>
           )}
         </div>
       </div>
 
-      {/* MAIP Section */}
-      <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-        <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><Gauge size={11} /> Max. Allowable Injection Pressure</h3>
-        <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-          <div><span className="text-muted">MAIP</span><br /><span className="text-primary font-bold">{maip.toFixed(2)} MPa</span></div>
-          <div><span className="text-muted">Wellbore P</span><br /><span className="text-primary font-bold">{injPres.toFixed(2)} MPa</span></div>
-          <div className="col-span-2">
-            <span className="text-muted">Margin to MAIP</span>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="flex-1 h-1.5 rounded-full bg-tertiary overflow-hidden">
-                <div className={`h-full rounded-full transition-all ${maipMargin > 20 ? 'bg-success' : maipMargin > 0 ? 'bg-warning' : 'bg-error'}`}
-                  style={{ width: `${Math.max(0, Math.min(100, maipMargin))}%` }} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Form Parameters (60% width equivalent: col-span-7) */}
+        <div className="lg:col-span-7 space-y-5">
+          
+          {/* Section 1: Capillary Sealing */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-md">
+            <div className="flex items-center justify-between border-b border-theme/20 pb-2">
+              <div className="flex items-center gap-1.5">
+                <Shield size={13} className={sealCapacity.status === 'adequate' ? 'text-success' : sealCapacity.status === 'marginal' ? 'text-warning' : 'text-error'} />
+                <span className="text-xs font-mono font-bold text-primary uppercase tracking-wider">1. Capillary Seal Capacity</span>
               </div>
-              <span className={`font-bold text-[11px] ${maipMargin > 20 ? 'text-success' : maipMargin > 0 ? 'text-warning' : 'text-error'}`}>
-                {maipMargin.toFixed(1)}%
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                sealCapacity.status === 'adequate'     ? 'bg-success/10 text-success border-success/30'
+                : sealCapacity.status === 'marginal'   ? 'bg-warning/10 text-warning border-warning/30'
+                :                                        'bg-error/10 text-error border-error/30'
+              }`}>
+                {sealCapacity.status.toUpperCase()}
               </span>
             </div>
-          </div>
-          <div className="col-span-2">
-            <span className="text-muted">Pressure Front Radius</span>
-            <span className="text-primary font-bold ml-2">{presFrontR < 1 ? '<1' : presFrontR.toFixed(1)} km</span>
-          </div>
-        </div>
-        <p className="text-[8px] text-warning mt-1 italic">
-          {simP !== null
-            ? `Based on current params — sim result ${simP.toFixed(2)} MPa differs (stale)`
-            : 'Estimated from current formation parameters — run simulation for time-matched values'}
-        </p>
-      </div>
 
-      {/* Fracture & Integrity */}
-      <div className="space-y-1.5">
-        <Row label="Fracture Pressure" value={`${fracPres.toFixed(1)} MPa`} />
-        <Row label="Safety Factor" value={`${sf.toFixed(2)} (screening)`} />
-        <Row label="Caprock Stress" value={`${capFrac.toFixed(1)} MPa`} />
-      </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-muted font-mono flex justify-between mb-1.5">
+                  <span>Pore throat radius (caprock)</span>
+                  <span className="text-secondary font-bold">{caprockPoreThroatNm} nm</span>
+                </label>
+                <input type="range" min={1} max={500} step={1} value={caprockPoreThroatNm}
+                  onChange={(e) => setCaprockPoreThroatNm(Number(e.target.value))}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent" />
+              </div>
+              <div>
+                <label className="text-xs text-muted font-mono flex justify-between mb-1.5">
+                  <span>Contact angle (wetting state)</span>
+                  <span className="text-secondary font-bold">{contactAngleDeg}°</span>
+                </label>
+                <input type="range" min={0} max={60} step={1} value={contactAngleDeg}
+                  onChange={(e) => setContactAngleDeg(Number(e.target.value))}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent" />
+              </div>
+            </div>
 
-      <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${capOK ? 'bg-success border-success text-success' : capWarn ? 'bg-warning border-warning text-warning' : 'bg-error border-error text-error'}`}>
-        <span className="uppercase tracking-wider text-[8px] opacity-70">Caprock seal</span>
-        <div className="mt-0.5">
-          {capOK ? '✓ Intact' : capWarn ? '⚠ Approaching limit' : '✕ Exceeded'}
-        </div>
-      </div>
-
-      {/* Seismicity */}
-      <div>
-        <h3 className="text-[10px] text-muted font-mono mb-1 flex items-center gap-1">
-          {seisRisk === 'low' ? <CheckCircle size={11} className="text-success" /> : seisRisk === 'moderate' ? <AlertCircle size={11} className="text-warning" /> : <AlertTriangle size={11} className="text-error" />}
-          Seismicity Risk
-        </h3>
-        <div className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-mono ${seisRisk === 'low' ? 'bg-accent-subtle text-accent' : seisRisk === 'moderate' ? 'bg-warning text-warning' : 'bg-error text-error'}`}>
-          {seisRisk === 'high' && <AlertTriangle size={13} />}
-          {seisRisk.charAt(0).toUpperCase() + seisRisk.slice(1)}
-        </div>
-      </div>
-
-      {/* Fault Slip */}
-      <div className="space-y-1">
-        <h3 className="text-[10px] text-muted font-mono">Fault Slip Potential</h3>
-        <div className="w-full h-1.5 rounded-full bg-tertiary overflow-hidden">
-          <div className="h-full rounded-full bg-warning transition-all" style={{ width: `${slipPot * 100}%` }} />
-        </div>
-        <span className="text-[10px] text-muted font-mono">{(slipPot * 100).toFixed(1)}%</span>
-      </div>
-
-      {/* Wellbore Diagnostics — Peaceman (1978) */}
-      <div className="rounded px-2 py-2 border border-theme/30 bg-tertiary/20 space-y-1.5">
-        <h3 className="text-[10px] text-muted font-mono flex items-center gap-1">
-          <Drill size={11} /> Wellbore Diagnostics
-          <span className="ml-auto text-[8px] text-muted/50">Peaceman (1978)</span>
-        </h3>
-        <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-          <div>
-            <span className="text-muted text-[8px]">BHP</span>
-            <div className="font-bold text-primary">{wellboreResult.bhp_MPa.toFixed(2)} MPa</div>
-          </div>
-          <div>
-            <span className="text-muted text-[8px]">Injectivity J</span>
-            <div className="font-bold text-primary">{wellboreResult.injectivityIndex_m3dMPa.toFixed(1)} m³/d·MPa</div>
-          </div>
-          <div>
-            <span className="text-muted text-[8px]">Max Rate (fracture)</span>
-            <div className={`font-bold ${wellboreResult.maxSustainableRate_MtPerYear < 0.1 ? 'text-error' : 'text-accent'}`}>
-              {wellboreResult.maxSustainableRate_MtPerYear.toFixed(2)} Mt/yr
+            <div className="grid grid-cols-2 gap-3 text-xs font-mono pt-2">
+              <div className="rounded p-2 bg-tertiary/20 border border-theme/10">
+                <span className="text-[9px] text-muted block uppercase">Entry Pressure</span>
+                <span className="font-bold text-primary text-sm">{sealCapacity.entryPressureMPa.toFixed(3)} MPa</span>
+              </div>
+              <div className="rounded p-2 bg-tertiary/20 border border-theme/10">
+                <span className="text-[9px] text-muted block uppercase">Max Containable Mass</span>
+                <span className="font-bold text-primary text-sm">{sealCapacity.maxColumnMassMt.toFixed(2)} Mt</span>
+              </div>
+              <div className="rounded p-2 bg-tertiary/20 border border-theme/10 col-span-2 flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] text-muted block uppercase">Seal utilization</span>
+                  <div className="font-bold text-primary mt-0.5 text-sm">{sealCapacity.sealUtilizationPct.toFixed(1)}%</div>
+                </div>
+                <div className="w-40 h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${sealCapacity.sealUtilizationPct > 90 ? 'bg-error' : sealCapacity.sealUtilizationPct > 70 ? 'bg-warning' : 'bg-success'}`}
+                    style={{ width: `${Math.min(100, sealCapacity.sealUtilizationPct)}%` }} />
+                </div>
+              </div>
             </div>
           </div>
-          <div>
-            <span className="text-muted text-[8px]">r_eq (Peaceman)</span>
-            <div className="font-bold text-primary">{wellboreResult.peacemanRadius_m.toFixed(0)} m</div>
-          </div>
-        </div>
-        {wellboreResult.maxSustainableRate_MtPerYear < 0.05 && (
-          <p className="text-[8px] text-error flex items-center gap-1">
-            <AlertTriangle size={9} /> Near fracture limit — reduce rate or increase k
-          </p>
-        )}
-      </div>
 
-      {/* Fault Reactivation Risk — Mohr-Coulomb 3D (Streit & Hillis 2004) */}
-      <div className={`rounded px-2 py-2 border space-y-1.5 ${
-        faultReactivation.reactivationRisk === 'critical' ? 'border-error bg-error' :
-        faultReactivation.reactivationRisk === 'high' ? 'border-warning bg-warning' :
-        faultReactivation.reactivationRisk === 'moderate' ? 'border-warning bg-warning' :
-        'border-success bg-success'
-      }`}>
-        <h3 className="text-[10px] font-mono flex items-center gap-1 text-muted">
-          <Activity size={11} /> Fault Reactivation Risk
-          <span className="ml-auto text-[8px] text-muted/50">Streit & Hillis (2004)</span>
-        </h3>
-        <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-          <div>
-            <span className="text-muted text-[8px]">Slip Tendency</span>
-            <div className="font-bold text-primary">{faultReactivation.slipTendency.toFixed(3)}</div>
-          </div>
-          <div>
-            <span className="text-muted text-[8px]">Critical ΔP</span>
-            <div className={`font-bold ${faultReactivation.criticalPressureIncrease_MPa < 2 ? 'text-error' : faultReactivation.criticalPressureIncrease_MPa < 5 ? 'text-warning' : 'text-success'}`}>
-              {faultReactivation.criticalPressureIncrease_MPa > 50 ? '>50' : faultReactivation.criticalPressureIncrease_MPa.toFixed(1)} MPa
+          {/* Section 2: Stress State Sliders */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-md">
+            <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-theme/20 pb-2">
+              2. Mohr-Coulomb Mechanical Properties
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-muted font-mono flex justify-between mb-1.5">
+                  <span>Friction Angle (φ)</span>
+                  <span className="text-secondary font-bold">{params.caprockFriction}°</span>
+                </label>
+                <input type="range" min={15} max={45} step={0.5} value={params.caprockFriction}
+                  onChange={(e) => setParams({ caprockFriction: parseFloat(e.target.value) })}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent" />
+              </div>
+              <div>
+                <label className="text-xs text-muted font-mono flex justify-between mb-1.5">
+                  <span>Cohesion (C)</span>
+                  <span className="text-secondary font-bold">{params.caprockCohesion.toFixed(1)} MPa</span>
+                </label>
+                <input type="range" min={0} max={15} step={0.1} value={params.caprockCohesion}
+                  onChange={(e) => setParams({ caprockCohesion: parseFloat(e.target.value) })}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent" />
+              </div>
+              <div>
+                <label className="text-xs text-muted font-mono flex justify-between mb-1.5">
+                  <span>Biot Coefficient (α)</span>
+                  <span className="text-secondary font-bold">{params.biotCoefficient.toFixed(2)}</span>
+                </label>
+                <input type="range" min={0.4} max={1.0} step={0.01} value={params.biotCoefficient}
+                  onChange={(e) => setParams({ biotCoefficient: parseFloat(e.target.value) })}
+                  className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs font-mono pt-2">
+              <div className="rounded p-2 bg-tertiary/20 border border-theme/10">
+                <span className="text-[9px] text-muted block uppercase">Overburden (Sv)</span>
+                <span className="font-bold text-primary">{sv.toFixed(1)} MPa</span>
+              </div>
+              <div className="rounded p-2 bg-tertiary/20 border border-theme/10">
+                <span className="text-[9px] text-muted block uppercase">Min Horizontal (Sh)</span>
+                <span className="font-bold text-primary">{sh.toFixed(1)} MPa</span>
+              </div>
             </div>
           </div>
-          <div>
-            <span className="text-muted text-[8px]">σ'n on fault</span>
-            <div className="font-bold text-primary">{faultReactivation.normalStress_MPa.toFixed(1)} MPa</div>
-          </div>
-          <div>
-            <span className="text-muted text-[8px]">τ on fault</span>
-            <div className="font-bold text-primary">{faultReactivation.shearStress_MPa.toFixed(1)} MPa</div>
-          </div>
-        </div>
-        <div className={`flex items-center justify-between px-2 py-1 rounded text-[10px] font-mono font-semibold ${
-          faultReactivation.reactivationRisk === 'critical' ? 'bg-error text-error' :
-          faultReactivation.reactivationRisk === 'high' ? 'bg-warning text-warning' :
-          faultReactivation.reactivationRisk === 'moderate' ? 'bg-warning text-warning' :
-          'bg-success text-success'
-        }`}>
-          <span>{faultReactivation.reactivationRisk.toUpperCase()} RISK</span>
-          <span className="text-[9px] opacity-70 font-normal capitalize">{faultReactivation.failureMode}</span>
-        </div>
-        <p className="text-[8px] text-muted/60 italic">Critically-oriented normal fault (dip 60°, worst-case). Adjust fault geometry in Geology panel.</p>
-      </div>
 
-      {/* Surface Heave */}
-      <div>
-        <h3 className="text-[10px] text-muted font-mono mb-1 flex items-center gap-1">
-          <ArrowUp size={11} className="text-muted" /> Surface Heave
-        </h3>
-        <div className="flex items-center justify-between bg-tertiary/50 rounded px-2 py-1.5 border border-theme/30">
-          <div className="flex items-baseline gap-1">
-            {heaveM !== null ? (
-              <>
-                <span className="text-[18px] font-mono font-bold text-accent">
-                  {heaveM * 1000 < 0.01 ? '<0.01' : (heaveM * 1000).toFixed(3)}
-                </span>
-                <span className="text-[9px] text-muted font-mono">mm</span>
-              </>
-            ) : (
-              <span className="text-[11px] text-muted/50 font-mono italic">Run simulation</span>
+          {/* Rate Optimizer Action */}
+          {!geoChecks.allOk && (
+            <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 space-y-3">
+              <div className="text-sm font-mono font-bold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                <Brain size={14} /> Rate Containment Optimizer
+              </div>
+              <p className="text-xs font-mono text-secondary leading-normal">
+                Planned rate: <strong>{wells.reduce((s, w) => s + w.injectionRate, 0).toFixed(2)} Mt/yr</strong> exceeds structural safety limits.
+                Click below to calculate and apply the maximum geomechanically safe rate.
+              </p>
+              <button
+                onClick={() => {
+                  const nWells = Math.max(1, wells.length)
+                  const opt = autoOptimizeWells(params, nWells, wells)
+                  setWells(opt.wells)
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-accent text-white hover:bg-accent-hover font-mono font-bold text-xs transition shadow"
+              >
+                <Brain size={14} /> Scale Down to Safe Rate
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Visuals & Diagnostics (40% width equivalent: col-span-5) */}
+        <div className="lg:col-span-5 space-y-5">
+          
+          {/* Mohr-Coulomb Chart */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-primary uppercase tracking-wider">Stress Analysis</span>
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${mData.failed ? 'bg-error/10 border-error/30 text-error animate-pulse' : 'bg-success/10 border-success/30 text-success'}`}>
+                {mData.failed ? 'SLIP FAILURE' : 'STABLE'}
+              </span>
+            </div>
+            <canvas ref={canvasRef} className="w-full rounded-lg border border-theme/20 bg-page/50" style={{ minHeight: 250 }} />
+          </div>
+
+          {/* Unified Checks list */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3 shadow-md">
+            <span className="text-xs font-mono font-bold text-primary uppercase tracking-wider">Unified Verification</span>
+            <div className="space-y-1.5">
+              {geoChecks.items.map((c) => (
+                <div key={c.id} className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono border ${
+                  c.ok ? 'bg-tertiary/10 border-theme/10 text-secondary' : 'bg-error/10 border-error/30 text-error font-semibold'
+                }`}>
+                  <div className="flex items-center gap-1.5">
+                    <span>{c.ok ? '✓' : '✕'}</span>
+                    <span>{c.label}</span>
+                  </div>
+                  <span>{c.detail}</span>
+                </div>
+              ))}
+            </div>
+            
+            {!geoChecks.allOk && paramGuidance && (
+              <div className="bg-tertiary/40 rounded p-2.5 space-y-1.5 border border-theme/20 text-xs font-mono">
+                <div className="text-[10px] text-muted uppercase font-bold">Binding Constraint</div>
+                <p className="text-secondary leading-relaxed">
+                  Controlling margin is <span className="text-warning font-semibold">{geoChecks.binding.label}</span> (ceiling {geoChecks.binding.ceiling.toFixed(1)} MPa).
+                </p>
+                {paramGuidance.needsMore && (
+                  <div className="text-[10px] text-accent/80 space-y-0.5 bg-page/40 p-1.5 rounded">
+                    <div>· Permeability ≥ {paramGuidance.kMin_mD.toFixed(0)} mD</div>
+                    <div>· Thickness ≥ {Math.ceil(paramGuidance.hMin_m)} m</div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-          <span className="text-[7px] text-muted/60 font-mono text-right leading-tight max-w-[120px]">
-            Nucleus-of-strain{params.fracturedReservoir ? ' (fractured: ×2–10× possible)' : ''}
-          </span>
-        </div>
-        {params.fracturedReservoir && (
-          <p className="text-[8px] text-warning font-mono mt-1 leading-relaxed flex items-start gap-1">
-            <AlertTriangle size={9} className="shrink-0 mt-0.5" />
-            Fractured/faulted reservoir. Nucleus-of-strain underestimates heave — fault opening and fracture compliance can add 2–10× (cf. In Salah InSAR KB-502: 15–20 mm cumulative).
-          </p>
-        )}
-      </div>
 
-      {/* Stress state summary */}
-      <div className="text-[8px] text-muted/50 font-mono space-y-0.5 pt-1 border-t border-theme/20">
-        <div>S_v = {sv.toFixed(1)} MPa, S_h = {sh.toFixed(1)} MPa</div>
-        <div>σ_m₀ = {mData.sigmaM_init.toFixed(1)} MPa → σ_m' = {mData.sigmaM_curr.toFixed(1)} MPa</div>
-        <div>ΔP = {dp.toFixed(2)} MPa, α = {params.biotCoefficient.toFixed(2)}, μ = {Math.tan(mData.phiDeg * Math.PI / 180).toFixed(3)}</div>
+          {/* Diagnostics grid */}
+          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+            {/* Wellbore Diagnostics */}
+            <div className="rounded-xl border border-theme/30 bg-card p-4 space-y-2 shadow-sm col-span-2">
+              <div className="flex items-center justify-between border-b border-theme/20 pb-1.5">
+                <span className="text-[10px] text-muted uppercase font-bold">Wellbore Diagnostics</span>
+                <span className="text-[8px] text-muted/50">Peaceman (1978)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                <div>BHP: <span className="text-secondary font-bold">{wellboreResult.bhp_MPa.toFixed(2)} MPa</span></div>
+                <div>Injectivity Index: <span className="text-secondary font-bold">{wellboreResult.injectivityIndex_m3dMPa.toFixed(1)}</span></div>
+                <div className="col-span-2">Max Sustainable: <span className="text-accent font-bold">{wellboreResult.maxSustainableRate_MtPerYear.toFixed(2)} Mt/yr</span></div>
+              </div>
+            </div>
+
+            {/* Fault Reactivation */}
+            <div className={`rounded-xl border p-4 space-y-2 shadow-sm col-span-2 ${
+              faultReactivation.reactivationRisk === 'critical' ? 'border-error bg-error/5' :
+              faultReactivation.reactivationRisk === 'high' ? 'border-warning bg-warning/5' :
+              faultReactivation.reactivationRisk === 'moderate' ? 'border-warning bg-warning/5' :
+              'border-success bg-success/5'
+            }`}>
+              <div className="flex items-center justify-between border-b border-theme/10 pb-1.5">
+                <span className="text-[10px] text-muted uppercase font-bold">Fault Reactivation</span>
+                <span className="text-[8px] text-muted/50">Streit &amp; Hillis (2004)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                <div>Slip Tendency: <span className="text-secondary font-bold">{faultReactivation.slipTendency.toFixed(3)}</span></div>
+                <div>Critical ΔP: <span className="text-secondary font-bold">{faultReactivation.criticalPressureIncrease_MPa.toFixed(1)} MPa</span></div>
+                <div className="col-span-2">Risk Level: <span className="text-accent font-bold uppercase">{faultReactivation.reactivationRisk}</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between"><span className="text-[11px] text-muted font-mono">{label}</span><span className="text-[11px] text-secondary font-mono">{value}</span></div>
 }

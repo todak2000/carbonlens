@@ -1,3 +1,7 @@
+// Re-export the registry so consumers can import from one place
+export { MODEL_REGISTRY, renderCitation, renderSimEngineAttribution, renderProvenanceTableRows, renderPhysicsFootnote, PHD_UPGRADE_IDS } from './modelRegistry'
+export type { ModelEntry, ModelDomain, ModelType, ModelStatus, Citation } from './modelRegistry'
+
 export interface Equation {
   name: string
   formula: string
@@ -255,21 +259,21 @@ export const MARS_ATTRIBUTION = {
 }
 
 // ── Prototype scope boundary — rendered as a disclaimer in the panel ──────────
+// classicalComponents is now derived from MODEL_REGISTRY so it stays in sync automatically.
+import { MODEL_REGISTRY as _REG, PHD_UPGRADE_IDS as _PHD } from './modelRegistry'
+
 export const PROTOTYPE_SCOPE = {
   title: 'Prototype Scope & Research Boundary',
   mlComponents: [
     { property: 'CO\u2082-brine IFT', model: 'MARS (MSc research, UTP)', status: 'deployed' as const },
     { property: 'Applicability domain', model: 'Conformal prediction / AD gate (MSc research, UTP)', status: 'deployed' as const },
   ],
-  classicalComponents: [
-    { property: 'CO\u2082 density', model: 'Span-Wagner (1996) Helmholtz EOS \u2014 42-term multi-parameter (\u00b10.05% vs NIST REFPROP)', phd: false },
-    { property: 'CO\u2082 viscosity', model: 'Fenghour et al. (1998) \u2192 Laesecke & Muzny (2017) upgrade pending', phd: false },
-    { property: 'CO\u2082 solubility', model: 'Duan-Sun (2003) extended 5-coeff fit + T-dependent Pitzer \u03bb(\u03c4)', phd: true },
-    { property: 'Brine density', model: 'Garcia (2001)', phd: true },
-    { property: 'Pressure / AoR', model: 'Nordbotten (2005) two-phase composite radial flow', phd: false },
-    { property: 'Relative permeability', model: 'van Genuchten\u2013Mualem (1980/1976) + Killough\u2013Land hysteresis', phd: false },
-    { property: 'Trapping', model: 'Land (1968) + Killough (1976) imbibition hysteresis', phd: false },
-    { property: 'Geomechanics', model: 'Mohr-Coulomb + Biot (standard)', phd: false },
-  ],
+  classicalComponents: _REG
+    .filter(m => (m.type === 'classical' || m.type === 'empirical' || m.type === 'numerical') && m.status !== 'deprecated' && m.domain !== 'benchmark-validation')
+    .map(m => ({
+      property: m.property,
+      model: m.name + (m.knownLimitations ? ` \u2014 ${m.knownLimitations}` : ''),
+      phd: _PHD.includes(m.id),
+    })),
   phdNote: 'Properties marked \u2605 will be replaced by PhD-era MARS models with calibrated cross-laboratory uncertainty (2027\u20132029).',
 }

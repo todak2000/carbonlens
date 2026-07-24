@@ -1,20 +1,47 @@
-import { useRef, useState, useMemo, useCallback } from 'react'
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
 import { GeometryType } from '../../types'
+import { WellboreSchematic } from '../WellboreSchematic'
 import { parseLAS } from '../../utils/lasParser'
 import { parseEclipseDeck } from '../../utils/eclipseParser'
 import { parseCarbonGrid, generateSampleGrid } from '../../utils/gridParser'
 import { FORMATION_PRESETS } from '../../data/formationPresets'
 import { computeOptimalRate, classifyRate, RATE_STATUS_META, RateEnvelope } from '../../utils/computeOptimalRate'
-import { Plus, Trash2, DrillIcon as Drilling, Upload, Info, Move, FileDown, Clock, Sparkles, Brain, CheckCircle2, X } from 'lucide-react'
+import {
+  Plus, Trash2, DrillIcon as Drilling, Upload, Info, Move, FileDown, Clock,
+  Sparkles, Brain, CheckCircle2, X, ShieldCheck, AlertTriangle, ChevronRight, ChevronLeft, Layers, Lock,
+} from 'lucide-react'
 import { autoOptimizeWells } from '../../utils/autoOptimize'
 import { validateGeomechanics } from '../../hooks/useSimulation'
+import { assessStorageScreening } from '../../engine/classical/storageScreening'
+import {
+  computeTr, computePr, evaluateMars, scaleInput,
+  subEquation, subScaler, supEquation, supScaler,
+  assessApplicabilityDomain, determinePhase,
+  co2DensitySpanWagner, co2ViscosityFenghour, brineDensityGarcia,
+} from '../../engine'
+
+// ── Sub-step labels ────────────────────────────────────────────────────────────
+const SUB_STEPS = [
+  { n: 1, label: 'Location & Scale' },
+  { n: 2, label: 'Geometry' },
+  { n: 3, label: 'Rock Quality' },
+  { n: 4, label: 'Fluid Conditions' },
+  { n: 5, label: 'CO2 Stream' },
+  { n: 6, label: 'Wells' },
+] as const
+
+type SubStep = 1 | 2 | 3 | 4 | 5 | 6
+
+// ── Screening status badge ─────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: 'green' | 'amber' | 'red' }) {
+  if (status === 'green')  return <span className="text-[9px] font-mono text-emerald-400 font-bold">✓</span>
+  if (status === 'amber')  return <span className="text-[9px] font-mono text-amber-400 font-bold">~</span>
+  return <span className="text-[9px] font-mono text-red-400 font-bold">✗</span>
+}
 
 // ── Formation Intelligence Card ───────────────────────────────────────────────
-// Shows live risk assessment, year-to-P90, MAIP margin, and actionable guidance
-// whenever formation params or well rates change.
-
 interface IntelligenceProps {
   env: RateEnvelope
   totalAnnualRate: number
@@ -25,78 +52,30 @@ interface IntelligenceProps {
 }
 
 function FormationIntelligenceCard({ env, totalAnnualRate, projectYears, maipMPa, maipMarginPct, onApplySafeRate }: IntelligenceProps) {
-  // Classify the total fleet rate vs the P50-scaled envelope
-  const perWell = totalAnnualRate  // caller passes total; envelope is per-well * n wells
   const yearsToP90 = totalAnnualRate > 0 ? env.totalCapacityP90 / totalAnnualRate : Infinity
   const yearsToP50 = totalAnnualRate > 0 ? env.totalCapacityP50 / totalAnnualRate : Infinity
-
-  // Derive status from total rate vs scaled envelope
   const atRisk   = yearsToP90 < projectYears
   const aboveP50 = yearsToP50 < projectYears
   const maipRisk = maipMarginPct < 20
-
-  // Highest severity wins
   const severity: 'critical' | 'warning' | 'ok' =
     atRisk || maipMarginPct < 0 ? 'critical' : (aboveP50 || maipRisk) ? 'warning' : 'ok'
-
   const border = severity === 'critical' ? 'border-error/40 bg-error/5'
     : severity === 'warning' ? 'border-amber-500/40 bg-amber-500/5'
     : 'border-emerald-500/30 bg-emerald-500/5'
-
   const iconColor = severity === 'critical' ? 'text-error'
     : severity === 'warning' ? 'text-amber-400'
     : 'text-emerald-400'
-
-  // ── Implication text ──────────────────────────────────────────────────────
-  let headline = ''
-  let body = ''
-  let tip = ''
-
-  if (maipMarginPct < 0) {
-    headline = 'Injection pressure already exceeds MAIP'
-    body = `Wellbore pressure will breach the Maximum Allowable Injection Pressure (${maipMPa.toFixed(1)} MPa) before the project even starts. Caprock fracturing is expected from the first year of injection.`
-    tip = 'Apply the safe rate below, or reduce well count / increase caprock cohesion in the Geomechanics panel.'
-  } else if (atRisk) {
-    headline = `P90 capacity will be exceeded at year ${yearsToP90.toFixed(0)}`
-    body = `Total injection rate (${totalAnnualRate.toFixed(3)} Mt/yr) will fill the P90 storage estimate (${env.totalCapacityP90.toFixed(2)} Mt) in ${yearsToP90.toFixed(0)} years — before your ${projectYears}-year project ends. Sustained overpressure beyond P90 pushes reservoir pressure toward fracture pressure, risking caprock seal failure and CO₂ migration upward.`
-    tip = 'Reduce injection rate using the slider below, or click "Apply safe rate" to let the engine compute the maximum rate that keeps you within the P90 envelope with MAIP margin.'
-  } else if (maipRisk) {
-    headline = `MAIP margin is thin (${maipMarginPct.toFixed(0)}%)`
-    body = `Wellbore injection pressure is within 20% of the Maximum Allowable Injection Pressure (${maipMPa.toFixed(1)} MPa). Small rate increases or pressure transients could breach the regulatory safety limit.`
-    tip = 'Lower the injection rate slider or increase formation depth / caprock cohesion to widen the margin.'
-  } else if (aboveP50) {
-    headline = `P50 optimal rate exceeded — approaching P90 by year ${yearsToP90.toFixed(0)}`
-    body = `Rate is above the DOE P50 optimal. The P90 limit will be reached at year ${yearsToP90.toFixed(0)}. This is acceptable if your project ends before then, but leaves less buffer for pressure transients.`
-    tip = 'Consider reducing rate to the P50 optimal for a conservative, well-utilised design.'
-  } else {
-    headline = 'Formation is well-configured'
-    body = `Injection rate is within the DOE P50 optimal envelope. P90 capacity (${env.totalCapacityP90.toFixed(2)} Mt) will not be reached within the ${projectYears}-year project. MAIP margin is ${maipMarginPct.toFixed(0)}% — safe.`
-    tip = ''
-  }
-
+  const tip = severity === 'critical'
+    ? atRisk ? `At current rates, P90 capacity reached in ${yearsToP90.toFixed(0)} yr — below project horizon. Reduce rate or add wells.` : 'MAIP margin negative — injection pressure exceeds fracture gradient. Apply safe rate immediately.'
+    : severity === 'warning'
+      ? aboveP50 ? `Rate is above P50 envelope — P50 capacity may be exceeded in ${yearsToP50.toFixed(0)} yr.` : 'MAIP margin is low. Minor pressure fluctuations may approach fracture gradient.'
+      : ''
   return (
-    <div className={`rounded-lg border ${border} p-3 space-y-2`}>
-      <div className="flex items-center gap-1.5">
-        <Brain size={12} className={iconColor} />
-        <span className="text-[9px] font-mono font-semibold text-primary uppercase tracking-wider">Formation Intelligence</span>
-        <span className={`ml-auto text-[8px] font-mono px-1.5 py-0.5 rounded border ${
-          severity === 'critical' ? 'bg-error/10 border-error/30 text-error'
-          : severity === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-        }`}>
-          {severity === 'critical' ? 'RISK' : severity === 'warning' ? 'CAUTION' : 'SAFE'}
-        </span>
+    <div className={`rounded-lg p-2.5 border space-y-2 ${border}`}>
+      <div className={`flex items-center gap-1.5 text-[10px] font-mono font-semibold ${iconColor}`}>
+        <Brain size={11} />
+        Formation Intelligence
       </div>
-
-      {/* Headline */}
-      <p className={`text-[10px] font-mono font-semibold leading-snug ${
-        severity === 'critical' ? 'text-error' : severity === 'warning' ? 'text-amber-300' : 'text-emerald-300'
-      }`}>{headline}</p>
-
-      {/* Explanation */}
-      <p className="text-[9px] text-muted font-mono leading-relaxed">{body}</p>
-
-      {/* Metrics strip */}
       <div className="grid grid-cols-3 gap-1.5 text-[9px] font-mono">
         <div className="rounded bg-card border border-theme/50 px-1.5 py-1">
           <div className="text-muted text-[7px] uppercase tracking-wider mb-0.5">P90 Capacity</div>
@@ -115,8 +94,6 @@ function FormationIntelligenceCard({ env, totalAnnualRate, projectYears, maipMPa
           </div>
         </div>
       </div>
-
-      {/* Tip + action */}
       {tip && (
         <div className="flex items-start gap-1.5 pt-1 border-t border-theme/30">
           <Info size={9} className="text-muted shrink-0 mt-0.5" />
@@ -147,7 +124,7 @@ function ValidationBanner({ issues }: { issues: { type: 'error' | 'warning'; mes
             : 'bg-warning border-warning text-warning'
         }`}>
           <span className="font-bold shrink-0">{issue.type === 'error' ? '\u2715' : '\u26a0'}</span>
-          {issue.message}
+          <span>{issue.message}</span>
         </div>
       ))}
     </div>
@@ -172,13 +149,17 @@ interface SliderProps {
   step: number
   unit: string
   onChange: (v: number) => void
+  badge?: 'green' | 'amber' | 'red'
 }
 
-function Slider({ label, value, min, max, step, unit, onChange }: SliderProps) {
+function Slider({ label, value, min, max, step, unit, onChange, badge }: SliderProps) {
   return (
     <div>
       <div className="flex justify-between text-[11px] mb-0.5">
-        <span className="text-muted font-mono">{label}</span>
+        <span className="text-muted font-mono flex items-center gap-1">
+          {label}
+          {badge && <StatusBadge status={badge} />}
+        </span>
         <span className="text-secondary font-mono">{value}{unit}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full" />
@@ -204,6 +185,12 @@ export default function FormationPanel() {
 
   const projectYears = useUIStore((s) => s.projectYears)
   const setProjectYears = useUIStore((s) => s.setProjectYears)
+  const stageCompletion = useUIStore((s) => s.stageCompletion)
+  const setStageComplete = useUIStore((s) => s.setStageComplete)
+  const setPanel = useUIStore((s) => s.setPanel)
+
+  // ── Sub-step navigation ──────────────────────────────────────────────────────
+  const [subStep, setSubStep] = useState<SubStep>(1)
 
   const rateEnvelope = useMemo(
     () => computeOptimalRate(params, wells, projectYears),
@@ -217,14 +204,11 @@ export default function FormationPanel() {
     if (params.temperature < -56.3)
       issues.push({ type: 'warning', message: `Temperature ${params.temperature}\u00b0C is below CO\u2082 triple point (\u221256.3\u00b0C)` })
     if (params.pressure <= 0)
-      issues.push({ type: 'error', message: 'Initial pressure must be > 0 MPa' })
+      issues.push({ type: 'error', message: 'Pressure must be > 0 MPa' })
     if (params.porosity <= 0)
       issues.push({ type: 'error', message: 'Porosity must be > 0' })
     if (wells.length === 0)
-      issues.push({ type: 'warning', message: 'No injection wells configured \u2014 add at least one well' })
-    const zeroRateWells = wells.filter(w => w.injectionRate <= 0)
-    if (zeroRateWells.length > 0)
-      issues.push({ type: 'warning', message: `Well${zeroRateWells.length > 1 ? 's' : ''} ${zeroRateWells.map(w => w.label).join(', ')} ha${zeroRateWells.length > 1 ? 've' : 's'} zero injection rate` })
+      issues.push({ type: 'warning', message: 'No injection wells configured' })
     return issues
   }, [params, wells])
 
@@ -233,57 +217,108 @@ export default function FormationPanel() {
   const setGridData = useFormationStore((s) => s.setGridData)
   const gridData = useFormationStore((s) => s.gridData)
   const loadPreset = useFormationStore((s) => s.load)
-  const [activePreset, setActivePreset] = useState<string | null>(null)
+  const activePreset = useFormationStore((s) => s.activePresetName)
+  const [presetChangeMode, setPresetChangeMode] = useState(false)
 
-  // ── Auto-optimize notice ──────────────────────────────────────────────────
-  interface OptNotice { formation: string; perWellRate: number; totalRate: number; p90: number; maip: number }
+  interface OptNotice { formation: string; perWellRate: number; totalRate: number }
   const [optNotice, setOptNotice] = useState<OptNotice | null>(null)
 
-  // Compute live MAIP margin from current params + wells for the intelligence card
   const liveMAIP = useMemo(() => {
     if (wells.length === 0) return { maip: 0, maipMarginPct: 100 }
     try {
       const v = validateGeomechanics(params, wells)
-      return {
-        maip: v.estimatedPInj ?? 0,
-        maipMarginPct: v.checks.maip?.value ?? 100,
-      }
+      return { maip: v.estimatedPInj ?? 0, maipMarginPct: v.checks.maip?.value ?? 100 }
     } catch {
       return { maip: 0, maipMarginPct: 100 }
     }
   }, [params, wells])
 
-  // Compute total annual rate across all wells
-  const totalAnnualRate = useMemo(
-    () => wells.reduce((s, w) => s + w.injectionRate, 0),
-    [wells],
-  )
+  const totalAnnualRate = useMemo(() => wells.reduce((s, w) => s + w.injectionRate, 0), [wells])
 
-  // Handler: apply geomechanics-validated safe rate to all wells
+  // ── Storage screening (reactive) ─────────────────────────────────────────────
+  const screeningResult = useMemo(() => assessStorageScreening(params), [params])
+
+  // ── Amber acknowledgment state ───────────────────────────────────────────────
+  const [amberAcknowledged, setAmberAcknowledged] = useState(false)
+
+  // Reset stage2 whenever params change after confirmation
+  useEffect(() => {
+    if (stageCompletion.stage2) {
+      setStageComplete('stage2', false)
+      setAmberAcknowledged(false)
+    }
+  // Only trigger on params change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
+
+  // Auto-save project whenever parameters or wells change
+  useEffect(() => {
+    useUIStore.getState().saveCurrentProject()
+  }, [params, wells])
+
+  // ── MARS IFT prediction (sub-step 5) ─────────────────────────────────────────
+  const marsIFT = useMemo(() => {
+    try {
+      const T_K = params.temperature + 273.15
+      const P_MPa = params.pressure
+      const phase = determinePhase(T_K, P_MPa, params.methaneFraction, params.nitrogenFraction)
+      const Pr = computePr(P_MPa, params.methaneFraction, params.nitrogenFraction)
+      const Tr = computeTr(T_K, params.methaneFraction, params.nitrogenFraction)
+      const MCM = params.monovalentSalinity
+      const BCM = params.bivalentSalinity
+      const input = {
+        Pr, Tr, MCM, BCM,
+        x_CH4: params.methaneFraction,
+        x_N2: params.nitrogenFraction,
+        drho_sq: 0,
+        BCM_bin: BCM > 0 ? 1 : 0,
+        CH4_bin: params.methaneFraction > 0 ? 1 : 0,
+        N2_bin: params.nitrogenFraction > 0 ? 1 : 0,
+      }
+      let ift: number | null = null
+      if (phase === 'subcritical') {
+        ift = evaluateMars(scaleInput(input, subScaler), subEquation)
+      } else {
+        ift = evaluateMars(scaleInput(input, supScaler), supEquation)
+      }
+      const ad = assessApplicabilityDomain(input, phase)
+      return { ift: ift ?? 0, ad, phase }
+    } catch {
+      return null
+    }
+  }, [params])
+
+  // ── Fluid properties (sub-step 4 live readout) ────────────────────────────────
+  const fluidProps = useMemo(() => {
+    try {
+      const T_K = params.temperature + 273.15
+      const P_Pa = params.pressure * 1e6
+      const phase = determinePhase(T_K, params.pressure, params.methaneFraction, params.nitrogenFraction)
+      const co2Density = co2DensitySpanWagner(T_K, params.pressure)
+      const co2Visc = co2ViscosityFenghour(T_K, co2Density)
+      const brineDensity = brineDensityGarcia(T_K, P_Pa, params.monovalentSalinity)
+      return { co2Density, co2Visc, brineDensity, phase }
+    } catch {
+      return null
+    }
+  }, [params.temperature, params.pressure, params.monovalentSalinity])
+
+  // ── Sub-step 1 validation: depth must be ≥800m to proceed ─────────────────────
+  const step1CanProceed = params.depth >= 800
+
+  // ── Sub-step 5 validation: CO2 must be ≥5% ────────────────────────────────────
+  const step5CanProceed = (params.methaneFraction + params.nitrogenFraction) < 0.95
+
   const handleApplySafeRate = useCallback(() => {
     const opt = autoOptimizeWells(params, Math.max(1, wells.length), wells)
     setWells(opt.wells)
   }, [params, wells, setWells])
 
-  // Handler: load a preset AND auto-optimize wells for that formation
   const handlePresetLoad = useCallback((preset: typeof FORMATION_PRESETS[0]) => {
     loadPreset(preset.params, undefined, preset.name)
-    setActivePreset(preset.name)
-    // Run optimization against the new formation params (not the old ones)
     const opt = autoOptimizeWells(preset.params, Math.max(1, wells.length), wells)
     setWells(opt.wells)
-    // Compute P90 for the notice
-    const T_K = preset.params.temperature + 273.15
-    const rhoCO2Approx = 700 // kg/m³ approx for notice display
-    const poreVol = preset.params.area * 1e6 * preset.params.thickness * preset.params.netToGross * preset.params.porosity
-    const p90 = poreVol * 0.055 * rhoCO2Approx / 1e9
-    setOptNotice({
-      formation: preset.name,
-      perWellRate: opt.perWellRate,
-      totalRate: opt.totalRate,
-      p90,
-      maip: 0,
-    })
+    setOptNotice({ formation: preset.name, perWellRate: opt.perWellRate, totalRate: opt.totalRate })
   }, [loadPreset, wells, setWells])
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -296,10 +331,7 @@ export default function FormationPanel() {
     const text = await file.text()
     try {
       const parsed = parseLAS(text)
-      if (parsed.depths.length === 0) {
-        alert('No depth data found in this LAS file.')
-        return
-      }
+      if (parsed.depths.length === 0) { alert('No depth data found in this LAS file.'); return }
       setLas({
         curves: parsed.curveNames.map((name) => ({
           curveName: name,
@@ -309,82 +341,53 @@ export default function FormationPanel() {
         depthMin: parsed.depths[0],
         depthMax: parsed.depths[parsed.depths.length - 1],
       })
-    } catch {
-      alert('Failed to parse LAS file. Check the format.')
-    }
+    } catch { alert('Failed to parse LAS file. Check the format.') }
   }
 
   const handleGridUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const text = await file.text()
     try {
-      const parsed = parseCarbonGrid(text)
+      const parsed = parseCarbonGrid(await file.text())
       setGridData(parsed)
       setGeometry('gridfile')
-    } catch {
-      alert('Failed to parse grid file. Check the format.')
-    }
+    } catch { alert('Failed to parse grid file. Check the format.') }
   }
 
   const applyLasAverages = useCallback(() => {
     if (!las) return
-    // Average porosity from any POR* curve
-    const porCurve = las.curves.find((c) =>
-      c.curveName.toUpperCase().includes('POR')
-    )
-    // Average permeability from any PERM* curve (log-average)
-    const permCurve = las.curves.find((c) =>
-      c.curveName.toUpperCase().includes('PERM') || c.curveName.toUpperCase() === 'K'
-    )
+    const porCurve = las.curves.find((c) => c.curveName.toUpperCase().includes('POR'))
+    const permCurve = las.curves.find((c) => c.curveName.toUpperCase().includes('PERM') || c.curveName.toUpperCase() === 'K')
     const updates: Partial<import('../../types').FormationParams> = {}
-    if (porCurve && porCurve.values.length > 0) {
-      const validVals = porCurve.values.filter((v) => v > 0 && v < 1 && isFinite(v))
-      if (validVals.length > 0) {
-        updates.porosity = parseFloat(
-          (validVals.reduce((s, v) => s + v, 0) / validVals.length).toFixed(3)
-        )
-      }
+    if (porCurve) {
+      const v = porCurve.values.filter((x) => x > 0 && x < 1 && isFinite(x))
+      if (v.length) updates.porosity = parseFloat((v.reduce((s, x) => s + x, 0) / v.length).toFixed(3))
     }
-    if (permCurve && permCurve.values.length > 0) {
-      // Log-average for permeability (geometric mean)
-      const validVals = permCurve.values.filter((v) => v > 0 && isFinite(v))
-      if (validVals.length > 0) {
-        const logMean = validVals.reduce((s, v) => s + Math.log10(v), 0) / validVals.length
-        updates.permeability = parseFloat(Math.pow(10, logMean).toFixed(1))
-      }
+    if (permCurve) {
+      const v = permCurve.values.filter((x) => x > 0 && isFinite(x))
+      if (v.length) updates.permeability = parseFloat(Math.pow(10, v.reduce((s, x) => s + Math.log10(x), 0) / v.length).toFixed(1))
     }
-    if (Object.keys(updates).length > 0) setParams(updates)
+    if (Object.keys(updates).length) setParams(updates)
   }, [las, setParams])
 
   const handleEclipseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const text = await file.text()
     try {
-      const result = parseEclipseDeck(text)
-      if (result.errors.length > 0) {
-        alert(`Eclipse parse errors:\n${result.errors.join('\n')}`)
-        return
-      }
+      const result = parseEclipseDeck(await file.text())
+      if (result.errors.length > 0) { alert(`Eclipse parse errors:\n${result.errors.join('\n')}`); return }
       const updates: Partial<import('../../types').FormationParams> = {}
       if (result.topDepth_m != null && result.dz_m != null && result.grid) {
         updates.depth = Math.round(result.topDepth_m + result.dz_m * result.grid.nz / 2)
         updates.thickness = Math.round(result.dz_m * result.grid.nz)
-      } else if (result.topDepth_m != null) {
-        updates.depth = Math.round(result.topDepth_m)
-      }
-      if (result.meanPorosity != null)    updates.porosity     = parseFloat(result.meanPorosity.toFixed(3))
-      if (result.meanPermX_mD != null)    updates.permeability = parseFloat(result.meanPermX_mD.toFixed(1))
-      if (result.initPressure_MPa != null) updates.pressure    = parseFloat(result.initPressure_MPa.toFixed(2))
-      if (result.temperature_C != null)   updates.temperature  = parseFloat(result.temperature_C.toFixed(1))
-      if (result.dx_m != null && result.dy_m != null && result.grid) {
-        // Approximate area in km²
-        const areakm2 = (result.dx_m * result.grid.nx * result.dy_m * result.grid.ny) / 1e6
-        updates.area = parseFloat(areakm2.toFixed(1))
-      }
-      if (Object.keys(updates).length > 0) setParams(updates)
-      // Import wells
+      } else if (result.topDepth_m != null) updates.depth = Math.round(result.topDepth_m)
+      if (result.meanPorosity != null) updates.porosity = parseFloat(result.meanPorosity.toFixed(3))
+      if (result.meanPermX_mD != null) updates.permeability = parseFloat(result.meanPermX_mD.toFixed(1))
+      if (result.initPressure_MPa != null) updates.pressure = parseFloat(result.initPressure_MPa.toFixed(2))
+      if (result.temperature_C != null) updates.temperature = parseFloat(result.temperature_C.toFixed(1))
+      if (result.dx_m != null && result.dy_m != null && result.grid)
+        updates.area = parseFloat(((result.dx_m * result.grid.nx * result.dy_m * result.grid.ny) / 1e6).toFixed(1))
+      if (Object.keys(updates).length) setParams(updates)
       if (result.wells.length > 0) {
         const newWells: import('../../types').Well[] = result.wells.map((w, idx) => ({
           id: `eclipse_well_${idx}_${Date.now()}`,
@@ -397,14 +400,9 @@ export default function FormationPanel() {
         }))
         setWells(newWells)
       }
-      const applied = Object.keys(updates).length
-      const warnMsg = result.warnings.length > 0 ? `\nWarnings:\n${result.warnings.slice(0, 3).join('\n')}` : ''
-      alert(`Eclipse deck imported: ${applied} parameters applied, ${result.wells.length} well(s) loaded.${warnMsg}`)
-      // Reset file input so same file can be re-uploaded
       if (eclipseFileRef.current) eclipseFileRef.current.value = ''
-    } catch (err) {
-      alert(`Failed to parse Eclipse deck: ${err instanceof Error ? err.message : String(err)}`)
-    }
+      alert(`Eclipse deck imported: ${Object.keys(updates).length} parameters applied, ${result.wells.length} well(s) loaded.`)
+    } catch (err) { alert(`Failed to parse Eclipse deck: ${err instanceof Error ? err.message : String(err)}`) }
   }
 
   const handleDownloadSampleGrid = () => {
@@ -412,382 +410,842 @@ export default function FormationPanel() {
     const blob = new Blob([JSON.stringify(grid, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = 'sample_irregular_dome.carbon.json'
-    a.click()
+    a.href = url; a.download = 'sample_irregular_dome.carbon.json'; a.click()
     URL.revokeObjectURL(url)
   }
 
-  return (
-    <div className="p-4 space-y-3">
-      <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider">Formation Parameters</h2>
+  // ── Helper: get criterion status for a given id ───────────────────────────────
+  const criterionStatus = useCallback((id: string) => {
+    return screeningResult.criteria.find((c) => c.id === id)?.status ?? 'green'
+  }, [screeningResult])
 
-      <ValidationBanner issues={validationIssues} />
+  // ── Sub-step navigation helpers ───────────────────────────────────────────────
+  const canGoNext = useCallback((): boolean => {
+    if (subStep === 1) return step1CanProceed
+    if (subStep === 5) return step5CanProceed
+    return true
+  }, [subStep, step1CanProceed, step5CanProceed])
 
-      <div>
-        <label className="text-[11px] text-muted font-mono block mb-1">Presets</label>
-        <div className="flex flex-wrap gap-1">
-          {FORMATION_PRESETS.map((preset) => {
-            const isActive = activePreset === preset.name
-            return (
-              <button
-                key={preset.name}
-                onClick={() => handlePresetLoad(preset)}
-                title={`${preset.location} — ${preset.description}`}
-                className={`px-2 py-1 rounded text-[9px] font-mono transition-all border flex items-center gap-1 ${
-                  isActive
-                    ? 'bg-accent text-white border-accent shadow-[0_0_6px_rgba(0,196,160,0.4)] font-semibold'
-                    : 'bg-tertiary text-muted hover:text-secondary border-theme/30 hover:border-theme/60'
-                }`}
-              >
-                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white inline-block shrink-0" />}
-                {preset.name}
-              </button>
-            )
-          })}
-        </div>
+  const nextStep = () => { if (canGoNext() && subStep < 6) setSubStep((s) => (s + 1) as SubStep) }
+  const prevStep = () => { if (subStep > 1) setSubStep((s) => (s - 1) as SubStep) }
 
-        {/* Auto-optimize applied notice */}
-        {optNotice && (
-          <div className="mt-2 px-2.5 py-2 rounded border border-emerald-500/30 bg-emerald-500/8 flex items-start gap-2">
-            <CheckCircle2 size={11} className="text-emerald-400 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] text-emerald-300 font-mono font-semibold leading-snug">
-                Wells auto-optimized for {optNotice.formation}
-              </p>
-              <p className="text-[8px] text-emerald-400/70 font-mono leading-relaxed mt-0.5">
-                Rate set to {optNotice.perWellRate.toFixed(3)} Mt/yr per well (total {optNotice.totalRate.toFixed(3)} Mt/yr) — maximum safe rate validated against MAIP, caprock fracture pressure, and Mohr-Coulomb failure criteria. Adjust with the slider below.
-              </p>
-            </div>
-            <button onClick={() => setOptNotice(null)} className="text-emerald-400/50 hover:text-emerald-400 transition shrink-0">
-              <X size={10} />
-            </button>
-          </div>
-        )}
+  // ── Render sub-step content ───────────────────────────────────────────────────
+  const renderSubStep = () => {
+    switch (subStep) {
 
-        {/* Active preset info card */}
-        {activePreset && (() => {
-          const p = FORMATION_PRESETS.find((p) => p.name === activePreset)
-          return p ? (
-            <div className="mt-2 px-2.5 py-2 rounded border border-accent/50 bg-accent/10 shadow-[0_0_8px_rgba(0,196,160,0.12)]">
-              <div className="flex items-center justify-between mb-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse inline-block" />
-                  <span className="text-[10px] text-accent font-mono font-semibold">{p.name}</span>
-                </div>
-                <span className="text-[8px] text-muted font-mono">{p.location}</span>
+      // ── 1. Location & Scale ────────────────────────────────────────────────────
+      case 1:
+        return (
+          <div className="space-y-4">
+            <p className="text-[10px] text-muted font-mono leading-relaxed">
+              Define the physical dimensions of your target CO2 storage formation. Depth must exceed 800 m for CO2 to reach its supercritical state — the dense phase essential for efficient geological storage.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <Slider label="Depth" value={params.depth} min={500} max={5000} step={10} unit=" m"
+                  onChange={(v) => setParams({ depth: v })} badge={criterionStatus('depth')} />
+                {params.depth < 800 && (
+                  <p className="text-[9px] text-red-400 font-mono">Depth below 800 m minimum. CO2 will be gaseous — not suitable for storage.</p>
+                )}
+
+                <Slider label="Formation Thickness" value={params.thickness} min={10} max={500} step={5} unit=" m"
+                  onChange={(v) => setParams({ thickness: v })} badge={criterionStatus('thickness')} />
               </div>
-              <p className="text-[8px] text-muted/80 font-mono leading-tight">{p.description}</p>
+
+              <div className="space-y-4">
+                <Slider label="Formation Area" value={params.area} min={1} max={500} step={0.5} unit=" km²"
+                  onChange={(v) => setParams({ area: v })} badge={criterionStatus('area')} />
+
+                <Slider label="Net-to-Gross" value={params.netToGross * 100} min={10} max={100} step={1} unit=" %"
+                  onChange={(v) => setParams({ netToGross: v / 100 })} badge={criterionStatus('netToGross')} />
+              </div>
             </div>
-          ) : null
-        })()}
-      </div>
 
-      <Slider label="Depth" value={params.depth} min={500} max={4000} step={10} unit=" m" onChange={(v) => setParams({ depth: v })} />
-      <Slider label="Thickness (Storage Interval)" value={params.thickness} min={10} max={500} step={5} unit=" m" onChange={(v) => setParams({ thickness: v })} />
-      <Slider label="Porosity" value={params.porosity * 100} min={5} max={40} step={0.5} unit=" %" onChange={(v) => setParams({ porosity: v / 100 })} />
-      <Slider label="Permeability" value={params.permeability} min={1} max={5000} step={10} unit=" mD" onChange={(v) => setParams({ permeability: v })} />
-      <Slider label="Pressure" value={params.pressure} min={5} max={60} step={0.1} unit=" MPa" onChange={(v) => setParams({ pressure: v })} />
-      <Slider label="Temperature" value={params.temperature} min={20} max={150} step={1} unit=" °C" onChange={(v) => setParams({ temperature: v })} />
-      <Slider label="Area" value={params.area} min={1} max={100} step={0.5} unit=" km²" onChange={(v) => setParams({ area: v })} />
-      <Slider label="Net-to-Gross" value={params.netToGross * 100} min={30} max={100} step={1} unit=" %" onChange={(v) => setParams({ netToGross: v / 100 })} />
-      <div className="text-[9px] text-muted/60 font-mono -mt-1.5 leading-tight">
-        Net-to-gross = ratio of reservoir-quality rock to total formation thickness.
-        Shale/silt layers are excluded. Affects containment probability and storage capacity.
-      </div>
+            {/* Project years here for convenience */}
+            <div className="pt-3 border-t border-theme/30">
+              <div className="flex justify-between text-[10px] mb-0.5">
+                <span className="text-muted font-mono flex items-center gap-1"><Clock size={10} /> Project Years</span>
+                <span className="text-secondary font-mono">{projectYears} yr</span>
+              </div>
+              <input type="range" min={10} max={100} step={5} value={projectYears}
+                onChange={(e) => setProjectYears(Number(e.target.value))} className="w-full" />
+            </div>
+          </div>
+        )
 
-      <div>
-        <label className="text-[11px] text-muted font-mono block mb-1">Geometry Type</label>
-        <div className="flex flex-wrap gap-1">
-          {geometries.map((g) => (
-            <button key={g.value} onClick={() => setGeometry(g.value)}
-              className={`px-3 py-1.5 rounded text-[10px] font-mono transition ${params.geometryType === g.value ? 'bg-accent text-white' : 'bg-tertiary text-muted hover:text-secondary'}`}
-            >
-              {g.label}
-            </button>
-          ))}
-        </div>
-        {params.geometryType === 'gridfile' && (
-          <div className="mt-2 space-y-1.5">
-            <div className="flex items-center gap-1">
-              <input ref={gridFileRef} type="file" accept=".json" onChange={handleGridUpload} className="hidden" />
-              <button onClick={() => gridFileRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-tertiary text-muted hover:text-secondary"
-              >
-                <Upload size={12} /> Upload .carbon.json
+      // ── 2. Reservoir Geometry ────────────────────────────────────────────────
+      case 2:
+        return (
+          <div className="space-y-3">
+            <p className="text-[10px] text-muted font-mono leading-relaxed">
+              Select the structural configuration of your formation. Geometry controls how CO2 migrates and accumulates. Anticlinal traps are most favourable for structural trapping.
+            </p>
+
+            <div>
+              <label className="text-[11px] text-muted font-mono block mb-1.5">Geometry Type</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {geometries.map((g) => (
+                  <button key={g.value} onClick={() => setGeometry(g.value)}
+                    className={`px-3 py-2 rounded text-[10px] font-mono transition text-left ${
+                      params.geometryType === g.value ? 'bg-accent text-white font-semibold' : 'bg-tertiary text-muted hover:text-secondary'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+              {params.geometryType === 'gridfile' && (
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-1">
+                    <input ref={gridFileRef} type="file" accept=".json" onChange={handleGridUpload} className="hidden" />
+                    <button onClick={() => gridFileRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-tertiary text-muted hover:text-secondary">
+                      <Upload size={12} /> Upload .carbon.json
+                    </button>
+                    <button onClick={handleDownloadSampleGrid}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-tertiary text-muted hover:text-secondary">
+                      <FileDown size={12} /> Sample
+                    </button>
+                  </div>
+                  {gridData && <p className="text-[10px] text-accent font-mono">Loaded: {gridData.name} ({gridData.nx}x{gridData.nz})</p>}
+                </div>
+              )}
+            </div>
+
+            {/* LAS upload */}
+            <div className="pt-2 border-t border-theme/30">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><Upload size={12} /> LAS Well Log</h3>
+              </div>
+              <input ref={fileRef} type="file" accept=".las" onChange={handleLasUpload} className="hidden" />
+              <div className="flex gap-1">
+                <button onClick={() => fileRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-1.5 text-[10px] px-3 py-2 rounded-md font-mono bg-tertiary text-muted hover:text-secondary transition">
+                  <Upload size={11} /> {las ? 'Replace' : 'Upload .las'}
+                </button>
+                <a href="/sample_well.las" download
+                  className="flex items-center gap-1 text-[10px] px-2.5 py-2 rounded-md font-mono bg-tertiary text-accent hover:text-white hover:bg-accent transition">
+                  Sample
+                </a>
+              </div>
+              {las ? (
+                <div className="mt-1 space-y-1">
+                  <p className="text-[10px] text-accent font-mono">{las.curves.length} curve(s) loaded ({las.depthMin}–{las.depthMax} m)</p>
+                  <button onClick={applyLasAverages}
+                    className="flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30 transition w-full justify-center">
+                    <Upload size={10} /> Apply LAS averages to simulation params
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted font-mono mt-1 italic">No LAS loaded.</p>
+              )}
+            </div>
+
+            {/* Eclipse import */}
+            <div className="pt-2 border-t border-theme/30">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><FileDown size={12} /> Eclipse .DATA Import</h3>
+              </div>
+              <input ref={eclipseFileRef} type="file" accept=".data,.DATA,.inc,.INC" onChange={handleEclipseUpload} className="hidden" />
+              <button onClick={() => eclipseFileRef.current?.click()}
+                className="w-full flex items-center justify-center gap-1.5 text-[10px] px-3 py-2 rounded-md font-mono bg-tertiary text-muted hover:text-secondary transition">
+                <Upload size={11} /> Import Eclipse Deck
               </button>
-              <button onClick={handleDownloadSampleGrid}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono bg-tertiary text-muted hover:text-secondary"
-              >
-                <FileDown size={12} /> Sample
-              </button>
+              <p className="text-[9px] text-muted font-mono mt-1 leading-tight">Parses GRID, PROPS, SCHEDULE keywords. Imports depth, porosity, permeability, pressure, temperature, well locations.</p>
             </div>
-            {gridData && <p className="text-[10px] text-accent font-mono">Loaded: {gridData.name} ({gridData.nx}×{gridData.nz})</p>}
           </div>
-        )}
-      </div>
+        )
 
-      <div>
-        <label className="text-[11px] text-muted font-mono block mb-1">Salt Type</label>
-        <div className="flex gap-1">
-          {(['NaCl', 'CaCl2', 'Mixed'] as const).map((t) => (
-            <button key={t} onClick={() => setSaltType(t)}
-              className={`px-3 py-1.5 rounded text-[10px] font-mono transition ${params.saltType === t ? 'bg-accent text-white' : 'bg-tertiary text-muted hover:text-secondary'}`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
+      // ── 3. Rock Quality ──────────────────────────────────────────────────────
+      case 3: {
+        const poreVol = params.area * 1e6 * params.thickness * params.netToGross * params.porosity / 1e9  // km³
+        const capacityP50 = poreVol * 0.02 * (fluidProps?.co2Density ?? 700) / 1e6  // Mt
+        const injIdx = screeningResult.criteria.find((c) => c.id === 'injectivity')
+        return (
+          <div className="space-y-4">
+            <p className="text-[10px] text-muted font-mono leading-relaxed">
+              Porosity determines storage volume. Permeability determines injectability. Both must exceed minimum thresholds for viable CO2 storage.
+            </p>
 
-      <Slider label="Monovalent Salinity" value={params.monovalentSalinity} min={0} max={5} step={0.01} unit=" mol/kg" onChange={setMonovalent} />
-      <Slider label="Bivalent Salinity" value={params.bivalentSalinity} min={0} max={5} step={0.01} unit=" mol/kg" onChange={setBivalent} />
-      <Slider label="CH4 Fraction" value={params.methaneFraction * 100} min={0} max={10} step={0.1} unit=" %" onChange={(v) => setParams({ methaneFraction: v / 100 })} />
-      <Slider label="N2 Fraction" value={params.nitrogenFraction * 100} min={0} max={10} step={0.1} unit=" %" onChange={(v) => setParams({ nitrogenFraction: v / 100 })} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Slider label="Porosity" value={params.porosity * 100} min={5} max={45} step={0.5} unit=" %"
+                  onChange={(v) => setParams({ porosity: v / 100 })} badge={criterionStatus('porosity')} />
+                {params.porosity < 0.10 && (
+                  <p className="text-[9px] text-red-400 font-mono">Below 10% minimum (Bachu 2003). Formation unlikely to be economic.</p>
+                )}
 
-      <div className="pt-3 border-t border-theme">
-        {/* Project horizon */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] mb-0.5">
-            <span className="text-muted font-mono flex items-center gap-1"><Clock size={10} /> Project Years</span>
-            <span className="text-secondary font-mono">{projectYears} yr</span>
-          </div>
-          <input type="range" min={10} max={100} step={5} value={projectYears}
-            onChange={(e) => setProjectYears(Number(e.target.value))}
-            className="w-full"
-          />
-          <div className="flex justify-between text-[8px] text-muted/60 font-mono mt-0.5">
-            <span>10 yr</span><span>100 yr</span>
-          </div>
-        </div>
+                <Slider label="Permeability" value={params.permeability} min={1} max={3000} step={10} unit=" mD"
+                  onChange={(v) => setParams({ permeability: v })} badge={criterionStatus('permeability')} />
 
-        {/* DOE capacity summary */}
-        <div className="mb-3 rounded bg-tertiary/50 border border-theme/30 px-2 py-1.5 space-y-0.5">
-          <div className="text-[8px] text-muted font-mono uppercase tracking-wider mb-1">DOE Storage Envelope</div>
-          {[
-            { label: 'P10 (0.51%)', val: rateEnvelope.totalCapacityP10, color: '#94a3b8' },
-            { label: 'P50 (2.0%)',  val: rateEnvelope.totalCapacityP50, color: '#34d399' },
-            { label: 'P90 (5.5%)',  val: rateEnvelope.totalCapacityP90, color: '#fb923c' },
-          ].map(({ label, val, color }) => (
-            <div key={label} className="flex justify-between text-[9px] font-mono">
-              <span className="text-muted">{label}</span>
-              <span style={{ color }}>{val.toFixed(2)} Mt</span>
+                <div className="text-[10px] text-muted font-mono">
+                  Net-to-gross (from Step 1): <span className="text-secondary font-bold">{(params.netToGross * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-tertiary/30 border border-theme/20 p-4 space-y-2">
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-2 border-b border-theme/10 pb-1 font-bold">Geological Volumetric Estimates</div>
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-muted">Pore volume:</span>
+                  <span className="text-secondary font-bold">{poreVol.toFixed(3)} km³</span>
+                </div>
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-muted">Capacity P50 (DOE 2011):</span>
+                  <span className="text-emerald-400 font-bold">{capacityP50.toFixed(2)} Mt</span>
+                </div>
+                {injIdx && (
+                  <div className="flex items-center justify-between text-xs font-mono border-t border-theme/10 pt-1.5 mt-1.5">
+                    <span className="text-muted">Injectivity index:</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-secondary font-bold">{injIdx.yourValue.toFixed(2)} kg/(s·MPa)</span>
+                      <StatusBadge status={injIdx.status} />
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
-          <div className="pt-1 border-t border-theme/20 text-[8px] text-muted font-mono flex justify-between">
-            <span>Optimal rate / well</span>
-            <span className="text-success">{rateEnvelope.optimalRate.toFixed(3)} Mt/yr</span>
           </div>
-        </div>
+        )
+      }
 
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><Drilling size={12} /> Wells</h3>
-          <div className="flex items-center gap-1">
+      // ── 4. Fluid Conditions ───────────────────────────────────────────────────
+      case 4:
+        return (
+          <div className="space-y-4">
+            <p className="text-[10px] text-muted font-mono leading-relaxed">
+              Pressure and temperature control CO2 density and viscosity. At supercritical conditions (T{'>'}31.1°C, P{'>'}7.38 MPa), CO2 reaches 600–800 kg/m³ — making storage 3-4x more efficient than gaseous CO2.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Slider label="Reservoir Pressure" value={params.pressure} min={5} max={60} step={0.1} unit=" MPa"
+                  onChange={(v) => setParams({ pressure: v })} badge={criterionStatus('pressure')} />
+
+                <Slider label="Temperature" value={params.temperature} min={20} max={200} step={1} unit=" °C"
+                  onChange={(v) => setParams({ temperature: v })} badge={criterionStatus('temperature')} />
+
+                <div>
+                  <label className="text-[11px] text-muted font-mono block mb-1.5 uppercase tracking-wider font-bold">Salt Type</label>
+                  <div className="flex gap-1.5">
+                    {(['NaCl', 'CaCl2', 'Mixed'] as const).map((t) => (
+                      <button key={t} onClick={() => setSaltType(t)}
+                        className={`px-3.5 py-2 rounded-lg text-[10px] font-mono font-semibold transition ${params.saltType === t ? 'bg-accent text-white shadow-sm' : 'bg-tertiary text-muted hover:text-secondary'}`}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Slider label="Monovalent Salinity (NaCl eq)" value={params.monovalentSalinity} min={0} max={5} step={0.01} unit=" mol/kg"
+                  onChange={setMonovalent} />
+                <Slider label="Bivalent Salinity (CaCl₂/MgCl₂)" value={params.bivalentSalinity} min={0} max={2} step={0.01} unit=" mol/kg"
+                  onChange={setBivalent} />
+
+                {fluidProps && (
+                  <div className="rounded-xl bg-tertiary/30 border border-theme/20 p-4 space-y-2">
+                    <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-2 border-b border-theme/10 pb-1 font-bold">Thermodynamic Properties</div>
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-muted">CO2 density:</span>
+                      <span className="text-secondary font-bold">{fluidProps.co2Density.toFixed(1)} kg/m³</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-muted">CO2 viscosity:</span>
+                      <span className="text-secondary font-bold">{(fluidProps.co2Visc * 1000).toFixed(3)} mPa·s</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-muted">Brine density:</span>
+                      <span className="text-secondary font-bold">{fluidProps.brineDensity.toFixed(1)} kg/m³</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-mono border-t border-theme/10 pt-1.5 mt-1.5">
+                      <span className="text-muted">CO2 phase state:</span>
+                      <span className={fluidProps.phase === 'supercritical' ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                        {fluidProps.phase === 'supercritical' ? 'Supercritical ✓' : 'Subcritical ✗'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+
+      // ── 5. CO2 Stream Composition ─────────────────────────────────────────────
+      case 5:
+        return (
+          <div className="space-y-4">
+            <p className="text-[10px] text-muted font-mono leading-relaxed">
+              CO2 streams from industrial sources contain impurities. CH4 reduces density; N2 reduces interfacial tension. The MARS model predicts CO2-brine IFT in real time from your inputs.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Slider label="CH₄ Fraction (methane impurity)" value={params.methaneFraction * 100} min={0} max={89} step={0.1} unit=" %"
+                  onChange={(v) => setParams({ methaneFraction: v / 100 })} />
+                <Slider label="N₂ Fraction (nitrogen impurity)" value={params.nitrogenFraction * 100} min={0} max={76} step={0.1} unit=" %"
+                  onChange={(v) => setParams({ nitrogenFraction: v / 100 })} />
+
+                {(params.methaneFraction + params.nitrogenFraction) >= 0.95 && (
+                  <p className="text-[9px] text-red-400 font-mono">CH4 + N2 exceeds 95% — insufficient CO2 in stream.</p>
+                )}
+              </div>
+
+              {marsIFT && (
+                <div className="rounded-xl border border-theme/20 bg-tertiary/30 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted uppercase tracking-wider mb-2 border-b border-theme/10 pb-1 font-bold">
+                    <Brain size={12} className="text-accent" />
+                    MARS IFT Prediction Model
+                  </div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-muted">IFT (CO2-brine):</span>
+                    <span className="text-primary font-bold">{marsIFT.ift.toFixed(2)} mN/m</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-muted">Applicability domain:</span>
+                    <span className={
+                      marsIFT.ad.status === 'green' ? 'text-emerald-400 font-semibold'
+                      : marsIFT.ad.status === 'yellow' ? 'text-amber-400 font-semibold'
+                      : 'text-red-400 font-semibold'
+                    }>
+                      {marsIFT.ad.status === 'green' ? 'Within training range' : marsIFT.ad.status === 'yellow' ? 'Marginal extrapolation' : 'Outside training range'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-muted">Prediction interval (90%):</span>
+                    <span className="text-secondary font-bold">±{marsIFT.ad.pi_halfwidth.toFixed(2)} mN/m</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-mono border-t border-theme/10 pt-1.5 mt-1.5">
+                    <span className="text-muted">Phase:</span>
+                    <span className={`font-bold uppercase ${marsIFT.phase === 'supercritical' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {marsIFT.phase}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+
+      // ── 6. Injection Wells ────────────────────────────────────────────────────
+      case 6:
+        return (
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><Drilling size={12} /> Wells</h3>
+                <div className="flex items-center gap-1">
+                  {wells.length > 0 && (
+                    <button onClick={() => { const opt = autoOptimizeWells(params, wells.length, wells); setWells(opt.wells) }}
+                      className="flex items-center gap-0.5 text-[10px] text-amber hover:text-amber-hover font-mono" title="Auto-optimize wells">
+                      <Sparkles size={11} /> Optimize
+                    </button>
+                  )}
+                  {wells.length < 5 && (
+                    <button onClick={addWell} className="flex items-center gap-0.5 text-[10px] text-accent hover:text-accent-hover font-mono">
+                      <Plus size={11} /> Add
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {wells.length === 0 && (
+                <p className="text-[10px] text-muted font-mono italic mb-2">No wells configured. Add at least one injection well.</p>
+              )}
+
+              {wells.map((w) => {
+                const status = classifyRate(w.injectionRate, rateEnvelope)
+                const meta   = RATE_STATUS_META[status]
+                const sliderMax = Math.max(5, rateEnvelope.maxRate * 1.5)
+                const pctOfOptimal = rateEnvelope.optimalRate > 0 ? (w.injectionRate / rateEnvelope.optimalRate) * 100 : 0
+                return (
+                  <div key={w.id} className="mb-3 p-2 rounded bg-tertiary border border-theme/20">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <input value={w.label} onChange={(e) => updateWellLabel(w.id, e.target.value)}
+                        className="text-xs text-secondary font-mono bg-transparent border-b border-theme/30 outline-none focus:border-accent px-0 py-0 w-28" />
+                      <button onClick={() => removeWell(w.id)} className="flex items-center gap-0.5 text-[10px] text-muted hover:text-error font-mono">
+                        <Trash2 size={10} /> Remove
+                      </button>
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[9px] mb-0.5">
+                          <span className="text-muted font-mono flex items-center gap-0.5"><Move size={8} />X</span>
+                          <span className="text-secondary font-mono">{w.x.toFixed(2)}</span>
+                        </div>
+                        <input type="range" min={-1.5} max={1.5} step={0.05} value={w.x}
+                          onChange={(e) => updateWellPosition(w.id, parseFloat(e.target.value), w.z)} className="w-full" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[9px] mb-0.5">
+                          <span className="text-muted font-mono flex items-center gap-0.5"><Move size={8} />Z</span>
+                          <span className="text-secondary font-mono">{w.z.toFixed(2)}</span>
+                        </div>
+                        <input type="range" min={-1.5} max={1.5} step={0.05} value={w.z}
+                          onChange={(e) => updateWellPosition(w.id, w.x, parseFloat(e.target.value))} className="w-full" />
+                      </div>
+                    </div>
+                    <div className="mb-1.5">
+                      <div className="flex justify-between text-[10px] mb-0.5">
+                        <span className="text-muted font-mono">Injection rate</span>
+                        <span className="font-mono font-semibold" style={{ color: meta.color }}>{w.injectionRate.toFixed(3)} Mt/yr</span>
+                      </div>
+                      <input type="range" min={0.001} max={sliderMax} step={0.001} value={w.injectionRate}
+                        onChange={(e) => updateWellRate(w.id, parseFloat(e.target.value))} className="w-full" />
+                      <div className="relative h-3 rounded overflow-hidden mt-1" style={{ background: 'rgba(15,25,40,0.7)' }}>
+                        <div className="absolute top-0 bottom-0 w-px bg-slate-400/50" style={{ left: `${Math.min(99, (rateEnvelope.minRate / sliderMax) * 100)}%` }} />
+                        <div className="absolute top-0 bottom-0 w-px bg-teal-400/80" style={{ left: `${Math.min(99, (rateEnvelope.optimalRate / sliderMax) * 100)}%` }} />
+                        <div className="absolute top-0 bottom-0 w-px bg-orange-400/80" style={{ left: `${Math.min(99, (rateEnvelope.maxRate / sliderMax) * 100)}%` }} />
+                        <div className="absolute top-0 bottom-0 left-0 rounded transition-all duration-150"
+                          style={{ width: `${Math.min(100, (w.injectionRate / sliderMax) * 100)}%`, background: meta.color, opacity: 0.35 }} />
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[8px] font-mono" style={{ background: meta.bg, color: meta.color }}>
+                        <span>{meta.label}</span>
+                        <span className="ml-auto opacity-70">{pctOfOptimal.toFixed(0)}% of optimal</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[9px] mb-0.5">
+                          <span className="text-muted font-mono">Ramp-up</span>
+                          <span className="text-secondary font-mono">{w.rampUpYears} yr</span>
+                        </div>
+                        <input type="range" min={1} max={Math.floor(projectYears / 3)} step={1}
+                          value={w.rampUpYears} onChange={(e) => updateWellSchedule(w.id, parseFloat(e.target.value), w.rampDownYears)} className="w-full" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[9px] mb-0.5">
+                          <span className="text-muted font-mono">Ramp-down</span>
+                          <span className="text-secondary font-mono">{w.rampDownYears} yr</span>
+                        </div>
+                        <input type="range" min={1} max={Math.floor(projectYears / 3)} step={1}
+                          value={w.rampDownYears} onChange={(e) => updateWellSchedule(w.id, w.rampUpYears, parseFloat(e.target.value))} className="w-full" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* DOE envelope summary */}
+            <div className="rounded bg-tertiary/50 border border-theme/30 px-2 py-1.5 space-y-0.5">
+              <div className="text-[8px] text-muted font-mono uppercase tracking-wider mb-1">DOE Storage Envelope</div>
+              {[
+                { label: 'P10 (0.51%)', val: rateEnvelope.totalCapacityP10, color: '#94a3b8' },
+                { label: 'P50 (2.0%)',  val: rateEnvelope.totalCapacityP50, color: '#34d399' },
+                { label: 'P90 (5.5%)',  val: rateEnvelope.totalCapacityP90, color: '#fb923c' },
+              ].map(({ label, val, color }) => (
+                <div key={label} className="flex justify-between text-[9px] font-mono">
+                  <span className="text-muted">{label}</span>
+                  <span style={{ color }}>{val.toFixed(2)} Mt</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Formation Intelligence */}
             {wells.length > 0 && (
-              <button onClick={() => {
-                const opt = autoOptimizeWells(params, wells.length, wells)
-                setWells(opt.wells)
-              }} className="flex items-center gap-0.5 text-[10px] text-amber hover:text-amber-hover font-mono" title="Auto-place wells and set max safe rate">
-                <Sparkles size={11} /> Optimize
-              </button>
+              <FormationIntelligenceCard
+                env={rateEnvelope}
+                totalAnnualRate={totalAnnualRate}
+                projectYears={projectYears}
+                maipMPa={liveMAIP.maip}
+                maipMarginPct={liveMAIP.maipMarginPct}
+                onApplySafeRate={handleApplySafeRate}
+              />
             )}
-            {wells.length < 5 && <button onClick={addWell} className="flex items-center gap-0.5 text-[10px] text-accent hover:text-accent-hover font-mono"><Plus size={11} /> Add</button>}
-          </div>
-        </div>
-        {wells.length === 0 && (
-          <p className="text-[10px] text-muted font-mono italic mb-2">No wells configured. Add wells via the Add button or drag them into position on the 3D model.</p>
-        )}
-        {wells.map((w) => {
-          const status = classifyRate(w.injectionRate, rateEnvelope)
-          const meta   = RATE_STATUS_META[status]
-          const pctOfOptimal = rateEnvelope.optimalRate > 0
-            ? (w.injectionRate / rateEnvelope.optimalRate) * 100
-            : 0
-          // slider fill: optimal = 50% of visual bar; scale relative to maxRate
-          const sliderMax = Math.max(5, rateEnvelope.maxRate * 1.5)
 
-          return (
-            <div key={w.id} className="mb-3 p-2 rounded bg-tertiary border border-theme/20">
-              <div className="flex items-center justify-between mb-1.5">
-                <input value={w.label} onChange={(e) => updateWellLabel(w.id, e.target.value)}
-                  className="text-xs text-secondary font-mono bg-transparent border-b border-theme/30 outline-none focus:border-accent px-0 py-0 w-28"
-                />
-                <button onClick={() => removeWell(w.id)} className="flex items-center gap-0.5 text-[10px] text-muted hover:text-error font-mono"><Trash2 size={10} /> Remove</button>
+            {/* Confirm Formation gate */}
+            <div className="border-t border-theme pt-3 space-y-3">
+              <div className={`rounded-lg px-3 py-2 border text-[10px] font-mono flex items-start gap-2 ${
+                !screeningResult.canProceed
+                  ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                  : screeningResult.requiresAcknowledgment
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              }`}>
+                {!screeningResult.canProceed
+                  ? <X size={12} className="shrink-0 mt-0.5 text-red-400" />
+                  : screeningResult.requiresAcknowledgment
+                    ? <AlertTriangle size={12} className="shrink-0 mt-0.5 text-amber-400" />
+                    : <ShieldCheck size={12} className="shrink-0 mt-0.5 text-emerald-400" />
+                }
+                <span className="leading-relaxed">{screeningResult.recommendation}</span>
               </div>
 
-              {/* Position sliders */}
-              <div className="flex gap-2 mb-2">
-                <div className="flex-1">
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-muted font-mono">X</span>
-                    <span className="text-secondary font-mono">{w.x.toFixed(2)}</span>
-                  </div>
-                  <input type="range" min={-1.5} max={1.5} step={0.05} value={w.x} onChange={(e) => updateWellPosition(w.id, parseFloat(e.target.value), w.z)} className="w-full" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-muted font-mono">Z</span>
-                    <span className="text-secondary font-mono">{w.z.toFixed(2)}</span>
-                  </div>
-                  <input type="range" min={-1.5} max={1.5} step={0.05} value={w.z} onChange={(e) => updateWellPosition(w.id, w.x, parseFloat(e.target.value))} className="w-full" />
-                </div>
-              </div>
-
-              {/* Injection rate with UX feedback */}
-              <div className="mb-1.5">
-                <div className="flex justify-between text-[10px] mb-0.5">
-                  <span className="text-muted font-mono">Injection rate</span>
-                   <span className="font-mono font-semibold" style={{ color: meta.color }}>
-                    {w.injectionRate.toFixed(3)} Mt/yr
+              {screeningResult.requiresAcknowledgment && screeningResult.canProceed && (
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5 accent-amber-400"
+                    checked={amberAcknowledged} onChange={(e) => setAmberAcknowledged(e.target.checked)} />
+                  <span className="text-[10px] font-mono text-amber-300 leading-relaxed">
+                    I understand this formation has marginal properties and accept the associated uncertainty.
                   </span>
-                </div>
-                <input type="range" min={0.001} max={sliderMax} step={0.001}
-                  value={w.injectionRate}
-                  onChange={(e) => updateWellRate(w.id, parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                {/* Deviation bar */}
-                <div className="relative h-3 rounded overflow-hidden mt-1" style={{ background: 'rgba(15,25,40,0.7)' }}>
-                  {/* P10 marker */}
-                  <div className="absolute top-0 bottom-0 w-px bg-slate-400/50"
-                    style={{ left: `${Math.min(99, (rateEnvelope.minRate / sliderMax) * 100)}%` }} />
-                  {/* P50 (optimal) marker */}
-                  <div className="absolute top-0 bottom-0 w-px bg-teal-400/80"
-                    style={{ left: `${Math.min(99, (rateEnvelope.optimalRate / sliderMax) * 100)}%` }} />
-                  {/* P90 marker */}
-                  <div className="absolute top-0 bottom-0 w-px bg-orange-400/80"
-                    style={{ left: `${Math.min(99, (rateEnvelope.maxRate / sliderMax) * 100)}%` }} />
-                  {/* Current rate fill */}
-                  <div className="absolute top-0 bottom-0 left-0 rounded transition-all duration-150"
-                    style={{
-                      width: `${Math.min(100, (w.injectionRate / sliderMax) * 100)}%`,
-                      background: meta.color,
-                      opacity: 0.35,
-                    }}
-                  />
-                </div>
-                {/* Legend labels */}
-                <div className="flex justify-between text-[7px] font-mono mt-0.5" style={{ color: '#475569' }}>
-                  <span style={{ marginLeft: `${Math.min(85, (rateEnvelope.minRate / sliderMax) * 100)}%` }}>P10</span>
-                  <span style={{ position: 'absolute', marginLeft: `${Math.min(85, (rateEnvelope.optimalRate / sliderMax) * 100 - 3)}%` }}>P50</span>
-                  <span>P90</span>
-                </div>
-                {/* Status badge */}
-                <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[8px] font-mono"
-                  style={{ background: meta.bg, color: meta.color }}>
-                  <span>{meta.label}</span>
-                  <span className="ml-auto opacity-70">{pctOfOptimal.toFixed(0)}% of optimal</span>
-                </div>
-              </div>
+                </label>
+              )}
 
-              {/* Ramp schedule */}
-              <div className="flex gap-2 mt-1">
-                <div className="flex-1">
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-muted font-mono">Ramp-up</span>
-                    <span className="text-secondary font-mono">{w.rampUpYears} yr</span>
-                  </div>
-                  <input type="range" min={1} max={Math.floor(projectYears / 3)} step={1}
-                    value={w.rampUpYears}
-                    onChange={(e) => updateWellSchedule(w.id, parseFloat(e.target.value), w.rampDownYears)}
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-[9px] mb-0.5">
-                    <span className="text-muted font-mono">Ramp-down</span>
-                    <span className="text-secondary font-mono">{w.rampDownYears} yr</span>
-                  </div>
-                  <input type="range" min={1} max={Math.floor(projectYears / 3)} step={1}
-                    value={w.rampDownYears}
-                    onChange={(e) => updateWellSchedule(w.id, w.rampUpYears, parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-              </div>
+              <button
+                disabled={!screeningResult.canProceed || (screeningResult.requiresAcknowledgment && !amberAcknowledged)}
+                onClick={() => { setStageComplete('stage2', true); setPanel('simulation') }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                  bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white"
+              >
+                <ShieldCheck size={13} />
+                Confirm Formation &amp; Proceed to Simulation
+              </button>
             </div>
-          )
-        })}
+          </div>
+        )
+    }
+  }
+
+  const wellDesign = useMemo(() => {
+    const reservoirTop = params.depth
+    const reservoirBottom = params.depth + params.thickness
+    const caprockTop = Math.max(0, reservoirTop - 50)
+    const caprockBottom = reservoirTop
+    const totalDepth = reservoirBottom + 100
+
+    return {
+      totalDepth_m: totalDepth,
+      caprockTopDepth_m: caprockTop,
+      caprockBottomDepth_m: caprockBottom,
+      reservoirTopDepth_m: reservoirTop,
+      reservoirBottomDepth_m: reservoirBottom,
+      perforationTopDepth_m: reservoirTop,
+      perforationBottomDepth_m: reservoirBottom,
+      casingStrings: [
+        { name: 'Conductor', outerDiameter_in: 20, innerDiameter_in: 18.5, topDepth_m: 0, bottomDepth_m: 80, cementTopDepth_m: 0 },
+        { name: 'Surface', outerDiameter_in: 13.375, innerDiameter_in: 12.5, topDepth_m: 0, bottomDepth_m: Math.min(reservoirTop * 0.3, 500), cementTopDepth_m: 0 },
+        { name: 'Intermediate', outerDiameter_in: 9.625, innerDiameter_in: 8.8, topDepth_m: 0, bottomDepth_m: caprockTop + 10, cementTopDepth_m: Math.min(reservoirTop * 0.3, 500) },
+        { name: 'Production', outerDiameter_in: 7, innerDiameter_in: 6.2, topDepth_m: 0, bottomDepth_m: totalDepth - 10, cementTopDepth_m: caprockTop - 20, isInjectionString: true }
+      ]
+    }
+  }, [params.depth, params.thickness])
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-theme/20 pb-4">
+        <div>
+          <div className="text-[10px] font-mono text-accent uppercase tracking-widest flex items-center gap-1.5">
+            <Layers size={12} /> Stage 2: Reservoir Characterization
+          </div>
+          <h1 className="text-xl md:text-2xl font-semibold text-primary font-mono tracking-tight mt-1">
+            Define Formation &amp; Well Properties
+          </h1>
+          <p className="text-xs text-muted mt-1 leading-relaxed">
+            Enter target saline aquifer dimensions, transport properties, mineralogy, fluid conditions, and injector layout.
+          </p>
+        </div>
+        <ValidationBanner issues={validationIssues} />
       </div>
 
-      {/* Formation Intelligence Card — live risk assessment */}
-      {wells.length > 0 && (
-        <FormationIntelligenceCard
-          env={rateEnvelope}
-          totalAnnualRate={totalAnnualRate}
-          projectYears={projectYears}
-          maipMPa={liveMAIP.maip}
-          maipMarginPct={liveMAIP.maipMarginPct}
-          onApplySafeRate={handleApplySafeRate}
-        />
-      )}
+      {/* Main Content Split: Form on Left (60%), Interactive Visuals on Right (40%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Column: Multi-Step Input Wizard (Lg: col-span-7) */}
+        <div className="lg:col-span-7 space-y-6 bg-card border border-theme rounded-2xl p-6 shadow-md flex flex-col min-h-[600px] justify-between">
+          
+          <div>
+            {/* Step Header */}
+            <div className="flex items-center justify-between mb-4 border-b border-theme/10 pb-3">
+              <span className="text-xs font-semibold font-mono text-primary">
+                Step {subStep} of 6 — {SUB_STEPS[subStep - 1].label}
+              </span>
+              <span className="text-[10px] font-mono text-muted text-right max-w-[60%] truncate">
+                {subStep === 1 && 'Aquifer dimensions and depth constraint.'}
+                {subStep === 2 && 'Geometry and log uploads.'}
+                {subStep === 3 && 'Porosity, permeability, and volume calculations.'}
+                {subStep === 4 && 'Reservoir temperature, pressure, salinity.'}
+                {subStep === 5 && 'Composition, impurities, IFT.'}
+                {subStep === 6 && 'Check criteria and confirm details.'}
+              </span>
+            </div>
 
-      {/* Eclipse .DATA Deck Import */}
-      <div className="border-t border-theme/30 pt-3">
-        <h3 className="text-[11px] text-muted font-mono flex items-center gap-1 mb-1">
-          <Upload size={12} /> Eclipse Deck (.DATA)
+            {/* Presets Quick-Load bar (Only on Step 1) */}
+            {subStep === 1 && (
+              <div className="mb-4 bg-tertiary/10 p-3 rounded-lg border border-theme/20">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] text-muted font-mono uppercase tracking-wider">
+                    Quick Load Analogue Preset
+                  </label>
+                  {activePreset && !presetChangeMode && (
+                    <button onClick={() => setPresetChangeMode(true)}
+                      className="text-[9px] font-mono text-accent hover:text-accent-hover underline transition">
+                      Change Foundation Formation
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {FORMATION_PRESETS.map((preset) => {
+                    const isActive = activePreset === preset.name
+                    const isLocked = activePreset !== null && !presetChangeMode
+                    const isDisabledInChangeMode = presetChangeMode && isActive
+                    const clickable = !isLocked && !isDisabledInChangeMode
+
+                    return (
+                      <button key={preset.name}
+                        onClick={() => {
+                          if (!clickable) return
+                          if (activePreset && activePreset !== preset.name) {
+                            if (window.confirm('Switching presets will reset all formation parameters. Continue?')) {
+                              handlePresetLoad(preset)
+                              setPresetChangeMode(false)
+                            }
+                          } else {
+                            handlePresetLoad(preset)
+                            setPresetChangeMode(false)
+                          }
+                        }}
+                        title={`${preset.location} — ${preset.description}`}
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-mono transition-all border flex items-center gap-1.5 ${
+                          isActive && (isLocked || presetChangeMode)
+                            ? 'bg-accent/20 text-accent border-accent/50 font-semibold cursor-not-allowed opacity-60'
+                            : isLocked
+                              ? 'bg-tertiary/50 text-muted/40 border-theme/10 cursor-not-allowed'
+                              : 'bg-tertiary text-muted hover:text-secondary border-theme/30 hover:border-theme/60'
+                        }`}>
+                        {isActive && <Lock size={10} className="shrink-0" />}
+                        {preset.name}
+                      </button>
+                    )
+                  })}
+                  {presetChangeMode && (
+                    <button onClick={() => {
+                      if (window.confirm('Switch to Custom Formation? All current parameters will be reset to defaults.')) {
+                        useFormationStore.getState().reset()
+                        setPresetChangeMode(false)
+                      }
+                    }}
+                      className="px-2.5 py-1 rounded-md text-[10px] font-mono transition-all border flex items-center gap-1.5 bg-violet-500/10 text-violet-300 border-violet-500/30 hover:bg-violet-500/20">
+                      <span className="text-violet-300">✦</span>
+                      Custom (Build from Scratch)
+                    </button>
+                  )}
+                </div>
+                {optNotice && (
+                  <div className="mt-2.5 px-2.5 py-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-2">
+                    <CheckCircle2 size={12} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-emerald-300 font-mono flex-1 leading-normal">
+                      Wells optimized for {optNotice.formation} — {optNotice.perWellRate.toFixed(3)} Mt/yr per well
+                    </p>
+                    <button onClick={() => setOptNotice(null)} className="text-emerald-400/50 hover:text-emerald-400 shrink-0"><X size={12} /></button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sub-step Form Content */}
+            <div className="space-y-4">
+              {renderSubStep()}
+            </div>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-between border-t border-theme/10 pt-4 mt-6">
+            <button
+              onClick={prevStep}
+              disabled={subStep === 1}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-mono bg-tertiary text-muted hover:text-primary transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={13} /> Previous
+            </button>
+
+            {/* Step Indicators */}
+            <div className="flex items-center gap-2">
+              {SUB_STEPS.map(({ n, label }) => (
+                <button key={n}
+                  onClick={() => setSubStep(n as SubStep)}
+                  className={`w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-mono transition-all ${
+                    n === subStep
+                      ? 'bg-accent border-accent text-white font-bold'
+                      : n < subStep
+                        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                        : 'bg-tertiary border-theme/20 text-muted/50'
+                  }`}
+                  title={label}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+
+            {subStep < 6 ? (
+              <button
+                onClick={nextStep}
+                disabled={!canGoNext()}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-xs font-mono bg-accent hover:bg-accent-hover text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+                title={!canGoNext() ? subStep === 1 ? 'Depth must be ≥800 m to proceed' : 'Fix validation errors to proceed' : ''}
+              >
+                Next Step <ChevronRight size={13} />
+              </button>
+            ) : (
+              <div />
+            )}
+          </div>
+
+        </div>
+
+        {/* Right Column: Interactive Visualizations (Lg: col-span-5) */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Wellbore Schematic Panel */}
+          <div className="bg-card border border-theme rounded-2xl p-5 space-y-4 shadow-md flex flex-col items-center">
+            <div className="w-full flex items-center justify-between border-b border-theme/10 pb-2">
+              <h3 className="text-xs font-semibold font-mono text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Layers size={13} className="text-accent" /> Scaled Wellbore Profile
+              </h3>
+              <span className="text-[9px] font-mono text-muted">Updates in real-time</span>
+            </div>
+            
+            {/* Render the Wellbore Schematic Component */}
+            <div className="bg-white/5 p-3 rounded-xl border border-theme/10 w-full flex justify-center">
+              <WellboreSchematic
+                design={wellDesign}
+                label={`${params.depth}m Aquifer Target`}
+                className="rounded-lg shadow-sm border border-slate-200/10 bg-white"
+              />
+            </div>
+            <div className="text-[9px] text-muted font-mono leading-relaxed text-center px-4">
+              Scaled casing configuration showing conductor (20"), surface (13⅜"), intermediate (9⅝"), and production tubing (7") relative to geological zones.
+            </div>
+          </div>
+
+          {/* CO2 Phase Diagram Panel */}
+          <PhaseDiagramCard temperature={params.temperature} pressure={params.pressure} />
+
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
+
+import { TrendingUp } from 'lucide-react'
+
+function PhaseDiagramCard({ temperature, pressure }: { temperature: number; pressure: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const dpr = window.devicePixelRatio || 1
+    const rect = canvas.getBoundingClientRect()
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+    const ctx = canvas.getContext('2d')!
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+    const w = rect.width
+    const h = rect.height
+    ctx.clearRect(0, 0, w, h)
+
+    const margin = { top: 15, right: 15, bottom: 25, left: 35 }
+    const chartW = w - margin.left - margin.right
+    const chartH = h - margin.top - margin.bottom
+
+    const getX = (t: number) => margin.left + (t / 120) * chartW
+    const getY = (p: number) => margin.top + chartH - (p / 35) * chartH
+
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.05)'
+    ctx.fillRect(getX(0), getY(7.38), chartW, chartH - (getY(7.38) - getY(35)))
+
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'
+    ctx.fillRect(getX(0), getY(35), getX(31.1) - getX(0), getY(7.38) - getY(35))
+
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.07)'
+    ctx.fillRect(getX(31.1), getY(35), getX(120) - getX(31.1), getY(7.38) - getY(35))
+
+    ctx.strokeStyle = '#334155'
+    ctx.lineWidth = 1
+    ctx.setLineDash([3, 3])
+
+    ctx.beginPath()
+    ctx.moveTo(getX(0), getY(7.38))
+    ctx.lineTo(getX(120), getY(7.38))
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.moveTo(getX(31.1), getY(7.38))
+    ctx.lineTo(getX(31.1), getY(35))
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    ctx.fillStyle = '#f59e0b'
+    ctx.beginPath()
+    ctx.arc(getX(31.1), getY(7.38), 4, 0, 2 * Math.PI)
+    ctx.fill()
+
+    ctx.strokeStyle = '#334155'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(margin.left, margin.top)
+    ctx.lineTo(margin.left, margin.top + chartH)
+    ctx.lineTo(margin.left + chartW, margin.top + chartH)
+    ctx.stroke()
+
+    ctx.fillStyle = '#94a3b8'
+    ctx.font = '8px monospace'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'middle'
+    for (let p = 0; p <= 35; p += 10) {
+      ctx.fillText(`${p} MPa`, margin.left - 5, getY(p))
+    }
+
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    for (let t = 0; t <= 120; t += 30) {
+      ctx.fillText(`${t}°C`, getX(t), margin.top + chartH + 5)
+    }
+
+    ctx.fillStyle = '#f59e0b'
+    ctx.font = '7px monospace'
+    ctx.textAlign = 'left'
+    ctx.fillText('Critical (31.1°C, 7.38 MPa)', getX(31.1) + 6, getY(7.38) - 2)
+
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.4)'
+    ctx.font = 'bold 9px monospace'
+    ctx.fillText('GAS', getX(80), getY(4))
+
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.4)'
+    ctx.fillText('LIQUID', getX(8), getY(20))
+
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.5)'
+    ctx.fillText('SUPERCRITICAL', getX(65), getY(22))
+
+    const isSupercritical = temperature > 31.1 && pressure > 7.38
+    ctx.fillStyle = isSupercritical ? '#10b981' : '#ef4444'
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.arc(getX(temperature), getY(pressure), 6, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.fillStyle = '#fff'
+    ctx.font = 'bold 8px monospace'
+    ctx.textAlign = temperature > 60 ? 'right' : 'left'
+    const labelX = temperature > 60 ? getX(temperature) - 8 : getX(temperature) + 8
+    ctx.fillText(`Reservoir: ${temperature.toFixed(0)}°C, ${pressure.toFixed(1)} MPa`, labelX, getY(pressure) - 2)
+
+  }, [temperature, pressure])
+
+  return (
+    <div className="bg-card border border-theme rounded-2xl p-5 space-y-4 shadow-md flex flex-col items-center">
+      <div className="w-full flex items-center justify-between border-b border-theme/10 pb-2">
+        <h3 className="text-xs font-semibold font-mono text-primary uppercase tracking-wider flex items-center gap-1.5">
+          <TrendingUp size={13} className="text-accent" /> CO₂ Physical Phase State
         </h3>
-        <p className="text-[8px] text-muted/70 font-mono leading-relaxed mb-2">
-          Imports formation params and wells from an Eclipse E100/E300 .DATA file.
-          Reads DIMENS, DX/DY/DZ, TOPS, PORO, PERMX, PRESSURE, TEMPERATURE, WELSPECS, WCONINJE.
-        </p>
-        <input
-          ref={eclipseFileRef}
-          type="file"
-          accept=".data,.DATA,.txt"
-          onChange={handleEclipseUpload}
-          className="hidden"
-        />
-        <button
-          onClick={() => eclipseFileRef.current?.click()}
-          className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-tertiary text-secondary text-[10px] font-mono hover:text-primary border border-theme/50 hover:border-theme transition"
-        >
-          <Upload size={11} /> Import .DATA file
-        </button>
+        <span className="text-[9px] font-mono text-muted">Span-Wagner basis</span>
       </div>
-
-      <div className="pt-2 border-t border-theme">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[11px] text-muted font-mono flex items-center gap-1"><Upload size={12} /> LAS Well Log</h3>
-        </div>
-        <div className="bg-tertiary/50 rounded p-2 mb-2">
-          <p className="text-[9px] text-muted font-mono leading-relaxed flex items-start gap-1">
-            <Info size={10} className="shrink-0 mt-0.5" />
-            LAS is well log data (depth vs. porosity/permeability), not a 3D mesh. When loaded, it colors the formation by the measured porosity at each depth.
-          </p>
-        </div>
-        <input ref={fileRef} type="file" accept=".las" onChange={handleLasUpload} className="hidden" />
-        <div className="flex gap-1">
-          <button onClick={() => fileRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-1.5 text-[10px] px-3 py-2 rounded-md font-mono bg-tertiary text-muted hover:text-secondary transition"
-          >
-            <Upload size={11} />
-            {las ? 'Replace' : 'Upload .las'}
-          </button>
-          <a href="/sample_well.las" download
-            className="flex items-center gap-1 text-[10px] px-2.5 py-2 rounded-md font-mono bg-tertiary text-accent hover:text-white hover:bg-accent transition"
-          >
-            Download sample
-          </a>
-        </div>
-        {las ? (
-          <p className="text-[10px] text-accent font-mono mt-1">
-            {las.curves.length} curve(s) loaded ({las.depthMin}–{las.depthMax} m) — 3D model colors updated
-          </p>
-        ) : (
-          <p className="text-[10px] text-muted font-mono mt-1 italic">
-            No LAS loaded. Formation uses uniform porosity color from slider.
-          </p>
-        )}
-        {las && (
-          <button
-            onClick={applyLasAverages}
-            className="mt-1 flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30 transition w-full justify-center"
-            title="Compute arithmetic mean porosity and geometric mean permeability from LAS curves, then populate the simulation sliders"
-          >
-            <Upload size={10} /> Apply LAS averages → simulation params
-          </button>
-        )}
+      
+      <canvas ref={canvasRef} className="w-full rounded-xl border border-theme/20 bg-slate-950" style={{ minHeight: 180 }} />
+      
+      <div className="text-[9px] text-muted font-mono leading-relaxed text-center px-4">
+        CO₂ must be supercritical (dense phase) for safe, deep saline storage. Reservoir target conditions should sit in the green zone.
       </div>
     </div>
   )

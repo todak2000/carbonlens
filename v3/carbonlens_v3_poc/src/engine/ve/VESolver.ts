@@ -48,6 +48,13 @@ export interface VEFluidProps {
   porosity: number
   Swi: number             // connate water saturation (fraction)
   thickness: number       // m — maximum possible η (formation thickness)
+  /**
+   * Minimum CO₂ column height (m) for a cell to be counted as "plume invaded".
+   * Default 0.01 m (1 cm) suits mass-balance tracking.
+   * Set to ~5 m for comparison against 4D seismic surveys (Chadwick 2009)
+   * where the reflectivity anomaly requires at least 5 m of CO₂ column.
+   */
+  etaThresh?: number
 }
 
 export interface VEWellSource {
@@ -162,7 +169,13 @@ export class VESolver {
   }
 
   /**
-   * Advance simulation by one year.
+   * Advance simulation by one year using CFL-adaptive sub-stepping.
+   *
+   * The gravity-current spreading term creates a nonlinear diffusion PDE whose
+   * explicit stability limit is dt_cfl = φ_eff·dx²·μ / (k·Δρg·η_max).
+   * For high-permeability formations (k > 500 mD) this limit is sub-annual,
+   * so the annual step is automatically split into n_sub equal sub-steps.
+   * Maximum sub-steps is capped at 500 (< 1 day) for performance.
    *
    * @param wells   Array of active injection sources this year
    * @param dPdx_Pa_m  Optional pressure-gradient in x direction (Pa/m), length nx·ny
@@ -177,135 +190,153 @@ export class VESolver {
     const { co2Viscosity, thickness } = this.fluid
     const { dt_s, phi_eff, deltaRho } = this
     const dRhog_half = (deltaRho * G) / 2
-
     const n = nx * ny
-    const etaNew = new Float32Array(this.eta)
     const idx = (i: number, j: number) => j * nx + i
 
-    // ── Killough–Land hysteresis: compute mobile CO₂ column height ─────────
-    // During drainage (η increasing): all CO₂ is mobile → etaMobile = η
-    // During imbibition (η decreasing): residual CO₂ is trapped by capillarity.
-    //
-    // Land (1968) trapped saturation: Sgr_eff = Sgr_max × Sg_max / (1 + C × Sg_max)
-    // where Sg_max = η_max_hist / H (historical max CO₂ column fraction).
-    //
-    // Mobile CO₂ column: η_mobile = max(0, η − Sgr_eff × H)
-    // The trapped fraction reduces the effective driving head for buoyancy spreading,
-    // preventing over-estimation of post-injection plume mobility.
-    const etaMobile = new Float32Array(n)
+    // ── CFL-adaptive sub-stepping ────────────────────────────────────────────
+    // Stability limit: dt_cfl = phi_eff * min(dx,dy)^2 * mu / (k_max * Δρg * eta_max)
+    // Using maximum permeability and current maximum column height.
+    let etaMax = 0
+    let kPermMax = 0
+    for (let k = 0; k < n; k++) {
+      if (this.eta[k] > etaMax) etaMax = this.eta[k]
+      if (this.permField[k] > kPermMax) kPermMax = this.permField[k]
+    }
+    // Use formation thickness as the conservative bound for eta (guarantees stability
+    // regardless of current fill state, including the very first injection step).
+    const etaForCFL = Math.max(etaMax, thickness)
+    const dxMin = Math.min(dx_m, dy_m)
+    const dtCFL = kPermMax > 0
+      ? (phi_eff * dxMin * dxMin * co2Viscosity) / (kPermMax * deltaRho * G * etaForCFL)
+      : dt_s
+    // Safety factor 0.45 (< 0.5 for 2D) to stay comfortably within stability.
+    const n_sub = Math.min(500, Math.max(1, Math.ceil(dt_s / (0.45 * Math.max(dtCFL, 1)))))
+    const dt_sub = dt_s / n_sub
+
+    // ── Sub-step loop ────────────────────────────────────────────────────────
     const { LAND_C, SGR_MAX_FRAC } = VESolver
-    for (let k = 0; k < n; k++) {
-      // Track historical maximum (only increases — reset via reset())
-      if (this.eta[k] > this.eta_max_hist[k]) this.eta_max_hist[k] = this.eta[k]
 
-      const Sg_max = this.eta_max_hist[k] / Math.max(thickness, 1e-6)
-      if (Sg_max <= 0) {
-        etaMobile[k] = this.eta[k]
-        continue
-      }
+    for (let sub = 0; sub < n_sub; sub++) {
+      const etaNew = new Float32Array(this.eta)
 
-      // Land trapping coefficient gives effective residual saturation
-      const Sgr_eff = SGR_MAX_FRAC * Sg_max / (1 + LAND_C * Sg_max)
+      // ── Killough–Land hysteresis: compute mobile CO₂ column height ───────
+      // During drainage (η increasing): all CO₂ is mobile → etaMobile = η
+      // During imbibition (η decreasing): residual CO₂ is trapped by capillarity.
+      //
+      // Land (1968) trapped saturation: Sgr_eff = Sgr_max × Sg_max / (1 + C × Sg_max)
+      // where Sg_max = η_max_hist / H (historical max CO₂ column fraction).
+      //
+      // Mobile CO₂ column: η_mobile = max(0, η − Sgr_eff × H)
+      const etaMobile = new Float32Array(n)
+      for (let k = 0; k < n; k++) {
+        if (this.eta[k] > this.eta_max_hist[k]) this.eta_max_hist[k] = this.eta[k]
 
-      // Only apply trapping during imbibition (η declining from its historic peak)
-      if (this.eta[k] < this.eta_max_hist[k]) {
-        etaMobile[k] = Math.max(0, this.eta[k] - Sgr_eff * thickness)
-      } else {
-        etaMobile[k] = this.eta[k]   // drainage: all CO₂ drives flux
-      }
-    }
-
-    // ── X-direction fluxes ────────────────────────────────────────────────
-    for (let j = 0; j < ny; j++) {
-      for (let i = 0; i < nx - 1; i++) {
-        const kL = idx(i, j)
-        const kR = idx(i + 1, j)
-        const etaL = etaMobile[kL]
-        const etaR = etaMobile[kR]
-        const kPermL = this.permField[kL]
-        const kPermR = this.permField[kR]
-        if (kPermL <= 0 && kPermR <= 0) continue
-
-        // Harmonic mean transmissibility at face
-        const kPermFace = (kPermL + kPermR) > 0
-          ? 2 * kPermL * kPermR / (kPermL + kPermR)
-          : 0
-
-        // Upwind η at face: use upstream value based on gradient direction
-        const deta_dx = (etaR - etaL) / dx_m
-        let flux_x = 0
-
-        // Gravity term: flow from high η to low η (gravity current spreading)
-        const gravGrad = dRhog_half * deta_dx
-        const etaFaceGrav = gravGrad > 0 ? etaL : etaR  // upwind
-        flux_x -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
-
-        // Pressure gradient advection (if provided)
-        if (dPdx_Pa_m) {
-          const dp_dx = (dPdx_Pa_m[kL] + dPdx_Pa_m[kR]) * 0.5
-          const etaFacePres = dp_dx < 0 ? etaL : etaR  // upwind (flow in −∇P direction)
-          flux_x -= (kPermFace * etaFacePres / co2Viscosity) * dp_dx
+        const Sg_max = this.eta_max_hist[k] / Math.max(thickness, 1e-6)
+        if (Sg_max <= 0) {
+          etaMobile[k] = this.eta[k]
+          continue
         }
-
-        // Divergence contribution to each adjacent cell (conservative)
-        const contrib = flux_x * dt_s / (dx_m * phi_eff)
-        etaNew[kL] -= contrib
-        etaNew[kR] += contrib
-      }
-    }
-
-    // ── Y-direction fluxes ────────────────────────────────────────────────
-    for (let j = 0; j < ny - 1; j++) {
-      for (let i = 0; i < nx; i++) {
-        const kB = idx(i, j)
-        const kT = idx(i, j + 1)
-        const etaB = etaMobile[kB]
-        const etaT = etaMobile[kT]
-        const kPermB = this.permField[kB]
-        const kPermT = this.permField[kT]
-        if (kPermB <= 0 && kPermT <= 0) continue
-
-        const kPermFace = (kPermB + kPermT) > 0
-          ? 2 * kPermB * kPermT / (kPermB + kPermT)
-          : 0
-
-        const deta_dy = (etaT - etaB) / dy_m
-        let flux_y = 0
-
-        const gravGrad = dRhog_half * deta_dy
-        const etaFaceGrav = gravGrad > 0 ? etaB : etaT
-        flux_y -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
-
-        if (dPdy_Pa_m) {
-          const dp_dy = (dPdy_Pa_m[kB] + dPdy_Pa_m[kT]) * 0.5
-          const etaFacePres = dp_dy < 0 ? etaB : etaT
-          flux_y -= (kPermFace * etaFacePres / co2Viscosity) * dp_dy
+        const Sgr_eff = SGR_MAX_FRAC * Sg_max / (1 + LAND_C * Sg_max)
+        if (this.eta[k] < this.eta_max_hist[k]) {
+          etaMobile[k] = Math.max(0, this.eta[k] - Sgr_eff * thickness)
+        } else {
+          etaMobile[k] = this.eta[k]   // drainage: all CO₂ drives flux
         }
-
-        const contrib = flux_y * dt_s / (dy_m * phi_eff)
-        etaNew[kB] -= contrib
-        etaNew[kT] += contrib
       }
+
+      // ── X-direction fluxes ──────────────────────────────────────────────
+      for (let j = 0; j < ny; j++) {
+        for (let i = 0; i < nx - 1; i++) {
+          const kL = idx(i, j)
+          const kR = idx(i + 1, j)
+          const etaL = etaMobile[kL]
+          const etaR = etaMobile[kR]
+          const kPermL = this.permField[kL]
+          const kPermR = this.permField[kR]
+          if (kPermL <= 0 && kPermR <= 0) continue
+
+          // Harmonic mean transmissibility at face
+          const kPermFace = (kPermL + kPermR) > 0
+            ? 2 * kPermL * kPermR / (kPermL + kPermR)
+            : 0
+
+          // Upwind η at face: upstream cell is opposite to flow direction.
+          // Gravity current flows from high η to low η (downhill):
+          //   gravGrad < 0  → deta_dx < 0  → flow is +x (rightward)  → upstream is L
+          //   gravGrad >= 0 → deta_dx >= 0 → flow is -x (leftward)   → upstream is R
+          const deta_dx = (etaR - etaL) / dx_m
+          let flux_x = 0
+
+          const gravGrad = dRhog_half * deta_dx
+          const etaFaceGrav = gravGrad < 0 ? etaL : etaR  // upwind
+          flux_x -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
+
+          // Pressure gradient advection (if provided)
+          if (dPdx_Pa_m) {
+            const dp_dx = (dPdx_Pa_m[kL] + dPdx_Pa_m[kR]) * 0.5
+            const etaFacePres = dp_dx < 0 ? etaL : etaR  // upwind (flow in −∇P direction)
+            flux_x -= (kPermFace * etaFacePres / co2Viscosity) * dp_dx
+          }
+
+          const contrib = flux_x * dt_sub / (dx_m * phi_eff)
+          etaNew[kL] -= contrib
+          etaNew[kR] += contrib
+        }
+      }
+
+      // ── Y-direction fluxes ──────────────────────────────────────────────
+      for (let j = 0; j < ny - 1; j++) {
+        for (let i = 0; i < nx; i++) {
+          const kB = idx(i, j)
+          const kT = idx(i, j + 1)
+          const etaB = etaMobile[kB]
+          const etaT = etaMobile[kT]
+          const kPermB = this.permField[kB]
+          const kPermT = this.permField[kT]
+          if (kPermB <= 0 && kPermT <= 0) continue
+
+          const kPermFace = (kPermB + kPermT) > 0
+            ? 2 * kPermB * kPermT / (kPermB + kPermT)
+            : 0
+
+          const deta_dy = (etaT - etaB) / dy_m
+          let flux_y = 0
+
+          const gravGrad = dRhog_half * deta_dy
+          const etaFaceGrav = gravGrad < 0 ? etaB : etaT  // upwind
+          flux_y -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
+
+          if (dPdy_Pa_m) {
+            const dp_dy = (dPdy_Pa_m[kB] + dPdy_Pa_m[kT]) * 0.5
+            const etaFacePres = dp_dy < 0 ? etaB : etaT
+            flux_y -= (kPermFace * etaFacePres / co2Viscosity) * dp_dy
+          }
+
+          const contrib = flux_y * dt_sub / (dy_m * phi_eff)
+          etaNew[kB] -= contrib
+          etaNew[kT] += contrib
+        }
+      }
+
+      // ── Source terms (split evenly across sub-steps) ─────────────────────
+      for (const w of wells) {
+        const i = Math.max(0, Math.min(nx - 1, w.i))
+        const j = Math.max(0, Math.min(ny - 1, w.j))
+        const k = idx(i, j)
+        const dEta = (w.q_m3s * dt_sub) / (dx_m * dy_m * phi_eff)
+        etaNew[k] = Math.min(etaNew[k] + dEta, thickness)
+      }
+
+      // ── Physical bounds ───────────────────────────────────────────────────
+      for (let k = 0; k < n; k++) {
+        if (etaNew[k] < 0) etaNew[k] = 0
+        if (etaNew[k] > thickness) etaNew[k] = thickness
+      }
+
+      this.eta = etaNew
     }
 
-    // ── Source terms (injection wells) ───────────────────────────────────
-    for (const w of wells) {
-      const i = Math.max(0, Math.min(nx - 1, w.i))
-      const j = Math.max(0, Math.min(ny - 1, w.j))
-      const k = idx(i, j)
-      const dEta = (w.q_m3s * dt_s) / (dx_m * dy_m * phi_eff)
-      etaNew[k] = Math.min(etaNew[k] + dEta, thickness)
-    }
-
-    // ── Physical bounds ───────────────────────────────────────────────────
-    for (let k = 0; k < n; k++) {
-      if (etaNew[k] < 0) etaNew[k] = 0
-      if (etaNew[k] > thickness) etaNew[k] = thickness
-    }
-
-    this.eta = etaNew
     this._year++
-
     return this._buildState()
   }
 
@@ -318,7 +349,7 @@ export class VESolver {
     const { nx, ny, dx_m, dy_m } = this.grid
     const { thickness, co2Density, porosity, Swi } = this.fluid
     const phi_eff = porosity * (1 - Swi)
-    const ETA_THRESH = 0.01  // 1 cm — cell considered "invaded"
+    const ETA_THRESH = this.fluid.etaThresh ?? 0.01  // default 1 cm; set ~5 m for seismic comparison
     const { LAND_C, SGR_MAX_FRAC } = VESolver
 
     let plumeArea   = 0

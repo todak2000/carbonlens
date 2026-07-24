@@ -33,10 +33,21 @@ import {
 import { computeHaliteRisk } from '../engine/classical/haliteRisk'
 import { computeHeterogeneityCorrections } from '../engine/classical/heterogeneityCorrection'
 import { computeDepletedFieldCapacity } from '../engine/classical/depletedFieldCapacity'
+import { assessStorageScreening } from '../engine/classical/storageScreening'
+import { classifyFormationRegime } from '../engine/classical/formationRegimeClassifier'
+import type { FormationRegime } from '../engine/classical/formationRegimeClassifier'
 import {
   VESolver, uniformPermField, wellToGridIndex,
   type VEFluidProps, type VEWellSource,
 } from '../engine/ve'
+import { solveFDPressure } from '../engine/ve/FDPressureSolver'
+
+// VE grid dimensions — 60×60 matches MRST benchmark resolution (500 m/cell on 30 km domain)
+// Increasing from the original 40×40 (750 m/cell) unlocks lateral plume spreading:
+// at 40×40 a 1 Mt/yr injection never fills a 750 m cell enough to drive buoyancy flux
+// to neighbours within 20 years, producing a constant single-cell footprint.
+const VE_NX = 60
+const VE_NY = 60
 
 export function computeYearly(
   params: FormationParams,
@@ -52,12 +63,33 @@ export function computeYearly(
   const phi = params.porosity
   const ntg = params.netToGross
 
+  // ── Physics regime classification (Nordbotten & Celia 2006, Bachu 2003) ────
+  // Run once per year (cheap: pure arithmetic). Uses assessStorageScreening so
+  // both calls share the same injectivity index computation.
+  // targetRate = sum of active well rates at this year.
+  const targetRate_Mtyr = wells.reduce((s, w) => s + w.injectionRate, 0) || 1.0
+  const _screening       = assessStorageScreening(params)
+  const formationRegime: FormationRegime = classifyFormationRegime(
+    params, targetRate_Mtyr, _screening,
+  )
+
   // DOE Goodman 2011: Cc coefficients are derived from gross pore volume statistics
   // that implicitly capture NTG effects. Applying NTG explicitly double-counts it.
   const totalPoreVolume = A * h_m * phi
 
+  // Fix 5: connate water saturation — use param override or default 0.15
+  const SWI_CONNATE_PARAM = params.swiConnate ?? 0.15
+
   // CO2 density at initial reservoir conditions
-  const rhoCO2_init = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
+  // Fix 3: clamp pressure to valid EOS range (0.5–80 MPa) before calling Span-Wagner
+  // Fix 4: honour co2DensityOverride for benchmark / validation runs
+  const P_init_clamped = Math.max(0.5e6, Math.min(80e6, params.pressure * 1e6))
+  const rhoCO2_init_eos = co2DensityWithImpurities(T_K, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2_init = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
+    ? params.co2DensityOverride
+    : (Number.isFinite(rhoCO2_init_eos) && rhoCO2_init_eos > 0 && rhoCO2_init_eos < 1100
+        ? rhoCO2_init_eos
+        : 700)   // fallback: typical supercritical CO2 at ~10 MPa, 37°C
 
   // ── Capacity method: route by formation type ───────────────────────────────
   // Depleted gas/oil fields: gas-replacement volumetric (Bachu et al. 2007).
@@ -105,7 +137,13 @@ export function computeYearly(
   // contrast correction per Nordbotten, Celia & Bachu (2005) eq. 8.
   // Reference: Transp. Porous Media 58(3):339–360. DOI: 10.1007/s11242-004-0670-9
   const currentRate = wells.reduce((s, w) => s + wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears), 0)
-  const rhoCO2_mobile = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
+  // Fix 3+4: EOS guard and density override applied to the mobile-phase density used for pressure calc
+  const rhoCO2_mobile_eos = co2DensityWithImpurities(T_K, P_init_clamped, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2_mobile = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
+    ? params.co2DensityOverride
+    : (Number.isFinite(rhoCO2_mobile_eos) && rhoCO2_mobile_eos > 0 && rhoCO2_mobile_eos < 1100
+        ? rhoCO2_mobile_eos
+        : 700)
   const visc = co2ViscosityFenghour(T_K, rhoCO2_mobile)
 
   const perm_m2 = params.permeability * 9.869e-16
@@ -158,14 +196,22 @@ export function computeYearly(
   const P_t = params.pressure + dP_capped
 
   // Recompute fluid properties at the injection pressure
-  const P_Pa = P_t * 1e6
-  const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
-  const rhoBrine = brineDensityGarcia(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity)
+  // Fix 3: clamp injection pressure before EOS call to prevent spurious high-density values
+  const P_t_safe = Number.isFinite(P_t) ? P_t : params.pressure
+  const P_Pa = Math.max(0.5e6, Math.min(80e6, P_t_safe * 1e6))
+  // Fix 4: honour density override; otherwise use EOS with finite-value guard
+  const rhoCO2_eos = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
+  const rhoCO2 = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
+    ? params.co2DensityOverride
+    : (Number.isFinite(rhoCO2_eos) && rhoCO2_eos > 0 && rhoCO2_eos < 1100
+        ? rhoCO2_eos
+        : 700)
+  const rhoBrine = brineDensityGarcia(T_K, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
   const drho = rhoBrine - rhoCO2
   const drho_sq = drho * drho / 1e6
 
-  const phase = determinePhase(T_K, P_t, params.methaneFraction, params.nitrogenFraction)
-  const Pr = computePr(P_t, params.methaneFraction, params.nitrogenFraction)
+  const phase = determinePhase(T_K, P_t_safe, params.methaneFraction, params.nitrogenFraction)
+  const Pr = computePr(P_t_safe, params.methaneFraction, params.nitrogenFraction)
   const Tr = computeTr(T_K, params.methaneFraction, params.nitrogenFraction)
 
   const input: MarsInput = {
@@ -201,12 +247,12 @@ export function computeYearly(
     const brine: MultiSaltBrine = params.saltType === 'CaCl2'
       ? { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity, m_MgCl2: 0 }
       : { m_NaCl: params.monovalentSalinity, m_KCl: 0, m_CaCl2: params.bivalentSalinity * 0.6, m_MgCl2: params.bivalentSalinity * 0.4 }
-    const xCO2 = calculateMultiSaltSolubility(T_K, P_t, brine)
+    const xCO2 = calculateMultiSaltSolubility(T_K, P_t_safe, brine)
     solubility = xCO2 * 55.508 / Math.max(1e-9, 1 - xCO2)  // mole fraction → mol/kg
   } else {
-    solubility = co2SolubilityDuanSun(T_K, P_t, params.monovalentSalinity, params.bivalentSalinity)
+    solubility = co2SolubilityDuanSun(T_K, P_t_safe, params.monovalentSalinity, params.bivalentSalinity)
   }
-  const diffusion = co2DiffusionCoefficient(T_K, P_t, params.porosity)
+  const diffusion = co2DiffusionCoefficient(T_K, P_t_safe, params.porosity)
 
   // Gravity current radius: injected volume fills a thin layer under the seal
   // r = sqrt(2·V / (π·φ·h_eff)) where h_eff ≈ 10% of formation thickness
@@ -235,7 +281,8 @@ export function computeYearly(
     gridfile:      { trapFrac: 0.70, closureFrac: 0.20 },
   }
 
-  const SWI_CONNATE = 0.15   // connate water saturation
+  // Fix 5: use param-driven Swi (set above from params.swiConnate ?? 0.15)
+  const SWI_CONNATE = SWI_CONNATE_PARAM
   const C_LAND      = 2.5    // Land trapping coefficient, sandstone (Land 1968, SPE-1323-PA)
 
   // Land (1968) residual saturation from NTG-corrected pore volume
@@ -453,12 +500,12 @@ export function computeYearly(
   const pressureField = computePressureField(params, wells, year, projectYears, rhoCO2_mobile, visc_final)
 
   // ── Peaceman wellbore BHP (skin-aware near-wellbore pressure) ──────────────
-  // Cell width estimate from model area and assumed 20×20 grid resolution.
+  // Fix 2: cell width now derived from the actual VE grid (VE_NX × VE_NY) so Peaceman's
+  // equivalent radius r_eq = 0.1982 · dx reflects the true grid block size rather than
+  // the old hardcoded 20×20 assumption which over-estimated cell size by 50% at 60×60.
   // Peaceman (1978) equivalent radius: r_eq = 0.1982 · dx.
-  // This gives a physics-consistent BHP that accounts for skin, completion
-  // geometry, and wellbore radius — independent of the Nordbotten far-field model.
-  const cellWidth_m = Math.sqrt(params.area * 1e6) / 20
-  let peacemanBHP = P_t   // default to Nordbotten-based pressure if no active wells
+  const cellWidth_m = Math.sqrt(params.area * 1e6) / VE_NX
+  let peacemanBHP = P_t_safe   // default to Nordbotten-based pressure if no active wells
   let injectivityIndex = 0
   if (currentRate > 0 && wells.length > 0) {
     // Use average rate per well for each Peaceman computation; take the
@@ -473,7 +520,7 @@ export function computeYearly(
         params.permeability,
         cellWidth_m,
         visc_final,           // Pa·s
-        params.pressure,      // initial reservoir pressure (MPa)
+        P_t_safe,             // current reservoir pressure including Nordbotten buildup (MPa)
         wRate,                // Mt/yr for this well
         rhoCO2_mobile,        // kg/m³
         params.depth,
@@ -498,7 +545,7 @@ export function computeYearly(
         maxWellRate,
         h_m,
         phi,
-        0.15,                               // Swi — connate water (default)
+        SWI_CONNATE,                        // Fix 5: use param-driven Swi
         params.monovalentSalinity,
         params.bivalentSalinity,
         rhoCO2_mobile,
@@ -550,7 +597,7 @@ export function computeYearly(
     overpressureRisk,
     plumeRadius: aorHeterogeneityFactor != null ? plumeRadius * aorHeterogeneityFactor : plumeRadius,
     plumeHeight,
-    injectionPressure: P_t,
+    injectionPressure: P_t_safe,
     pressureField,
     co2Density: rhoCO2,
     brineDensity: rhoBrine,
@@ -584,6 +631,7 @@ export function computeYearly(
     heterogeneityCitation,
     sweepEfficiency,
     aorHeterogeneityFactor,
+    formationRegime,
   }
 }
 
@@ -602,15 +650,24 @@ interface AnimationState {
    *  accumulation free of PlumeGrid boundary-loss contamination.
    *  Used exclusively for the export snapshot mass-balance fields. */
   analyticalResult: SimulationResult | null
+  /**
+   * Implicit FD pressure solver state.
+   * fdPrev: pressure field (Pa) at the end of the last completed year.
+   *   Initialised to uniform initial pressure; updated each animation year.
+   *   Passed as P_prev_Pa to solveFDPressure(), enabling transient buildup.
+   * fdPermField_mD: permeability field in mD (same as VE solver).
+   *   Stored once per run to avoid reallocating Float32Array every frame.
+   */
+  fdPrev: Float32Array | null
+  fdPermField_mD: Float32Array | null
 }
 
 function makeAnimState(): AnimationState {
-  return { raf: 0, startTime: 0, prevYear: -1, resumeYear: 0, peakResult: null, plumeGrid: null, colorUpdateFn: null, veSolver: null, analyticalResult: null }
+  return { raf: 0, startTime: 0, prevYear: -1, resumeYear: 0, peakResult: null, plumeGrid: null, colorUpdateFn: null, veSolver: null, analyticalResult: null, fdPrev: null, fdPermField_mD: null }
 }
 
-// VE grid dimensions — 40×40 provides a good speed/resolution trade-off in-browser
-const VE_NX = 40
-const VE_NY = 40
+// VE_NX / VE_NY are declared above computeYearly so both the analytical function
+// and the animation loop share the same grid constant.
 
 export interface CheckResult {
   ok: boolean
@@ -902,6 +959,9 @@ export function useSimulation(gridRef?: React.RefObject<{
         updatedAt: now,
         snapshots: existing?.snapshots ?? simStore.snapshots ?? [],
         thumbnail: existing?.thumbnail ?? null,
+        country: existing?.country ?? '',
+        presetId: existing?.presetId ?? null,
+        stageCompletion: { ...uiStore.stageCompletion },
       }
       await db.projects.put(project)
     } catch { /* silent */ }
@@ -964,9 +1024,10 @@ export function useSimulation(gridRef?: React.RefObject<{
         st.colorUpdateFn?.()
       }
 
-      // ── VE solver step ────────────────────────────────────────────────────
+      // ── VE solver step (with implicit FD pressure) ────────────────────────
       if (st.veSolver) {
         const veWells: VEWellSource[] = []
+        const cellWidth_m_ve = Math.sqrt(params.area * 1e6) / VE_NX
         for (const w of wells) {
           const rate = wellRateAtTime(w.injectionRate, year, w.rampUpYears, w.rampDownYears, projectYears)
           if (rate > 0) {
@@ -975,11 +1036,85 @@ export function useSimulation(gridRef?: React.RefObject<{
             veWells.push({ i, j, q_m3s })
           }
         }
-        const veState = st.veSolver.step(veWells)
+
+        // ── Implicit FD pressure solve ──────────────────────────────────────
+        // Solves the transient compressible 2D pressure equation on the VE grid.
+        // Produces:
+        //   1. Spatial ∇P field fed into the VE plume step (pressure-driven migration)
+        //   2. Well-block pressures for Peaceman BHP (more accurate than Nordbotten
+        //      for bounded domains — pressure buildup converges toward MRST ~20 MPa
+        //      rather than the infinite-aquifer Nordbotten value ~10 MPa)
+        let dPdx_Pa_m: Float32Array | undefined
+        let dPdy_Pa_m: Float32Array | undefined
+        if (st.fdPrev && st.fdPermField_mD && veWells.length > 0) {
+          try {
+            const fdResult = solveFDPressure({
+              nx: VE_NX,
+              ny: VE_NY,
+              dx_m: cellWidth_m_ve,
+              dy_m: cellWidth_m_ve,
+              permField_mD:        st.fdPermField_mD,
+              formationH:          params.thickness,
+              porosity:            params.porosity,
+              totalCompressibility: 1e-9,   // Pa⁻¹ — typical sandstone aquifer
+              brineViscosity:      6e-4,    // Pa·s — brine at ~37 °C
+              wells:               veWells,
+              P_prev_Pa:           st.fdPrev,
+              dt_s:                365.25 * 24 * 3600,
+            })
+
+            // Advance FD pressure state (transient accumulation year-on-year)
+            st.fdPrev = fdResult.P_Pa
+            dPdx_Pa_m = fdResult.dPdx_Pa_m
+            dPdy_Pa_m = fdResult.dPdy_Pa_m
+
+            // FD-derived injection pressure: block pressure at highest-pressure well
+            if (fdResult.P_well_Pa.length > 0) {
+              const P_fd_max_Pa = Math.max(...fdResult.P_well_Pa)
+              const P_fd_MPa    = P_fd_max_Pa / 1e6
+
+              // Peaceman near-well BHP correction (Peaceman 1978):
+              //   BHP = P_block + Q·μ_brine·ln(r_eq/r_w) / (2π·k·H)
+              // r_eq = 0.1982·Δx for square cells (Peaceman equivalent radius)
+              const perm_m2_fd   = params.permeability * 9.869e-16
+              const r_eq         = 0.1982 * cellWidth_m_ve
+              const r_w          = 0.1   // m
+              let fdBHP_MPa      = P_fd_MPa
+              for (const vw of veWells) {
+                const peaceman_dP_MPa = (vw.q_m3s * 6e-4 * Math.log(r_eq / r_w))
+                  / (2 * Math.PI * perm_m2_fd * params.thickness) / 1e6
+                fdBHP_MPa = Math.max(fdBHP_MPa, P_fd_MPa + peaceman_dP_MPa)
+              }
+              // Cap: BHP cannot exceed fracture pressure (defensive guard)
+              const bhpCap = params.pressure + 30
+              newResult = {
+                ...newResult,
+                injectionPressure: P_fd_MPa,
+                peacemanBHP:       Math.min(fdBHP_MPa, bhpCap),
+              }
+            }
+          } catch {
+            // FD solver failed: keep Nordbotten analytical values; no ∇P in VE step
+            dPdx_Pa_m = undefined
+            dPdy_Pa_m = undefined
+          }
+        }
+
+        // ── VE plume step (now driven by FD ∇P + gravity) ──────────────────
+        const veState = st.veSolver.step(veWells, dPdx_Pa_m, dPdy_Pa_m)
+        // VE solver tracks residual trapping via Killough-Land hysteresis cell-by-cell.
+        // During active injection the plume only expands (drainage), so trappedMass_Mt ≈ 0,
+        // which correctly reflects the absence of imbibition-driven snap-off in an expanding plume.
+        const veResidual = veState.trappedMass_Mt
+        const veMobile = Math.max(0,
+          newResult.storageCapacity - newResult.solubilityTrapping - newResult.mineralTrapping - veResidual,
+        )
         newResult = {
           ...newResult,
-          vePlumeArea:   veState.plumeArea_m2 / 1e6,  // m² → km²
-          vePlumeRadius: veState.plumeRadius_m,
+          vePlumeArea:      veState.plumeArea_m2 / 1e6,  // m² → km²
+          vePlumeRadius:    veState.plumeRadius_m,
+          residualTrapping: veResidual,
+          mobilePlume:      veMobile,
         }
       }
 
@@ -1013,6 +1148,27 @@ export function useSimulation(gridRef?: React.RefObject<{
       }
 
       useUIStore.getState().setTimestep(year)
+
+      // Persist per-year trapping state to IndexedDB for monitoring panel
+      const currentProjectId = useUIStore.getState().currentProjectId
+      if (currentProjectId) {
+        const tb = st.plumeGrid ? st.plumeGrid.trappingBreakdown() : null
+        const snapshot = {
+          id: `${currentProjectId}_y${year}`,
+          projectId: currentProjectId,
+          year,
+          freeMt: tb?.freeMt ?? newResult.mobilePlume,
+          residualMt: tb?.residualMt ?? newResult.residualTrapping,
+          dissolvedMt: tb?.dissolvedMt ?? newResult.solubilityTrapping,
+          mineralMt: tb?.mineralMt ?? newResult.mineralTrapping,
+          plumeRadiusM: newResult.plumeRadius,
+          plumeAreaKm2: newResult.vePlumeArea ?? (Math.PI * newResult.plumeRadius * newResult.plumeRadius / 1e6),
+          pressureMPa: newResult.injectionPressure,
+          injectedMt: newResult.storageCapacity,
+          createdAt: Date.now(),
+        }
+        db.simulationSnapshots.put(snapshot).catch(() => { /* silent — non-blocking */ })
+      }
 
       // Capture reservoir snapshot at key simulation years
       const snapshotInterval = Math.max(5, Math.floor(projectYears / 5))
@@ -1097,6 +1253,19 @@ export function useSimulation(gridRef?: React.RefObject<{
     store.startAnimation()
     useUIStore.getState().setTimestep(0)
 
+    // ── Purge stale snapshots from the previous run ───────────────────────
+    // Must happen BEFORE the RAF loop writes year-1 data.  Keeping old records
+    // causes the Plume Expansion History table to show data from prior runs when
+    // the user changes simulation duration or formation parameters.
+    const currentProjectId = useUIStore.getState().currentProjectId
+    if (currentProjectId) {
+      db.simulationSnapshots
+        .where('projectId')
+        .equals(currentProjectId)
+        .delete()
+        .catch(() => { /* silent — non-blocking */ })
+    }
+
     try {
       const geoModel = useGeologicalStore.getState().model
       const gridData = geologicalModelToGrid(geoModel)
@@ -1135,18 +1304,25 @@ export function useSimulation(gridRef?: React.RefObject<{
     try {
       const dx_m = Math.sqrt(params.area * 1e6) / VE_NX
       const dy_m = Math.sqrt(params.area * 1e6) / VE_NY
-      const T_K   = params.temperature + 273.15
-      const P_Pa  = params.pressure * 1e6
-      const rhoCO2 = co2DensityWithImpurities(T_K, P_Pa, params.methaneFraction, params.nitrogenFraction)
-      const rhoBrine = brineDensityGarcia(T_K, params.pressure, params.monovalentSalinity, params.bivalentSalinity)
-      const muCO2  = co2ViscosityFenghour(T_K, rhoCO2)
+      const T_K_ve  = params.temperature + 273.15
+      // Fix 3: clamp pressure before EOS call
+      const P_Pa_ve = Math.max(0.5e6, Math.min(80e6, params.pressure * 1e6))
+      // Fix 4: honour co2DensityOverride in VE solver fluid properties
+      const rhoCO2_ve_eos = co2DensityWithImpurities(T_K_ve, P_Pa_ve, params.methaneFraction, params.nitrogenFraction)
+      const rhoCO2_ve = (params.co2DensityOverride != null && params.co2DensityOverride > 0)
+        ? params.co2DensityOverride
+        : (Number.isFinite(rhoCO2_ve_eos) && rhoCO2_ve_eos > 0 && rhoCO2_ve_eos < 1100
+            ? rhoCO2_ve_eos
+            : 700)
+      const rhoBrine_ve = brineDensityGarcia(T_K_ve, params.pressure, params.monovalentSalinity, params.bivalentSalinity)
+      const muCO2_ve  = co2ViscosityFenghour(T_K_ve, rhoCO2_ve)
       const veFluid: VEFluidProps = {
-        co2Density:    rhoCO2,
-        brineDensity:  rhoBrine,
-        co2Viscosity:  muCO2,
-        porosity:      params.porosity,
-        Swi:           0.15,
-        thickness:     params.thickness,
+        co2Density:   rhoCO2_ve,
+        brineDensity: rhoBrine_ve,
+        co2Viscosity: muCO2_ve,
+        porosity:     params.porosity,
+        Swi:          params.swiConnate ?? 0.15,   // Fix 5: param-driven Swi
+        thickness:    params.thickness,
       }
       const permField = uniformPermField(VE_NX, VE_NY, params.permeability)
       st.veSolver = new VESolver(
@@ -1157,6 +1333,17 @@ export function useSimulation(gridRef?: React.RefObject<{
       st.veSolver.reset()
     } catch {
       st.veSolver = null
+    }
+
+    // ── FD pressure solver initialisation ────────────────────────────────
+    // Store perm field and seed pressure field so the transient solver can
+    // accumulate pressure correctly from year 1 onwards.
+    try {
+      st.fdPermField_mD = uniformPermField(VE_NX, VE_NY, params.permeability)
+      st.fdPrev = new Float32Array(VE_NX * VE_NY).fill(params.pressure * 1e6)
+    } catch {
+      st.fdPrev = null
+      st.fdPermField_mD = null
     }
 
     st.raf = requestAnimationFrame(animateFrame)
@@ -1175,6 +1362,8 @@ export function useSimulation(gridRef?: React.RefObject<{
     st.colorUpdateFn = null
     st.resumeYear = 0
     st.analyticalResult = null
+    st.fdPrev = null
+    st.fdPermField_mD = null
     useSimulationStore.getState().stopAnimation()
     try { autoSaveProject() } catch { /* silent */ }
   }, [])

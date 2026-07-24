@@ -614,8 +614,8 @@ function InjectionPlume({ well, result }: {
   const wFill    = Math.max(0.12, rawFill)
 
   const maxReach  = Math.max(0.02, Math.min(1.3 - Math.max(Math.abs(well.x), Math.abs(well.z)), 1.0))
-  const injRadius = Math.max(0.02, Math.min(maxReach, (result.plumeRadius / 2000) * Math.sqrt(rawFill) * 1.1))
-  const capRadius = Math.max(0.02, Math.min(maxReach, (result.plumeRadius / 1500) * Math.sqrt(rawFill) + 0.05))
+  const injRadius = Math.max(0.02, Math.min(maxReach, (result.plumeRadius / 10000) * Math.sqrt(rawFill) * 1.1))
+  const capRadius = Math.max(0.02, Math.min(maxReach, (result.plumeRadius / 10000) * Math.sqrt(rawFill) + 0.01))
 
   // ── ALL hooks unconditionally above any early return ──────────────────────
 
@@ -886,7 +886,7 @@ function CO2SaturationTop() {
         const totalMax = w.injectionRate * projectYears
         const rawFill = Math.min(1, cum / Math.max(1, totalMax))
         const wFill = Math.max(0.08, rawFill)
-        const plumeR = Math.min(1.4, (result.plumeRadius / 1500) * Math.sqrt(rawFill) + 0.06)
+        const plumeR = Math.min(1.4, (result.plumeRadius / 10000) * Math.sqrt(rawFill) + 0.01)
         const dist = Math.sqrt((px - w.x) ** 2 + (pz - w.z) ** 2)
         sat = Math.max(sat, Math.max(0, 1 - (dist / plumeR) ** 2) * wFill)
       }
@@ -940,7 +940,7 @@ function PlumeGlowSpheres() {
         const totalMax = w.injectionRate * projectYears
         const rawFill = Math.min(1, cum / Math.max(1, totalMax))
         const fillFrac = Math.max(0.08, rawFill)
-        const r = Math.min(1.3, (result.plumeRadius / 1500) * Math.sqrt(rawFill) + 0.06)
+        const r = Math.min(1.3, (result.plumeRadius / 10000) * Math.sqrt(rawFill) + 0.01)
         return (
           <group key={w.id} position={[w.x, 0, w.z]}>
             {/* Core glow — mobile CO2 column, flattened ellipsoid */}
@@ -1914,32 +1914,9 @@ export default function ReservoirViewer() {
           backdropFilter: 'blur(4px)',
         }}
       >
-        <button
-          onClick={() => setViewMode('3d')}
-          style={{
-            padding: '0 16px', height: '100%', fontSize: '10px', fontFamily: 'monospace',
-            background: viewMode === '3d' ? 'var(--accent-bg)' : 'transparent',
-            color: viewMode === '3d' ? 'var(--accent)' : 'var(--text-muted)',
-            borderRight: '1px solid var(--border)',
-            borderBottom: viewMode === '3d' ? '2px solid var(--accent)' : '2px solid transparent',
-            cursor: 'pointer', outline: 'none',
-          }}
-        >
-          <Box size={12} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} /> 3D Model
-        </button>
-        <button
-          onClick={() => setViewMode('2d')}
-          style={{
-            padding: '0 16px', height: '100%', fontSize: '10px', fontFamily: 'monospace',
-            background: viewMode === '2d' ? 'var(--accent-bg)' : 'transparent',
-            color: viewMode === '2d' ? 'var(--accent)' : 'var(--text-muted)',
-            borderRight: '1px solid var(--border)',
-            borderBottom: viewMode === '2d' ? '2px solid var(--accent)' : '2px solid transparent',
-            cursor: 'pointer', outline: 'none',
-          }}
-        >
-          <Waves size={12} style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }} /> 2D Section
-        </button>
+        <div className="pl-3 text-[10px] font-mono font-semibold uppercase tracking-wider text-secondary">
+          3D Reservoir Simulation Model
+        </div>
 
         {/* Capture + Warning + Blowout UI */}
         <div className="ml-auto flex gap-1 pr-3 items-center">
@@ -2030,13 +2007,6 @@ export default function ReservoirViewer() {
           <TimestepSlider />
           <CurrentPhaseLabel />
           <DepthRuler />
-        </div>
-      )}
-
-      {/* 2D Plume Section View */}
-      {viewMode === '2d' && (
-        <div className="absolute inset-0 pt-8">
-          <CrossSection fullScreen={true} />
         </div>
       )}
 

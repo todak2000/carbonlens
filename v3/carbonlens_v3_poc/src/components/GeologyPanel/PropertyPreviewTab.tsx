@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { useGeologicalStore } from '../../store/geologicalStore'
 import { LITHOLOGY_DEFAULTS } from '../../data/lithologyDefaults'
 
-const BAR_WIDTH = 180
-const ROW_H = 22
+const BAR_WIDTH = 240
+const ROW_H = 36
 
 export default function PropertyPreviewTab() {
   const { model } = useGeologicalStore()
@@ -15,7 +15,7 @@ export default function PropertyPreviewTab() {
 
   if (sortedZones.length === 0) {
     return (
-      <div className="text-center py-8 text-muted text-[11px] font-mono">
+      <div className="text-center py-8 text-muted text-sm font-mono">
         Add zones in the Stratigraphy tab to see the property preview.
       </div>
     )
@@ -28,85 +28,89 @@ export default function PropertyPreviewTab() {
   const maxK = Math.max(...sortedZones.map((z) => z.kHorizontal), 1)
   const maxPhi = Math.max(...sortedZones.map((z) => z.porosityMean), 0.01)
 
-  const svgH = sortedZones.length * ROW_H + 30
+  const svgH = sortedZones.length * ROW_H + 40
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Formation Column Preview</p>
+    <div className="flex flex-col gap-6">
+      <h3 className="text-xs font-mono font-bold text-accent uppercase tracking-wider border-b border-theme/10 pb-2">
+        Formation Column Preview
+      </h3>
 
-      <div className="overflow-x-auto">
-        <svg width={BAR_WIDTH * 3 + 80} height={svgH} className="font-mono">
+      <div className="overflow-x-auto bg-page/40 p-3 rounded-lg border border-theme/20">
+        <svg width={BAR_WIDTH * 3 + 120} height={svgH} className="font-mono">
           {/* Headers */}
-          <text x="40" y="14" fontSize="8" fill="#9ca3af">Lithology</text>
-          <text x={40 + BAR_WIDTH + 10} y="14" fontSize="8" fill="#9ca3af">Porosity</text>
-          <text x={40 + BAR_WIDTH * 2 + 20} y="14" fontSize="8" fill="#9ca3af">k_h (mD)</text>
+          <text x="50" y="16" fontSize="11" fill="#9ca3af" fontWeight="600">Lithology / Layer</text>
+          <text x={50 + BAR_WIDTH + 15} y="16" fontSize="11" fill="#9ca3af" fontWeight="600">Porosity Mean</text>
+          <text x={50 + BAR_WIDTH * 2 + 30} y="16" fontSize="11" fill="#9ca3af" fontWeight="600">k_h (mD)</text>
 
           {sortedZones.map((zone, i) => {
-            const y = 20 + i * ROW_H
+            const y = 28 + i * ROW_H
             const lithDef = LITHOLOGY_DEFAULTS[zone.lithology]
-            const phiBarW = (zone.porosityMean / maxPhi) * (BAR_WIDTH - 10)
-            const kBarW = (zone.kHorizontal / maxK) * (BAR_WIDTH - 10)
+            const phiBarW = (zone.porosityMean / maxPhi) * (BAR_WIDTH - 20)
+            const kBarW = (zone.kHorizontal / maxK) * (BAR_WIDTH - 20)
             const depthLabel = `${zone.topDepth}m`
 
             return (
               <g key={zone.id}>
                 {/* Depth label */}
-                <text x="0" y={y + 14} fontSize="7" fill="#6b7280">{depthLabel}</text>
+                <text x="0" y={y + 20} fontSize="10" fill="#9ca3af" fontWeight="bold">{depthLabel}</text>
 
                 {/* Lithology block */}
-                <rect x="38" y={y + 1} width={BAR_WIDTH} height={ROW_H - 3} fill={zone.color} opacity={0.7} rx="2" />
-                <text x="44" y={y + 14} fontSize="7.5" fill="#1f2937" fontWeight="600">{zone.name}</text>
-                <text x="44" y={y + 20} fontSize="6.5" fill="#374151">{lithDef.label}</text>
+                <rect x="48" y={y + 2} width={BAR_WIDTH} height={ROW_H - 4} fill={zone.color} opacity={0.7} rx="3" />
+                <text x="56" y={y + 16} fontSize="11" fill="#1f2937" fontWeight="bold">{zone.name}</text>
+                <text x="56" y={y + 26} fontSize="9" fill="#374151" fontWeight="600">{lithDef.label}</text>
 
                 {/* Porosity bar */}
-                <rect x={40 + BAR_WIDTH + 8} y={y + 4} width={BAR_WIDTH - 10} height={ROW_H - 10} fill="#1e3a5f" opacity={0.3} rx="2" />
-                <rect x={40 + BAR_WIDTH + 8} y={y + 4} width={phiBarW} height={ROW_H - 10} fill="#3b82f6" opacity={0.8} rx="2" />
-                <text x={40 + BAR_WIDTH + 8 + phiBarW + 3} y={y + 14} fontSize="7" fill="#9ca3af">
+                <rect x={48 + BAR_WIDTH + 12} y={y + 6} width={BAR_WIDTH - 20} height={ROW_H - 12} fill="#1e3a5f" opacity={0.3} rx="3" />
+                <rect x={48 + BAR_WIDTH + 12} y={y + 6} width={phiBarW} height={ROW_H - 12} fill="#3b82f6" opacity={0.8} rx="3" />
+                <text x={48 + BAR_WIDTH + 12 + phiBarW + 5} y={y + 20} fontSize="10" fill="#e5e7eb" fontWeight="bold">
                   {(zone.porosityMean * 100).toFixed(1)}%
                 </text>
 
                 {/* Permeability bar */}
-                <rect x={40 + BAR_WIDTH * 2 + 18} y={y + 4} width={BAR_WIDTH - 10} height={ROW_H - 10} fill="#1e3a5f" opacity={0.3} rx="2" />
-                <rect x={40 + BAR_WIDTH * 2 + 18} y={y + 4} width={kBarW} height={ROW_H - 10} fill="#10b981" opacity={0.8} rx="2" />
-                <text x={40 + BAR_WIDTH * 2 + 18 + kBarW + 3} y={y + 14} fontSize="7" fill="#9ca3af">
+                <rect x={48 + BAR_WIDTH * 2 + 24} y={y + 6} width={BAR_WIDTH - 20} height={ROW_H - 12} fill="#1e3a5f" opacity={0.3} rx="3" />
+                <rect x={48 + BAR_WIDTH * 2 + 24} y={y + 6} width={kBarW} height={ROW_H - 12} fill="#10b981" opacity={0.8} rx="3" />
+                <text x={48 + BAR_WIDTH * 2 + 24 + kBarW + 5} y={y + 20} fontSize="10" fill="#e5e7eb" fontWeight="bold">
                   {zone.kHorizontal >= 1 ? zone.kHorizontal.toFixed(0) : zone.kHorizontal.toFixed(3)}
                 </text>
 
                 {/* Caprock indicator */}
                 {zone.isCaprock && (
-                  <text x={40 + BAR_WIDTH - 30} y={y + 14} fontSize="6.5" fill="#60a5fa">SEAL</text>
+                  <text x={48 + BAR_WIDTH - 45} y={y + 20} fontSize="9.5" fill="#f87171" fontWeight="bold">SEAL</text>
                 )}
               </g>
             )
           })}
 
           {/* Bottom depth */}
-          <text x="0" y={20 + sortedZones.length * ROW_H + 12} fontSize="7" fill="#6b7280">{maxDepth}m</text>
+          <text x="0" y={28 + sortedZones.length * ROW_H + 12} fontSize="10" fill="#9ca3af" fontWeight="bold">{maxDepth}m</text>
         </svg>
       </div>
 
-      <div className="flex flex-col gap-1.5 border-t border-theme pt-3">
-        <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Summary</p>
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className="bg-card rounded px-2 py-1.5">
-            <p className="text-[9px] text-muted font-mono">Total Gross Thickness</p>
-            <p className="text-xs font-mono text-primary">
+      <div className="flex flex-col gap-3 border-t border-theme/20 pt-4">
+        <h3 className="text-xs font-mono font-bold text-accent uppercase tracking-wider">
+          Stratigraphic Summary
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-card rounded-lg p-3 border border-theme/20">
+            <p className="text-xs text-muted font-mono uppercase tracking-wider mb-0.5">Total Gross Thickness</p>
+            <p className="text-base font-mono text-primary font-bold">
               {sortedZones.reduce((s, z) => s + z.thickness, 0).toFixed(0)} m
             </p>
           </div>
-          <div className="bg-card rounded px-2 py-1.5">
-            <p className="text-[9px] text-muted font-mono">Reservoir Zones</p>
-            <p className="text-xs font-mono text-primary">
+          <div className="bg-card rounded-lg p-3 border border-theme/20">
+            <p className="text-xs text-muted font-mono uppercase tracking-wider mb-0.5">Reservoir Zones</p>
+            <p className="text-base font-mono text-primary font-bold">
               {sortedZones.filter((z) => z.activeForInjection).length} / {sortedZones.length}
             </p>
           </div>
-          <div className="bg-card rounded px-2 py-1.5">
-            <p className="text-[9px] text-muted font-mono">Faults Defined</p>
-            <p className="text-xs font-mono text-primary">{model.faults.length}</p>
+          <div className="bg-card rounded-lg p-3 border border-theme/20">
+            <p className="text-xs text-muted font-mono uppercase tracking-wider mb-0.5">Faults Defined</p>
+            <p className="text-base font-mono text-primary font-bold">{model.faults.length}</p>
           </div>
-          <div className="bg-card rounded px-2 py-1.5">
-            <p className="text-[9px] text-muted font-mono">Depth Range</p>
-            <p className="text-xs font-mono text-primary">{minDepth}–{maxDepth} m</p>
+          <div className="bg-card rounded-lg p-3 border border-theme/20">
+            <p className="text-xs text-muted font-mono uppercase tracking-wider mb-0.5">Depth Range</p>
+            <p className="text-base font-mono text-primary font-bold">{minDepth}–{maxDepth} m</p>
           </div>
         </div>
       </div>

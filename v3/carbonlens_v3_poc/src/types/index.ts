@@ -122,6 +122,14 @@ export interface FormationParams {
   k_Vdp?: number                       // Dykstra-Parsons permeability variation coefficient V (0 to 0.85); default 0 = homogeneous
   k_layer_ratio?: number               // kh/kv anisotropy ratio (≥1); default 1 = isotropic
   n_layers?: number                    // Number of permeability layers in formation; default 1 = homogeneous
+  // ── Validation / benchmark overrides ────────────────────────────────────────
+  co2DensityOverride?: number          // kg/m³ — pin CO2 density to a prescribed value, bypassing EOS (for benchmark matching)
+  swiConnate?: number                  // connate water saturation fraction (default 0.15); expose for benchmark alignment
+  // ── k_eff calibration (kEffCalibration.ts) ──────────────────────────────────
+  // When set, VE gravity-current predictions use this calibrated effective permeability
+  // instead of the raw formation permeability. Back-calculated from a field anchor point
+  // using the Boait (2012) inversion. Units: mD.
+  k_eff_calibrated_mD?: number
 }
 
 export interface Well {
@@ -190,6 +198,8 @@ export interface SimulationResult {
   heterogeneityCitation?: string       // "Shook & Mitchell (2009), Kopp et al. (2010)"
   sweepEfficiency?: number             // E_s from Shook correlation (0 to 1)
   aorHeterogeneityFactor?: number      // multiplier on homogeneous AoR radius (≥1)
+  // Physics regime classification (Nordbotten & Celia 2006, NETL 2015)
+  formationRegime?: import('../engine/classical/formationRegimeClassifier').FormationRegime
 }
 
 export interface GeomechanicsResult {

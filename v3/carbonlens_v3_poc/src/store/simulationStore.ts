@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { SimulationResult, SimulationStatus, GeomechanicsResult, FormationParams } from '../types'
 import type { GeomechValidation } from '../hooks/useSimulation'
+import { useUIStore } from './uiStore'
 
 interface SimulationState {
   status: SimulationStatus
@@ -26,6 +27,9 @@ interface SimulationState {
   setResult: (result: SimulationResult) => void
   setCompletedResult: (result: SimulationResult) => void
   setCompletedSnapshot: (result: SimulationResult, wells: import('../types').Well[], params: import('../types').FormationParams, geomechanics?: GeomechanicsResult | null) => void
+  /** Restore a previously completed simulation when reopening a saved project.
+   *  Sets status to 'complete' so ResultDisplay is shown without re-running. */
+  restoreCompleted: (result: SimulationResult, wells: import('../types').Well[], params: import('../types').FormationParams, geomechanics?: GeomechanicsResult | null) => void
   setGeomechanics: (g: GeomechanicsResult) => void
   setValidation: (v: GeomechValidation | null) => void
   setForceRun: (f: boolean) => void
@@ -67,6 +71,22 @@ export const useSimulationStore = create<SimulationState>((set) => ({
 
   setCompletedSnapshot: (result, wells, params, geomechanics) => set({ completedResult: result, completedWells: wells, completedParams: params, completedGeomechanics: geomechanics ?? null }),
 
+  restoreCompleted: (result, wells, params, geomechanics) => {
+    set({
+      result,
+      completedResult: result,
+      completedWells: wells,
+      completedParams: params,
+      completedGeomechanics: geomechanics ?? null,
+      geomechanics: geomechanics ?? null,
+      status: 'complete',
+      isAnimating: false,
+      progress: 100,
+      forceRun: false,
+    })
+    useUIStore.getState().setStageComplete('stage3', true)
+  },
+
   setGeomechanics: (g) => set({ geomechanics: g }),
 
   setValidation: (v) => set({ validation: v }),
@@ -75,7 +95,10 @@ export const useSimulationStore = create<SimulationState>((set) => ({
 
   startAnimation: () => set({ isAnimating: true }),
 
-  stopAnimation: () => set({ isAnimating: false, status: 'complete', progress: 100, forceRun: false }),
+  stopAnimation: () => {
+    set({ isAnimating: false, status: 'complete', progress: 100, forceRun: false })
+    useUIStore.getState().setStageComplete('stage3', true)
+  },
 
   /** Pause mid-run — keeps status 'running' so resume is possible. */
   pauseAnimation: () => set({ isAnimating: false }),

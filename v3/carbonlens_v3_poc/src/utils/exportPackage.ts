@@ -82,7 +82,7 @@ ${result ? `
 <tr><td>Containment Probability</td><td>${fmt(result.containmentProbability)}</td><td>frac</td></tr>
 <tr><td>Residual Trapping</td><td>${fmt(result.residualTrapping)}</td><td>Mt</td></tr>
 <tr><td>Solubility Trapping</td><td>${fmt(result.solubilityTrapping)}</td><td>Mt</td></tr>
-<tr><td>Mobile Plume</td><td>${fmt(result.mobilePlume)}</td><td>Mt</td></tr>
+<tr><td>Structural Trapping</td><td>${fmt(result.mobilePlume)}</td><td>Mt</td></tr>
 </table>
 
 <h2>4. Depth Profile — Fluid Properties vs Depth</h2>
@@ -93,7 +93,7 @@ ${depthProfile.map(p => `<tr><td>${p.depth}</td><td>${p.pressure}</td><td>${p.te
 
 <h2>5. Time Series — Storage & Plume Evolution</h2>
 <table>
-<tr><th>Year</th><th>Stored (Mt)</th><th>Plume Radius (m)</th><th>Plume Height (m)</th><th>Inj Pressure (MPa)</th><th>Residual (Mt)</th><th>Solubility (Mt)</th><th>Mobile (Mt)</th><th>Utilisation (%)</th></tr>
+<tr><th>Year</th><th>Stored (Mt)</th><th>Plume Radius (m)</th><th>Plume Height (m)</th><th>Inj Pressure (MPa)</th><th>Residual (Mt)</th><th>Solubility (Mt)</th><th>Structural Trapping (Mt)</th><th>Utilisation (%)</th></tr>
 ${timeSeries.map(p => `<tr><td>${p.year}</td><td>${p.storageMt}</td><td>${p.plumeRadiusM}</td><td>${p.plumeHeightM}</td><td>${p.injectionPressureMPa}</td><td>${p.residualTrappingMt}</td><td>${p.solubilityTrappingMt}</td><td>${p.mobilePlumeMt}</td><td>${p.capacityUtilPct}</td></tr>`).join('')}
 </table>` : '<p><em>Run a simulation first to populate results.</em></p>'}
 

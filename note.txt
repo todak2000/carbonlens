@@ -1,3 +1,15 @@
 RUN VALIDATION test
 
 cd v3/carbonlens_v3_poc && 'yarn test src/__tests__/audit/generateValidationReports.test.ts'
+
+
+
+TODO
+- test carbonlens visualy for any fixes
+- run opm for existing spe 11 models for more multi-simulator
+valudation
+- get tnavigator for same. all these can help for 
+conversion to full ML as they will be data for modelling
+- work on improving 3D visuals/ get 2D of reserivor to mimic opm version
+- a thought of 4D came to mind, explore, you know (y, x, z, t)
+

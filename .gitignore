@@ -7,6 +7,10 @@ equations/
 *.csv
 *.xlsx
 *.pdf
+patent
+Paper 2
+upgrade_plan
+copyright
 !v3/carbonlens_v3_poc/public/sleipner-validation-report.pdf
 !v3/carbonlens_v3_poc/public/CarbonLens — Executive Summary.pdf
 !v3/carbonlens_v3_poc/public/UAE CCUS Facility Licence — Pre-Application (MOEI).pdf

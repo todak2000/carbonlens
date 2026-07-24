@@ -8,57 +8,86 @@ export default function PropertyPanel() {
   const result = useSimulationStore((s) => s.result)
 
   return (
-    <div className="p-4 space-y-3">
-      <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider">Fluid Properties</h2>
-      <div className="space-y-1.5">
-        <PropertyRow label="Temperature" value={`${params.temperature} °C`} />
-        <PropertyRow label="Pressure" value={`${params.pressure} MPa`} />
-        <PropertyRow label="Depth" value={`${params.depth} m`} />
-        <PropertyRow label="Thickness" value={`${params.thickness} m`} />
-        <PropertyRow label="Porosity" value={`${(params.porosity * 100).toFixed(1)} %`} />
-        <PropertyRow label="Permeability" value={`${params.permeability} mD`} />
-        <PropertyRow label="Area" value={`${params.area} km²`} />
-        <PropertyRow label="Net-to-Gross" value={`${(params.netToGross * 100).toFixed(0)} %`} />
-        <PropertyRow label="Geometry" value={params.geometryType} />
-        <PropertyRow label="Salinity (Mono)" value={`${params.monovalentSalinity} mol/kg`} />
-        <PropertyRow label="Salinity (Bi)" value={`${params.bivalentSalinity} mol/kg`} />
-        <PropertyRow label="Salt Type" value={params.saltType} />
-        <PropertyRow label="CH4 Fraction" value={`${(params.methaneFraction * 100).toFixed(1)} %`} />
-        <PropertyRow label="N2 Fraction" value={`${(params.nitrogenFraction * 100).toFixed(1)} %`} />
+    <div className="p-6 space-y-6 max-w-4xl mx-auto bg-card rounded-xl border border-theme/30 shadow-md">
+      <div>
+        <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">Fluid &amp; Reservoir Properties</h1>
+        <p className="text-xs text-muted font-mono mt-0.5">Thermodynamic states, lithology defaults, and transport parameters</p>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-2">
+        {/* Reservoir State Column */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-mono font-bold text-accent uppercase tracking-wider border-b border-theme/10 pb-1">
+            Reservoir State &amp; Geometry
+          </h3>
+          <div className="space-y-2">
+            <PropertyRow label="Depth" value={`${params.depth} m`} />
+            <PropertyRow label="Thickness" value={`${params.thickness} m`} />
+            <PropertyRow label="Temperature" value={`${params.temperature} °C`} />
+            <PropertyRow label="Pore Pressure" value={`${params.pressure} MPa`} />
+            <PropertyRow label="Reservoir Area" value={`${params.area} km²`} />
+            <PropertyRow label="Geometry Trap Type" value={<span className="capitalize">{params.geometryType}</span>} />
+          </div>
+        </div>
+
+        {/* Rock & Brine Composition Column */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-mono font-bold text-accent uppercase tracking-wider border-b border-theme/10 pb-1">
+            Rock &amp; Brine Composition
+          </h3>
+          <div className="space-y-2">
+            <PropertyRow label="Porosity" value={`${(params.porosity * 100).toFixed(1)} %`} />
+            <PropertyRow label="Permeability" value={`${params.permeability} mD`} />
+            <PropertyRow label="Net-to-Gross (NTG)" value={`${(params.netToGross * 100).toFixed(0)} %`} />
+            <PropertyRow label="Salt Type" value={<span className="uppercase">{params.saltType}</span>} />
+            <PropertyRow label="Salinity (Monovalent)" value={`${params.monovalentSalinity} mol/kg`} />
+            <PropertyRow label="Salinity (Bivalent)" value={`${params.bivalentSalinity} mol/kg`} />
+            <PropertyRow label="Methane (CH₄) Fraction" value={`${(params.methaneFraction * 100).toFixed(1)} %`} />
+            <PropertyRow label="Nitrogen (N₂) Fraction" value={`${(params.nitrogenFraction * 100).toFixed(1)} %`} />
+          </div>
+        </div>
+      </div>
+
       {status === 'complete' && result && (
-        <div className="pt-3 border-t border-theme space-y-1.5">
-          <h3 className="text-[10px] text-muted font-mono uppercase tracking-wider">Simulation Results</h3>
-          <PropertyRow label="Storage Capacity" value={`${result.storageCapacity.toFixed(1)} Mt`} />
-          <PropertyRow label="IFT" value={result.ift !== null ? `${result.ift.toFixed(2)} mN/m` : 'N/A'} />
-          {result.adAssessment && (
-            <div className="flex items-center justify-between py-0.5">
-              <span className="text-[10px] text-muted font-mono">MARS AD Gate</span>
-              <span className="flex items-center gap-1.5">
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      result.adAssessment.status === 'green' ? '#22c55e' :
-                      result.adAssessment.status === 'yellow' ? '#eab308' : '#ef4444',
-                  }}
-                />
-                <span className="text-[10px] font-mono text-secondary capitalize">
-                  {result.adAssessment.status}
+        <div className="pt-6 border-t border-theme/30 space-y-4">
+          <h3 className="text-xs font-mono font-bold text-accent uppercase tracking-wider border-b border-theme/10 pb-1">
+            Estimated Simulation Results
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+            <PropertyRow label="Stored CO₂ Plume" value={`${result.storageCapacity.toFixed(2)} Mt`} />
+            <PropertyRow label="Interfacial Tension (IFT)" value={result.ift !== null ? `${result.ift.toFixed(2)} mN/m` : 'N/A'} />
+            
+            {result.adAssessment && (
+              <div className="flex items-center justify-between py-1 border-b border-theme/10">
+                <span className="text-sm text-secondary font-mono">MARS Applicability Gate</span>
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        result.adAssessment.status === 'green' ? '#22c55e' :
+                        result.adAssessment.status === 'yellow' ? '#eab308' : '#ef4444',
+                    }}
+                  />
+                  <span className="text-sm font-mono text-secondary capitalize font-semibold font-mono">
+                    {result.adAssessment.status}
+                  </span>
                 </span>
-              </span>
-            </div>
-          )}
-          {result.adAssessment && (
-            <PropertyRow
-              label={`IFT PI90 ±`}
-              value={`${result.adAssessment.pi_halfwidth.toFixed(2)} mN/m`}
-            />
-          )}
-          <PropertyRow label="Plume Radius" value={`${result.plumeRadius.toFixed(1)} m`} />
-          <PropertyRow label="Containment" value={`${(result.containmentProbability * 100).toFixed(0)} %`} />
-          <PropertyRow label="P50 Capacity" value={`${result.p50.toFixed(1)} Mt`} />
-          <PropertyRow label="P10 / P90" value={`${result.p10.toFixed(1)} / ${result.p90.toFixed(1)} Mt`} />
+              </div>
+            )}
+
+            {result.adAssessment && (
+              <PropertyRow
+                label="IFT PI90 Confidence Boundary"
+                value={`± ${result.adAssessment.pi_halfwidth.toFixed(2)} mN/m`}
+              />
+            )}
+
+            <PropertyRow label="Plume Radius" value={`${result.plumeRadius.toFixed(1)} m`} />
+            <PropertyRow label="Containment Confidence" value={`${(result.containmentProbability * 100).toFixed(0)} %`} />
+            <PropertyRow label="DOE P50 Capacity Limit" value={`${result.p50.toFixed(1)} Mt`} />
+            <PropertyRow label="DOE P90 / P10 Range" value={`${result.p90.toFixed(1)} - ${result.p10.toFixed(1)} Mt`} />
+          </div>
         </div>
       )}
     </div>

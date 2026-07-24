@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarbonLens — Supervisor Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c1418;          /* deep subsurface */
+    --ink-2:#13212a;
+    --slate:#1d3340;
+    --paper:#f3efe6;        /* warm core-sample paper */
+    --paper-dim:#cdc6b7;
+    --plume:#37c4b8;        /* CO2 plume teal */
+    --plume-deep:#1d8f87;
+    --amber:#e8a13c;        /* AD borderline */
+    --red:#e2543f;          /* AD out-of-domain */
+    --green:#52c08a;        /* AD in-domain */
+    --hair:rgba(243,239,230,.14);
+    --hair-strong:rgba(243,239,230,.28);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',system-ui,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---- deck mechanics ---- */
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    padding:clamp(2.2rem,5vw,5rem) clamp(2.2rem,6vw,6.5rem);
+    opacity:0;visibility:hidden;z-index:0;pointer-events:none;
+    background:var(--ink);
+    transform:translateY(14px);
+    transition:opacity .55s ease, transform .55s ease, visibility 0s linear .55s;
+    overflow:hidden;
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none;z-index:1;pointer-events:auto;
+    transition:opacity .55s ease, transform .55s ease, visibility 0s}
+  @media (prefers-reduced-motion:reduce){
+    .slide{transition:opacity .2s ease}
+    .slide.active{transform:none}
+  }
+
+  /* ---- shared type ---- */
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--plume);margin-bottom:1.4rem;display:flex;gap:.8rem;align-items:center;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--plume);display:inline-block}
+  h1{
+    font-family:'Fraunces',serif;font-weight:500;
+    font-size:clamp(2.4rem,5.4vw,4.6rem);line-height:1.02;letter-spacing:-.015em;
+  }
+  h2{
+    font-family:'Fraunces',serif;font-weight:500;
+    font-size:clamp(1.9rem,3.8vw,3rem);line-height:1.06;letter-spacing:-.01em;
+    margin-bottom:1.6rem;
+  }
+  .lede{
+    font-size:clamp(1.05rem,1.7vw,1.4rem);line-height:1.5;
+    color:var(--paper-dim);max-width:46ch;font-weight:400;
+  }
+  strong{color:var(--paper);font-weight:600}
+  .teal{color:var(--plume)}
+
+  /* ---- geological strata motif (title) ---- */
+  .strata{position:absolute;inset:0;z-index:0;opacity:.5}
+  .strata span{position:absolute;left:0;right:0;display:block}
+  .s1{top:62%;height:38%;background:linear-gradient(180deg,#16262f,#0c1418)}
+  .s2{top:62%;height:1px;background:var(--hair-strong)}
+  .s3{top:74%;height:1px;background:var(--hair)}
+  .s4{top:85%;height:1px;background:var(--hair)}
+  .plume-dot{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle,var(--plume),transparent 70%);
+    filter:blur(2px);opacity:.55;
+  }
+
+  .title-wrap{position:relative;z-index:2;margin-top:auto;margin-bottom:auto}
+  .brandmark{
+    display:inline-flex;align-items:center;gap:.7rem;margin-bottom:2.2rem;
+    font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.2em;color:var(--paper-dim);
+  }
+  .lens{width:16px;height:16px;border-radius:50%;border:2px solid var(--plume);position:relative}
+  .lens::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--plume);opacity:.5}
+  .title-sub{margin-top:2rem;font-size:1.05rem;color:var(--paper-dim);max-width:50ch;line-height:1.5}
+  .footer-meta{
+    position:absolute;bottom:clamp(1.6rem,3vw,2.5rem);left:clamp(2.2rem,6vw,6.5rem);
+    right:clamp(2.2rem,6vw,6.5rem);z-index:2;
+    display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+    font-size:.7rem;letter-spacing:.12em;color:rgba(243,239,230,.45);
+  }
+
+  /* ---- gap slide: three layers ---- */
+  .gap-grid{display:grid;grid-template-columns:1fr;gap:0;margin-top:1.5rem;flex:1;align-content:center;max-width:62rem}
+  .gap-row{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2rem;align-items:center;
+    padding:1.4rem 0;border-bottom:1px solid var(--hair);
+  }
+  .gap-row:last-child{border-bottom:none}
+  .gap-row h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.5rem;margin-bottom:.35rem}
+  .gap-row p{color:var(--paper-dim);font-size:1rem;line-height:1.45;max-width:48ch}
+  .gap-tag{
+    font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;
+    padding:.4rem .8rem;border:1px solid var(--hair-strong);border-radius:2px;white-space:nowrap;color:var(--paper-dim);
+  }
+  .gap-row.highlight{background:linear-gradient(90deg,rgba(55,196,184,.08),transparent);
+    margin:0 -1.5rem;padding:1.6rem 1.5rem;border-radius:4px;border-bottom:1px solid var(--hair)}
+  .gap-row.highlight .gap-tag{border-color:var(--plume);color:var(--plume)}
+  .gap-row.highlight h3{color:var(--plume)}
+
+  /* ---- hook slide: three pillars ---- */
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:auto;margin-bottom:auto}
+  .pillar{
+    border:1px solid var(--hair);border-radius:6px;padding:1.8rem;
+    background:linear-gradient(180deg,rgba(29,51,64,.35),rgba(12,20,24,.1));
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .pillar .num{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--plume);letter-spacing:.15em;margin-bottom:1rem}
+  .pillar h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.45rem;line-height:1.1;margin-bottom:.8rem}
+  .pillar p{color:var(--paper-dim);font-size:.95rem;line-height:1.5}
+  .pillar .kicker{margin-top:auto;padding-top:1.1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--paper);letter-spacing:.05em;border-top:1px solid var(--hair)}
+
+  /* ---- demo slide: the AD gate ---- */
+  .demo-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;flex:1;align-items:center}
+  .demo-copy h2{margin-bottom:1.2rem}
+  .demo-copy p{color:var(--paper-dim);font-size:1.05rem;line-height:1.55;max-width:40ch;margin-bottom:1.6rem}
+  .demo-note{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--plume);letter-spacing:.06em;line-height:1.7}
+  .gate{
+    border:1px solid var(--hair-strong);border-radius:10px;overflow:hidden;
+    background:var(--ink-2);box-shadow:0 24px 60px rgba(0,0,0,.45);
+  }
+  .gate-head{padding:1rem 1.3rem;border-bottom:1px solid var(--hair);display:flex;justify-content:space-between;align-items:center;
+    font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.14em;color:var(--paper-dim)}
+  .gate-body{padding:1.6rem 1.3rem 1.8rem}
+  .readout{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.3rem}
+  .readout .val{font-family:'Fraunces',serif;font-size:3.2rem;font-weight:500;letter-spacing:-.02em;transition:color .4s}
+  .readout .unit{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--paper-dim)}
+  .interval{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--paper-dim);margin-bottom:1.5rem}
+  .status-pill{
+    display:inline-flex;align-items:center;gap:.6rem;padding:.55rem 1rem;border-radius:40px;
+    font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.08em;font-weight:500;
+    transition:all .4s;margin-bottom:1.5rem;
+  }
+  .status-pill .dot{width:9px;height:9px;border-radius:50%;transition:all .4s}
+  .slider-row{margin-top:.4rem}
+  .slider-row label{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--paper-dim);margin-bottom:.6rem;letter-spacing:.06em}
+  input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:4px;background:var(--slate);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--plume);cursor:pointer;border:3px solid var(--ink-2);box-shadow:0 0 0 1px var(--plume)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--plume);cursor:pointer;border:3px solid var(--ink-2)}
+  .gate.s-green{box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 0 1px rgba(82,192,138,.4)}
+  .gate.s-amber{box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 0 1px rgba(232,161,60,.45)}
+  .gate.s-red{box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 0 1px rgba(226,84,63,.5)}
+
+  /* ---- arc slide ---- */
+  .arc-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .arc-track{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:1.4rem;position:relative}
+  .arc-line{position:absolute;top:46px;left:6%;right:6%;height:2px;background:linear-gradient(90deg,var(--plume-deep),var(--plume),var(--amber));opacity:.5;z-index:0}
+  .arc-node{position:relative;z-index:1;padding:0 1rem;text-align:left}
+  .arc-dot{width:18px;height:18px;border-radius:50%;background:var(--ink);border:2px solid var(--plume);margin-bottom:1.6rem;position:relative;margin-top:38px}
+  .arc-dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--plume)}
+  .arc-node:nth-child(3) .arc-dot,.arc-node:nth-child(4) .arc-dot{border-color:var(--amber)}
+  .arc-node:nth-child(3) .arc-dot::after,.arc-node:nth-child(4) .arc-dot::after{background:var(--amber)}
+  .arc-yr{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.14em;color:var(--plume);margin-bottom:.6rem}
+  .arc-node:nth-child(3) .arc-yr,.arc-node:nth-child(4) .arc-yr{color:var(--amber)}
+  .arc-node h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.35rem;line-height:1.12;margin-bottom:.5rem}
+  .arc-node p{color:var(--paper-dim);font-size:.88rem;line-height:1.45}
+  .arc-foot{margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--hair);display:flex;gap:3rem;flex-wrap:wrap}
+  .arc-stat .n{font-family:'Fraunces',serif;font-size:1.9rem;font-weight:600;color:var(--plume)}
+  .arc-stat .l{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--paper-dim);letter-spacing:.1em;margin-top:.2rem}
+
+  /* ---- flow / pipeline slide ---- */
+  .flow-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:1rem}
+  .flow-track{display:grid;grid-template-columns:repeat(6,1fr);gap:.7rem;position:relative}
+  .flow-stage{
+    border:1px solid var(--hair);border-radius:6px;padding:1.1rem 1rem 1rem;
+    background:linear-gradient(180deg,rgba(29,51,64,.32),rgba(12,20,24,.08));
+    display:flex;flex-direction:column;position:relative;min-height:0;
+  }
+  .flow-stage:not(:last-child)::after{
+    content:"›";position:absolute;right:-.62rem;top:50%;transform:translateY(-50%);
+    font-size:1.3rem;color:var(--plume);z-index:3;font-family:'Inter',sans-serif;line-height:1;
+  }
+  .flow-stage.accent{
+    background:linear-gradient(180deg,rgba(55,196,184,.16),rgba(55,196,184,.03));
+    border-color:rgba(55,196,184,.45);
+  }
+  .fs-no{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--plume);letter-spacing:.12em;margin-bottom:.7rem}
+  .flow-stage.accent .fs-no{color:var(--plume)}
+  .flow-stage h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.18rem;line-height:1.08;margin-bottom:.55rem}
+  .flow-stage p{color:var(--paper-dim);font-size:.82rem;line-height:1.4;flex:1}
+  .flow-stage p sub{font-size:.72em}
+  .fs-out{margin-top:.85rem;padding-top:.7rem;border-top:1px solid var(--hair);
+    font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.04em;color:var(--paper)}
+  .flow-stage.accent .fs-out{color:var(--plume)}
+  .flow-foot{display:grid;grid-template-columns:auto 1fr;gap:1.4rem;align-items:center;
+    margin-top:2.2rem;padding-top:1.5rem;border-top:1px solid var(--hair)}
+  .ff-tag{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.14em;color:var(--plume);
+    border:1px solid var(--plume);border-radius:3px;padding:.5rem .85rem;white-space:nowrap}
+  .flow-foot p{color:var(--paper-dim);font-size:.95rem;line-height:1.5;max-width:70ch}
+  @media (max-width:860px){
+    .flow-track{grid-template-columns:1fr 1fr}
+    .flow-stage::after{display:none}
+    .flow-foot{grid-template-columns:1fr;gap:.8rem}
+  }
+
+  /* ---- problem slide ---- */
+  .problem-wrap{flex:1;display:grid;grid-template-columns:1.1fr .9fr;gap:3.5rem;align-items:center}
+  .problem-lede .lede{margin-bottom:1.6rem;max-width:42ch}
+  .problem-note{font-size:1.05rem;line-height:1.55;color:var(--paper-dim);max-width:42ch}
+  .problem-stats{display:flex;flex-direction:column;gap:0;border-left:1px solid var(--hair-strong);padding-left:2.2rem}
+  .pstat{padding:1.3rem 0;border-bottom:1px solid var(--hair)}
+  .pstat:last-child{border-bottom:none}
+  .pstat .pn{font-family:'Fraunces',serif;font-weight:600;font-size:2.3rem;color:var(--plume);line-height:1;letter-spacing:-.01em}
+  .pstat:last-child .pn{color:var(--amber)}
+  .pstat .pl{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.1em;color:var(--paper-dim);margin-top:.5rem}
+
+  /* ---- module grid slide ---- */
+  .mod-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:.9rem;flex:1;margin-top:1.2rem;min-height:0}
+  .mod{border:1px solid var(--hair);border-radius:6px;padding:1.25rem 1.2rem;
+    background:linear-gradient(180deg,rgba(29,51,64,.32),rgba(12,20,24,.08));display:flex;flex-direction:column;min-height:0}
+  .mod.accent{background:linear-gradient(180deg,rgba(55,196,184,.16),rgba(55,196,184,.03));border-color:rgba(55,196,184,.45)}
+  .mod-no{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--plume);letter-spacing:.14em;margin-bottom:.55rem}
+  .mod h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.28rem;line-height:1.05;margin-bottom:.5rem}
+  .mod p{color:var(--paper-dim);font-size:.84rem;line-height:1.4}
+  .mod-foot{margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--hair);font-size:.92rem;color:var(--paper-dim);line-height:1.5}
+  .mod-foot .teal{font-weight:600}
+  @media (max-width:860px){
+    .problem-wrap{grid-template-columns:1fr;gap:1.6rem}
+    .problem-stats{border-left:none;padding-left:0;border-top:1px solid var(--hair-strong);padding-top:.5rem}
+    .mod-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  }
+
+  /* ---- market & model slide ---- */
+  .market-wrap{flex:1;display:grid;grid-template-columns:1fr 1.05fr;gap:3rem;align-items:center}
+  .mkt-stats{display:flex;flex-direction:column;gap:0;margin-bottom:1.6rem}
+  .mstat{padding:1.1rem 0;border-bottom:1px solid var(--hair)}
+  .mstat:first-child{padding-top:0}
+  .mstat .mn{font-family:'Fraunces',serif;font-weight:600;font-size:2.2rem;color:var(--plume);line-height:1;letter-spacing:-.01em}
+  .mstat .ml{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.1em;color:var(--paper-dim);margin-top:.45rem}
+  .mkt-note{font-size:1rem;line-height:1.55;color:var(--paper-dim);max-width:42ch}
+  .market-right{display:flex;flex-direction:column;gap:.9rem}
+  .model-card{border:1px solid var(--hair);border-radius:6px;padding:1.2rem 1.3rem;
+    background:linear-gradient(180deg,rgba(29,51,64,.3),rgba(12,20,24,.06))}
+  .model-card.accent{background:linear-gradient(180deg,rgba(55,196,184,.15),rgba(55,196,184,.04));border-color:rgba(55,196,184,.45)}
+  .mc-head{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.16em;color:var(--paper-dim);margin-bottom:.6rem}
+  .model-card.accent .mc-head{color:var(--plume)}
+  .model-card p{font-size:.95rem;line-height:1.5;color:var(--paper-dim)}
+  .model-card.accent p{color:var(--paper)}
+  .model-foot{font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.6;color:var(--paper-dim);
+    padding-top:.4rem;letter-spacing:.02em}
+  .model-foot strong{color:var(--plume);font-weight:500}
+  @media (max-width:860px){
+    .market-wrap{grid-template-columns:1fr;gap:1.6rem}
+  }
+
+  /* ---- comparison table slide ---- */
+  .cmp-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .cmp{width:100%;border-collapse:collapse;font-size:.9rem}
+  .cmp th,.cmp td{text-align:center;padding:.85rem .7rem;border-bottom:1px solid var(--hair)}
+  .cmp thead th{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.08em;color:var(--paper-dim);text-transform:uppercase;font-weight:500;vertical-align:bottom;padding-bottom:1rem}
+  .cmp .cmp-feat{text-align:left;font-family:'Inter',sans-serif;font-size:.92rem;color:var(--paper);font-weight:400;width:30%}
+  .cmp thead .cmp-feat{color:var(--paper-dim)}
+  .cmp .cmp-us{
+    background:linear-gradient(180deg,rgba(55,196,184,.14),rgba(55,196,184,.05));
+    font-weight:600;position:relative;
+  }
+  .cmp thead .cmp-us{
+    font-family:'Fraunces',serif;font-size:1.05rem;letter-spacing:0;color:var(--plume);text-transform:none;font-weight:600;
+    border-top:2px solid var(--plume);border-left:1px solid rgba(55,196,184,.3);border-right:1px solid rgba(55,196,184,.3);
+    border-top-left-radius:6px;border-top-right-radius:6px;
+  }
+  .cmp tbody .cmp-us{border-left:1px solid rgba(55,196,184,.3);border-right:1px solid rgba(55,196,184,.3)}
+  .cmp tbody tr:last-child .cmp-us{border-bottom:1px solid rgba(55,196,184,.3);border-bottom-left-radius:6px;border-bottom-right-radius:6px}
+  .cmp .yes{color:var(--green);font-size:1.05rem;line-height:1}
+  .cmp .part{color:var(--amber);font-size:1.05rem;line-height:1}
+  .cmp .no{color:rgba(243,239,230,.32);font-family:'JetBrains Mono',monospace;font-size:.74rem;letter-spacing:.04em}
+  .cmp em{font-style:normal;font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--plume);display:block;margin-top:.2rem;letter-spacing:.04em}
+  .cmp-legend{display:flex;gap:1.6rem;align-items:center;margin-top:1.4rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--paper-dim);letter-spacing:.06em}
+  .cmp-legend .yes{color:var(--green)}.cmp-legend .part{color:var(--amber)}.cmp-legend .no{color:rgba(243,239,230,.4)}
+  .cmp-caveat{margin-left:auto;color:rgba(243,239,230,.38);font-size:.66rem;max-width:40ch;text-align:right;letter-spacing:.02em}
+  @media (max-width:860px){
+    .cmp{font-size:.74rem}
+    .cmp th,.cmp td{padding:.5rem .35rem}
+    .cmp .cmp-feat{width:auto}
+    .cmp-caveat{display:none}
+  }
+
+  /* ---- ask slide ---- */
+  .ask-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:54rem}
+  .ask-main{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(1.8rem,3.4vw,2.9rem);line-height:1.18;letter-spacing:-.01em;margin-bottom:2.4rem}
+  .ask-main .hl{color:var(--plume);font-style:italic}
+  .ask-steps{display:flex;flex-direction:column;gap:0}
+  .ask-step{display:grid;grid-template-columns:auto 1fr;gap:1.4rem;align-items:baseline;padding:1.1rem 0;border-bottom:1px solid var(--hair)}
+  .ask-step:last-child{border-bottom:none}
+  .ask-step .mk{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--plume);letter-spacing:.1em}
+  .ask-step p{font-size:1.08rem;line-height:1.4}
+  .ask-step .sub{color:var(--paper-dim);font-size:.92rem;margin-top:.25rem}
+
+  /* ---- nav ---- */
+  .nav{position:fixed;bottom:1.4rem;right:1.6rem;z-index:50;display:flex;align-items:center;gap:1rem;font-family:'JetBrains Mono',monospace}
+  .dots{display:flex;gap:.5rem}
+  .dots button{width:8px;height:8px;border-radius:50%;border:none;background:var(--hair-strong);cursor:pointer;padding:0;transition:all .3s}
+  .dots button.on{background:var(--plume);transform:scale(1.3)}
+  .counter{font-size:.72rem;color:rgba(243,239,230,.45);letter-spacing:.1em}
+  .arrows{display:flex;gap:.4rem}
+  .arrows button{background:transparent;border:1px solid var(--hair-strong);color:var(--paper-dim);width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:.9rem;transition:all .2s;display:flex;align-items:center;justify-content:center}
+  .arrows button:hover{border-color:var(--plume);color:var(--plume)}
+  .hint{position:fixed;bottom:1.6rem;left:1.6rem;z-index:50;font-family:'JetBrains Mono',monospace;font-size:.66rem;color:rgba(243,239,230,.35);letter-spacing:.08em}
+
+  @media (max-width:860px){
+    .pillars{grid-template-columns:1fr}
+    .demo-wrap{grid-template-columns:1fr;gap:1.6rem}
+    .arc-track{grid-template-columns:1fr 1fr}
+    .arc-line{display:none}
+    .arc-dot{margin-top:0}
+    .gap-row{grid-template-columns:1fr}
+    .gap-tag{justify-self:start}
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 — TITLE -->
+  <section class="slide active">
+    <div class="strata">
+      <span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span>
+      <span class="plume-dot" style="width:140px;height:140px;left:62%;top:66%"></span>
+      <span class="plume-dot" style="width:80px;height:80px;left:74%;top:70%"></span>
+      <span class="plume-dot" style="width:50px;height:50px;left:55%;top:69%"></span>
+    </div>
+    <div class="title-wrap">
+      <div class="brandmark"><span class="lens"></span>CARBONLENS&nbsp;/&nbsp;STORAGE STUDIO</div>
+      <h1>The $160k tool<br>that now runs in<br><span class="teal">a browser tab.</span></h1>
+      <p class="title-sub">A browser-native CO₂ storage simulation studio — validated against 20 years of Sleipner field data, covering 16 global formations and five regulatory jurisdictions. Here&rsquo;s where it&rsquo;s gone since you last saw the prototype.</p>
+    </div>
+    <div class="footer-meta"><span>DANIEL OLAGUNJU · UTP</span><span>SUPERVISOR REVIEW · 2026</span></div>
+  </section>
+
+  <!-- 2 — THE PROBLEM -->
+  <section class="slide">
+    <div class="eyebrow">Why CCS projects stall</div>
+    <h2>The geology isn&rsquo;t the bottleneck.<br>The tools to evaluate it are.</h2>
+    <div class="problem-wrap">
+      <div class="problem-lede">
+        <p class="lede">Net-zero needs <strong>6 Gt/yr</strong> of CO₂ stored by 2050. We&rsquo;re at <strong>~50 Mt/yr</strong> — under 1%. Suitable formations exist on every inhabited continent. What&rsquo;s missing is screening speed.</p>
+        <p class="problem-note">Every project begins with one question: <span class="teal">is this formation worth a serious look?</span> Answering it requires simulation — and simulation is locked behind a wall.</p>
+      </div>
+      <div class="problem-stats">
+        <div class="pstat"><div class="pn">$80–200k</div><div class="pl">PER YEAR · ENTERPRISE CCS SOFTWARE SUITES</div></div>
+        <div class="pstat"><div class="pn">weeks</div><div class="pl">SPECIALIST TRAINING + PROCUREMENT CYCLES</div></div>
+        <div class="pstat"><div class="pn">locked out</div><div class="pl">UNIVERSITIES · REGULATORS · EMERGING MARKETS</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 — WHAT IT IS NOW -->
+  <section class="slide">
+    <div class="eyebrow">What CarbonLens does · six modules, one browser tab</div>
+    <h2 style="margin-bottom:.2rem">A full screening studio — built for CO₂ storage,<br>not adapted from oil &amp; gas software.</h2>
+    <div class="mod-grid">
+      <div class="mod"><div class="mod-no">01</div><h3>Plume simulation</h3><p>Nordbotten, Span-Wagner, Duan-Sun, Brooks-Corey working in concert. Plume radius, trapping, pressure over 100 years — live in 3D.</p></div>
+      <div class="mod"><div class="mod-no">02</div><h3>Probabilistic capacity</h3><p>Latin Hypercube sampling → P10 / P50 / P90 storage bounds in under five seconds, in the language regulators and investors use.</p></div>
+      <div class="mod"><div class="mod-no">03</div><h3>Geomechanical risk</h3><p>Mohr-Coulomb, MAIP, fault-slip, surface heave. Safety-factor alerts at the thresholds that get projects shut in.</p></div>
+      <div class="mod"><div class="mod-no">04</div><h3>Permit documentation</h3><p>Jurisdiction-specific applications for five frameworks — EPA Class VI, EU, UK NSTA, Australia, Middle East. Days &rarr; minutes.</p></div>
+      <div class="mod"><div class="mod-no">05</div><h3>Economics &amp; credits</h3><p>NPV, IRR, levelised cost, 45Q and EU-ETS carbon-credit valuation. Answers the investor&rsquo;s question directly.</p></div>
+      <div class="mod accent"><div class="mod-no">06</div><h3>Digital Twin Registry</h3><p>Every run → a signed certificate (CL-XXXX) with QR verification. The artefact linking a simulation to a carbon-credit issuance.</p></div>
+    </div>
+    <div class="mod-foot"><span class="teal">+</span> The MARS-IFT model from my thesis is the interfacial-tension engine inside Module 01 — one validated component of a much larger system.</div>
+  </section>
+
+  <!-- 4 — COMPETITIVE LANDSCAPE -->
+  <section class="slide">
+    <div class="eyebrow">How it stands against the field</div>
+    <h2 style="margin-bottom:1.2rem">Screening tools exist. None combine<br>what CarbonLens puts in one browser tab.</h2>
+    <div class="cmp-wrap">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th class="cmp-feat">Capability</th>
+            <th class="cmp-us">CarbonLens</th>
+            <th>SCO2T​PRO</th>
+            <th>SLB / Halliburton</th>
+            <th>EarthNET</th>
+            <th>CO2-SCREEN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cmp-feat">Browser-native · zero install</td>
+            <td class="cmp-us"><span class="yes">●</span></td>
+            <td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="part">◐</span></td><td><span class="no">—</span></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Jurisdiction-specific permit export</td>
+            <td class="cmp-us"><span class="yes">●</span> <em>5 frameworks</em></td>
+            <td><span class="no">—</span></td><td><span class="part">◐</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Geomechanical risk + economics + credits</td>
+            <td class="cmp-us"><span class="yes">●</span></td>
+            <td><span class="part">◐</span></td><td><span class="yes">●</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Emerging-market geography (SE Asia · W. Africa · ME)</td>
+            <td class="cmp-us"><span class="yes">●</span></td>
+            <td><span class="no">US-centric</span></td><td><span class="part">◐</span></td><td><span class="part">◐</span></td><td><span class="no">US-centric</span></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Field-validated (Sleipner, 20 yr)</td>
+            <td class="cmp-us"><span class="yes">●</span></td>
+            <td><span class="part">◐</span></td><td><span class="yes">●</span></td><td><span class="part">◐</span></td><td><span class="part">◐</span></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Instant access · no procurement</td>
+            <td class="cmp-us"><span class="yes">●</span> <em>free tier</em></td>
+            <td><span class="no">enterprise</span></td><td><span class="no">enterprise</span></td><td><span class="no">enterprise</span></td><td><span class="yes">●</span> <em>free</em></td>
+          </tr>
+          <tr>
+            <td class="cmp-feat">Pricing model</td>
+            <td class="cmp-us"><span class="yes">●</span> <em>transparent SaaS</em></td>
+            <td><span class="no">quote-based</span></td><td><span class="no">quote-based</span></td><td><span class="no">quote-based</span></td><td><span class="no">grant-funded</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="cmp-legend">
+        <span><span class="yes">●</span> full</span>
+        <span><span class="part">◐</span> partial</span>
+        <span><span class="no">—</span> none</span>
+        <span class="cmp-caveat">Competitor capabilities from public product pages. Enterprise-suite pricing is quote-gated (not published); SCO2T​PRO &amp; SimCCSPRO list no public price.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 — MARKET & MODEL -->
+  <section class="slide">
+    <div class="eyebrow">The market &amp; what we actually sell</div>
+    <h2 style="margin-bottom:1.1rem">We don&rsquo;t sell permit reports.<br>We compress the stage that produces them.</h2>
+    <div class="market-wrap">
+      <div class="market-left">
+        <div class="mkt-stats">
+          <div class="mstat"><div class="mn">628</div><div class="ml">CCS PROJECTS IN PIPELINE · +60% SINCE 2023</div></div>
+          <div class="mstat"><div class="mn">247</div><div class="ml">PROJECTS NOW IN FEED · MORE THAN DOUBLED</div></div>
+          <div class="mstat"><div class="mn">~6 yrs</div><div class="ml">TYPICAL EPA CLASS VI PERMIT TIMELINE</div></div>
+        </div>
+        <p class="mkt-note">Governments are spending nine figures — <span class="teal">$75M on Class VI permitting, $100M on FEED studies</span> — precisely because this stage is the bottleneck where projects stall or die.</p>
+      </div>
+      <div class="market-right">
+        <div class="model-card">
+          <div class="mc-head">THE HONEST LINE</div>
+          <p>A submittable permit needs a licensed professional&rsquo;s sign-off and carries liability. <strong>CarbonLens does not replace that</strong> — even the leading screening tools state plainly they don&rsquo;t.</p>
+        </div>
+        <div class="model-card accent">
+          <div class="mc-head">WHAT WE SELL</div>
+          <p>The <strong>screening &amp; permit-prep stage</strong> — feasibility runs, risk &amp; capacity analysis, and a first-draft permit template — compressed from weeks of consultant time to minutes, with <strong>traceable, validated provenance</strong> that de-risks the eventual sign-off.</p>
+        </div>
+        <div class="model-foot">Anchor: pre-FEED feasibility studies run <strong>$12–15M+</strong> per project (public DOE CarbonSAFE awards). We take a slice of that cost out — we don&rsquo;t replace the engineer who signs.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 — VALIDATION / MONEY SHOT -->
+  <section class="slide">
+    <div class="eyebrow">The credibility centrepiece · drag to step through 20 years</div>
+    <div class="demo-wrap">
+      <div class="demo-copy">
+        <h2>Matched against the<br>world&rsquo;s longest-running<br>CCS site.</h2>
+        <p>Sleipner has injected CO₂ into the Utsira Sand since 1996 — nine sand layers, continuous 4D-seismic monitoring, the primary public dataset for validating any CCS model.</p>
+        <div class="demo-note">7 / 7 METRICS WITHIN TOLERANCE<br>16 FORMATIONS · 5 CONTINENTS VALIDATED<br>SPAN-WAGNER &amp; DUAN-SUN AT FIELD CONDITIONS</div>
+      </div>
+      <div class="gate s-green" id="gate">
+        <div class="gate-head"><span>SLEIPNER UTSIRA · BENCHMARK</span><span id="regime">YEAR 04 · 2000</span></div>
+        <div class="gate-body">
+          <div class="readout"><span class="val" id="ift">3.15</span><span class="unit">Mt stored</span></div>
+          <div class="interval" id="pi">published ≈ 3.6 Mt &nbsp;·&nbsp; deviation &minus;10.0%</div>
+          <div class="status-pill" id="pill" style="background:rgba(82,192,138,.13);color:var(--green)">
+            <span class="dot" style="background:var(--green)"></span><span id="statustxt">PASS · WITHIN ±20% TOLERANCE</span>
+          </div>
+          <div class="slider-row">
+            <label><span>INJECTION TIMELINE</span><span id="lev">1996 &rarr; 2016</span></label>
+            <input type="range" min="0" max="100" value="0" id="slider" aria-label="Step through the Sleipner injection timeline">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 — IMPACT -->
+  <section class="slide">
+    <div class="eyebrow">Why it matters</div>
+    <h2 style="margin-bottom:.4rem">Collapse the screening barrier,<br>and the global CCS pipeline moves faster.</h2>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="num">TIME</div>
+        <h3>Days to minutes</h3>
+        <p>Pre-feasibility screening that meant procurement, setup, and days of modelling now happens in a browser tab. Faster screening, faster pipeline, sooner to gigatonne scale.</p>
+        <div class="kicker">First question, answered immediately</div>
+      </div>
+      <div class="pillar">
+        <div class="num">EQUITY</div>
+        <h3>Where the gap is widest</h3>
+        <p>The 16 formations and 5 frameworks deliberately cover Southeast Asia, West Africa, the Middle East — exactly where commercial tools are out of reach and storage potential is large.</p>
+        <div class="kicker">CCS as a global capability</div>
+      </div>
+      <div class="pillar">
+        <div class="num">OVERSIGHT</div>
+        <h3>Regulators can verify</h3>
+        <p>Agencies in emerging markets can run independent screening on the same physics engines — strengthening permit review without buying commercial software or hiring specialists.</p>
+        <div class="kicker">Trust, built into the workflow</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 — INVITE INPUT -->
+  <section class="slide">
+    <div class="eyebrow">Where I&rsquo;d value your read</div>
+    <div class="ask-wrap">
+      <p class="ask-main">You&rsquo;ve seen the prototype evolve — I&rsquo;d like your <span class="hl">honest read</span> on where it&rsquo;s strong, where it&rsquo;s thin, and where it should go next.</p>
+      <div class="ask-steps">
+        <div class="ask-step"><span class="mk">&rarr; THE SCIENCE</span><div><p>Does the Sleipner validation hold up to scrutiny?</p><p class="sub">The bulk-homogeneous approximation, the ±20% tolerance, the marginal plume-radius metrics — is this sound for a screening tool?</p></div></div>
+        <div class="ask-step"><span class="mk">&rarr; THE DIRECTION</span><div><p>What&rsquo;s the highest-value next module?</p><p class="sub">Deeper geomechanics, multi-layer plume physics, more Malaysian formations for the PETRONAS conversation?</p></div></div>
+        <div class="ask-step"><span class="mk">&rarr; THE REACH</span><div><p>Who should see this before Prototypes for Humanity?</p><p class="sub">Academics, regulators, PETRONAS — where would your read open the most useful doors before the 1 August deadline?</p></div></div>
+      </div>
+    </div>
+    <div class="footer-meta" style="position:static;margin-top:auto;padding-top:1.5rem"><span class="teal">CARBONLENS · STORAGE STUDIO</span><span>I&rsquo;D RATHER HEAR WHERE IT BREAKS THAN WHERE IT SHINES.</span></div>
+  </section>
+
+<!-- nav -->
+<div class="hint">← → or SPACE to navigate</div>
+<div class="nav">
+  <span class="counter"><span id="cur">01</span> / 08</span>
+  <div class="dots" id="dots"></div>
+  <div class="arrows"><button id="prev" aria-label="Previous slide">‹</button><button id="next" aria-label="Next slide">›</button></div>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  const cur=document.getElementById('cur');
+  const dotsWrap=document.getElementById('dots');
+  slides.forEach((_,k)=>{const b=document.createElement('button');if(k===0)b.classList.add('on');b.onclick=()=>go(k);dotsWrap.appendChild(b);});
+  const dots=[...dotsWrap.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    cur.textContent=String(i+1).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  window.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft')go(i-1);
+  });
+
+  // ---- live AD gate ----
+  const slider=document.getElementById('slider');
+  const gate=document.getElementById('gate');
+  const ift=document.getElementById('ift');
+  const pi=document.getElementById('pi');
+  const pill=document.getElementById('pill');
+  const statustxt=document.getElementById('statustxt');
+  const lev=document.getElementById('lev');
+  const regime=document.getElementById('regime');
+  const dot=pill.querySelector('.dot');
+  // Sleipner injection timeline: 5 published checkpoints (1996->2016)
+  const timeline=[
+    {yr:'YEAR 04 · 2000',sim:'3.15',pub:'≈ 3.6 Mt',dev:'−10.0%'},
+    {yr:'YEAR 08 · 2004',sim:'6.75',pub:'≈ 7.2 Mt',dev:'−6.3%'},
+    {yr:'YEAR 12 · 2008',sim:'10.35',pub:'≈ 10.8 Mt',dev:'−3.7%'},
+    {yr:'YEAR 16 · 2012',sim:'13.95',pub:'≈ 14.4 Mt',dev:'−3.2%'},
+    {yr:'YEAR 20 · 2016',sim:'17.55',pub:'≈ 18 Mt',dev:'−2.5%'}
+  ];
+  function paint(v){
+    const idx=Math.min(timeline.length-1,Math.floor(v/100*timeline.length));
+    const t=timeline[idx];
+    const green=getCSS('--green');
+    gate.className='gate s-green';
+    pill.style.background=hexa(green,.13);pill.style.color=green;
+    dot.style.background=green;
+    statustxt.textContent='PASS · WITHIN ±20% TOLERANCE';
+    ift.style.color=getCSS('--paper');
+    ift.textContent=t.sim;
+    pi.innerHTML='published '+t.pub+' &nbsp;·&nbsp; deviation '+t.dev;
+    regime.textContent=t.yr;
+    lev.textContent='checkpoint '+(idx+1)+' / 5 · '+(2000+idx*4);
+  }
+  function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  function hexa(hex,a){const c=hex.replace('#','');const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);return`rgba(${r},${g},${b},${a})`;}
+  slider.addEventListener('input',e=>paint(+e.target.value));
+  paint(0);
+</script>
+</body>
+</html>

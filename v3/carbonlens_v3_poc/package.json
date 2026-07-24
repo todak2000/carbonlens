@@ -12,7 +12,10 @@
     "test": "vitest run && yarn sync:validation",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "sync:validation": "cp -r ../validation/. ./public/validation/"
+    "sync:validation": "cp -r ../validation/. ./public/validation/",
+    "sync:models": "tsx scripts/syncModels.ts",
+    "validate:models": "tsx scripts/validateModels.ts",
+    "prebuild": "yarn validate:models"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
@@ -40,8 +43,10 @@
     "autoprefixer": "^10.4.20",
     "gh-pages": "^6.3.0",
     "happy-dom": "^14.0.0",
+    "modern-web-guidance": "^0.0.174",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
+    "tsx": "^4.22.4",
     "typescript": "^5.5.4",
     "vite": "^5.4.3",
     "vitest": "^2.0.0"

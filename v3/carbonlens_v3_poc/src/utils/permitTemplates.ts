@@ -86,7 +86,7 @@ function resultsSection(result: SimulationResult): PermitSection {
       sep,
       'TRAPPING MECHANISMS',
       sep,
-      l('Mobile Plume', `${result.mobilePlume.toFixed(4)} Mt`),
+      l('Structural Trapping', `${result.mobilePlume.toFixed(4)} Mt`),
       l('Residual (Ganglia)', `${result.residualTrapping.toFixed(4)} Mt`),
       l('Dissolved (Solubility)', `${result.solubilityTrapping.toFixed(4)} Mt`),
       l('Mineral (Geochemical)', `${(result.mineralTrapping ?? 0).toFixed(4)} Mt`),

@@ -49,7 +49,6 @@ export default function RegistryPanel() {
   const [formationLabel, setFormationLabel] = useState<string>('')
   const [editingLabel, setEditingLabel] = useState(false)
 
-  // Sync label whenever the active preset changes (or on first mount)
   useEffect(() => {
     setFormationLabel(activePresetName ?? 'Custom Formation')
     setCertSaved(false)
@@ -75,11 +74,6 @@ export default function RegistryPanel() {
     return result.storageCapacity * rate
   }, [result, jurisdiction])
 
-  const yearlyRate = useMemo(() => {
-    if (!result) return 0
-    return result.storageCapacity / Math.max(1, projectYears)
-  }, [result, projectYears])
-
   const mockTxns = useMemo(() => {
     if (!result) return []
     const rate = jurisdiction === 'US' ? 85 : jurisdiction === 'EU' ? 60 : jurisdiction === 'Australia' ? 45 : 70
@@ -91,7 +85,7 @@ export default function RegistryPanel() {
       txns.push({
         id: mockTxId(y),
         year: 2026 + y - 1,
-        label: `Year ${y} verification`,
+        label: `Year ${y} Verification`,
         credits: Math.round(credits),
         status: y <= 3 ? 'confirmed' as const : 'pending' as const,
       })
@@ -100,12 +94,12 @@ export default function RegistryPanel() {
   }, [result, jurisdiction, projectYears])
 
   const statusBadge = verified
-    ? { label: 'Verified', color: 'bg-success border-success text-success' }
+    ? { label: 'Verified', color: 'bg-success/20 border-success text-success' }
     : warning
-    ? { label: 'Review Required', color: 'bg-warning border-warning text-warning' }
+    ? { label: 'Review Required', color: 'bg-warning/20 border-warning text-warning' }
     : failed
-    ? { label: 'Non-Compliant', color: 'bg-error border-error text-error' }
-    : { label: 'Not Assessed', color: 'bg-tertiary/30 border-theme/30 text-muted' }
+    ? { label: 'Non-Compliant', color: 'bg-error/20 border-error text-error font-bold' }
+    : { label: 'Not Assessed', color: 'bg-tertiary border-theme/20 text-secondary font-semibold' }
 
   const certStatus: CertificateRecord['status'] = verified
     ? 'Verified'
@@ -115,11 +109,11 @@ export default function RegistryPanel() {
 
   const handleSaveCertificate = () => {
     if (!result || !geomech) return
-    const formationName = formationLabel.trim() || activePresetName || 'Custom Formation'
+    const name = formationLabel.trim() || activePresetName || 'Custom Formation'
     const record: CertificateRecord = {
       assetId,
       savedAt: new Date().toISOString(),
-      formationName,
+      formationName: name,
       jurisdiction,
       depth: params.depth,
       area: params.area,
@@ -154,198 +148,257 @@ export default function RegistryPanel() {
     : null
 
   return (
-    <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-120px)]">
-      <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider flex items-center gap-1.5">
-        <Database size={13} /> Digital Twin Registry
-      </h2>
-
-      {/* Asset ID & Status */}
-      <div className="rounded px-3 py-2 border border-theme/30 bg-tertiary/20 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] text-muted font-mono uppercase tracking-wider">Asset ID</span>
-          <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${statusBadge.color}`}>
-            {statusBadge.label}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Shield size={14} className={verified ? 'text-success' : warning ? 'text-warning' : 'text-muted'} />
-          <span className="text-[13px] font-mono font-bold text-primary tracking-wider">{assetId}</span>
-        </div>
-        <div className="text-[8px] text-muted/50 font-mono flex items-center gap-2">
-          <span>Jurisdiction: {jurisdiction}</span>
-          <span>·</span>
-          <span>Depth: {params.depth}m</span>
-          <span>·</span>
-          <span>Area: {params.area}km²</span>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-theme/20 pb-4">
+        <div>
+          <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+            <Database size={20} className="text-accent" /> Digital Twin Asset Registry
+          </h1>
+          <p className="text-xs text-muted font-mono mt-0.5">
+            Cryptographic storage certification ledger and immutable verification records
+          </p>
         </div>
       </div>
 
-      {/* Formation name for certificate */}
-      <div className="rounded px-2 py-2 border border-theme/30 bg-tertiary/20 space-y-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] text-muted font-mono uppercase tracking-wider">Formation Name</span>
-          <button
-            onClick={() => setEditingLabel((v) => !v)}
-            className="text-[9px] font-mono text-muted/60 hover:text-primary flex items-center gap-0.5 transition"
-          >
-            <Pencil size={9} /> {editingLabel ? 'done' : 'edit'}
-          </button>
-        </div>
-        {editingLabel ? (
-          <input
-            type="text"
-            value={formationLabel}
-            onChange={(e) => setFormationLabel(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && setEditingLabel(false)}
-            placeholder="Enter formation name…"
-            autoFocus
-            className="w-full bg-transparent border-b border-primary/40 text-[11px] font-mono text-primary outline-none pb-0.5 placeholder:text-muted/40"
-          />
-        ) : (
-          <div className="text-[11px] font-mono font-semibold text-primary truncate">{formationLabel || 'Custom Formation'}</div>
-        )}
-        <div className="text-[8px] text-muted/40 font-mono">Used on the certificate. Keep preset name or enter your own.</div>
-      </div>
-
-      {/* Certificate Actions */}
-      {result && geomech && (
-        <div className="flex gap-2">
-          <button
-            onClick={handleSaveCertificate}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-400 hover:bg-emerald-500/20 transition"
-          >
-            <FileCheck size={11} /> Save Certificate
-          </button>
-          <button
-            disabled={!certSaved}
-            onClick={() => certUrl && window.open(certUrl, '_blank')}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded bg-blue-500/10 border border-blue-500/30 text-[10px] font-mono text-blue-400 hover:bg-blue-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <ExternalLink size={11} /> View Certificate
-          </button>
-        </div>
-      )}
-      {certSaved && certUrl && (
-        <div className="rounded px-2 py-1.5 bg-emerald-500/5 border border-emerald-500/20 text-[9px] font-mono text-emerald-400 break-all">
-          Certificate saved. Share link: <span className="text-muted">{certUrl}</span>
-        </div>
-      )}
-
-      {/* Verification Summary */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${containmentOk ? 'bg-success border-success text-success' : result ? 'bg-warning border-warning text-warning' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
-          <span className="uppercase tracking-wider text-[8px] opacity-70">Containment</span>
-          <div className="mt-0.5 font-bold flex items-center gap-1">
-            {result ? `${(result.containmentProbability * 100).toFixed(0)}%` : '—'}
-            {containmentOk && <BadgeCheck size={11} />}
-          </div>
-        </div>
-        <div className={`rounded px-2 py-1.5 border text-[10px] font-mono ${geomechOk ? 'bg-success border-success text-success' : geomech ? 'bg-warning border-warning text-warning' : 'bg-tertiary/30 border-theme/30 text-muted'}`}>
-          <span className="uppercase tracking-wider text-[8px] opacity-70">Geomechanics</span>
-          <div className="mt-0.5 font-bold flex items-center gap-1">
-            {geomech ? `${geomech.safetyFactor.toFixed(2)} SF` : '—'}
-            {geomechOk && <BadgeCheck size={11} />}
-          </div>
-        </div>
-      </div>
-
-      {/* Storage Summary */}
-      {result && (
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-          <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><Database size={11} /> Storage Account</h3>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] font-mono">
-            <span className="text-muted">Injected CO₂</span>
-            <span className="text-secondary text-right font-bold">{result.storageCapacity.toFixed(2)} Mt</span>
-            <span className="text-muted">Total Capacity</span>
-            <span className="text-secondary text-right font-bold">{result.totalCapacity.toFixed(2)} Mt</span>
-            <span className="text-muted">Utilization</span>
-            <span className="text-secondary text-right font-bold">{result.capacityUtilPct.toFixed(1)}%</span>
-            <span className="text-muted">Plume Radius</span>
-            <span className="text-secondary text-right font-bold">{result.plumeRadius.toFixed(0)} m</span>
-          </div>
-        </div>
-      )}
-
-      {/* Pressure Integrity */}
-      {geomech && (
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-          <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><Activity size={11} /> Pressure Integrity</h3>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] font-mono">
-            <span className="text-muted">Injection Pressure</span>
-            <span className="text-secondary text-right font-bold">{result?.injectionPressure.toFixed(1) ?? '—'} MPa</span>
-            <span className="text-muted">MAIP Limit</span>
-            <span className="text-secondary text-right font-bold">{geomech.maip.toFixed(1)} MPa</span>
-          </div>
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <div className="flex-1 h-1.5 rounded-full bg-tertiary overflow-hidden">
-              <div className={`h-full rounded-full transition-all ${geomech.maipMargin > 20 ? 'bg-success' : geomech.maipMargin > 0 ? 'bg-warning' : 'bg-red-500'}`}
-                style={{ width: `${Math.max(0, Math.min(100, geomech.maipMargin))}%` }} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Asset info, name editor, certificate actions (60% width equivalent: col-span-7) */}
+        <div className="lg:col-span-7 space-y-5">
+          
+          {/* Asset Info Card */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-md">
+            <div className="flex items-center justify-between border-b border-theme/10 pb-2">
+              <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">Asset Information</span>
+              <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${statusBadge.color}`}>
+                {statusBadge.label}
+              </span>
             </div>
-            <span className={`text-[10px] font-mono font-bold ${geomech.maipMargin > 20 ? 'text-success' : geomech.maipMargin > 0 ? 'text-warning' : 'text-error'}`}>
-              {geomech.maipMargin.toFixed(1)}% margin
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Leakage Proof */}
-      {result && (
-        <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-          <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><FileCheck size={11} /> Containment Proof</h3>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] font-mono">
-            <span className="text-muted">Mobile Plume</span>
-            <span className="text-secondary text-right font-bold">{result.mobilePlume.toFixed(2)} Mt</span>
-            <span className="text-muted">Residual Trapping</span>
-            <span className="text-secondary text-right font-bold">{result.residualTrapping.toFixed(2)} Mt</span>
-            <span className="text-muted">Solubility Trapping</span>
-            <span className="text-secondary text-right font-bold">{result.solubilityTrapping.toFixed(2)} Mt</span>
-            <span className="text-muted">Overpressure Risk</span>
-            <span className={`text-right font-bold ${result.overpressureRisk ? 'text-error' : 'text-success'}`}>
-              {result.overpressureRisk ? '⚠ Yes' : 'None'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Verified Credit Ledger */}
-      <div className="rounded px-2 py-1.5 border border-theme/30 bg-tertiary/20">
-        <h3 className="text-[10px] text-muted font-mono mb-1.5 flex items-center gap-1"><PiggyBank size={11} className="text-warning" /> Credit Ledger</h3>
-        {result ? (
-          <>
-            <div className="flex items-baseline justify-between mb-1.5">
-              <span className="text-[9px] text-muted font-mono">Total Verified Credits</span>
-              <span className="text-[16px] font-mono font-bold text-warning">{totalCredits.toFixed(0)}</span>
+            
+            <div className="flex items-center gap-2.5">
+              <Shield size={20} className={verified ? 'text-success' : warning ? 'text-warning' : 'text-muted'} />
+              <span className="text-base font-mono font-bold text-primary tracking-wider">{assetId}</span>
             </div>
-            <div className="space-y-1">
-              {mockTxns.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between text-[9px] font-mono border-b border-theme/10 pb-1 last:border-0">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${tx.status === 'confirmed' ? 'bg-success' : 'bg-warning'}`} />
-                    <span className="text-muted">{tx.label}</span>
-                  </div>
+            
+            <div className="text-xs text-muted leading-relaxed font-mono space-y-1 bg-page/40 p-3 rounded-lg border border-theme/20">
+              <div>· Jurisdiction: <span className="text-secondary font-semibold">{jurisdiction} Compliance Framework</span></div>
+              <div>· Formation Depth: <span className="text-secondary font-semibold">{params.depth} m (Appraisal Boundary)</span></div>
+              <div>· Reservoir Footprint: <span className="text-secondary font-semibold">{params.area} km²</span></div>
+            </div>
+          </div>
+
+          {/* Formation name for certificate */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">Formation Label Details</span>
+              <button
+                onClick={() => setEditingLabel((v) => !v)}
+                className="text-xs font-mono text-accent hover:text-accent-hover flex items-center gap-1 transition"
+              >
+                <Pencil size={11} /> {editingLabel ? 'Finish' : 'Edit'}
+              </button>
+            </div>
+            
+            {editingLabel ? (
+              <input
+                type="text"
+                value={formationLabel}
+                onChange={(e) => setFormationLabel(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && setEditingLabel(false)}
+                placeholder="Enter formation name…"
+                autoFocus
+                className="w-full bg-slate-800 border border-theme/30 rounded px-3 py-2 text-xs font-mono text-primary outline-none focus:border-accent"
+              />
+            ) : (
+              <div className="text-sm font-mono font-bold text-primary bg-page/40 px-3 py-2 rounded-lg border border-theme/20 truncate">
+                {formationLabel || 'Custom Formation'}
+              </div>
+            )}
+            <p className="text-[10px] text-muted/65 font-mono">This label will be printed on the cryptographic storage verification certificate.</p>
+          </div>
+
+          {/* Containment proof breakdown */}
+          {result && (
+            <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3 shadow-md">
+              <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-theme/10 pb-2">
+                Containment Proof &amp; Trapping States
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                <div className="bg-tertiary/20 p-3 rounded-lg border border-theme/10 flex justify-between">
+                  <span className="text-muted font-semibold">Structural Trapping</span>
+                  <span className="text-secondary font-bold">{result.mobilePlume.toFixed(2)} Mt</span>
+                </div>
+                <div className="bg-tertiary/20 p-3 rounded-lg border border-theme/10 flex justify-between">
+                  <span className="text-muted font-semibold">Residual Trapping</span>
+                  <span className="text-secondary font-bold">{result.residualTrapping.toFixed(2)} Mt</span>
+                </div>
+                <div className="bg-tertiary/20 p-3 rounded-lg border border-theme/10 flex justify-between">
+                  <span className="text-muted font-semibold">Solubility Trapping</span>
+                  <span className="text-secondary font-bold">{result.solubilityTrapping.toFixed(2)} Mt</span>
+                </div>
+                <div className="bg-tertiary/20 p-3 rounded-lg border border-theme/10 flex justify-between">
+                  <span className="text-muted font-semibold">Overpressure Risk</span>
+                  <span className={`font-bold ${result.overpressureRisk ? 'text-error' : 'text-success'}`}>
+                    {result.overpressureRisk ? 'Critical Warning' : 'No Threat'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Certificate Actions */}
+          {result && geomech && (
+            <div className="flex gap-4">
+              <button
+                onClick={handleSaveCertificate}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono font-bold text-emerald-400 hover:bg-emerald-500/20 transition shadow"
+              >
+                <FileCheck size={14} /> Cryptographic Seal Asset
+              </button>
+              <button
+                disabled={!certSaved}
+                onClick={() => certUrl && window.open(certUrl, '_blank')}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-xs font-mono font-bold text-blue-400 hover:bg-blue-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed shadow"
+              >
+                <ExternalLink size={14} /> Download Certificate (PDF)
+              </button>
+            </div>
+          )}
+          {certSaved && certUrl && (
+            <div className="rounded-xl px-4 py-3 bg-emerald-500/5 border border-emerald-500/20 text-xs font-mono text-emerald-400 break-all leading-normal">
+              Certificate recorded on ledger. Public verification link: <br />
+              <span className="text-muted underline cursor-pointer">{certUrl}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Storage Accounts, verification and Credit Ledger (40% width: col-span-5) */}
+        <div className="lg:col-span-5 space-y-5">
+          
+          {/* Verification summary scores */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`rounded-xl p-3 border text-xs font-mono flex flex-col justify-between ${
+              containmentOk ? 'bg-success/15 border-success text-success' : result ? 'bg-warning/15 border-warning text-warning' : 'bg-tertiary border-theme/20 text-secondary'
+            }`}>
+              <span className="uppercase tracking-wider text-[10px] opacity-75 font-bold">Containment Probability</span>
+              <div className="mt-1 font-bold text-lg flex items-center gap-1.5 justify-between">
+                <span>{result ? `${(result.containmentProbability * 100).toFixed(0)}%` : '—'}</span>
+                {containmentOk && <BadgeCheck size={16} />}
+              </div>
+            </div>
+            <div className={`rounded-xl p-3 border text-xs font-mono flex flex-col justify-between ${
+              geomechOk ? 'bg-success/15 border-success text-success' : geomech ? 'bg-warning/15 border-warning text-warning' : 'bg-tertiary border-theme/20 text-secondary'
+            }`}>
+              <span className="uppercase tracking-wider text-[10px] opacity-75 font-bold">Geomechanical SF</span>
+              <div className="mt-1 font-bold text-lg flex items-center gap-1.5 justify-between">
+                <span>{geomech ? `${geomech.safetyFactor.toFixed(2)} SF` : '—'}</span>
+                {geomechOk && <BadgeCheck size={16} />}
+              </div>
+            </div>
+          </div>
+
+          {/* Storage Capacity Account */}
+          {result && (
+            <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3.5 shadow-md">
+              <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 border-b border-theme/10 pb-2">
+                <Database size={14} className="text-accent" /> Storage Capacity Account
+              </h3>
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between border-b border-theme/10 pb-1">
+                  <span className="text-muted">Total Reservoir Capacity</span>
+                  <span className="text-secondary font-bold">{result.totalCapacity.toFixed(2)} Mt</span>
+                </div>
+                <div className="flex justify-between border-b border-theme/10 pb-1">
+                  <span className="text-muted">Injected Carbon Target</span>
+                  <span className="text-secondary font-bold">{result.storageCapacity.toFixed(2)} Mt</span>
+                </div>
+                <div className="flex justify-between border-b border-theme/10 pb-1">
+                  <span className="text-muted">Pore Volume Utilization</span>
+                  <span className="text-secondary font-bold">{result.capacityUtilPct.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Simulation Plume Radius</span>
+                  <span className="text-secondary font-bold">{result.plumeRadius.toFixed(1)} m</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pressure Integrity & MAIP */}
+          {geomech && (
+            <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3.5 shadow-md">
+              <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 border-b border-theme/10 pb-2">
+                <Activity size={14} className="text-accent" /> Pressure Safety Envelope
+              </h3>
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between border-b border-theme/10 pb-1">
+                  <span className="text-muted">Injection BHP</span>
+                  <span className="text-secondary font-bold">{result?.injectionPressure.toFixed(2) ?? '—'} MPa</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">MAIP Limit</span>
+                  <span className="text-secondary font-bold">{geomech.maip.toFixed(2)} MPa</span>
+                </div>
+                
+                <div className="pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-secondary">{tx.credits.toLocaleString()} credits</span>
-                    <span className="text-[7px] text-muted/50 font-mono">{tx.id}</span>
+                    <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden border border-theme/10">
+                      <div className={`h-full rounded-full transition-all ${geomech.maipMargin > 20 ? 'bg-success' : geomech.maipMargin > 0 ? 'bg-warning' : 'bg-red-500'}`}
+                        style={{ width: `${Math.max(0, Math.min(100, geomech.maipMargin))}%` }} />
+                    </div>
+                    <span className={`font-mono font-bold ${geomech.maipMargin > 20 ? 'text-success' : geomech.maipMargin > 0 ? 'text-warning' : 'text-error'}`}>
+                      {geomech.maipMargin.toFixed(1)}% margin
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-            <button onClick={() => setPanel('economics')}
-              className="mt-2 w-full flex items-center justify-center gap-1 py-1.5 rounded bg-warning border border-warning text-[10px] font-mono text-warning hover:bg-warning transition">
-              <ArrowUpRight size={11} /> View Economics
-            </button>
-          </>
-        ) : (
-          <p className="text-[10px] text-muted/60 font-mono italic">Run simulation to generate credit ledger</p>
-        )}
-      </div>
+          )}
 
-      {/* Not Assessed hint */}
-      {!result && (
-        <div className="rounded px-2 py-2 border border-dashed border-theme/20 text-[9px] text-muted/50 font-mono text-center">
-          Run a simulation to assess storage integrity and generate the digital twin registry.
+          {/* Credit Ledger */}
+          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-md">
+            <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 border-b border-theme/10 pb-2">
+              <PiggyBank size={14} className="text-accent" /> Carbon Credit Registry Ledger
+            </h3>
+            {result ? (
+              <div className="space-y-3">
+                <div className="flex items-baseline justify-between border-b border-theme/15 pb-2">
+                  <span className="text-xs text-muted font-mono uppercase font-bold">Total Verified Yield</span>
+                  <span className="text-xl font-mono font-bold text-accent">{totalCredits.toFixed(0)} Credits</span>
+                </div>
+                <div className="space-y-2">
+                  {mockTxns.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between text-[11px] font-mono border-b border-theme/10 pb-1.5 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${tx.status === 'confirmed' ? 'bg-success' : 'bg-warning'}`} />
+                        <span className="text-secondary font-semibold">{tx.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-right">
+                        <span className="text-primary font-bold">{tx.credits.toLocaleString()} t</span>
+                        <span className="text-[10px] text-muted/60">{tx.id}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPanel('economics')}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-accent/40 bg-accent/15 text-xs font-mono text-accent hover:bg-accent/25 transition font-bold"
+                >
+                  <ArrowUpRight size={14} /> Inspect Financial Model
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted/60 font-mono italic text-center py-6">Run simulation to generate compliance credit records.</p>
+            )}
+          </div>
+
+          {/* Not Assessed Hint */}
+          {!result && (
+            <div className="rounded-xl px-4 py-4 border border-dashed border-theme/30 text-xs text-muted/50 font-mono text-center bg-slate-800/30">
+              Run Stage 3 dynamic model simulation to initialize registry asset certificates.
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { generateWellboreSVGString } from '../components/WellboreSchematic'
 import { computeYearly, computeGeomechanicsResult } from '../hooks/useSimulation'
 import { wellRateAtTime } from './gridParser'
 import { useUIStore } from '../store/uiStore'
+import { renderSimEngineAttribution, renderProvenanceTableRows } from '../data/modelRegistry'
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -788,12 +789,12 @@ function buildBackPage(opts: {
           <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
             <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
             <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Muhammad Aslam Md Yusof</strong> &mdash; Co-Supervisor, UTP Malaysia
+            <strong style="color:white;">Dr. Berihun Negash Mamo</strong> &mdash; Advisor, UTP Malaysia
           </div>
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
           <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Simulation Engine</div>
-          <div style="font-size:9pt;color:#cbd5e1;">Span-Wagner (1996) CO&#x2082; EOS &middot; DOE Goodman (2011) &middot; Duan-Sun Solubility &middot; Duan et al. (2006) Multi-Salt Solubility &middot; MARS IFT (Olagunju, in prep.) &middot; Nordbotten (2005) Two-Phase AoR &middot; Hesse et al. (2008) Post-Injection &middot; Mohr-Coulomb Geomechanics &middot; Shook &amp; Mitchell (2009) &middot; Kopp et al. (2010) Heterogeneity Corrections &middot; van Genuchten&ndash;Mualem kr &middot; Killough&ndash;Land Hysteresis</div>
+          <div style="font-size:9pt;color:#cbd5e1;">${renderSimEngineAttribution()}</div>
         </div>
       </div>
 
@@ -1185,7 +1186,7 @@ function buildExecutiveSummaryBody(
             <td style="padding:3px 6px;">${mineral.toFixed(3)} Mt (${pctM}%)</td>
           </tr>
           <tr>
-            <td style="padding:3px 6px;">Mobile</td>
+            <td style="padding:3px 6px;">Structural Trapping</td>
             <td style="padding:3px 6px;">
               <div class="bar-track"><div style="width:${pctMob}%; background:#ef4444; height:8px; border-radius:4px;"></div></div>
             </td>
@@ -2037,10 +2038,45 @@ export function openPermitApplication(
   <div class="section-box">
     <p>The Area of Review (AoR) is the region surrounding the CO&#x2082; storage complex within which elevated formation pressures could cause CO&#x2082; or displaced brine to migrate into underground sources of drinking water (USDW) or other protected resources. The AoR must be delineated using computational modelling and updated at regular intervals throughout the project lifetime.</p>
   </div>
+  ${result?.formationRegime ? (() => {
+    const fr = result.formationRegime!
+    const regimeBadgeColor: Record<string, string> = {
+      BUOYANCY_DOMINATED: '#166534',
+      MIXED: '#854d0e',
+      PRESSURE_DOMINATED: '#7f1d1d',
+      INJECTIVITY_LIMITED: '#581c87',
+    }
+    const regimeBorderColor: Record<string, string> = {
+      BUOYANCY_DOMINATED: '#22c55e',
+      MIXED: '#eab308',
+      PRESSURE_DOMINATED: '#ef4444',
+      INJECTIVITY_LIMITED: '#a855f7',
+    }
+    const bgColor = regimeBadgeColor[fr.type] ?? '#1e293b'
+    const borderColor = regimeBorderColor[fr.type] ?? '#64748b'
+    const metricLabel: Record<string, string> = {
+      plume_radius: 'VE Plume Radius (Boait 2012)',
+      bhp_buildup: 'Wellbore BHP / Pressure Buildup',
+      injectivity_index: 'Injectivity Index',
+    }
+    return `
+  <div style="background:${bgColor};border-left:4px solid ${borderColor};padding:12px 16px;border-radius:6px;margin:10px 0 14px 0;font-size:9pt;line-height:1.6;">
+    <strong style="color:${borderColor};">Formation Physics Regime: ${fr.type.replace(/_/g,' ')}</strong>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">Primary validation metric: <strong style="color:#e2e8f0;">${metricLabel[fr.primaryMetric] ?? fr.primaryMetric}</strong></span>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">VE model: <strong style="color:${fr.veIsValid ? '#22c55e' : '#f87171'};">${fr.veIsValid ? 'APPLICABLE' : 'NOT APPLICABLE'}</strong></span>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">Screening score: <strong style="color:#e2e8f0;">${fr.screeningScore.toFixed(0)}/100</strong></span>
+    ${fr.warningBanner ? `<br/><span style="color:#fca5a5;margin-top:4px;display:block;">${fr.warningBanner}</span>` : ''}
+    ${fr.failedCriteria.length > 0 ? `<br/><span style="color:#fca5a5;font-size:8pt;">Failed criteria: ${fr.failedCriteria.join(', ')}</span>` : ''}
+    ${fr.amberCriteria.length > 0 ? `<br/><span style="color:#fcd34d;font-size:8pt;">Marginal criteria: ${fr.amberCriteria.join(', ')}</span>` : ''}
+  </div>`
+  })() : ''}
   <table>
     <thead><tr><th>Parameter</th><th>Value</th><th>Method</th></tr></thead>
     <tbody>
-      <tr><td>Estimated Plume Radius${result?.hessePostInjection ? ' — <strong>post-injection</strong>' : wells.length > 1 ? ' (per-well, analytical)' : ''}</td><td>${plumeRadius.toFixed(0)} m</td><td>${result?.hessePostInjection ? 'Hesse et al. (2008) post-injection gravity current — leading shock front position (replaces injection-phase estimate)' : `Gravity-current spreading (Boait 2012 calibration)${wells.length > 1 ? `; ${wells.length}-well programme — individual radii merge into compound multi-well plume over the simulation horizon` : ''}`}</td></tr>
+      <tr><td>Estimated Plume Radius${result?.hessePostInjection ? ' — <strong>post-injection</strong>' : wells.length > 1 ? ' (per-well, analytical)' : ''}</td><td>${plumeRadius.toFixed(0)} m</td><td>${result?.hessePostInjection ? 'Hesse et al. (2008) post-injection gravity current — leading shock front position (replaces injection-phase estimate)' : `Gravity-current spreading (Boait 2012 calibration)${wells.length > 1 ? `; ${wells.length}-well programme — individual radii merge into compound multi-well plume over the simulation horizon` : ''}`}${result?.formationRegime && !result.formationRegime.veIsValid ? ' <em style="color:#f87171;">[VE model not applicable for this formation — radius shown for reference only]</em>' : ''}</td></tr>
       <tr><td>Plume Height (vertical extent)</td><td>${plumeHeight.toFixed(0)} m</td><td>Fraction of formation thickness</td></tr>
       <tr><td>AoR Radius — Pressure Threshold (primary)</td><td><strong>${aorRadiusDynamic.toFixed(0)} m</strong></td><td>Nordbotten (2005) two-phase composite ΔP = 1 psi (0.007 MPa) contour at year ${aorYear}${aorRadiusDynamic === 0 ? ' <em style="color:#d97706;">(High permeability — ΔP dissipates below 1 psi at all radii. AoR governed by geometric 3× multiplier.)</em>' : ''}</td></tr>
       <tr><td>AoR Radius — Geometric (3× plume, secondary)</td><td>${aorRadiusLegacy.toFixed(0)} m</td><td>Legacy 3× multiplier — retained as conservative check</td></tr>
@@ -2122,7 +2158,7 @@ export function openPermitApplication(
       <tr><td>Residual (capillary) trapping</td><td>${residual.toFixed(4)}</td><td>${pctR}%</td></tr>
       <tr><td>Dissolution trapping (still dissolved) <sup>†</sup></td><td>${dissolvedOnly.toFixed(4)}</td><td>${pctS}%</td></tr>
       <tr><td>Mineral trapping (precipitated carbonate) <sup>†</sup></td><td>${mineral.toFixed(4)}</td><td>${pctM}%</td></tr>
-      <tr><td>Mobile plume (structural / free)</td><td>${mobile.toFixed(4)}</td><td>${pctMob}%</td></tr>
+      <tr><td>Structural Trapping</td><td>${mobile.toFixed(4)}</td><td>${pctMob}%</td></tr>
       <tr style="background:#e0f2fe;"><td><strong>Tracked Total (model components)</strong></td><td><strong>${trappingRef.toFixed(4)}</strong></td><td><strong>100%</strong></td></tr>
       ${storedTotal > 0 && Math.abs(storedTotal - trappingRef) > storedTotal * 0.05 ? `<tr style="background:#f0f9ff;"><td>Cumulative Injection (total)</td><td>${storedTotal.toFixed(4)}</td><td style="font-size:8.5pt;color:#1e40af;">Re-run simulation to completion for full mass-balance breakdown. (${(trappingRef / storedTotal * 100).toFixed(1)}% of injected mass currently tracked in trapping components.)</td></tr>` : ''}
     </tbody>
@@ -2280,19 +2316,7 @@ export function openPermitApplication(
   <table style="margin-top:12px;">
     <thead><tr><th>Component</th><th>Model</th><th>Reference</th></tr></thead>
     <tbody>
-      <tr><td>CO&#x2082; density</td><td>Span-Wagner (1996) 56-term Helmholtz EOS (primary, ±0.05%); Peng-Robinson (1976) mixing rules for impure CO&#x2082; streams (CH&#x2084;, N&#x2082;, H&#x2082;S, SO&#x2082;)</td><td>Span &amp; Wagner (1996), J. Phys. Chem. Ref. Data 25(6):1509&#x2013;1596; Peng &amp; Robinson (1976) Ind. Eng. Chem. Fundam. 15(1):59&#x2013;64; Li &amp; Yan (2009) binary k<sub>ij</sub></td></tr>
-      <tr><td>CO&#x2082; viscosity</td><td>Fenghour et al. (1998) correlation</td><td>Fenghour, Wakeham &amp; Vesovic (1998) J. Phys. Chem. Ref. Data 27(1):31–44. Note: Laesecke &amp; Muzny (2017) is the current NIST-recommended reference (±0.5% vs ±5% for Fenghour at high pressure); upgrade pending coefficient transcription.</td></tr>
-      <tr><td>CO&#x2082; solubility</td><td>Duan-Sun model (extended 5-coefficient fit)</td><td>Duan &amp; Sun (2003) Chem. Geology 193(3–4):257–271. T-dependent Pitzer λ(T) and ζ parameters from Table 3; separate NaCl / CaCl₂ Setschenow corrections.</td></tr>
-      <tr><td>Storage capacity</td><td>DOE Goodman method</td><td>Goodman et al. (2011) Int. J. Greenhouse Gas Control 5(4):828–835</td></tr>
-      <tr><td>CO&#x2082;-brine interfacial tension (IFT)</td><td>MARS regression (sub/supercritical)</td><td>Olagunju (in preparation) — MARS model for CO&#x2082;-brine IFT prediction across sub- and supercritical conditions; MSc research, Universiti Teknologi PETRONAS (unpublished)</td></tr>
-      <tr><td>Relative permeability</td><td>van Genuchten–Mualem + Killough–Land hysteresis</td><td>van Genuchten (1980) Soil Sci. Soc. Am. J. 44(5):892–898; Mualem (1976) Water Resour. Res. 12(3):513–522; Krevor et al. (2012) Water Resour. Res. 48:W02544 (laboratory Berea/Fontainebleau parameters); Land (1968) SPE-1965-PA; Killough (1976) SPE-5765-PA</td></tr>
-      <tr><td>Pressure model</td><td>Nordbotten (2005) two-phase composite radial flow</td><td>Nordbotten, Celia &amp; Bachu (2005) Transp. Porous Media 58(3):339–360. Outer brine zone: E₁ integral with brine mobility; near-well CO₂ zone: mobility-ratio correction. Supersedes single-phase Theis (1935) for two-phase CO₂ injection.</td></tr>
-      <tr><td>AoR delineation</td><td>Nordbotten two-phase pressure-threshold inversion (1 psi / 0.007 MPa)</td><td>EPA Class VI guidance 40 CFR 146.84; bisection on Nordbotten (2005) composite ΔP to find threshold contour radius</td></tr>
-      <tr><td>2D plume footprint (VE model)</td><td>Vertical Equilibrium 2D FD solver (40×40 grid)</td><td>Nordbotten &amp; Celia (2006) Water Resour. Res. 42:W01407; Hesse et al. (2008) J. Fluid Mech. 611:35–60</td></tr>
-      <tr><td>Halite precipitation risk</td><td>Zeidouni dryout-radius screening</td><td>Zeidouni et al. (2009) Int. J. GHG Control 3(5):600–611; Muller et al. (2009) Energy Procedia 1(1):3507–3514</td></tr>
-      <tr><td>Wellbore schematic</td><td>Auto-generated from depth &amp; thickness</td><td>CCUS well architecture per ISO 16530 / API RP 90</td></tr>
-      <tr><td>Wellbore pressure</td><td>Peaceman (1978) well-block model</td><td>Peaceman (1978) SPE-6893-PA; injectivity index J = 2πkh/μ(ln r<sub>e</sub>/r<sub>w</sub> + S)</td></tr>
-      <tr><td>Geomechanics</td><td>Mohr-Coulomb failure</td><td>Jaeger et al. (2007) Fundamentals of Rock Mechanics</td></tr>
+      ${renderProvenanceTableRows()}
     </tbody>
   </table>
 

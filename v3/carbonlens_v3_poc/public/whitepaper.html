@@ -85,7 +85,6 @@
     }
     @media print {
       .cover {
-        /* Stretch to fill the full A4 sheet with zero page margin */
         min-height: 297mm;
         width: 210mm;
         margin: 0;
@@ -199,24 +198,20 @@
     /* FOOTER */
     .doc-footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 8pt; color: var(--text-muted); }
 
-    /* ═══════════════════════════════════════════════
-       PRINT STYLESHEET — comprehensive layout control
-       ═══════════════════════════════════════════════ */
+    /* ===============================================================
+       PRINT STYLESHEET
+       =============================================================== */
     @media print {
 
-      /* PAGE GEOMETRY */
       @page :first { margin: 0; size: A4; }
       @page { margin: 5mm 8mm 8mm; size: A4; }
 
-      /* BODY & WRAPPER */
       body { font-size: 8.5pt; line-height: 1.5; orphans: 3; widows: 3; }
       .page-wrap { max-width: 100%; padding: 0 0 16px; }
 
-      /* SECTION SPACING */
       section { padding-top: 12px; }
       section.break { page-break-before: always; padding-top: 8px; }
 
-      /* HEADINGS */
       .section-number { font-size: 6.5pt; margin-bottom: 3px; }
       h1.section-title {
         font-size: 13pt; padding-bottom: 6px; margin-bottom: 10px;
@@ -227,26 +222,21 @@
         page-break-after: avoid; break-after: avoid;
       }
 
-      /* Keep the FIRST sibling after any heading on the same page as that heading */
       h1.section-title + *,
       h2.sub-title + * {
         page-break-before: avoid;
         break-before: avoid;
       }
 
-      /* PARAGRAPHS */
       p { margin-bottom: 6px; font-size: 8.5pt; orphans: 3; widows: 3; }
 
-      /* EXECUTIVE SUMMARY */
       .exec-summary { padding: 12px 16px; margin: 0 0 12px; }
       .exec-summary p { font-size: 8.5pt; }
 
-      /* TABLE OF CONTENTS — own page after exec summary */
       .toc { padding: 14px 18px; margin: 0; page-break-after: always; }
       .toc-title { font-size: 8pt; margin-bottom: 8px; }
       .toc-item { padding: 4px 0; font-size: 8.5pt; }
 
-      /* FIGURES — full width, keep intact, stick to preceding text */
       .figure {
         margin: 10px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -255,7 +245,6 @@
       .figure img { width: 100%; height: auto; display: block; }
       .figure-caption { padding: 5px 12px; font-size: 7.5pt; }
 
-      /* FORMULA BLOCKS — keep with preceding heading/paragraph */
       .formula-block {
         padding: 10px 14px; margin: 8px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -266,7 +255,6 @@
       .eq-where { font-size: 7pt; margin-top: 4px; line-height: 1.5; }
       .eq-ref { font-size: 6.5pt; margin-top: 3px; }
 
-      /* CALLOUT */
       .callout {
         padding: 9px 13px; margin: 8px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -274,7 +262,6 @@
       }
       .callout p { font-size: 8pt; }
 
-      /* HIGHLIGHT BOX */
       .highlight-box {
         padding: 12px 16px; margin: 10px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -283,7 +270,6 @@
       .highlight-box .hb-title { font-size: 9pt; margin-bottom: 5px; }
       .highlight-box p { font-size: 8pt; }
 
-      /* TABLES */
       .table-wrap {
         margin: 8px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -294,7 +280,6 @@
       thead th { padding: 5px 8px; font-size: 7pt; }
       tbody td { padding: 4px 8px; }
 
-      /* SCORE CARDS */
       .score-grid {
         gap: 8px; margin: 10px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -303,7 +288,6 @@
       .score-card .score-val { font-size: 16pt; }
       .score-card .score-label { font-size: 6.5pt; }
 
-      /* TEAM CARDS */
       .team-grid {
         gap: 10px; margin: 10px 0;
         page-break-inside: avoid; break-inside: avoid;
@@ -312,26 +296,20 @@
       .team-card .name { font-size: 9pt; margin-bottom: 3px; }
       .team-card .inst { font-size: 7.5pt; }
 
-      /* LISTS */
       ul.doc-list { margin: 5px 0 8px 16px; }
       ul.doc-list li { margin-bottom: 3px; font-size: 8.5pt; }
 
-      /* REPORT LINKS — not clickable on paper, hide them */
       .report-link { display: none; }
 
-      /* DISCLAIMER */
       .disclaimer {
         padding: 8px 12px; margin: 8px 0; font-size: 7.5pt;
         page-break-inside: avoid; break-inside: avoid;
       }
 
-      /* REFERENCES */
       .references p { font-size: 7.5pt; margin-bottom: 5px; }
 
-      /* FOOTER */
       .doc-footer { margin-top: 16px; padding-top: 8px; font-size: 7pt; }
 
-      /* COVER — full bleed */
       .cover { padding: 40px 56px 40px; min-height: 297mm; width: 210mm; margin: 0; }
       .cover-body { padding: 36px 0 28px; }
       .cover-title { font-size: 26pt; margin-bottom: 12px; }
@@ -366,7 +344,7 @@
           <text x="48" y="40" font-family="monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
         </svg>
       </div>
-      <p>Technical White Paper · Prototypes for Humanity 2026</p>
+      <p>Technical White Paper &middot; Prototypes for Humanity 2026</p>
     </div>
     <button class="dl-btn" onclick="window.print()">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -374,7 +352,7 @@
     </button>
   </div>
 
-  <!-- ═══ COVER ═══ -->
+  <!-- COVER -->
   <div class="cover">
     <div class="cover-logo">
       <svg width="160" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
@@ -395,7 +373,7 @@
     </div>
 
     <div class="cover-body">
-      <div class="cover-tag">Technical White Paper · 2026 Edition</div>
+      <div class="cover-tag">Technical White Paper &middot; 2026 Edition</div>
       <h1 class="cover-title">Democratising CO&#8322; Storage Simulation<br>for a Net-Zero World</h1>
       <p class="cover-subtitle">A browser-based CO&#8322; storage simulation studio, validated against 20 years of field data, accessible to any researcher, engineer, or policymaker with a web browser.</p>
 
@@ -414,7 +392,7 @@
         </div>
         <div>
           <span class="cover-stat-num" style="font-size:13pt;letter-spacing:-0.01em;padding-top:4px;display:block">Browser</span>
-          <span class="cover-stat-label">Native · No Installation</span>
+          <span class="cover-stat-label">Native &middot; No Installation</span>
         </div>
       </div>
     </div>
@@ -426,9 +404,10 @@
         MSc Researcher, Universiti Teknologi PETRONAS, Malaysia
       </div>
       <div>
-        <strong>Academic Supervision</strong>
+        <strong>Academic Supervisors &amp; Advisors</strong>
         Dr. Okorie Ekwe Agwu (Supervisor)<br>
-        Dr. Muhammad Aslam Md Yusof (Co-Supervisor)<br>
+        Dr. Muhamad Aslam MD Yusof (Co-supervisor)<br>
+        Dr. Berihun Negash Mamo (Advisor)<br>
         Universiti Teknologi PETRONAS, Malaysia
       </div>
       <div>
@@ -436,16 +415,11 @@
         Universiti Teknologi PETRONAS<br>
         Seri Iskandar, Perak, Malaysia
       </div>
-      <div>
-        <strong>Submitted To</strong>
-        Prototypes for Humanity 2026<br>
-        Dubai Future Forum, November 2026<br>
-        Final Deadline: 1 August 2026
-      </div>
+     
     </div>
   </div>
 
-  <!-- ═══ MAIN CONTENT ═══ -->
+  <!-- MAIN CONTENT -->
   <div class="page-wrap">
 
     <!-- EXECUTIVE SUMMARY -->
@@ -456,19 +430,21 @@
       <div class="exec-summary">
         <p>The deployment of carbon capture and storage (CCS) is recognised by the Intergovernmental Panel on Climate Change as essential to limiting global warming to 1.5&#176;C. Yet despite strong scientific consensus, the number of operating CCS projects worldwide remains critically below what net-zero pathways require. A significant but under-examined barrier is tool access: the software used to evaluate potential storage formations costs upwards of $160,000 per year in licensing fees, requires dedicated hardware, and assumes specialist expertise that most research groups, regulatory agencies, and consulting firms in emerging storage markets do not have.</p>
         <p>CarbonLens is a browser-based CO&#8322; storage simulation studio that removes this barrier entirely. It delivers validated physics-based simulation, probabilistic risk assessment, geomechanical safety analysis, regulatory permit documentation, and a digital twin registry, all within a standard web browser, with no installation or dedicated hardware required.</p>
-        <p>The simulator has been validated against 20 years of real injection data from the Sleipner West CO&#8322; storage project in Norway, achieving 100% alignment across 7 key metrics within accepted scientific tolerance. It covers 16 global formation presets across five continents and generates jurisdiction-specific permit documentation for five regulatory frameworks.</p>
+        <p>The simulator has been validated against 20 years of real injection data from the Sleipner West CO&#8322; storage project in Norway, achieving 100% alignment across 7 key metrics within accepted scientific tolerance. It covers 16 global formation presets across five continents and generates jurisdiction-specific permit documentation for five regulatory frameworks: US (EPA Class VI), EU (CCS Directive), Australia (NOPSEMA), Malaysia, and Norway.</p>
         <p>CarbonLens is developed by Daniel T. Olagunju, a researcher at Universiti Teknologi PETRONAS (UTP), Malaysia. The platform incorporates a MARS machine learning model for CO&#8322;-brine interfacial tension prediction alongside established published physics engines. A peer-reviewed paper documenting the MARS methodology has been submitted for journal publication and is currently under review. The broader research programme is expected to result in a Masters degree upon completion at UTP Malaysia.</p>
       </div>
 
       <div class="toc">
         <div class="toc-title">Contents</div>
         <div class="toc-item"><span class="toc-section">1</span> The Problem</div>
-        <div class="toc-item"><span class="toc-section">2</span> CarbonLens — The Solution</div>
-        <div class="toc-item"><span class="toc-section">3</span> Platform Capabilities</div>
-        <div class="toc-item"><span class="toc-section">4</span> Scientific Validation: Sleipner Utsira Benchmark &amp; All 16 Formations</div>
-        <div class="toc-item"><span class="toc-section">5</span> Expected Impact</div>
-        <div class="toc-item"><span class="toc-section">6</span> Academic Foundation and Team</div>
-        <div class="toc-item"><span class="toc-section">7</span> References</div>
+        <div class="toc-item"><span class="toc-section">2</span> CarbonLens: The Solution</div>
+        <div class="toc-item"><span class="toc-section">3</span> Stage-Gate Workflow</div>
+        <div class="toc-item"><span class="toc-section">4</span> Platform Capabilities and Physics Engines</div>
+        <div class="toc-item"><span class="toc-section">5</span> Scientific Validation: Sleipner Utsira Benchmark and All 16 Formations</div>
+        <div class="toc-item"><span class="toc-section">6</span> Expected Impact</div>
+        <div class="toc-item"><span class="toc-section">7</span> Academic Foundation and Team</div>
+        <div class="toc-item"><span class="toc-section">8</span> Technical Architecture and Simulator Positioning</div>
+        <div class="toc-item"><span class="toc-section">9</span> References</div>
       </div>
     </section>
 
@@ -488,12 +464,12 @@
         <li>University research groups evaluating candidate formations for academic study</li>
         <li>Small and mid-sized consulting firms without enterprise software budgets</li>
         <li>Regulatory agencies in emerging CCS markets who need to review project submissions independently</li>
-        <li>Development organisations and national energy companies in Southeast Asia, West Africa, the Middle East, and Latin America — regions with significant storage potential but limited access to commercial tools</li>
+        <li>Development organisations and national energy companies in Southeast Asia, West Africa, and Latin America, where significant storage potential exists but commercial tool access is limited</li>
       </ul>
 
       <div class="highlight-box">
         <div class="hb-title">The Core Problem in One Sentence</div>
-        <p>Projects stall not because the geology is unsuitable, but because the tools to evaluate it are inaccessible — and the consequence is a project pipeline that moves far too slowly for a 1.5&#176;C world.</p>
+        <p>Projects stall not because the geology is unsuitable, but because the tools to evaluate it are inaccessible, and the consequence is a project pipeline that moves far too slowly for a 1.5&#176;C world.</p>
       </div>
 
       <h2 class="sub-title">1.3 The Open Source Gap</h2>
@@ -503,7 +479,7 @@
     <!-- SECTION 2: THE SOLUTION -->
     <section class="break">
       <div class="section-number">Section 2</div>
-      <h1 class="section-title">CarbonLens — The Solution</h1>
+      <h1 class="section-title">CarbonLens: The Solution</h1>
 
       <p>CarbonLens is a browser-based CO&#8322; storage simulation studio. It is not adapted from oil and gas software. Every module was built specifically for CO&#8322; aquifer storage workflows, drawing directly from published scientific literature. It runs in any modern web browser, on any operating system, on any device capable of accessing the internet.</p>
 
@@ -514,10 +490,11 @@
 
       <h2 class="sub-title">2.1 Browser-Native Access</h2>
       <p>CarbonLens runs entirely in a standard web browser with no installation, no dedicated hardware, and no specialist IT setup required. The physics engines are implemented as TypeScript-compiled mathematical models that execute client-side. Formation data is processed locally and never leaves the user's machine, which is relevant for commercially sensitive projects.</p>
-      <p>The simulator is accessed via a URL. A researcher in Malaysia, a regulator in Nigeria, or a consultant in London accesses the same tool from the same browser with identical capability — no license procurement, no version management, no deployment infrastructure.</p>
+      <p>The simulator is accessed via a URL. A researcher in Malaysia, a regulator in Nigeria, or a consultant in London accesses the same tool from the same browser with identical capability: no license procurement, no version management, no deployment infrastructure.</p>
 
-      <h2 class="sub-title">2.2 Formation Library</h2>
-      <p>CarbonLens includes 16 pre-loaded formation presets representing active or candidate CO&#8322; storage sites across five continents: the North Sea (Sleipner, Johansen), Southeast Asia (Malay Basin, Gippsland, Browse), North America (Illinois Basin, Utsira equivalent), West Africa (offshore Nigeria analog), and the Middle East. All formation parameters are populated automatically from published field data. Users can override any parameter manually or import real well data via LAS file, making the platform suitable for evaluating actual site data alongside the standard presets.</p>
+      <h2 class="sub-title">2.2 Formation Library and Model Registry</h2>
+      <p>CarbonLens includes 16 pre-loaded formation presets representing active or candidate CO&#8322; storage sites across five continents: the North Sea (Sleipner Utsira, Johansen, Sn&#248;hvit Tub&#230;en), Southeast Asia (Malay Basin, Kasawari, Duyong, North Sumatra Basin), Australia (Otway, Gorgon), North America (Mount Simon / ADM Decatur, Alberta Basin / Basal Cambrian), West Africa (Niger Delta), North Africa and Middle East (Nile Delta, Abu Dhabi Basin, In Salah), and Europe (Rotterdam North Sea). All formation parameters are populated automatically from published field data.</p>
+      <p>A built-in <strong>Model Registry</strong> stores pre-calibrated presets for all validated sites. Each preset encodes peer-reviewed field parameters, enabling one-click formation loading without manual data entry. Users can override any parameter manually or import real well data via LAS file, making the platform suitable for evaluating actual site data alongside the standard presets.</p>
 
       <div class="figure">
         <img src="./wp-images/3.png" alt="Formation input panel showing geological parameters and preset selection" />
@@ -525,28 +502,58 @@
       </div>
     </section>
 
-    <!-- SECTION 3: CAPABILITIES -->
+    <!-- SECTION 3: STAGE-GATE WORKFLOW -->
     <section class="break">
       <div class="section-number">Section 3</div>
-      <h1 class="section-title">Platform Capabilities</h1>
+      <h1 class="section-title">Stage-Gate Workflow</h1>
 
-      <h2 class="sub-title">3.1 CO&#8322; Plume Simulation</h2>
-      <p>The simulation engine combines four published analytical models working in concert: the Nordbotten (2005) two-phase area-of-review model for plume migration; the Span-Wagner (1996) Helmholtz equation of state for CO&#8322; density and viscosity at reservoir conditions; the Duan-Sun (2003) equation for CO&#8322; solubility in brine; and the Brooks-Corey / Land residual and capillary trapping framework. Together these compute plume radius, height, lateral migration, dissolution trapping, residual trapping, and injection pressure in real time, projected across a 100-year horizon.</p>
+      <p>CarbonLens organises the assessment process into five sequential stages. Each stage must be completed before the next is unlocked. This progressive disclosure architecture ensures that users build up a defensible evidence base at each step before proceeding to more detailed analysis, mirroring the structured workflow expected in regulatory submissions.</p>
+
+      <div class="table-wrap">
+        <div class="table-title">Table 1 — Five-Stage Progressive Disclosure Workflow</div>
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>Name</th><th>Key Activities</th><th>Gate Condition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Setup</td><td>Project identity, country, jurisdiction selection, simulation duration</td><td>All required fields populated</td></tr>
+            <tr><td>2</td><td>Define</td><td>Six-step formation wizard (depth, thickness, porosity, permeability, fluid properties, geomechanics); storage screening assessment; geomechanics validation</td><td>Storage screening passes (no red criteria); geomechanics safety factor &gt; 1.0</td></tr>
+            <tr><td>3</td><td>Simulate</td><td>Run physics engine; live plume cross-section display; 3D reservoir viewer with real-time colour-mapped saturation</td><td>Simulation completes without divergence</td></tr>
+            <tr><td>4</td><td>Analyse</td><td>Monitoring and synthetic SCADA; leakage risk assessment; Monte Carlo uncertainty quantification; history matching against field observations</td><td>User reviews all analysis panels</td></tr>
+            <tr><td>5</td><td>Report</td><td>Economics assessment; jurisdiction-specific permit export; digital twin registry certificate; PDF and HTML report generation</td><td>No gate: all outputs available</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <p>The Stage 2 gate is enforced by the Storage Screening Engine (Section 4.2). If any screening criterion returns a red result, the "Confirm Formation" button is disabled and the user is presented with the specific criterion that failed, along with a plain-language explanation and suggested remediation. This prevents users from advancing to simulation with formations that do not meet minimum viability thresholds.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 4: CAPABILITIES -->
+    <section class="break">
+      <div class="section-number">Section 4</div>
+      <h1 class="section-title">Platform Capabilities and Physics Engines</h1>
+
+      <h2 class="sub-title">4.1 CO&#8322; Plume Simulation: Numerical VE Solver and Analytical Pressure Model</h2>
+      <p>The primary plume geometry solver in CarbonLens is a per-cell numerical advection engine operating on a 60&#215;60 Cartesian grid (500 m/cell on a 30 km domain). This is implemented as a 2D Vertically Integrated (VE) gravity-current solver (VESolver.ts), which integrates the depth-averaged CO&#8322; column height field forward in time using an explicit two-point upwind finite-difference scheme. The VE approximation is physically valid when buoyancy segregation is fast relative to injection timescales, a condition satisfied in high-permeability saline aquifers of the type represented in the formation library.</p>
+      <p>Injection pressure is computed separately using the Nordbotten (2005) two-phase composite radial-flow model. This model correctly accounts for the mobility contrast between the CO&#8322; plume zone and the surrounding undisturbed brine, using brine hydraulic diffusivity for the far-field Theis pressure propagation and a near-field mobility-contrast correction at the plume boundary (Nordbotten, Celia and Bachu 2005, eq. 8). The Nordbotten model is used for pressure only; plume geometry is governed by the VE numerical solver.</p>
+      <p>During post-injection monitoring periods, plume migration is modelled using the Hesse et al. (2008) analytical gravity-current solution, which tracks both the leading and trailing fronts of the spreading CO&#8322; column after injection ceases.</p>
 
       <div class="formula-block">
-        <div class="formula-label">Plume Radius — Nordbotten (2005)</div>
-        <div class="eq">r(t) = &radic;[ Q&middot;t / (&pi;&middot;&rho;<sub>CO&#8322;</sub>&middot;h&middot;&phi;&middot;(1&minus;S<sub>wr</sub>) ) ]</div>
-        <div class="eq-where">Q = injection rate (kg/s) &nbsp;&bull;&nbsp; h = formation thickness (m) &nbsp;&bull;&nbsp; &phi; = porosity &nbsp;&bull;&nbsp; S<sub>wr</sub> = residual water saturation</div>
-        <div class="formula-label" style="margin-top:14px">Injection Overpressure — Theis (1935) Transient</div>
-        <div class="eq">&Delta;P(r,t) = (Q&middot;&mu;<sub>CO&#8322;</sub>) / (4&pi;&middot;k&middot;h) &times; E<sub>1</sub>( r<sup>2</sup>&middot;&phi;&middot;c<sub>t</sub>&middot;&mu; / (4&middot;k&middot;t) )</div>
-        <div class="eq-where">k = permeability (m&#178;) &nbsp;&bull;&nbsp; E<sub>1</sub> = exponential integral &nbsp;&bull;&nbsp; c<sub>t</sub> = total compressibility</div>
-        <div class="formula-label" style="margin-top:14px">CO&#8322; Density — Span-Wagner Helmholtz EOS (1996)</div>
+        <div class="formula-label">VE Plume Height Equation (Nordbotten and Celia 2006)</div>
+        <div class="eq">&phi;(1&minus;S<sub>wi</sub>) &part;&eta;/&part;t + &nabla;&middot;q<sub>CO&#8322;</sub> = Q<sub>source</sub></div>
+        <div class="eq-where">&eta;(x,y,t) = CO&#8322; column height at each grid cell (m); q<sub>CO&#8322;</sub> = depth-averaged Darcy flux (gravity + pressure gradient); Q<sub>source</sub> = well injection term. Solved on a 60&#215;60 grid, forward-Euler, dt = 1 year.</div>
+        <div class="formula-label" style="margin-top:14px">Injection Overpressure: Nordbotten (2005) Two-Phase Composite Radial Flow</div>
+        <div class="eq">&Delta;P(r,t) = (Q&middot;&mu;<sub>brine</sub>) / (4&pi;&middot;k&middot;h) &times; E<sub>1</sub>( r<sup>2</sup> / (4&alpha;<sub>b</sub>t) ) + (Q&middot;(&mu;<sub>eff</sub>&minus;&mu;<sub>brine</sub>)) / (4&pi;&middot;k&middot;h) &times; E<sub>1</sub>( r<sub>pl</sub><sup>2</sup> / (4&alpha;<sub>b</sub>t) )</div>
+        <div class="eq-where">&alpha;<sub>b</sub> = brine hydraulic diffusivity (k / &phi;&mu;<sub>b</sub>c<sub>t</sub>); r<sub>pl</sub> = current plume radius; &mu;<sub>eff</sub> = CO&#8322; effective viscosity / k<sub>r,CO&#8322;</sub>. The second term is the near-field mobility-contrast correction.</div>
+        <div class="formula-label" style="margin-top:14px">CO&#8322; Density: Span-Wagner Helmholtz EOS (1996)</div>
         <div class="eq">&rho;<sub>CO&#8322;</sub> = P&middot;M<sub>CO&#8322;</sub> / [ Z(T,P)&middot;R&middot;T ] &nbsp;&nbsp; where &nbsp;&nbsp; Z = 1 + &delta;&middot;(&part;&phi;<sup>r</sup>/&part;&delta;)<sub>&tau;</sub></div>
-        <div class="eq-where">&phi;<sup>r</sup> = residual Helmholtz free energy &nbsp;&bull;&nbsp; &delta; = reduced density &nbsp;&bull;&nbsp; &tau; = inverse reduced temperature. NIST gold-standard reference equation for pure CO&#8322;.</div>
-        <div class="formula-label" style="margin-top:14px">CO&#8322;-Brine Interfacial Tension — MARS-IFT Model (Olagunju, in prep.)</div>
+        <div class="eq-where">&phi;<sup>r</sup> = residual Helmholtz free energy; &delta; = reduced density; &tau; = inverse reduced temperature. NIST gold-standard reference equation for pure CO&#8322;. Impurities (CH&#8324;, N&#8322;) handled via mixing rules.</div>
+        <div class="formula-label" style="margin-top:14px">CO&#8322;-Brine Interfacial Tension: MARS-IFT Model (Olagunju, in prep.)</div>
         <div class="eq">&sigma;(T,P,S) = &beta;<sub>0</sub> + &Sigma;<sub>i</sub> &beta;<sub>i</sub>&middot;B<sub>i</sub>(x<sub>i</sub>)</div>
-        <div class="eq-where">B<sub>i</sub> = piecewise linear basis functions (hinge functions): max(0, x<sub>i</sub>&minus;k<sub>i</sub>) and max(0, k<sub>i</sub>&minus;x<sub>i</sub>). Model trained on laboratory IFT measurements spanning reservoir T, P, and salinity conditions.</div>
-        <div class="eq-ref">Refs: Nordbotten et al. (2005) Transp. Porous Media 58:339 &nbsp;&bull;&nbsp; Span &amp; Wagner (1996) JPCRD 25:1509 &nbsp;&bull;&nbsp; Theis (1935) Trans. AGU 16:519</div>
+        <div class="eq-where">B<sub>i</sub> = piecewise linear basis functions (hinge functions): max(0, x<sub>i</sub>&minus;k<sub>i</sub>) and max(0, k<sub>i</sub>&minus;x<sub>i</sub>). Trained on laboratory IFT measurements spanning reservoir T, P, and salinity conditions. Feeds directly into caprock seal capacity (Section 4.3).</div>
+        <div class="eq-ref">Refs: Nordbotten et al. (2005) Transp. Porous Media 58:339 &bull; Nordbotten and Celia (2006) Water Resour. Res. 42:W01407 &bull; Span and Wagner (1996) JPCRD 25:1509 &bull; Hesse et al. (2008) J. Fluid Mech. 611:35</div>
       </div>
 
       <div class="figure">
@@ -554,20 +561,75 @@
         <div class="figure-caption"><strong>Figure 3.</strong> Simulation panel. Key outputs include total storage, injection pressure, utilisation efficiency, CO&#8322; density, and solubility. The 3D viewer shows the current plume state. Simulation runs at up to 5x speed and updates the visualisation continuously.</div>
       </div>
 
-      <h2 class="sub-title">3.2 Probabilistic Uncertainty Quantification</h2>
-      <p>Storage capacity estimates carry inherent uncertainty because subsurface parameters are never known precisely. CarbonLens quantifies this uncertainty using Latin Hypercube Sampling across the key geological inputs, generating P10 (conservative), P50 (best estimate), and P90 (optimistic) storage capacity bounds in under five seconds. This probabilistic output mirrors the language used in regulatory submissions and investment decisions: the P10 case provides a conservative design basis, and the P90 case characterises the potential upside.</p>
+      <h2 class="sub-title">4.2 Storage Screening Engine</h2>
+      <p>Before simulation can begin, the formation must pass a 10-criterion screening assessment based on the Bachu (2003) sedimentary basin screening framework and the NETL (2015) best-practices site characterisation checklist. Each criterion is evaluated in real time as formation parameters are entered, and is classified as green (pass), amber (marginal, acknowledgment required), or red (fail, blocks progression).</p>
+      <p>The 10 criteria cover: minimum depth for supercritical CO&#8322; state (800 m), minimum effective porosity (5%), minimum injectivity / permeability-thickness product, maximum salinity for dissolution capacity, caprock presence and integrity, structural geometry suitability, absence of critical fault proximity, minimum formation temperature (31.1&#176;C, the CO&#8322; critical temperature), adequate pressure regime, and seismicity risk classification. A red result on any single criterion disables the Stage 2 gate and prevents the user from running a simulation, ensuring that only viable formations proceed to detailed assessment.</p>
+
+      <h2 class="sub-title">4.3 Caprock Seal Capacity</h2>
+      <p>The caprock seal capacity module computes the maximum CO&#8322; column height that the caprock can contain before capillary entry, using the Leverett (1941) capillary entry pressure framework. The entry pressure is computed from the MARS-IFT model output and the user-specified caprock pore-throat radius, linking the machine learning interfacial tension prediction directly to a quantitative operational safety limit.</p>
 
       <div class="formula-block">
-        <div class="formula-label">Storage Capacity — DOE Bulk Volume Method (Goodman 2011)</div>
+        <div class="formula-label">Capillary Entry Pressure and Maximum Column Height (Leverett 1941)</div>
+        <div class="eq">P<sub>e</sub> = (2 &middot; &sigma; &middot; cos&theta;) / r<sub>t</sub></div>
+        <div class="eq">&nbsp;&nbsp;&nbsp;h<sub>max</sub> = P<sub>e</sub> / (&Delta;&rho; &middot; g)</div>
+        <div class="eq-where">&sigma; = CO&#8322;-brine IFT from MARS model (N/m); &theta; = advancing contact angle (degrees, default 0 for water-wet); r<sub>t</sub> = caprock pore-throat radius (m); &Delta;&rho; = brine density minus CO&#8322; density (kg/m&#179;); g = 9.81 m/s&#178;.</div>
+        <div class="eq-ref">Refs: Leverett (1941) Trans. AIME 142:152 &bull; Schowalter (1979) AAPG Bull. 63:723 &bull; Hildenbrand et al. (2002) Geofluids 2:3</div>
+      </div>
+
+      <p>The module outputs maximum column height (m), approximate maximum containable CO&#8322; mass (Mt), current buoyancy pressure versus entry pressure, and a seal utilisation percentage based on the current simulated column height. Status is classified as adequate, marginal, or insufficient.</p>
+
+      <h2 class="sub-title">4.4 Dissolution Trapping: Fick Kinetic Model with Convective Enhancement</h2>
+      <p>Dissolution trapping is computed using an interfacial-area-limited Fick kinetic model, not a fixed percentage rate. The effective diffusion coefficient is enhanced by the Rayleigh number to account for convective fingering (Neufeld et al. 2010), which accelerates dissolution after an onset time that scales inversely with the square root of permeability. The dissolution capacity is bounded above by the brine-volume solubility limit computed from the Duan-Sun (2003) equation of state, preventing physically impossible dissolution estimates in low-brine-volume scenarios.</p>
+
+      <div class="formula-block">
+        <div class="formula-label">Fick Kinetic Dissolution with Convective Enhancement</div>
+        <div class="eq">m<sub>diss</sub>(t) = min( 2 A<sub>contact</sub> &rho;<sub>brine</sub> X<sub>sat</sub> &radic;(D<sub>eff</sub> t), V<sub>brine</sub> &rho;<sub>brine</sub> X<sub>sat</sub> f<sub>conv</sub> )</div>
+        <div class="eq-where">A<sub>contact</sub> = &pi;r<sub>plume</sub>&#178; (plume-brine interfacial area, m&#178;); X<sub>sat</sub> = solubility from Duan-Sun (2003) converted to mass fraction; D<sub>eff</sub> = D<sub>mol</sub> &times; max(1, &radic;(Ra/Ra<sub>crit</sub>)); Ra = &Delta;&rho;<sub>dissolved</sub> &middot; g &middot; k &middot; h / (&mu;<sub>brine</sub> D<sub>mol</sub> &phi;); Ra<sub>crit</sub> = 40 (Neufeld 2010). Convective enhancement factor f<sub>conv</sub> grows from 1 to 3 after onset time t<sub>onset</sub> = max(2, 50/&radic;k<sub>mD</sub>) years.</div>
+        <div class="eq-ref">Refs: Ennis-King and Paterson (2005) IJGGC 1:86 &bull; Neufeld et al. (2010) GRL 37:L22404 &bull; Duan and Sun (2003) Chem. Geol. 193:257</div>
+      </div>
+
+      <h2 class="sub-title">4.5 Relative Permeability</h2>
+      <p>The default relative permeability model is van Genuchten-Mualem (van Genuchten 1980), which is used for all standard saline aquifer simulations. Brooks-Corey (1964) is available as an alternative for users who require it for compatibility with specific formation datasets. Both models feed into the Land (1968) residual trapping calculation. The Land trapping coefficient C = 2.5 is calibrated for sandstone; carbonate formations use the same framework with modified reactive fractions for mineral trapping.</p>
+
+      <h2 class="sub-title">4.6 Mineral Trapping</h2>
+      <p>Mineral trapping uses formation-class-specific Transition State Theory (TST) kinetics (Lasaga 1984; Palandri and Kharaka 2004). Carbonate formations (calcite, dolomite) use a reactive mineral fraction of 5%, specific surface area of 0.5 m&#178;/kg, and reference rate constant of 1.55 &#215; 10&#8315;&#8310; mol/m&#178;/s at 110&#176;C. Sandstone formations use 1% reactive fraction, 0.1 m&#178;/kg, and rate constant 1 &#215; 10&#8315;&#8313; mol/m&#178;/s. Surface passivation is modelled using an exponential decay with formation-class timescale (carbonate: 15 yr; sandstone: 25 yr). Mineral trapping is set to zero for simulations with project duration below 30 years; Benson and Cole (2008) establish that mineral trapping is negligible at 20 years and becomes non-negligible only beyond 50 years. The Benson and Cole (2008) screening cap (15% of injected for carbonates; 10% for sandstones) is applied as an upper bound.</p>
+
+      <h2 class="sub-title">4.7 Fault Reactivation: 3D Stress Tensor Analysis</h2>
+      <p>Fault reactivation risk is assessed using a full 3D stress tensor rotation to compute the normal and shear stresses on user-defined fault planes at arbitrary dip and strike. Byerlee (1978) friction is applied to determine the critical pore pressure increase required to trigger slip on each fault. Multi-fault configurations are supported. The output is a critical pressure increase margin for each fault, providing a quantitative safety envelope for injection operations.</p>
+
+      <div class="formula-block">
+        <div class="formula-label">Fault Reactivation: Critical Pressure Increase (Byerlee 1978; Streit and Hillis 2004)</div>
+        <div class="eq">&Delta;P<sub>crit</sub> = (&sigma;<sub>n</sub> &minus; P<sub>p</sub>) &minus; &tau; / &mu;<sub>f</sub></div>
+        <div class="eq-where">&sigma;<sub>n</sub> = normal stress on fault plane after tensor rotation (MPa); P<sub>p</sub> = initial pore pressure (MPa); &tau; = resolved shear stress on fault plane (MPa); &mu;<sub>f</sub> = Byerlee friction coefficient (0.6 for &sigma;<sub>n</sub> &lt; 200 MPa, 0.85 otherwise). &Delta;P<sub>crit</sub> is the maximum pore pressure increase before fault slip initiates.</div>
+        <div class="eq-ref">Refs: Streit and Hillis (2004) Energy 29:1445 &bull; Byerlee (1978) Pure Appl. Geophys. 116:615</div>
+      </div>
+
+      <h2 class="sub-title">4.8 Thermal Effects</h2>
+      <p>CarbonLens models thermal effects by computing the geothermal gradient contribution to reservoir temperature at the specified depth, and applying a Joule-Thomson cooling correction during CO&#8322; injection. The injection temperature is computed from the wellhead conditions and the in-situ enthalpy drop. These thermal outputs feed into the Span-Wagner EOS density calculation and the MARS-IFT model, ensuring that near-wellbore thermodynamic conditions are correctly represented.</p>
+
+      <h2 class="sub-title">4.9 Hysteresis and Imbibition Trapping (Killough 1976)</h2>
+      <p>The VE solver tracks imbibition hysteresis cell-by-cell. During periods when brine re-imbibes into regions previously drained by CO&#8322;, the Killough (1976) hysteresis model is applied. This model interpolates between the drainage and imbibition relative permeability curves, capturing the snap-off mechanism that immobilises residual CO&#8322; ganglia and converts mobile plume CO&#8322; into permanently trapped residual. The Land (1968) trapping coefficient governs the magnitude of residual saturation in each cell. This hysteresis treatment is significant for post-injection monitoring periods, when the trailing edge of the gravity current is retreating and imbibition is active.</p>
+
+      <h2 class="sub-title">4.10 Halite Risk Assessment</h2>
+      <p>Salt precipitation and near-wellbore dry-out are assessed using the Zeidouni et al. (2009) dryout-radius model. Dry CO&#8322; injected into the formation evaporates formation brine and can precipitate halite (NaCl) crystals in pore spaces near the wellbore, reducing permeability and potentially impairing injectivity. The model computes the dryout radius as a function of injection rate, formation thickness, porosity, connate water saturation, brine salinity, and CO&#8322; and brine density. Output includes a risk classification (low, moderate, high) and a quantitative dryout radius estimate in metres.</p>
+
+      <h2 class="sub-title">4.11 Heterogeneity Corrections</h2>
+      <p>Formation heterogeneity is characterised by the Dykstra-Parsons coefficient (V<sub>DP</sub>), a standard measure of permeability variation between layers. When V<sub>DP</sub> is specified, CarbonLens applies the Shook and Mitchell (2009) sweep efficiency correction, which reduces the effective storage capacity and plume footprint to account for preferential flow through high-permeability layers and bypassing in low-permeability zones. An area-of-review (AOR) heterogeneity factor is also computed and applied to the plume radius, producing a larger and more conservative AOR consistent with the guidance in Kopp et al. (2010).</p>
+
+      <h2 class="sub-title">4.12 Depleted Field Capacity</h2>
+      <p>For depleted gas and oil field formations, CarbonLens uses the gas-replacement volumetric method of Bachu et al. (2007) rather than the DOE Goodman (2011) Cc coefficient framework that applies to saline aquifers. The gas-replacement method computes storage capacity as the void space vacated by gas production between initial reservoir pressure and abandonment pressure, expressed as CO&#8322; equivalent at in-situ density. P10, P50, and P90 bounds are derived from uncertainty on the gas initially in place (GIIP) and the abandonment pressure.</p>
+
+      <h2 class="sub-title">4.13 Probabilistic Uncertainty Quantification</h2>
+      <p>Storage capacity estimates carry inherent uncertainty because subsurface parameters are never known precisely. CarbonLens quantifies this uncertainty using Latin Hypercube Sampling across the key geological inputs, generating P10 (conservative), P50 (best estimate), and P90 (optimistic) storage capacity bounds in under five seconds. This probabilistic output mirrors the language used in regulatory submissions and investment decisions.</p>
+
+      <div class="formula-block">
+        <div class="formula-label">Storage Capacity: DOE Bulk Volume Method (Goodman 2011)</div>
         <div class="eq">G<sub>CO&#8322;</sub> = A &middot; h &middot; &phi; &middot; NTG &middot; (1 &minus; S<sub>wr</sub>) &middot; &rho;<sub>CO&#8322;</sub>(T,P) &middot; E<sub>s</sub></div>
-        <div class="eq-where">A = formation area (m&#178;) &nbsp;&bull;&nbsp; h = net thickness (m) &nbsp;&bull;&nbsp; NTG = net-to-gross ratio &nbsp;&bull;&nbsp; E<sub>s</sub> = storage efficiency factor (dimensionless)</div>
-        <div class="formula-label" style="margin-top:14px">Latin Hypercube Sampling — Stratified Probabilistic Sampling</div>
+        <div class="eq-where">A = formation area (m&#178;); h = net thickness (m); NTG = net-to-gross ratio; E<sub>s</sub> = storage efficiency factor (Cc), ranging from 0.51% (P10) to 5.5% (P90) per Goodman et al. (2011). CO&#8322; density is from Span-Wagner EOS at in-situ T, P. NTG is not applied to the pore volume when using the Cc framework, as DOE Goodman Cc coefficients are derived from gross pore volume statistics that implicitly capture NTG effects.</div>
+        <div class="formula-label" style="margin-top:14px">Latin Hypercube Sampling</div>
         <div class="eq">x<sub>ij</sub> = F<sub>j</sub><sup>&minus;1</sup>[ (&pi;<sub>ij</sub> &minus; u<sub>ij</sub>) / N ]</div>
-        <div class="eq-where">N = number of Monte Carlo iterations &nbsp;&bull;&nbsp; &pi;<sub>ij</sub> = random permutation of stratum index for variable j &nbsp;&bull;&nbsp; u<sub>ij</sub> ~ Uniform(0,1) &nbsp;&bull;&nbsp; F<sub>j</sub><sup>&minus;1</sup> = inverse CDF of input distribution. LHS ensures full coverage of each marginal distribution with far fewer samples than simple random sampling — critical for in-browser computation.</div>
-        <div class="formula-label" style="margin-top:14px">P10 / P50 / P90 Output Percentiles</div>
-        <div class="eq">P<sub>x</sub> = x-th percentile of { G<sub>CO&#8322;</sub>(i), i = 1 ... N }</div>
-        <div class="eq-where">P10 = conservative (10th percentile capacity), P50 = median best estimate, P90 = optimistic upside. Used directly in investment screening and regulatory permit applications.</div>
-        <div class="eq-ref">Refs: Goodman et al. (2011) DOE/NETL-2011/1440 &nbsp;&bull;&nbsp; McKay M.D. et al. (1979) Technometrics 21:239</div>
+        <div class="eq-where">N = number of Monte Carlo iterations; &pi;<sub>ij</sub> = random permutation of stratum index for variable j; u<sub>ij</sub> ~ Uniform(0,1); F<sub>j</sub><sup>&minus;1</sup> = inverse CDF of input distribution. LHS ensures full coverage of each marginal distribution with far fewer samples than simple random sampling.</div>
+        <div class="eq-ref">Refs: Goodman et al. (2011) DOE/NETL-2011/1440 &bull; McKay et al. (1979) Technometrics 21:239</div>
       </div>
 
       <div class="figure">
@@ -575,23 +637,23 @@
         <div class="figure-caption"><strong>Figure 4.</strong> Monte Carlo uncertainty panel. P10, P50, and P90 storage capacity estimates generated using Latin Hypercube Sampling across porosity, permeability, thickness, and net-to-gross. The convergence curve confirms statistical stability. Results export as CSV.</div>
       </div>
 
-      <h2 class="sub-title">3.3 Geomechanical Risk Assessment</h2>
-      <p>Geomechanical failure, including caprock fracture, fault reactivation, or induced seismicity, is the primary reason CCS injection projects are shut in or rejected during permitting. CarbonLens calculates the full suite of geomechanical safety indicators: Mohr-Coulomb shear failure criterion for caprock integrity, Maximum Allowable Injection Pressure (MAIP), fault slip potential, surface heave estimate, and a safety factor with threshold alerts at Fs below 1.2 (moderate risk) and Fs below 1.0 (failure).</p>
+      <h2 class="sub-title">4.14 Geomechanical Risk Assessment</h2>
+      <p>Geomechanical failure, including caprock fracture, fault reactivation, or induced seismicity, is the primary reason CCS injection projects are shut in or rejected during permitting. CarbonLens calculates the full suite of geomechanical safety indicators: Mohr-Coulomb shear failure criterion for caprock integrity, Maximum Allowable Injection Pressure (MAIP), fault slip potential (via the 3D stress tensor method described in Section 4.7), surface heave estimate, and a safety factor with threshold alerts at Fs below 1.2 (moderate risk) and Fs below 1.0 (failure).</p>
 
       <div class="formula-block">
-        <div class="formula-label">Mohr-Coulomb Shear Failure Criterion — Caprock Integrity</div>
+        <div class="formula-label">Mohr-Coulomb Shear Failure Criterion: Caprock Integrity</div>
         <div class="eq">|&tau;| = c + &sigma;<sub>n</sub> &middot; tan(&phi;)</div>
-        <div class="eq-where">c = cohesion (MPa) &nbsp;&bull;&nbsp; &sigma;<sub>n</sub> = effective normal stress on failure plane (MPa) &nbsp;&bull;&nbsp; &phi; = internal friction angle (degrees). Failure occurs when the applied shear stress &tau; exceeds this envelope.</div>
-        <div class="formula-label" style="margin-top:14px">Safety Factor — Caprock Shear Stability</div>
+        <div class="eq-where">c = cohesion (MPa); &sigma;<sub>n</sub> = effective normal stress on failure plane (MPa); &phi; = internal friction angle (degrees). Failure occurs when the applied shear stress &tau; exceeds this envelope.</div>
+        <div class="formula-label" style="margin-top:14px">Safety Factor: Caprock Shear Stability</div>
         <div class="eq">F<sub>s</sub> = (c + &sigma;<sub>n</sub> &middot; tan(&phi;)) / &tau;<sub>applied</sub></div>
-        <div class="eq-where">F<sub>s</sub> &gt; 1.5 = low risk &nbsp;&bull;&nbsp; 1.0 &le; F<sub>s</sub> &lt; 1.2 = moderate risk (alert) &nbsp;&bull;&nbsp; F<sub>s</sub> &lt; 1.0 = failure. CarbonLens triggers a risk badge and warning at the 1.2 threshold.</div>
-        <div class="formula-label" style="margin-top:14px">Maximum Allowable Injection Pressure — Fracture Gradient</div>
+        <div class="eq-where">F<sub>s</sub> &gt; 1.5 = low risk; 1.0 &le; F<sub>s</sub> &lt; 1.2 = moderate risk (alert); F<sub>s</sub> &lt; 1.0 = failure. CarbonLens triggers a risk badge and warning at the 1.2 threshold.</div>
+        <div class="formula-label" style="margin-top:14px">Maximum Allowable Injection Pressure: Fracture Gradient</div>
         <div class="eq">MAIP = &sigma;<sub>3</sub> &minus; P<sub>pore</sub> &nbsp;&nbsp; where &nbsp;&nbsp; &sigma;<sub>3</sub> = K<sub>0</sub> &middot; (&sigma;<sub>v</sub> &minus; &alpha;P<sub>p</sub>) + &alpha;P<sub>p</sub></div>
-        <div class="eq-where">K<sub>0</sub> = horizontal stress ratio &nbsp;&bull;&nbsp; &sigma;<sub>v</sub> = vertical (overburden) stress (MPa) &nbsp;&bull;&nbsp; &alpha; = Biot effective stress coefficient &nbsp;&bull;&nbsp; P<sub>p</sub> = pore pressure (MPa). MAIP defines the upper safe injection pressure limit below which caprock fracture cannot initiate (Hubbert &amp; Willis 1957).</div>
-        <div class="formula-label" style="margin-top:14px">Surface Heave — Poroelastic Reservoir Expansion</div>
+        <div class="eq-where">K<sub>0</sub> = horizontal stress ratio; &sigma;<sub>v</sub> = vertical (overburden) stress (MPa); &alpha; = Biot effective stress coefficient; P<sub>p</sub> = pore pressure (MPa). MAIP defines the upper safe injection pressure limit below which caprock fracture cannot initiate (Hubbert and Willis 1957).</div>
+        <div class="formula-label" style="margin-top:14px">Surface Heave: Poroelastic Reservoir Expansion</div>
         <div class="eq">u<sub>z</sub> = (1&minus;2&nu;)/(1&minus;&nu;) &middot; &alpha; &middot; &Delta;P &middot; h / (2G)</div>
-        <div class="eq-where">&nu; = Poisson's ratio &nbsp;&bull;&nbsp; G = shear modulus (MPa) &nbsp;&bull;&nbsp; h = reservoir thickness (m) &nbsp;&bull;&nbsp; &Delta;P = injection overpressure. Surface displacement is a regulatory monitoring metric under EU CCS Directive and EPA Class VI rules.</div>
-        <div class="eq-ref">Refs: Hubbert &amp; Willis (1957) Trans. AIME 210:153 &nbsp;&bull;&nbsp; Teatini et al. (2011) JGR 116:B08204 &nbsp;&bull;&nbsp; Zoback M.D. (2007) Reservoir Geomechanics, Cambridge</div>
+        <div class="eq-where">&nu; = Poisson's ratio; G = shear modulus (MPa); h = reservoir thickness (m); &Delta;P = injection overpressure. Surface displacement is a regulatory monitoring metric under EU CCS Directive and EPA Class VI rules.</div>
+        <div class="eq-ref">Refs: Hubbert and Willis (1957) Trans. AIME 210:153 &bull; Teatini et al. (2011) JGR 116:B08204 &bull; Zoback (2007) Reservoir Geomechanics, Cambridge</div>
       </div>
 
       <div class="figure">
@@ -599,8 +661,15 @@
         <div class="figure-caption"><strong>Figure 5.</strong> Geomechanical risk panel. Safety factor, fracture pressure, MAIP margin, and fault slip potential are calculated in real time. The risk badge (Low / Moderate / High) provides an instant plain-language summary for non-specialist users and reviewers.</div>
       </div>
 
-      <h2 class="sub-title">3.4 Regulatory Permit Documentation</h2>
-      <p>CarbonLens generates jurisdiction-specific permit documentation for five regulatory frameworks: EPA Class VI Underground Injection Control (United States), EU CCS Directive (European Union), UK North Sea Transition Authority (NSTA), Australian NOPSEMA, and a Middle East regional framework. The documents incorporate simulation outputs, safety assessments, and site parameters. Producing a preliminary permit application template is reduced from days to minutes.</p>
+      <h2 class="sub-title">4.15 History Matching</h2>
+      <p>The history matching module allows users to import field observations (pressure measurements and plume area estimates at specific time steps) and optimise the simulation parameters to best fit those observations. Optimisation is performed using the Nelder-Mead simplex method, which minimises the root-mean-square deviation between observed and simulated values across a user-selected set of matchable parameters (permeability, porosity, net-to-gross, and injection rate). This capability is particularly useful for calibrating the simulator against well test data, 4D seismic plume area measurements, or pressure monitoring records from existing injection sites.</p>
+
+      <h2 class="sub-title">4.16 Monitoring and Synthetic SCADA</h2>
+      <p>The monitoring module provides an observation well conformance checker, which evaluates whether the simulated plume at the location of specified observation wells is consistent with the expected containment envelope. A synthetic SCADA data generator produces time-series pressure and temperature records with realistic Gaussian noise, suitable for demonstration, testing of monitoring protocols, or training workflows. This module supports the development of cost-effective monitoring plans, which are a required component of regulatory submissions under the EU CCS Directive and EPA Class VI.</p>
+
+      <h2 class="sub-title">4.17 Regulatory Permit Documentation</h2>
+      <p>CarbonLens generates jurisdiction-specific permit documentation for five regulatory frameworks: US EPA Class VI Underground Injection Control; EU CCS Directive (European Union); Australian NOPSEMA; Malaysia (Petroleum Act framework); and Norway (Petroleum Act / CO&#8322; storage regulations). The documents incorporate simulation outputs, safety assessments, and site parameters. Producing a preliminary permit application template is reduced from days to minutes.</p>
+      <p><strong>Roadmap note:</strong> UK NSTA and Middle East (UAE MOEI) regulatory frameworks are identified as planned additions in the next development phase and are not currently implemented.</p>
 
       <p>The sample documents below were generated by CarbonLens and demonstrate the quality and structure of the exported outputs:</p>
 
@@ -609,10 +678,6 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           Sample Executive Summary (PDF)
         </a>
-        <a class="report-link" href="./UAE%20CCUS%20Facility%20Licence%20%E2%80%94%20Pre-Application%20(MOEI).pdf" target="_blank" rel="noopener noreferrer">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Sample UAE CCUS Permit Application (PDF)
-        </a>
       </div>
 
       <div class="figure">
@@ -620,59 +685,56 @@
         <div class="figure-caption"><strong>Figure 6.</strong> Regulatory export panel. Jurisdiction selection triggers generation of a formatted permit application document incorporating all simulation outputs, safety assessments, and site-specific parameters. The Sleipner Benchmark Report is also accessible directly from this panel.</div>
       </div>
 
-      <h2 class="sub-title">3.5 Economics and Carbon Credit Assessment</h2>
-      <p>The economics module performs full-cycle project financial analysis: capital expenditure, operating cost, net present value (NPV), internal rate of return (IRR), and levelised cost of CO&#8322; storage (LCO&#8322;S). Carbon credit value is calculated against US 45Q tax credit pricing and EU Emissions Trading System (ETS) rates, producing a net revenue estimate alongside the storage cost. This module answers the investor's question directly: does this project make financial sense at current carbon prices?</p>
+      <h2 class="sub-title">4.18 Economics and Carbon Credit Assessment</h2>
+      <p>The economics module performs full-cycle project financial analysis: capital expenditure, operating cost, net present value (NPV), and levelised cost of CO&#8322; storage (LCO&#8322;S). Carbon credit value is calculated against US 45Q tax credit pricing and EU Emissions Trading System (ETS) rates, producing a net revenue estimate alongside the storage cost.</p>
 
       <div class="formula-block">
-        <div class="formula-label">Net Present Value — Full-Cycle Project Economics</div>
+        <div class="formula-label">Net Present Value: Full-Cycle Project Economics</div>
         <div class="eq">NPV = &minus;CAPEX + &Sigma;<sub>t=1</sub><sup>T</sup> [ (R<sub>t</sub> &minus; OPEX<sub>t</sub>) / (1 + r)<sup>t</sup> ]</div>
-        <div class="eq-where">CAPEX = capital expenditure (well drilling, compression, monitoring) &nbsp;&bull;&nbsp; R<sub>t</sub> = annual revenue from carbon credits at year t &nbsp;&bull;&nbsp; OPEX<sub>t</sub> = annual operating cost &nbsp;&bull;&nbsp; r = discount rate (%) &nbsp;&bull;&nbsp; T = project life (years)</div>
-        <div class="formula-label" style="margin-top:14px">Internal Rate of Return — Break-Even Discount Rate</div>
-        <div class="eq">0 = &minus;CAPEX + &Sigma;<sub>t=1</sub><sup>T</sup> [ (R<sub>t</sub> &minus; OPEX<sub>t</sub>) / (1 + IRR)<sup>t</sup> ]</div>
-        <div class="eq-where">IRR is the discount rate at which NPV = 0. A project is financially viable when IRR exceeds the hurdle rate (typically 8–12% for CCS infrastructure). Calculated numerically using Newton-Raphson iteration in-browser.</div>
+        <div class="eq-where">CAPEX = capital expenditure (well drilling, compression, monitoring); R<sub>t</sub> = annual revenue from carbon credits at year t; OPEX<sub>t</sub> = annual operating cost; r = discount rate (%); T = project life (years).</div>
         <div class="formula-label" style="margin-top:14px">Levelised Cost of CO&#8322; Storage (LCO&#8322;S)</div>
-        <div class="eq">LCO&#8322;S = [ CAPEX + &Sigma;<sub>t</sub> OPEX<sub>t</sub> / (1+r)<sup>t</sup> ] / [ &Sigma;<sub>t</sub> m<sub>t</sub> / (1+r)<sup>t</sup> ]</div>
-        <div class="eq-where">m<sub>t</sub> = mass of CO&#8322; stored in year t (tonnes) &nbsp;&bull;&nbsp; LCO&#8322;S expressed in USD/tonne CO&#8322;. Benchmarks: Sleipner ~$17/t, BECCS projects $60–$200/t. Provides direct comparability across candidate formations.</div>
-        <div class="formula-label" style="margin-top:14px">Carbon Credit Revenue — US 45Q and EU ETS</div>
+        <div class="eq">LCO&#8322;S = (CAPEX + &Sigma;<sub>t</sub> OPEX<sub>t</sub>) / m<sub>total</sub></div>
+        <div class="eq-where">m<sub>total</sub> = total undiscounted CO&#8322; stored (tonnes); LCO&#8322;S expressed in USD/tonne CO&#8322;. The denominator uses total undiscounted stored mass, consistent with standard CCUS cost benchmarking practice. Benchmarks: Sleipner ~$17/t, BECCS projects $60&ndash;$200/t.</div>
+        <div class="formula-label" style="margin-top:14px">Carbon Credit Revenue: US 45Q and EU ETS</div>
         <div class="eq">R<sub>credits</sub> = m<sub>annual</sub> &middot; P<sub>carbon</sub> &nbsp;&nbsp; where &nbsp;&nbsp; P<sub>45Q</sub> = $85/tonne (2026), P<sub>ETS</sub> = market price (EUR/tonne)</div>
         <div class="eq-where">m<sub>annual</sub> = annual CO&#8322; injection rate (tonnes/year). US IRS Section 45Q provides a tax credit of $85/tonne for geological storage. EU ETS prices fluctuate; CarbonLens uses the current market rate as a configurable input.</div>
-        <div class="eq-ref">Ref: IRS Rev. Proc. 2020-12 (45Q) &nbsp;&bull;&nbsp; EC Directive 2003/87/EC (EU ETS) &nbsp;&bull;&nbsp; Rubin et al. (2015) Int. J. Greenhouse Gas Control 40:378</div>
+        <div class="eq-ref">Ref: IRS Rev. Proc. 2020-12 (45Q) &bull; EC Directive 2003/87/EC (EU ETS) &bull; Rubin et al. (2015) IJGGC 40:378</div>
       </div>
 
       <div class="figure">
-        <img src="./wp-images/8.png" alt="Economics panel showing cost breakdown, NPV, IRR and carbon credit valuation" />
-        <div class="figure-caption"><strong>Figure 7.</strong> Economics and MRV panel. Full-cycle cost breakdown, NPV, IRR, and carbon credit valuation under US 45Q and EU ETS pricing. Net value per tonne updates in real time as formation or injection parameters change.</div>
+        <img src="./wp-images/8.png" alt="Economics panel showing cost breakdown, NPV and carbon credit valuation" />
+        <div class="figure-caption"><strong>Figure 7.</strong> Economics and MRV panel. Full-cycle cost breakdown, NPV, and carbon credit valuation under US 45Q and EU ETS pricing. Net value per tonne updates in real time as formation or injection parameters change.</div>
       </div>
 
-      <h2 class="sub-title">3.6 Digital Twin Registry</h2>
-      <p>Every completed simulation produces a digitally signed certificate stored in the CarbonLens Digital Twin Registry. Each certificate carries a unique identifier (CL-XXXX), a QR code for instant verification, and a snapshot of the key simulation outputs including storage capacity, injection pressure, containment probability, and safety factor. The certificate links physical reservoir parameters to simulation outcomes, creating an auditable record for use in regulatory submissions, carbon credit applications, and investment due diligence.</p>
+      <h2 class="sub-title">4.19 Digital Twin Registry</h2>
+      <p>Every completed simulation produces a verifiable certificate stored in the CarbonLens Digital Twin Registry. Each certificate carries a unique identifier (CL-XXXX), a QR code for instant verification, and a snapshot of the key simulation outputs including storage capacity, injection pressure, containment probability, and safety factor. Registry records are stored in-browser using IndexedDB, persisting across sessions on the same device. Export to PDF or HTML provides a portable, shareable record that can be submitted to regulators, included in carbon credit applications, or shared with investment due diligence teams. The certificate links physical reservoir parameters to simulation outcomes, creating an auditable record that connects a geological simulation to a carbon credit issuance event.</p>
 
       <div class="figure">
         <img src="./wp-images/7.png" alt="Digital Twin Registry showing certificate with unique ID, QR code and simulation summary" />
-        <div class="figure-caption"><strong>Figure 8.</strong> Digital Twin Registry. Each simulation is assigned a unique verifiable certificate (CL-XXXX) with a scannable QR code. Storage account, injection pressure, capacity utilisation, containment probability, and geomechanical safety are permanently recorded.</div>
+        <div class="figure-caption"><strong>Figure 8.</strong> Digital Twin Registry. Each simulation is assigned a unique verifiable certificate (CL-XXXX) with a scannable QR code. Storage capacity, injection pressure, capacity utilisation, containment probability, and geomechanical safety are recorded and persist in-browser across sessions.</div>
       </div>
 
       <div class="figure">
-        <img src="./wp-images/9.png" alt="Certificate of Storage Verification — sample digital certificate generated by CarbonLens" />
-        <div class="figure-caption"><strong>Figure 9.</strong> Certificate of Storage Verification. A sample certificate generated by CarbonLens for carbon crediting purposes. The certificate captures the formation name, simulation date, unique certificate ID, key capacity and safety metrics, and a QR code linking to the permanent registry record. This certificate is the artefact that connects a geological simulation to a carbon credit issuance event.</div>
+        <img src="./wp-images/9.png" alt="Certificate of Storage Verification: sample digital certificate generated by CarbonLens" />
+        <div class="figure-caption"><strong>Figure 9.</strong> Certificate of Storage Verification. A sample certificate generated by CarbonLens for carbon crediting purposes. The certificate captures the formation name, simulation date, unique certificate ID, key capacity and safety metrics, and a QR code linking to the registry record.</div>
       </div>
     </section>
 
-    <!-- SECTION 4: SLEIPNER VALIDATION -->
+    <!-- SECTION 5: VALIDATION -->
     <section class="break">
-      <div class="section-number">Section 4</div>
-      <h1 class="section-title">Scientific Validation: Sleipner Utsira Benchmark</h1>
+      <div class="section-number">Section 5</div>
+      <h1 class="section-title">Scientific Validation: Sleipner Utsira Benchmark and All 16 Formations</h1>
 
-      <h2 class="sub-title">4.1 Why Sleipner?</h2>
+      <h2 class="sub-title">5.1 Why Sleipner?</h2>
       <p>Rigorous validation is the foundation of any engineering simulation tool. Without evidence that the simulator produces results consistent with real-world behaviour, its outputs carry no scientific or regulatory weight.</p>
       <p>The Sleipner West CO&#8322; storage project in the Norwegian North Sea is the world's longest-running industrial CCS monitoring programme. Injection began in September 1996 and has continued for nearly 30 years. The Utsira Sand formation has been monitored continuously using 4D seismic surveys, gravimetric mass balance measurements, and geological well data. This monitoring record has been published in multiple peer-reviewed papers and constitutes the primary public dataset against which CCS simulation models are evaluated internationally.</p>
       <p>Matching a simulator against Sleipner is not a trivial benchmark. The formation is geologically complex, comprising nine distinct CO&#8322;-bearing sand layers separated by thin mudstone horizons with heterogeneous permeability and multi-layer buoyancy migration. Any simulator achieving close agreement with this dataset has demonstrated that its physics engines are calibrated to real subsurface behaviour.</p>
 
-      <h2 class="sub-title">4.2 Formation Parameters</h2>
+      <h2 class="sub-title">5.2 Formation Parameters</h2>
       <p>CarbonLens was configured to match the published Sleipner Utsira formation parameters as documented in Arts et al. (2004), Boait et al. (2012), and Furre et al. (2017).</p>
 
       <div class="table-wrap">
-        <div class="table-title">Table 1 — Formation Parameter Comparison: Published Sleipner vs. CarbonLens Input</div>
+        <div class="table-title">Table 2 — Formation Parameter Comparison: Published Sleipner vs. CarbonLens Input</div>
         <table>
           <thead>
             <tr><th>Parameter</th><th>Published Range (Sleipner)</th><th>CarbonLens Simulation</th></tr>
@@ -694,14 +756,14 @@
       </div>
 
       <div class="callout">
-        <p>The CarbonLens simulation uses bulk formation parameters representing the effective composite reservoir, consistent with DOE capacity methodology (Goodman 2011). The multi-layer architecture of the real Utsira formation is acknowledged as a known limitation of the screening-level model, as noted in the Validation Conclusion (Section 4.5).</p>
+        <p>The CarbonLens simulation uses bulk formation parameters representing the effective composite reservoir, consistent with DOE capacity methodology (Goodman 2011). The multi-layer architecture of the real Utsira formation is acknowledged as a known limitation of the screening-level model, as noted in the Validation Conclusion (Section 5.5).</p>
       </div>
 
-      <h2 class="sub-title">4.3 Historical Injection Timeline</h2>
+      <h2 class="sub-title">5.3 Historical Injection Timeline</h2>
       <p>CarbonLens simulation results were compared against published monitoring values spanning the full 20-year record from 1996 to 2016. Published storage values are derived from seismic amplitude calibration (Arts 2004) and gravimetric surveys (Furre 2017). Injection was modelled at 0.9 Mt/yr with a one-year ramp-up.</p>
 
       <div class="table-wrap">
-        <div class="table-title">Table 2 — Historical Injection Timeline: CarbonLens vs. Published Monitoring Data (1996–2016)</div>
+        <div class="table-title">Table 3 — Historical Injection Timeline: CarbonLens vs. Published Monitoring Data (1996&ndash;2016)</div>
         <table>
           <thead>
             <tr><th>Year (Calendar)</th><th>Simulated Storage</th><th>Published Storage</th><th>Deviation</th><th>Assessment</th><th>Source</th></tr>
@@ -717,22 +779,22 @@
       </div>
 
       <div class="callout">
-        <p>All five time-step comparisons pass within the adopted ±20% tolerance. The systematic slight under-prediction is consistent with the known multi-layer plume spreading behaviour in the real Utsira formation, where thin intra-formational mudstones produce faster lateral migration than a bulk homogeneous model predicts. This is an expected and documented behaviour for screening-level analytical models.</p>
+        <p>All five time-step comparisons pass within the adopted &#177;20% tolerance. The systematic slight under-prediction is consistent with the known multi-layer plume spreading behaviour in the real Utsira formation, where thin intra-formational mudstones produce faster lateral migration than a bulk homogeneous model predicts. This is an expected and documented behaviour for screening-level analytical models.</p>
       </div>
 
-      <h2 class="sub-title">4.4 Physics Validation</h2>
+      <h2 class="sub-title">5.4 Physics Validation</h2>
       <p>CarbonLens fluid physics were validated against published field constraints and laboratory data. The Span-Wagner EOS was used for CO&#8322; density and the Duan-Sun model for solubility, both representing the international standard reference methods for these properties.</p>
 
       <div class="table-wrap">
-        <div class="table-title">Table 3 — Physics Validation: CarbonLens Outputs vs. Published Sleipner Field Constraints</div>
+        <div class="table-title">Table 4 — Physics Validation: CarbonLens Outputs vs. Published Sleipner Field Constraints</div>
         <table>
           <thead>
             <tr><th>Metric</th><th>CarbonLens</th><th>Published Constraint</th><th>% Deviation</th><th>Assessment</th><th>Source</th></tr>
           </thead>
           <tbody>
-            <tr><td>CO&#8322; Density at 36&#176;C, 10.3 MPa</td><td>710.5 kg/m&#179;</td><td>720 ±55 kg/m&#179;</td><td>-1.3%</td><td><span class="badge badge-pass">PASS</span></td><td>Furre 2017</td></tr>
+            <tr><td>CO&#8322; Density at 36&#176;C, 10.3 MPa</td><td>710.5 kg/m&#179;</td><td>720 &#177;55 kg/m&#179;</td><td>-1.3%</td><td><span class="badge badge-pass">PASS</span></td><td>Furre 2017</td></tr>
             <tr><td>CO&#8322; Solubility at Sleipner conditions</td><td>0.831 mol/kg</td><td>0.65 to 0.90 mol/kg</td><td>+7.3%</td><td><span class="badge badge-pass">PASS</span></td><td>Duan-Sun 2003</td></tr>
-            <tr><td>Dissolution Rate (% per year at Year 20)</td><td>0.35%/yr</td><td>≤2.7%/yr</td><td>within limit</td><td><span class="badge badge-pass">PASS</span></td><td>Furre 2017</td></tr>
+            <tr><td>Dissolution Rate (% per year at Year 20)</td><td>0.35%/yr</td><td>&#8804;2.7%/yr</td><td>within limit</td><td><span class="badge badge-pass">PASS</span></td><td>Furre 2017</td></tr>
             <tr><td>Gravity Current Radius at Year 4</td><td>567 m</td><td>650 m</td><td>-12.7%</td><td><span class="badge badge-marginal">MARGINAL</span></td><td>Boait 2012</td></tr>
             <tr><td>Gravity Current Radius at Year 12</td><td>983 m</td><td>1150 m</td><td>-14.6%</td><td><span class="badge badge-marginal">MARGINAL</span></td><td>Boait 2012</td></tr>
             <tr><td>Storage at Year 4</td><td>3.15 Mt</td><td>approx. 3.6 Mt</td><td>-12.5%</td><td><span class="badge badge-marginal">MARGINAL</span></td><td>Chadwick 2004</td></tr>
@@ -741,7 +803,7 @@
         </table>
       </div>
 
-      <h2 class="sub-title">4.5 Overall Validation Score</h2>
+      <h2 class="sub-title">5.5 Overall Validation Score</h2>
 
       <div class="score-grid">
         <div class="score-card">
@@ -753,7 +815,7 @@
           <span class="score-label">Metrics Within Tolerance</span>
         </div>
         <div class="score-card">
-          <span class="score-val">±20%</span>
+          <span class="score-val">&#177;20%</span>
           <span class="score-label">Tolerance Applied</span>
         </div>
         <div class="score-card">
@@ -762,16 +824,16 @@
         </div>
       </div>
 
-      <a class="report-link" href="./sleipner-validation-report.pdf" target="_blank" rel="noopener noreferrer">
+      <a class="report-link" href="./validation/sleipner_utsira.html" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        View Full Sleipner Validation Report (PDF)
+        View Full Sleipner Validation Report
       </a>
 
       <div class="callout">
-        <p><strong>Validation Conclusion:</strong> The CarbonLens simulation achieves 100% alignment with published Sleipner monitoring data across 7 key metrics. The Span-Wagner equation of state correctly captures the in-situ CO&#8322; density. The Duan-Sun solubility model yields results within the published range. The plume radius comparisons are rated MARGINAL, consistent with the bulk-homogeneous approximation applied at screening scale — an expected limitation that is clearly documented. For a pre-feasibility screening tool, this level of agreement is scientifically sound and practically sufficient.</p>
+        <p><strong>Validation Conclusion:</strong> The CarbonLens simulation achieves 100% alignment with published Sleipner monitoring data across 7 key metrics. The Span-Wagner equation of state correctly captures the in-situ CO&#8322; density. The Duan-Sun solubility model yields results within the published range. The plume radius comparisons are rated MARGINAL, consistent with the bulk-homogeneous approximation applied at screening scale, an expected limitation that is clearly documented. For a pre-feasibility screening tool, this level of agreement is scientifically sound and practically sufficient.</p>
       </div>
 
-      <h2 class="sub-title">4.6 Multi-Formation Validation Suite (All 16 Presets)</h2>
+      <h2 class="sub-title">5.6 Multi-Formation Validation Suite (All 16 Presets)</h2>
       <p>Beyond Sleipner, CarbonLens has been validated against published data for 15 additional formations spanning five continents. Each formation report documents the input parameters used, the published reference values, and a pass/review/note assessment at &#177;30% tolerance. The full suite is available interactively below.</p>
 
       <div class="table-wrap">
@@ -785,7 +847,7 @@
             <tr><td><a href="./validation/johansen.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Johansen</a></td><td>Norwegian North Sea</td><td>Dahle et al. 2009; Eigestad et al. 2009</td><td>Capacity (Mt), pressure, formation factor</td></tr>
             <tr><td><a href="./validation/in_salah.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">In Salah</a></td><td>Central Algeria</td><td>Ringrose et al. 2013; Mathieson et al. 2010</td><td>Injection BHP, storage (Mt), AoR</td></tr>
             <tr><td><a href="./validation/otway.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Otway</a></td><td>Victoria, Australia</td><td>Underschultz et al. 2011; Hortle et al. 2011</td><td>Plume radius, pressure, solubility trapping</td></tr>
-            <tr><td><a href="./validation/mount_simon.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Mt. Simon (ADM Decatur)</a></td><td>Illinois Basin, USA</td><td>Gollakota &amp; McDonald 2014</td><td>BHP (MPa), plume radius, storage (Mt)</td></tr>
+            <tr><td><a href="./validation/mount_simon.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Mt. Simon (ADM Decatur)</a></td><td>Illinois Basin, USA</td><td>Gollakota and McDonald 2014</td><td>BHP (MPa), plume radius, storage (Mt)</td></tr>
             <tr><td><a href="./validation/gorgon.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Gorgon</a></td><td>Western Australia</td><td>Flett et al. 2008; Wilson et al. 2015</td><td>Capacity, injection rate, containment</td></tr>
             <tr><td><a href="./validation/malay_basin.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Malay Basin</a></td><td>Offshore Malaysia</td><td>Leong et al. 2013; PETRONAS 2022</td><td>Capacity (Mt), temperature, pressure</td></tr>
             <tr><td><a href="./validation/kasawari.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Kasawari</a></td><td>Sarawak, Malaysia</td><td>PETRONAS 2023 technical release</td><td>CO&#8322; fraction, injection rate, depth</td></tr>
@@ -794,7 +856,7 @@
             <tr><td><a href="./validation/niger_delta.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Niger Delta</a></td><td>Offshore Nigeria</td><td>Nwidee et al. 2017; IEA GHG 2009</td><td>Saline aquifer capacity, permeability, depth</td></tr>
             <tr><td><a href="./validation/nile_delta.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Nile Delta</a></td><td>Egypt / Mediterranean</td><td>Attia et al. 2015; IEAGHG 2011</td><td>Depth, salinity, temperature, capacity</td></tr>
             <tr><td><a href="./validation/abu_dhabi_basin.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Abu Dhabi Basin</a></td><td>UAE, Middle East</td><td>ADNOC 2021; IEA GHG MENA 2020</td><td>Depth, permeability, injection parameters</td></tr>
-            <tr><td><a href="./validation/alberta_basin.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Alberta Basin</a></td><td>Alberta, Canada</td><td>Bachu &amp; Adams 2003; Bachu 2008</td><td>Aquifer capacity, salinity, pressure gradient</td></tr>
+            <tr><td><a href="./validation/alberta_basin.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Alberta Basin</a></td><td>Alberta, Canada</td><td>Bachu and Adams 2003; Bachu 2008</td><td>Aquifer capacity, salinity, pressure gradient</td></tr>
             <tr><td><a href="./validation/rotterdam_north_sea.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Rotterdam North Sea</a></td><td>Netherlands</td><td>Neele et al. 2019; Porthos 2023</td><td>Depth, injection pressure, capacity</td></tr>
             <tr><td><a href="./validation/sn_hvit_tubaen.html" target="_blank" rel="noopener noreferrer" style="color:var(--teal-light)">Sn&#248;hvit (Tub&#230;en)</a></td><td>Barents Sea, Norway</td><td>Hansen et al. 2013; Grude et al. 2014</td><td>Injection BHP, formation pressure, plume</td></tr>
           </tbody>
@@ -806,11 +868,14 @@
         Open Full Formation Validation Suite (All 16 Formations)
       </a>
 
-      <h2 class="sub-title">4.7 Long-Term Projections (2026 to 2096)</h2>
+      <h2 class="sub-title">5.7 Simulator-to-Simulator Comparison (Planned)</h2>
+      <p>A planned validation milestone is a formal simulator-to-simulator comparison against open-source reservoir simulation codes including tNavigator (Rock Flow Dynamics), OPM Flow, and MRST-co2lab (SINTEF). This comparison will benchmark CarbonLens VE solver outputs against full 3D compositional simulation for the Sleipner, Johansen, and Otway scenarios. Results will be published in the companion technical paper. This milestone is planned for the next development phase and is not yet complete.</p>
+
+      <h2 class="sub-title">5.8 Long-Term Projections (2026 to 2096)</h2>
       <p>CarbonLens was used to project the Sleipner injection programme forward to the 100-year horizon (2096), assuming continued injection at 0.9 Mt/yr. These are scenario projections, not forecasts. Long-term projections carry increasing uncertainty as operating conditions diverge from the calibrated 20-year window.</p>
 
       <div class="table-wrap">
-        <div class="table-title">Table 4 — CarbonLens Future Projections: Sleipner Utsira (2026 to 2096)</div>
+        <div class="table-title">Table 6 — CarbonLens Future Projections: Sleipner Utsira (2026 to 2096)</div>
         <table>
           <thead>
             <tr><th>Year (Calendar)</th><th>Phase</th><th>Projected Storage</th><th>Plume Radius</th><th>Containment</th><th>Solubility Trapping</th></tr>
@@ -831,48 +896,49 @@
       </div>
     </section>
 
-    <!-- SECTION 5: IMPACT -->
-    <section class="break">
-      <div class="section-number">Section 5</div>
-      <h1 class="section-title">Expected Impact</h1>
-
-      <h2 class="sub-title">5.1 Accelerating the Global CCS Pipeline</h2>
-      <p>The most direct impact of CarbonLens is time compression. A pre-feasibility screening exercise that currently requires procurement of commercial software, specialist setup, and days of modelling can be completed in minutes. If every CCS project candidate in the world can be screened faster and at lower cost, the global project pipeline moves faster, and the world approaches the gigaton-scale storage capacity that net-zero requires sooner. CarbonLens does not replace final-stage reservoir simulation on committed projects; it answers the first question every project must ask, and it answers it immediately.</p>
-
-      <h2 class="sub-title">5.2 Geographic Equity in CCS Development</h2>
-      <p>The geographic coverage of CarbonLens is deliberate. The 16 formation presets and 5 regulatory frameworks were chosen to include Southeast Asia, where Malaysia, Indonesia, and Australia are actively developing offshore storage programmes; West Africa, where sub-Saharan nations are beginning to explore CO&#8322; storage potential; and the Middle East, where major national energy companies are under pressure to deploy CCS at scale. These are precisely the regions where commercial tool access is most constrained and where the pre-feasibility gap is widest. Making simulation accessible in these regions helps ensure that CCS develops as a globally distributed capability rather than a technology confined to well-resourced operators in the North Sea and North America.</p>
-
-      <h2 class="sub-title">5.3 Academic Research and Workforce Development</h2>
-      <p>University research groups studying CO&#8322; storage face a structural problem: developing expertise in CCS simulation requires using real simulation tools, but real tools require licenses that most universities cannot afford. CarbonLens removes this barrier, enabling students, PhD researchers, and faculty to engage directly with validated physics-based simulation without requiring commercial licenses or specialist infrastructure. This accelerates development of the CCS-trained engineering workforce that the industry urgently needs to meet the scale of deployment required by 2050.</p>
-
-      <h2 class="sub-title">5.4 Regulatory Capacity Building</h2>
-      <p>Regulatory agencies in emerging CCS markets need to evaluate permit applications submitted by project developers. Where the regulator cannot independently verify the developer's simulation, the regulatory process is weakened and approval timelines extend. CarbonLens gives regulatory agencies and their technical staff the ability to run independent screening simulations using the same physics engines, strengthening oversight without requiring commercial software procurement or specialist staff.</p>
-
-      <h2 class="sub-title">5.5 Carbon Credit Verification</h2>
-      <p>The Digital Twin Registry addresses one of the most persistent bottlenecks in carbon markets: verification. Every simulation certificate links physical reservoir parameters to quantified storage outcomes, creating an auditable trail from geological assessment to carbon credit issuance. This reduces the time and cost of third-party verification and improves transparency for credit buyers and regulators alike.</p>
-    </section>
-
-    <!-- SECTION 6: ACADEMIC FOUNDATION -->
+    <!-- SECTION 6: IMPACT -->
     <section class="break">
       <div class="section-number">Section 6</div>
+      <h1 class="section-title">Expected Impact</h1>
+
+      <h2 class="sub-title">6.1 Accelerating the Global CCS Pipeline</h2>
+      <p>The most direct impact of CarbonLens is time compression. A pre-feasibility screening exercise that currently requires procurement of commercial software, specialist setup, and days of modelling can be completed in minutes. If every CCS project candidate in the world can be screened faster and at lower cost, the global project pipeline moves faster, and the world approaches the gigaton-scale storage capacity that net-zero requires sooner. CarbonLens does not replace final-stage reservoir simulation on committed projects; it answers the first question every project must ask, and it answers it immediately.</p>
+
+      <h2 class="sub-title">6.2 Geographic Equity in CCS Development</h2>
+      <p>The geographic coverage of CarbonLens is deliberate. The 16 formation presets and five regulatory frameworks were chosen to include Southeast Asia, where Malaysia, Indonesia, and Australia are actively developing offshore storage programmes; West Africa, where sub-Saharan nations are beginning to explore CO&#8322; storage potential; and the Middle East, where major national energy companies are under pressure to deploy CCS at scale. These are precisely the regions where commercial tool access is most constrained and where the pre-feasibility gap is widest. Making simulation accessible in these regions helps ensure that CCS develops as a globally distributed capability rather than a technology confined to well-resourced operators in the North Sea and North America.</p>
+
+      <h2 class="sub-title">6.3 Academic Research and Workforce Development</h2>
+      <p>University research groups studying CO&#8322; storage face a structural problem: developing expertise in CCS simulation requires using real simulation tools, but real tools require licenses that most universities cannot afford. CarbonLens removes this barrier, enabling students, PhD researchers, and faculty to engage directly with validated physics-based simulation without requiring commercial licenses or specialist infrastructure. This accelerates development of the CCS-trained engineering workforce that the industry urgently needs to meet the scale of deployment required by 2050.</p>
+
+      <h2 class="sub-title">6.4 Regulatory Capacity Building</h2>
+      <p>Regulatory agencies in emerging CCS markets need to evaluate permit applications submitted by project developers. Where the regulator cannot independently verify the developer's simulation, the regulatory process is weakened and approval timelines extend. CarbonLens gives regulatory agencies and their technical staff the ability to run independent screening simulations using the same physics engines, strengthening oversight without requiring commercial software procurement or specialist staff.</p>
+
+      <h2 class="sub-title">6.5 Carbon Credit Verification</h2>
+      <p>The Digital Twin Registry addresses one of the most persistent bottlenecks in carbon markets: verification. Every simulation certificate links physical reservoir parameters to quantified storage outcomes, creating an auditable trail from geological assessment to carbon credit issuance. Registry records persist in-browser across sessions on the same device, and PDF or HTML export provides a portable, shareable record for third-party verification, reducing the time and cost of audit and improving transparency for credit buyers and regulators alike.</p>
+    </section>
+
+    <!-- SECTION 7: ACADEMIC FOUNDATION -->
+    <section class="break">
+      <div class="section-number">Section 7</div>
       <h1 class="section-title">Academic Foundation and Team</h1>
 
-      <h2 class="sub-title">6.1 Institutional Context</h2>
+      <h2 class="sub-title">7.1 Institutional Context</h2>
       <p>CarbonLens is developed by Daniel T. Olagunju at Universiti Teknologi PETRONAS (UTP), Malaysia. UTP is one of Southeast Asia's leading petroleum engineering universities and a recognised centre of research in carbon capture, utilisation, and storage. Daniel is an MSc researcher at UTP whose academic work focuses on machine learning methods for CO&#8322; storage property prediction, and CarbonLens puts that research to practical use in an accessible browser-based engineering platform.</p>
 
-      <h2 class="sub-title">6.2 The MARS Model: Machine Learning for Interfacial Tension</h2>
+      <h2 class="sub-title">7.2 The MARS Model: Machine Learning for Interfacial Tension</h2>
       <p>A central innovation within CarbonLens is the MARS (Multivariate Adaptive Regression Splines) machine learning model for CO&#8322;-brine interfacial tension (IFT). Interfacial tension governs capillary trapping, the mechanism that permanently immobilises residual CO&#8322; bubbles in pore spaces after the injected plume passes through a formation. It is one of the most important parameters in storage capacity estimation and one of the least reliably predicted by conventional correlations across the wide range of temperature, pressure, and salinity conditions encountered in global storage projects.</p>
-      <p>The MARS-IFT model was trained on a comprehensive set of laboratory experimental data and produces IFT predictions with higher accuracy than existing empirical correlations across the full range of CO&#8322; storage conditions. A peer-reviewed paper documenting the model development, training, and validation has been submitted for journal publication and is currently under review.</p>
+      <p>The MARS-IFT model was trained on a comprehensive set of laboratory experimental data and produces IFT predictions with higher accuracy than existing empirical correlations across the full range of CO&#8322; storage conditions. The model output feeds directly into the caprock seal capacity calculation (Section 4.3) and into the relative permeability and residual trapping framework. A peer-reviewed paper documenting the model development, training, and validation has been submitted for journal publication and is currently under review.</p>
 
-      <h2 class="sub-title">6.3 Project Milestones</h2>
+      <h2 class="sub-title">7.3 Project Milestones</h2>
       <ul class="doc-list">
-        <li><strong>Functional prototype built and deployed</strong> — fully operational browser-based simulator completed within two months of development start; deployed and shared with academic supervisor for structured review and feedback</li>
-        <li><strong>Sleipner benchmark validation completed</strong> — 100% alignment across 7 key metrics against 20 years of published field monitoring data from the world's longest-running CCS site</li>
-        <li><strong>MARS-IFT journal paper submitted</strong> — peer-reviewed paper on the machine learning interfacial tension model currently under editorial review</li>
-        <li><strong>Masters degree in progress</strong> — the MARS model and its integration into CO&#8322; storage simulation form the core research contribution of an MSc at UTP Malaysia</li>
+        <li><strong>Functional prototype built and deployed:</strong> fully operational browser-based simulator completed within two months of development start; deployed and shared with academic supervisor for structured review and feedback</li>
+        <li><strong>Sleipner benchmark validation completed:</strong> 100% alignment across 7 key metrics against 20 years of published field monitoring data from the world's longest-running CCS site</li>
+        <li><strong>Multi-formation validation suite completed:</strong> 16 formations validated across five continents against peer-reviewed published field data</li>
+        <li><strong>MARS-IFT journal paper submitted:</strong> peer-reviewed paper on the machine learning interfacial tension model currently under editorial review</li>
+        <li><strong>Masters degree in progress:</strong> the MARS model and its integration into CO&#8322; storage simulation form the core research contribution of an MSc at UTP Malaysia</li>
       </ul>
 
-      <h2 class="sub-title">6.4 Research Team</h2>
+      <h2 class="sub-title">7.4 Research Team</h2>
 
       <div class="team-grid">
         <div class="team-card">
@@ -886,40 +952,156 @@
           <div class="inst">Universiti Teknologi PETRONAS, Malaysia. Academic supervisor for the MSc research programme.</div>
         </div>
         <div class="team-card">
-          <div class="role">Co-Supervisor</div>
-          <div class="name">Dr. Muhammad Aslam Md Yusof</div>
+          <div class="role">Co-supervisor</div>
+          <div class="name">Dr. Muhamad Aslam MD Yusof</div>
           <div class="inst">Universiti Teknologi PETRONAS, Malaysia. Co-supervisor for the MSc research programme.</div>
         </div>
+        <div class="team-card">
+          <div class="role">Advisor</div>
+          <div class="name">Dr. Berihun Negash Mamo</div>
+          <div class="inst">Universiti Teknologi PETRONAS, Malaysia.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: TECHNICAL ARCHITECTURE AND SIMULATOR POSITIONING -->
+    <section class="break">
+      <div class="section-number">Section 8</div>
+      <h1 class="section-title">Technical Architecture and Simulator Positioning</h1>
+
+      <h2 class="sub-title">8.1 What Type of Simulator is CarbonLens?</h2>
+      <p>CarbonLens is not a compositional simulator and not a black-oil simulator. Compositional frameworks such as Eclipse E300 and CMG GEM are designed for petroleum production: they track multiple hydrocarbon components through a cubic equation of state (Peng-Robinson or SRK) and resolve oil-gas-water phase equilibria through flash calculations at every cell and timestep. Black-oil frameworks (Eclipse E100) assume fixed gas-oil ratio behaviour referenced to surface separator conditions. Both frameworks are irrelevant to CO&#8322; storage, which involves no hydrocarbon phase envelope.</p>
+      <p>CarbonLens is a purpose-built CO&#8322;/brine two-phase flow simulator. It implements the Duan-Sun (2003) equation of state for CO&#8322; solubility in brine, the Span-Wagner (1996) EOS for supercritical CO&#8322; density, and the Fenghour-Wakeham-Vesovic (1998) correlation for CO&#8322; viscosity. These are the recognised thermodynamic standards for deep saline aquifer CO&#8322; injection, and are the same physical models used in TOUGH2/ECO2N and the Eclipse CO2STORE keyword module.</p>
+
+      <h2 class="sub-title">8.2 The Two Co-existing Solvers</h2>
+      <p>CarbonLens runs two physics engines simultaneously, each calibrated for a different use case.</p>
+
+      <h2 class="sub-title">8.2.1 3D Saturation Solver</h2>
+      <p>The 3D saturation solver operates on a structured Cartesian grid (nx &times; ny &times; nz cells). It uses an explicit forward-Euler finite-difference scheme with CFL-adaptive sub-stepping. Near the wellbore, a temporal sub-stepping scheme equivalent to a local refinement ratio of 4 is applied automatically. The solver resolves the following physical mechanisms at every annual timestep:</p>
+      <ul class="doc-list">
+        <li><strong>Injection source term:</strong> Peaceman (1978) log-radial weighting, distributing injected volume according to ln(r&#8337;/r), the same radial flow model used in all major commercial simulators</li>
+        <li><strong>Buoyancy-driven vertical ascent:</strong> Darcy flow with vertical permeability, CO&#8322;/brine density contrast, and gas-phase relative permeability via hysteretic Killough model</li>
+        <li><strong>Lateral gravity current spreading:</strong> Nordbotten and Celia (2006) gravity current model near the caprock interface; gradient-driven diffusive spreading in deeper layers</li>
+        <li><strong>Capillary pressure:</strong> Brooks-Corey drainage curves, with capillary-driven cross-cell flux on all lateral faces</li>
+        <li><strong>Residual trapping:</strong> Killough (1976) and Land (1968) capillary hysteresis model, locking residual CO&#8322; saturation at imbibition onset</li>
+        <li><strong>Solubility trapping:</strong> Interfacial-area-limited dissolution with convective mixing enhancement, budget-limited by the Duan-Sun solubility at formation T/P</li>
+        <li><strong>Mineral trapping:</strong> Kinetic precipitation model following Lasaga (1984) and Palandri and Kharaka (2004), acting on the dissolved CO&#8322; fraction</li>
+        <li><strong>Stress-dependent permeability and porosity:</strong> Exponential k-stress model (k = k&#8320; exp(c&#8346; &alpha; &Delta;P)) with Biot coefficient &alpha; = 0.70 and Kozeny-Carman porosity scaling</li>
+        <li><strong>Fault transmissibility multipliers:</strong> Applied on all cell faces intersected by defined fault traces, using the same mathematical convention as Eclipse and TOUGH2</li>
+      </ul>
+
+      <h2 class="sub-title">8.2.2 2D Vertically Integrated (VE) Solver</h2>
+      <p>The VE solver follows the theoretical framework of Nordbotten and Celia (2006) and Hesse et al. (2008). It assumes instantaneous vertical equilibrium (CO&#8322; segregates to the caprock due to buoyancy, valid when the vertical equilibration timescale is much shorter than the injection timescale). This reduces the 3D migration problem to a 2D depth-integrated PDE for CO&#8322; column height &eta;(x, y, t):</p>
+
+      <div class="formula-block">
+        <div class="formula-label">Governing Equation (VE Solver)</div>
+        <div class="eq">&phi;(1 - S&#8346;&#7522;) &part;&eta;/&part;t + &nabla;&middot;q&#8322; = Q&#8347;&#7506;&#7512;&#7493;&#7504;&#7497;</div>
+        <div class="eq-where">where &phi; = porosity, S&#8346;&#7522; = connate water saturation, &eta; = CO&#8322; column height (m), q&#8322; = depth-averaged Darcy flux combining buoyancy and Theis pressure gradient terms</div>
+        <div class="eq-ref">Reference: Nordbotten and Celia (2006), Water Resources Research 42, W01407</div>
+      </div>
+
+      <p>The spatial discretization uses an upwind finite-difference scheme with harmonic mean transmissibility at cell faces. Timestepping uses CFL-adaptive sub-stepping with a 0.45 safety factor. The Land (1968) hysteresis model is implemented at every cell to track residual trapping during plume retreat. The solver accepts a full heterogeneous permeability field (nx &times; ny array in mD) and supports Theis superposition for far-field pressure gradient advection.</p>
+
+      <h2 class="sub-title">8.3 The 3D Visualization Layer</h2>
+      <p>The three-dimensional view rendered in the CarbonLens interface is a WebGL instanced mesh rendered via Three.js and React Three Fiber. It is a visualization layer driven entirely by the physics solver state: each grid cell's colour encodes CO&#8322; saturation, phase state (free, residual, dissolved, mineral), or a petrophysical property (porosity, permeability, salinity). It is not a geomodel imported from Petrel or a separate geometric engine. The colour field updates every simulation year, enabling real-time 3D observation of plume evolution without any dedicated workstation or graphics hardware beyond a standard laptop GPU.</p>
+
+      <h2 class="sub-title">8.4 Simulator-to-Simulator Positioning</h2>
+      <p>The table below positions CarbonLens against the principal commercial and open-source tools that a practitioner familiar with the industry would reference. The comparison is intentionally honest: CarbonLens is a screening tool, not a certification-grade full-field simulator, and the limitations are documented explicitly in Section 8.5.</p>
+
+      <div class="table-wrap">
+        <div class="table-title">Table 7 &mdash; CarbonLens versus Leading CO&#8322; Storage and Reservoir Simulation Tools</div>
+        <table>
+          <thead>
+            <tr><th>Feature</th><th>Eclipse E300 / CO2STORE</th><th>CMG GEM</th><th>TOUGH2 / ECO2N</th><th>Petrel (SLB)</th><th>CarbonLens</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Primary purpose</td><td>Compositional production simulation</td><td>Compositional / EOR simulation</td><td>Multiphase porous media (CO&#8322;, geothermal)</td><td>Geomodelling and simulation integration</td><td>CO&#8322; storage screening and permitting</td></tr>
+            <tr><td>Fluid model</td><td>Full EOS (PR78, SRK); CO2STORE add-on</td><td>Full EOS compositional</td><td>Span-Wagner / ECO2N CO&#8322;-brine EOS</td><td>N/A (geomodel host)</td><td>Duan-Sun solubility; Span-Wagner density; Fenghour viscosity</td></tr>
+            <tr><td>Flow equations</td><td>IMPES or fully implicit</td><td>Fully implicit</td><td>Integral finite-difference (IFDM)</td><td>N/A</td><td>Explicit FD (3D) + VE depth-averaged (2D)</td></tr>
+            <tr><td>Grid type</td><td>Corner-point (CPG), unstructured</td><td>Corner-point, PEBI/Voronoi</td><td>Irregular unstructured</td><td>Corner-point (exported to simulators)</td><td>Structured Cartesian</td></tr>
+            <tr><td>Fault representation</td><td>Full geometric fault planes with transmissibility</td><td>Full geometric faults</td><td>Transmissibility multipliers</td><td>Geometric fault modelling</td><td>Transmissibility multipliers on cell faces</td></tr>
+            <tr><td>Trapping mechanisms</td><td>Via CO2STORE keyword (partial)</td><td>Via CO&#8322; module</td><td>All four mechanisms natively</td><td>N/A</td><td>All four mechanisms: residual, dissolution, mineral, structural</td></tr>
+            <tr><td>Well model</td><td>Peaceman + skin + multisegment wells</td><td>Peaceman + multisegment</td><td>Source terms</td><td>N/A</td><td>Peaceman (1978) log-radial weighting</td></tr>
+            <tr><td>Geomechanics</td><td>Coupled (GEOMECH) or offline</td><td>Coupled or standalone</td><td>Limited / offline coupling</td><td>Via Visage coupling</td><td>Stress-dependent k/&phi;; Mohr-Coulomb caprock analysis</td></tr>
+            <tr><td>History matching</td><td>Manual + MEPO workflow optimizer</td><td>CMOST optimizer</td><td>Manual</td><td>N/A</td><td>Built-in parameter sweep; k&#7525;/k&#7536; and S&#7501;r overrides</td></tr>
+            <tr><td>3D visualization</td><td>Requires Petrel (separate software and license)</td><td>Builder/Results 3D viewer</td><td>ParaView post-processing</td><td>Native geomodel rendering</td><td>Browser-native Three.js/WebGL, instant</td></tr>
+            <tr><td>Regulatory permit output</td><td>Manual report drafting</td><td>Manual</td><td>Manual</td><td>Manual</td><td>Automated jurisdiction-specific permit packages</td></tr>
+            <tr><td>Deployment</td><td>Windows workstation + license dongle (~$160k/yr)</td><td>Windows + license</td><td>Linux/Mac + license</td><td>Windows + license (~$100k+/yr)</td><td>Any modern browser, zero installation, zero license cost</td></tr>
+            <tr><td>Time to first result</td><td>Days (model setup, gridding, PVT)</td><td>Days</td><td>Days to weeks</td><td>Days (geomodel only)</td><td>Minutes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-title">8.5 Documented Limitations</h2>
+      <p>Scientific credibility requires transparent acknowledgement of model scope. The following limitations apply to CarbonLens and define the boundary between appropriate and inappropriate use.</p>
+      <ul class="doc-list">
+        <li><strong>Structured Cartesian grid:</strong> CarbonLens cannot represent faults geometrically (as plane objects with throw, dip, and segment connectivity) or reproduce the pinch-outs and irregular stratigraphy captured by corner-point geometry in Eclipse and Petrel. Faults are represented as transmissibility multipliers on cell faces, which is adequate for screening but not for detailed fault seal analysis</li>
+        <li><strong>Explicit time integration:</strong> The explicit forward-Euler scheme is constrained by the CFL stability limit. For very high-permeability formations (k &gt; 500 mD) or fine grids, this requires many sub-steps and may be slower than a fully implicit scheme. Commercial simulators (Eclipse, CMG) use fully implicit or IMPES schemes that have no intrinsic timestep stability limit</li>
+        <li><strong>No in-situ EOS coupling:</strong> CO&#8322; density and viscosity are computed from formation-average temperature and pressure inputs at the start of simulation, not updated per-cell per-timestep as pressure and temperature evolve. This is appropriate for the pressure ranges typical of deep saline aquifer injection but introduces error in strongly pressure-sensitive regimes</li>
+        <li><strong>Isothermal assumption:</strong> CarbonLens does not model heat transport. Temperature is specified as a formation-average input. For projects near geothermal gradients or with significant Joule-Thomson cooling at the wellbore, dedicated thermal-compositional simulation is required</li>
+        <li><strong>No multisegment wellbore hydraulics:</strong> The Peaceman well model distributes injection volume using log-radial weighting but does not model tubing pressure drop, wellhead constraints, or downhole flow control devices</li>
+        <li><strong>Stochastic heterogeneity, not geostatistical:</strong> Property fields are spatially correlated via fractional Brownian motion (fBm) noise seeded from stratigraphic zone parameters. This is not equivalent to variogram-based sequential Gaussian simulation or pluriGaussian facies modelling as implemented in Petrel</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Appropriate use statement:</strong> CarbonLens is designed for pre-feasibility screening, rapid multi-site comparison, regulatory pre-screening documentation, academic training, and regulatory capacity building. It is not a replacement for full field development simulation on committed injection projects. The appropriate workflow is CarbonLens for screening followed by TOUGH2, Eclipse CO2STORE, or CMG GEM for final-stage certification where required by the relevant regulatory body.</p>
+      </div>
+
+      <h2 class="sub-title">8.6 Summary Statement for Technical Audiences</h2>
+      <div class="highlight-box">
+        <div class="hb-title">Technical One-Line Summary</div>
+        <p>CarbonLens uses a purpose-built CO&#8322;/brine two-phase finite-difference solver with a Vertically Integrated mode based on Nordbotten and Celia (2006), implementing all four CO&#8322; trapping mechanisms simultaneously in a browser, with Peaceman well weighting, Land-Killough capillary hysteresis, Duan-Sun solubility, and stress-dependent geomechanics, optimised for rapid pre-feasibility screening rather than full-field certification.</p>
       </div>
     </section>
 
     <!-- REFERENCES -->
     <section class="break">
-      <div class="section-number">Section 7</div>
+      <div class="section-number">Section 9</div>
       <h1 class="section-title">References</h1>
 
       <div class="references">
-        <p>Arts R. et al. (2004). Four-dimensional seismic monitoring of the CO&#8322; injection at Sleipner, offshore Norway. <em>Energy</em>, 29, 1383–1392.</p>
+        <p>Arts R. et al. (2004). Four-dimensional seismic monitoring of the CO&#8322; injection at Sleipner, offshore Norway. <em>Energy</em>, 29, 1383&ndash;1392.</p>
+        <p>Audigane P. et al. (2007). Two-dimensional reactive transport modeling of CO&#8322; injection in a saline aquifer at the Sleipner site, North Sea. <em>Water Resources Research</em>, 43, W03414.</p>
+        <p>Bachu S. (2003). Screening and ranking of sedimentary basins for sequestration of CO&#8322; in geological media. <em>Environmental Geology</em>, 44(3), 277&ndash;289.</p>
+        <p>Bachu S. et al. (2007). CO&#8322; storage capacity estimation: Methodology and gaps. <em>International Journal of Greenhouse Gas Control</em>, 1(4), 430&ndash;443.</p>
+        <p>Benson S.M. and Cole D.R. (2008). CO&#8322; sequestration in deep sedimentary formations. <em>Elements</em>, 4(5), 325&ndash;331.</p>
         <p>Boait F.C. et al. (2012). Spatial and temporal evolution of injected CO&#8322; at the Sleipner Field, North Sea. <em>Journal of Geophysical Research</em>, 117, B03309.</p>
-        <p>Brooks R.H. and Corey A.T. (1964). Hydraulic properties of porous media. <em>USGS Professional Paper, Hydrology Paper 3</em>.</p>
-        <p>Chadwick R.A. et al. (2004). Geological reservoir characterization of a CO&#8322; storage site: The Utsira Sand, Sleipner, northern North Sea. <em>Energy</em>, 29, 1371–1381.</p>
-        <p>Duan Z. and Sun R. (2003). An improved model calculating CO&#8322; solubility in pure water and aqueous NaCl solutions. <em>Chemical Geology</em>, 193, 257–271.</p>
-        <p>Fenghour A., Wakeham W.A. and Vesovic V. (1998). The viscosity of carbon dioxide. <em>Journal of Physical and Chemical Reference Data</em>, 27(1), 31–39.</p>
-        <p>Furre A.-K. et al. (2017). 20 years of monitoring CO&#8322;-injection at Sleipner. <em>Energy Procedia</em>, 114, 3916–3926.</p>
+        <p>Brooks R.H. and Corey A.T. (1964). Hydraulic properties of porous media. <em>Hydrology Paper 3</em>, Colorado State University.</p>
+        <p>Byerlee J. (1978). Friction of rocks. <em>Pure and Applied Geophysics</em>, 116(4&ndash;5), 615&ndash;626.</p>
+        <p>Chadwick R.A. et al. (2004). Geological reservoir characterization of a CO&#8322; storage site: The Utsira Sand, Sleipner, northern North Sea. <em>Energy</em>, 29, 1371&ndash;1381.</p>
+        <p>Duan Z. and Sun R. (2003). An improved model calculating CO&#8322; solubility in pure water and aqueous NaCl solutions. <em>Chemical Geology</em>, 193, 257&ndash;271.</p>
+        <p>Ennis-King J. and Paterson L. (2005). Role of convective mixing in the long-term storage of carbon dioxide in deep saline formations. <em>International Journal of Greenhouse Gas Control</em>, 1(1), 86&ndash;93.</p>
+        <p>Fenghour A., Wakeham W.A. and Vesovic V. (1998). The viscosity of carbon dioxide. <em>Journal of Physical and Chemical Reference Data</em>, 27(1), 31&ndash;39.</p>
+        <p>Furre A.-K. et al. (2017). 20 years of monitoring CO&#8322;-injection at Sleipner. <em>Energy Procedia</em>, 114, 3916&ndash;3926.</p>
         <p>Garcia J.E. (2001). Density of aqueous solutions of CO&#8322;. <em>Lawrence Berkeley National Laboratory Report LBNL-49023</em>.</p>
+        <p>Gasda S.E. et al. (2009). Vertically averaged approaches for CO&#8322; migration with solubility trapping. <em>Advances in Water Resources</em>, 32, 1322&ndash;1334.</p>
         <p>Goodman A. et al. (2011). US DOE methodology for the development of geologic storage potential for carbon dioxide at the national and regional scale. <em>DOE/NETL-2011/1440</em>.</p>
-        <p>Hubbert M.K. and Willis D.G. (1957). Mechanics of hydraulic fracturing. <em>Transactions of the AIME</em>, 210, 153–168.</p>
-        <p>Land C.S. (1968). Calculation of imbibition relative permeability for two- and three-phase flow from rock properties. <em>Transactions of the AIME</em>, 243, 149–156.</p>
-        <p>Nordbotten J.M. et al. (2005). Injection and storage of CO&#8322; in deep saline aquifers: Analytical solution for CO&#8322; plume evolution during injection. <em>Transport in Porous Media</em>, 58, 339–360.</p>
+        <p>Hesse M.A. et al. (2008). Gravity currents with residual trapping. <em>Journal of Fluid Mechanics</em>, 611, 35&ndash;60.</p>
+        <p>Hubbert M.K. and Willis D.G. (1957). Mechanics of hydraulic fracturing. <em>Transactions of the AIME</em>, 210, 153&ndash;168.</p>
+        <p>Killough J.E. (1976). Reservoir simulation with history-dependent saturation functions. <em>SPE Journal</em>, 16(1), 37&ndash;48.</p>
+        <p>Kopp A. et al. (2010). Investigations on CO&#8322; storage capacity in saline aquifers: Part 1. Geological storage fundamentals. <em>International Journal of Greenhouse Gas Control</em>, 4(1), 73&ndash;82.</p>
+        <p>Land C.S. (1968). Calculation of imbibition relative permeability for two- and three-phase flow from rock properties. <em>Transactions of the AIME</em>, 243, 149&ndash;156.</p>
+        <p>Lasaga A.C. (1984). Chemical kinetics of water-rock interactions. <em>Journal of Geophysical Research</em>, 89(B6), 4009&ndash;4025.</p>
+        <p>Leverett M.C. (1941). Capillary behavior in porous solids. <em>Transactions of the AIME</em>, 142, 152&ndash;169.</p>
+        <p>NETL (2015). Best Practices: Site Screening, Site Selection, and Site Characterization for Geologic Storage Projects. <em>DOE/NETL-2015/1632</em>.</p>
+        <p>Neufeld J.A. et al. (2010). Convective dissolution of carbon dioxide in saline aquifers. <em>Geophysical Research Letters</em>, 37, L22404.</p>
+        <p>Nordbotten J.M. et al. (2005). Injection and storage of CO&#8322; in deep saline aquifers: Analytical solution for CO&#8322; plume evolution during injection. <em>Transport in Porous Media</em>, 58, 339&ndash;360.</p>
+        <p>Nordbotten J.M. and Celia M.A. (2006). Similarity solutions for fluid injection into confined aquifers. <em>Water Resources Research</em>, 42, W01407.</p>
         <p>Olagunju D.T. (in prep.). MARS machine learning model for CO&#8322;-brine interfacial tension prediction across reservoir conditions. MSc research thesis, Universiti Teknologi PETRONAS, Malaysia.</p>
-        <p>Span R. and Wagner W. (1996). A new equation of state for carbon dioxide covering the fluid region from the triple-point temperature to 1100 K at pressures up to 800 MPa. <em>Journal of Physical and Chemical Reference Data</em>, 25(6), 1509–1596.</p>
+        <p>Palandri J.L. and Kharaka Y.K. (2004). A compilation of rate parameters of water-mineral interaction kinetics for application to geochemical modeling. <em>USGS Open-File Report 2004-1068</em>.</p>
+        <p>Shook G.M. and Mitchell K.M. (2009). A robust measure of heterogeneity for ranking earth models: The F-Phi curve and dynamic Lorenz coefficient. <em>SPE-124625-MS</em>.</p>
+        <p>Span R. and Wagner W. (1996). A new equation of state for carbon dioxide covering the fluid region from the triple-point temperature to 1100 K at pressures up to 800 MPa. <em>Journal of Physical and Chemical Reference Data</em>, 25(6), 1509&ndash;1596.</p>
+        <p>Streit J.E. and Hillis R.R. (2004). Estimating fault stability and sustainable fluid pressures for underground storage of CO&#8322; in porous rock. <em>Energy</em>, 29, 1445&ndash;1456.</p>
         <p>Teatini P. et al. (2011). Geomechanical response to seasonal gas storage in depleted reservoirs. <em>Journal of Geophysical Research</em>, 116, B08204.</p>
-        <p>Zweigel P. et al. (2004). Reservoir geology of the Utsira Formation at the first industrial-scale underground CO&#8322; storage site (Sleipner area, North Sea). <em>Geological Society Special Publication</em>, 233, 165–180.</p>
+        <p>van Genuchten M.T. (1980). A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. <em>Soil Science Society of America Journal</em>, 44(5), 892&ndash;898.</p>
+        <p>Zeidouni M. et al. (2009). Analytical solution to evaluate salt precipitation during CO&#8322; injection in saline aquifers. <em>International Journal of Greenhouse Gas Control</em>, 3(5), 600&ndash;611.</p>
+        <p>Zoback M.D. (2007). <em>Reservoir Geomechanics</em>. Cambridge University Press, Cambridge.</p>
+        <p>Zweigel P. et al. (2004). Reservoir geology of the Utsira Formation at the first industrial-scale underground CO&#8322; storage site (Sleipner area, North Sea). <em>Geological Society Special Publication</em>, 233, 165&ndash;180.</p>
       </div>
     </section>
 
     <div class="doc-footer">
-      <span>CarbonLens Technical White Paper · June 2026 · Prototypes for Humanity 2026 Submission</span>
+      <span>CarbonLens Technical White Paper &middot; June 2026 &middot; Prototypes for Humanity 2026 Submission</span>
       <span>Internal document. Not for distribution without permission.</span>
     </div>
 

@@ -12,6 +12,7 @@ const RESIDUAL_GREEN:  [number, number, number] = [0.063, 0.722, 0.506]  // #10b
 const DISSOLVED_TEAL:  [number, number, number] = [0.078, 0.722, 0.639]  // #14b8a6 dissolved in brine
 const MINERAL_GOLD:    [number, number, number] = [0.706, 0.298, 0.035]  // #b45309 mineralised
 const CAPROCK_GREY:    [number, number, number] = [0.392, 0.361, 0.431]  // #64748b seal
+const IMBIBITION_PURPLE: [number, number, number] = [0.55, 0.2, 0.75]   // imbibition front
 const FAULT_SEAL_RED:  [number, number, number] = [0.600, 0.100, 0.100]  // sealing fault cell
 const FAULT_OPEN_GRN:  [number, number, number] = [0.050, 0.450, 0.200]  // open fault cell
 
@@ -31,10 +32,11 @@ export function saturationToColor(
   if (isCaprock) return CAPROCK_GREY
 
   switch (phase) {
-    case 'residual': return RESIDUAL_GREEN
-    case 'dissolved': return DISSOLVED_TEAL
-    case 'mineral':   return MINERAL_GOLD
-    case 'none':      return BRINE_DEEP
+    case 'residual':   return RESIDUAL_GREEN
+    case 'dissolved':  return DISSOLVED_TEAL
+    case 'mineral':    return MINERAL_GOLD
+    case 'none':       return BRINE_DEEP
+    case 'imbibition': return IMBIBITION_PURPLE
     case 'free': {
       const s = Math.max(0, Math.min(1, sat))
       if (s < 0.20) return lerp3(BRINE_LIGHT, CO2_AMBER,  s / 0.20)

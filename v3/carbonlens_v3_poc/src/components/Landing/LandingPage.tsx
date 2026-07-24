@@ -239,9 +239,94 @@ const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Venture & Pitch", href: "#venture" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 const WHITEPAPER_URL = `${BASE}/whitepaper.html`;
+
+const FAQ_TABS = ['Academic', 'Industry', 'Regulator'] as const
+type FaqTab = typeof FAQ_TABS[number]
+
+const FAQ_DATA: Record<FaqTab, { q: string; a: string }[]> = {
+  Academic: [
+    {
+      q: "Is CarbonLens compositional or black-oil?",
+      a: "Neither. CarbonLens uses a purpose-built CO\u2082/brine two-phase flow model. Compositional and black-oil frameworks are designed for petroleum production with hydrocarbon phase envelopes. CO\u2082 storage requires CO\u2082-specific thermodynamics: CarbonLens implements the Duan-Sun (2003) equation of state for solubility and Span-Wagner (1996) for CO\u2082 density, which are the recognised thermodynamic standards for deep saline aquifer injection \u2014 the same models used in TOUGH2/ECO2N.",
+    },
+    {
+      q: "What numerical method does the simulator use?",
+      a: "CarbonLens runs two co-existing solvers. The 3D saturation solver uses explicit forward-Euler finite differences on a structured Cartesian grid with CFL-adaptive sub-stepping and Peaceman (1978) log-radial well weighting. The 2D Vertically Integrated (VE) solver follows Nordbotten and Celia (2006) with upwind finite-difference spatial discretization, harmonic-mean transmissibility at cell faces, and Hesse et al. (2008) post-injection gravity current model. Both run natively in the browser.",
+    },
+    {
+      q: "How does it compare to TOUGH2 and Eclipse CO2STORE?",
+      a: "TOUGH2 uses an integral finite-difference method on unstructured grids with the full ECO2N EOS. Eclipse CO2STORE bolts CO\u2082 dissolution and mineral trapping onto a black-oil framework. CarbonLens implements all four trapping mechanisms from first principles and has been cross-validated against Sleipner field data. The key difference is accessibility: TOUGH2 requires Linux expertise and days of setup; Eclipse requires a \u00a3100k+ annual license. CarbonLens produces validated results in minutes in any browser.",
+    },
+    {
+      q: "What are the known model limitations?",
+      a: "CarbonLens uses a structured Cartesian grid (no corner-point geometry), explicit time integration (CFL-constrained), no full in-situ EOS pressure coupling (fluid properties computed from global T/P inputs), isothermal assumption (no heat transport), no wellbore hydraulics, and stochastic rather than geostatistical heterogeneity. These are deliberate tradeoffs for screening-stage analysis. For full-field certification, TOUGH2, Eclipse, or CMG should be used.",
+    },
+    {
+      q: "Has CarbonLens been validated against field data?",
+      a: "Yes. CarbonLens has been validated against 20 years of monitoring data from Sleipner West (Norway), achieving 100% alignment across 7 key metrics within accepted scientific tolerance. It has also been benchmarked against published field parameters for 15 additional formations across 5 continents including North Sea, Algeria, Australia, Malaysia, Nigeria, USA, and the Middle East. Full validation reports are publicly accessible from the platform.",
+    },
+    {
+      q: "Can I cite CarbonLens in my research?",
+      a: "Yes. CarbonLens is developed by Daniel T. Olagunju at Universiti Teknologi PETRONAS, Malaysia. A companion MARS-IFT journal paper (machine learning model for CO\u2082-brine interfacial tension) is currently under peer review. The technical white paper with full methodology documentation is available for download. Contact the corresponding author for citation guidance.",
+    },
+  ],
+  Industry: [
+    {
+      q: "Can CarbonLens replace Eclipse or CMG for field development planning?",
+      a: "No, and it is not designed to. CarbonLens is a pre-feasibility and screening tool for rapid site evaluation and permit documentation. For committed field development \u2014 corner-point grids, compositional PVT, full pressure history matching, multi-well interference \u2014 Eclipse E300 with CO2STORE or CMG GEM remain appropriate. CarbonLens answers the first question any project must ask quickly and at zero software cost, before committing to a full simulation study.",
+    },
+    {
+      q: "How does it handle formation heterogeneity?",
+      a: "CarbonLens supports per-cell porosity, horizontal permeability (kH), vertical permeability (kV), and capillary entry pressure, all variable across the structured Cartesian grid. Property fields are assigned from stratigraphic zone definitions with spatially correlated stochastic variation (fractional Brownian motion noise). Fault transmissibility multipliers are applied on intersected cell faces. While not equivalent to Petrel variogram-based SGS, the model captures the key controls on CO\u2082 migration relevant to screening.",
+    },
+    {
+      q: "Can I import my own field data?",
+      a: "Yes. CarbonLens accepts LAS 2.0 well log files for porosity profiles, ECLIPSE-format grid files for structural geometry import, and CSV observation data for history matching. The platform also includes 16 built-in global formation presets based on published field parameters, covering all major CCS regions.",
+    },
+    {
+      q: "What well model is used?",
+      a: "CarbonLens uses the Peaceman (1978) log-radial injection weighting model, which mirrors the ln(re/r) pressure profile in radial Darcy flow. This is the same fundamental model used in Eclipse, TOUGH2, and CMG for wellbore source term allocation. Multi-well configurations are supported with independent ramp-up and ramp-down injection schedules per well.",
+    },
+    {
+      q: "What export outputs does it generate?",
+      a: "CarbonLens exports: PDF simulation certificates, jurisdiction-specific permit pre-screening reports (EPA Class VI, EU CCS Directive, NOPSEMA, Malaysia, Norway, and 7 additional frameworks), JSON/CSV data packages, PNG/GIF simulation recordings, and HTML formation reports. All outputs include full parameter sets and methodology traceability to published references.",
+    },
+    {
+      q: "How is the 3D visualization generated?",
+      a: "The 3D view is a WebGL instanced mesh rendered via Three.js and React Three Fiber. It is a visualization layer driven by the physics solver state: each cell colour represents CO\u2082 saturation, phase state (free/residual/dissolved/mineral), or a petrophysical property. It is not a separate geometric model; it is a direct render of the simulation grid, updating every simulation year in real time.",
+    },
+  ],
+  Regulator: [
+    {
+      q: "Can CarbonLens outputs be submitted as part of a formal permit application?",
+      a: "CarbonLens outputs are suitable for pre-feasibility and pre-screening stages of a regulatory submission. They are not certified final-stage simulation results and should not replace a full-field development simulation for Class VI UIC or equivalent permit submissions. However, CarbonLens is specifically designed to generate jurisdiction-ready pre-screening documentation: AoR estimates, storage capacity calculations, containment probability assessments, and caprock integrity scores aligned with EPA, NOPSEMA, EU CCS Directive, Malaysian, and Norwegian frameworks.",
+    },
+    {
+      q: "Which regulatory frameworks does CarbonLens support?",
+      a: "CarbonLens generates documentation aligned with: US EPA Class VI (UIC Program), EU CCS Directive 2009/31/EC, Australian NOPSEMA offshore framework, Malaysia PCSB/JDA framework, Norwegian Petroleum Directorate requirements, and 7 additional jurisdictions including Nigeria, Indonesia, Egypt, UAE, Canada, Algeria, and the UK (NSTA). Twelve regulatory frameworks are covered in the permit output module.",
+    },
+    {
+      q: "How is long-term containment risk quantified?",
+      a: "CarbonLens calculates containment probability from three parallel analyses: (1) Geomechanical caprock integrity via Mohr-Coulomb failure analysis, maximum allowable injection pressure (MAIP), and capillary seal capacity from the MARS-IFT interfacial tension model; (2) Leakage risk scoring based on fault proximity, caprock thickness, and formation pressure gradient; (3) Monte Carlo uncertainty propagation across petrophysical parameter distributions, producing P10/P50/P90 storage capacity estimates from 1,000 simulation runs.",
+    },
+    {
+      q: "Can regulators run independent verification without the developer's data?",
+      a: "Yes. CarbonLens is designed with regulatory independence in mind. A regulator can configure a formation from public-domain parameters (depth, porosity, permeability, caprock thickness) and run their own simulation to cross-check a developer's submission. The platform is browser-native: no software installation, no licenses, no IT procurement required. This regulatory capacity-building use case is explicitly documented in the technical white paper.",
+    },
+    {
+      q: "How is the Area of Review (AoR) calculated?",
+      a: "CarbonLens computes the AoR as the projected CO\u2082 plume footprint at end of injection plus a pressure perturbation radius estimated from Theis superposition. The AoR boundary corresponds to the radius at which the pressure increase above hydrostatic falls below the formation fracture gradient threshold. This follows the EPA Class VI definition. The AoR is reported in the simulation HUD and in the permit export package.",
+    },
+    {
+      q: "What audit trail is available for carbon credit verification?",
+      a: "Every simulation run generates a certificate containing: formation parameters, injection schedule, solver methodology reference (including physical constants and key literature citations), four-mechanism trapping breakdown (structural, residual, dissolution, mineral), containment probability, and a unique registry ID. The Digital Twin Registry persists all project records in-browser and exports as PDF or HTML for third-party audit, designed to serve as primary documentation for carbon credit issuance under voluntary and compliance markets.",
+    },
+  ],
+}
 
 // All 16 formation presets organised by world region for the coverage map
 // Coords are [x%, y%] within the 100×50 SVG viewBox (rough geographic placement)
@@ -289,6 +374,8 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [faqTab, setFaqTab] = useState<FaqTab>('Academic')
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const isOwner = user?.email === OWNER_EMAIL;
   const [showEmailGate, setShowEmailGate] = useState(false);
@@ -1093,6 +1180,79 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══ FAQ ════════════════════════════════════════════════════════ */}
+      <section id="faq" className="py-16 md:py-24 border-t border-theme">
+        <div className="max-w-4xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-10 md:mb-14">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 mb-3">
+              Frequently Asked Questions
+            </p>
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">
+              Questions from Academics, Industry and Regulators
+            </h2>
+            <p className="text-sm md:text-base text-muted max-w-xl mx-auto">
+              Detailed answers for technically demanding audiences, including those familiar with Eclipse, Petrel, TOUGH2, and CMG.
+            </p>
+          </div>
+
+          {/* Audience tab selector */}
+          <div className="flex justify-center mb-8 md:mb-10">
+            <div className="inline-flex rounded-xl border border-theme dark:bg-white/[0.03] bg-gray-100 p-1 gap-1">
+              {FAQ_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => { setFaqTab(tab); setOpenFaq(null); }}
+                  className={`px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all min-h-[36px] ${
+                    faqTab === tab
+                      ? 'bg-emerald-500 text-white shadow-sm'
+                      : 'text-muted hover:text-primary'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Accordion */}
+          <div className="space-y-2">
+            {FAQ_DATA[faqTab].map((item, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl border dark:border-white/[0.06] border-gray-200 dark:bg-white/[0.015] bg-white overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left gap-4 hover:dark:bg-white/[0.03] hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-sm font-medium text-primary leading-snug">{item.q}</span>
+                  <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full border dark:border-white/10 border-gray-300 text-muted transition-transform ${openFaq === idx ? 'rotate-45' : ''}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </span>
+                </button>
+                {openFaq === idx && (
+                  <div className="px-5 pb-5 pt-1">
+                    <p className="text-sm text-muted leading-relaxed">{item.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 md:mt-10 text-center">
+            <p className="text-xs text-muted font-mono">
+              More technical detail is available in the{' '}
+              <a href={WHITEPAPER_URL} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors">
+                Technical White Paper
+              </a>
+              {' '}and the full Validation Suite.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ FINAL CTA ══════════════════════════════════════════════════ */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-emerald-500/5 to-transparent border-t border-theme">
         <div className="max-w-3xl mx-auto px-4 md:px-8 text-center">
@@ -1132,6 +1292,12 @@ export default function LandingPage() {
                 className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono"
               >
                 Venture
+              </button>
+              <button
+                onClick={() => scrollTo("faq")}
+                className="text-[10px] md:text-xs text-muted hover:text-secondary transition font-mono"
+              >
+                FAQ
               </button>
               <a
                 href="mailto:hello@carbonlens.io"

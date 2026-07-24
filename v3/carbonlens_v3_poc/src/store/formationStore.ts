@@ -8,7 +8,7 @@ import { useGeologicalStore } from './geologicalStore'
 
 function getWellPosition(idx: number): [number, number] {
   const angle = (idx / 5) * Math.PI * 2 - Math.PI / 2
-  return [1.0 * Math.cos(angle), 1.0 * Math.sin(angle)]
+  return [0.4 * Math.cos(angle), 0.4 * Math.sin(angle)]
 }
 
 interface FormationState {

@@ -1,128 +1,476 @@
+import { useState, useEffect } from 'react'
 import { useUIStore } from '../../store/uiStore'
+import { useFormationStore } from '../../store/formationStore'
+import { useAuthStore } from '../../store/authStore'
+import { db } from '../../db/projectDb'
 import {
-  BarChart3, Mountain, Play, Hammer, Globe, Download, DollarSign, Crosshair, Target,
-  PanelLeftOpen, PanelLeftClose, Sun, Moon, LayoutDashboard, Database, FlaskConical, BookOpen,
-  ShieldCheck, Shuffle, Activity,
+  Lock, LayoutDashboard, Mountain, FlaskConical, Target, Play, Hammer,
+  Radio, Crosshair, Shuffle, DollarSign, Globe, Database, Download,
+  CheckCircle, AlertCircle, HelpCircle, X, LogOut,
+  ChevronLeft, ChevronRight, Sun, Moon,
 } from 'lucide-react'
 import Logo from '../Logo'
 import type { LucideIcon } from 'lucide-react'
+import { assessStorageScreening } from '../../engine/classical/storageScreening'
+import MethodologyPanel from '../MethodologyPanel/MethodologyPanel'
+import ValidationDashboard from '../ValidationPanel/ValidationDashboard'
 
-type Panel = 'properties' | 'formation' | 'geology' | 'simulation' | 'geomechanics' | 'economics' | 'leakage' | 'screening' | 'jurisdiction' | 'export' | 'overview' | 'registry' | 'methodology' | 'validation' | 'montecarlo' | 'historymatching'
+import type { Panel } from '../../store/uiStore'
 
-type NavGroup = {
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type StageKey = 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'stage5'
+
+type NavItem = {
+  panel: Panel
   label: string
-  items: { panel: Panel; label: string; icon: LucideIcon }[]
+  icon: LucideIcon
 }
 
-const navGroups: NavGroup[] = [
+type StageGroup = {
+  label: string
+  stageKey: StageKey
+  /** which stage must be complete for THIS stage to be unlocked */
+  prerequisite: StageKey | null
+  items: NavItem[]
+}
+
+// ── Stage-gate nav structure ───────────────────────────────────────────────────
+
+const STAGE_GROUPS: StageGroup[] = [
   {
-    label: 'Input',
+    label: 'Stage 1: Setup',
+    stageKey: 'stage1',
+    prerequisite: null,
     items: [
-      { panel: 'overview' as const,    label: 'Overview',    icon: LayoutDashboard },
-      { panel: 'formation' as const,   label: 'Formation',   icon: Mountain },
-      { panel: 'geology' as const,     label: 'Geology',     icon: FlaskConical },
-      { panel: 'properties' as const,  label: 'Properties',  icon: BarChart3 },
-      { panel: 'screening' as const,   label: 'Screening',   icon: Target },
+      { panel: 'overview', label: 'Overview', icon: LayoutDashboard },
     ],
   },
   {
-    label: 'Analysis',
+    label: 'Stage 2: Define',
+    stageKey: 'stage2',
+    prerequisite: 'stage1',
     items: [
-      { panel: 'simulation' as const,      label: 'Simulation',    icon: Play },
-      { panel: 'geomechanics' as const,    label: 'Geomechanics',  icon: Hammer },
-      { panel: 'leakage' as const,         label: 'Leakage',       icon: Crosshair },
-      { panel: 'montecarlo' as const,      label: 'Monte Carlo',   icon: Shuffle },
+      { panel: 'formation', label: 'Formation', icon: Mountain },
+      { panel: 'geology',   label: 'Geology',   icon: FlaskConical },
+      { panel: 'geomechanics', label: 'Geomechanics', icon: Hammer },
+      { panel: 'screening', label: 'Screening', icon: Target },
     ],
   },
   {
-    label: 'Outputs',
+    label: 'Stage 3: Simulate',
+    stageKey: 'stage3',
+    prerequisite: 'stage2',
     items: [
-      { panel: 'economics' as const,   label: 'Economics',  icon: DollarSign },
-      { panel: 'registry' as const,    label: 'Registry',   icon: Database },
-      { panel: 'jurisdiction' as const, label: 'Jurisdiction', icon: Globe },
-      { panel: 'export' as const,      label: 'Export',     icon: Download },
+      { panel: 'simulation',   label: 'Simulation',   icon: Play },
     ],
   },
   {
-    label: 'Tools',
+    label: 'Stage 4: Analyse',
+    stageKey: 'stage4',
+    prerequisite: 'stage3',
     items: [
-      { panel: 'historymatching' as const, label: 'Hist. Match',  icon: Activity },
-      { panel: 'validation' as const,      label: 'Validation',   icon: ShieldCheck },
-      { panel: 'methodology' as const,     label: 'Methodology',  icon: BookOpen },
+      { panel: 'monitoring',  label: 'Monitoring',   icon: Radio },
+      { panel: 'leakage',     label: 'Leakage Risk', icon: Crosshair },
+      { panel: 'montecarlo',  label: 'Monte Carlo',  icon: Shuffle },
+    ],
+  },
+  {
+    label: 'Stage 5: Report',
+    stageKey: 'stage5',
+    prerequisite: 'stage4',
+    items: [
+      { panel: 'economics',    label: 'Economics',   icon: DollarSign },
+      { panel: 'jurisdiction', label: 'Jurisdiction', icon: Globe },
+      { panel: 'registry',     label: 'Registry',    icon: Database },
+      { panel: 'export',       label: 'Export',      icon: Download },
     ],
   },
 ]
 
-export default function Sidebar() {
-  const activePanel = useUIStore((s) => s.activePanel)
-  const setPanel = useUIStore((s) => s.setPanel)
-  const sidebarOpen = useUIStore((s) => s.sidebarOpen)
-  const setSidebar = useUIStore((s) => s.setSidebar)
-  const toggleTheme = useUIStore((s) => s.toggleTheme)
-  const theme = useUIStore((s) => s.theme)
+// ── Benchmark Guide static content ────────────────────────────────────────────
 
-  const w = sidebarOpen ? 'w-44' : 'w-12'
+const BENCHMARK_GUIDE_TEXT = `Sleipner Utsira Benchmark Setup
+
+The Sleipner CO2 storage site (North Sea, Norway) is the standard benchmark
+for CO2 plume simulation validation. The Utsira Sand formation has been
+monitored by 4D seismic since 1994 and serves as a key reference dataset.
+
+tNavigator Setup:
+  - Import Utsira grid (ECLIPSE format, ~4.5 M cells)
+  - CO2STORE keyword enabled, EOS PVT from Span-Wagner (1996)
+  - Injection rate: 1 Mt/yr at well 15/9-A16
+  - Observation: plume area at each seismic survey year (1994, 1999, 2001,
+    2004, 2006, 2008, 2010)
+  - Key output: CO2 saturation maps at top Utsira, compare vs 4D amplitude
+
+OPM Flow Setup:
+  - Use opm-tests/norne or sleipner_a dataset (BSG format)
+  - Run: flow SLEIPNER.DATA --output-dir=results/
+  - Compare summary vectors RGIP (gas in place) and WBHP (wellhead pressure)
+  - Post-process with ResInsight for plume cross-section plots
+
+MRST (MATLAB Reservoir Simulation Toolbox) Setup:
+  - Use co2lab module: addpath(genpath(fullfile(MRST_DIR, 'co2lab')))
+  - Load: G = readGRDECL('utsira.grdecl'); G = processGRDECL(G);
+  - Run vertical-equilibrium (VE) model for fast plume-spread approximation
+  - Calibrate against CarbonLens analytical output using matchSleipner script
+
+Key comparison metrics:
+  - Plume area (km2) at each survey year
+  - Maximum CO2 column height (m) at apex
+  - Dissolved fraction vs total injected at year 17 (2011)`
+
+// ── Reference Drawer ──────────────────────────────────────────────────────────
+
+type RefTab = 'methodology' | 'validation' | 'benchmark'
+
+function ReferenceDrawer({ onClose }: { onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<RefTab>('methodology')
+
+  const tabs: { key: RefTab; label: string }[] = [
+    { key: 'methodology', label: 'Methodology' },
+    { key: 'validation',  label: 'Validation'  },
+    { key: 'benchmark',   label: 'Benchmark Guide' },
+  ]
 
   return (
-    <nav className={`${w} border-r border-theme flex flex-col items-center py-3 shrink-0 bg-page transition-all duration-200`}>
-      <div 
-        className="mb-4 cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => useUIStore.getState().setView('landing')}
-        title="Go to landing page"
-      >
-        {sidebarOpen ? (
-          <Logo width={130} />
-        ) : (
-          <Logo iconOnly />
-        )}
-      </div>
-
-      <button onClick={() => setSidebar(!sidebarOpen)}
-        className="w-8 h-8 flex items-center justify-center rounded hover:bg-tertiary text-muted mb-1"
-        title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-      >
-        {sidebarOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
-      </button>
-
-      <div className="flex flex-col w-full px-1.5 mt-2 gap-3 overflow-y-auto">
-        {navGroups.map((group) => (
-          <div key={group.label}>
-            {sidebarOpen && (
-              <div className="px-2.5 mb-1 text-[7px] font-mono uppercase tracking-widest text-muted/50 select-none">
-                {group.label}
-              </div>
-            )}
-            {!sidebarOpen && <div className="border-t border-theme/30 mx-1.5 mb-1" />}
-            <div className="flex flex-col gap-0.5">
-              {group.items.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button key={item.panel} onClick={() => setPanel(item.panel)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md transition text-xs font-mono
-                      ${activePanel === item.panel
-                        ? 'bg-accent text-white'
-                        : 'text-muted hover:bg-tertiary hover:text-secondary'
-                      }`}
-                    title={item.label}
-                  >
-                    <Icon size={15} className="shrink-0" />
-                    {sidebarOpen && <span className="truncate">{item.label}</span>}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-auto">
-        <button onClick={toggleTheme}
-          className="w-8 h-8 flex items-center justify-center rounded hover:bg-tertiary text-muted"
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    <div className="fixed inset-y-0 right-0 w-[640px] max-w-full z-50 flex flex-col bg-page border-l border-theme shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-theme shrink-0">
+        <div className="flex gap-2">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`px-3 py-1.5 rounded text-xs font-mono transition
+                ${activeTab === t.key
+                  ? 'bg-accent text-white'
+                  : 'text-muted hover:bg-tertiary hover:text-secondary'
+                }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-tertiary text-muted"
+          title="Close reference drawer"
         >
-          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+          <X size={14} />
         </button>
       </div>
-    </nav>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === 'methodology' && <MethodologyPanel />}
+        {activeTab === 'validation'  && <ValidationDashboard />}
+        {activeTab === 'benchmark' && (
+          <div className="p-5">
+            <h3 className="text-sm font-mono font-semibold text-secondary mb-3">
+              tNavigator / OPM / MRST Benchmark Guide
+            </h3>
+            <pre className="text-[11px] font-mono text-muted whitespace-pre-wrap leading-relaxed">
+              {BENCHMARK_GUIDE_TEXT}
+            </pre>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Screening badge helper ─────────────────────────────────────────────────────
+
+type ScreeningBadge = 'red' | 'amber' | 'green' | 'none'
+
+function useScreeningBadge(stage2Complete: boolean, stage2Started: boolean): ScreeningBadge {
+  const params = useFormationStore((s) => s.params)
+
+  if (!stage2Started) return 'none'
+
+  const result = assessStorageScreening(params)
+
+  if (result.totalFailed > 0) return 'red'
+  if (stage2Complete) return 'green'
+  return 'amber'
+}
+
+// ── Monitoring badge helper ────────────────────────────────────────────────────
+
+type MonitoringBadge = 'green' | 'amber' | 'red' | 'none'
+
+function useMonitoringBadge(projectId: string | null): MonitoringBadge {
+  const [badge, setBadge] = useState<MonitoringBadge>('none')
+
+  useEffect(() => {
+    if (!projectId) { setBadge('none'); return }
+
+    let cancelled = false
+    db.monitoringObservations
+      .where('projectId')
+      .equals(projectId)
+      .toArray()
+      .then((obs) => {
+        if (cancelled) return
+        if (obs.length === 0) { setBadge('none'); return }
+        if (obs.some((o) => o.conformanceStatus === 'red')) { setBadge('red'); return }
+        if (obs.some((o) => o.conformanceStatus === 'amber')) { setBadge('amber'); return }
+        setBadge('green')
+      })
+      .catch(() => { if (!cancelled) setBadge('none') })
+
+    return () => { cancelled = true }
+  }, [projectId])
+
+  return badge
+}
+
+// ── Stage group header indicator ──────────────────────────────────────────────
+
+function StageHeaderIndicator({
+  isLocked,
+  isComplete,
+  isCurrent,
+}: {
+  isLocked: boolean
+  isComplete: boolean
+  isCurrent: boolean
+}) {
+  if (isLocked) return <Lock size={11} className="text-muted/40 shrink-0" />
+  if (isComplete) return <CheckCircle size={11} className="text-emerald-400 shrink-0" />
+  if (isCurrent) return <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 inline-block" />
+  return null
+}
+
+// ── Item badge overlay ─────────────────────────────────────────────────────────
+
+function ScreeningItemBadge({ badge }: { badge: ScreeningBadge }) {
+  if (badge === 'none') return null
+  if (badge === 'green') return <CheckCircle size={10} className="text-emerald-400 shrink-0" />
+  if (badge === 'red')   return <AlertCircle size={10} className="text-red-400 shrink-0" />
+  return <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 inline-block" />
+}
+
+function MonitoringItemBadge({ badge }: { badge: MonitoringBadge }) {
+  if (badge === 'none') return null
+  if (badge === 'green') return <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 inline-block" />
+  if (badge === 'red')   return <span className="w-2 h-2 rounded-full bg-red-400 shrink-0 inline-block" />
+  return <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 inline-block" />
+}
+
+// ── Main Sidebar ──────────────────────────────────────────────────────────────
+
+export default function Sidebar() {
+  const activePanel      = useUIStore((s) => s.activePanel)
+  const setPanel         = useUIStore((s) => s.setPanel)
+  const setView          = useUIStore((s) => s.setView)
+  const sidebarOpen      = useUIStore((s) => s.sidebarOpen)
+  const setSidebar       = useUIStore((s) => s.setSidebar)
+  const toggleTheme      = useUIStore((s) => s.toggleTheme)
+  const theme            = useUIStore((s) => s.theme)
+  const stageCompletion  = useUIStore((s) => s.stageCompletion)
+  const currentProjectId = useUIStore((s) => s.currentProjectId)
+  const logout           = useAuthStore((s) => s.logout)
+
+  const [refDrawerOpen, setRefDrawerOpen] = useState(false)
+  const [expertMode, setExpertMode] = useState<boolean>(
+    () => localStorage.getItem('cl_expert_mode') === '1'
+  )
+
+  // Sync expert mode from localStorage on mount and when toggled
+  const toggleExpertMode = () => {
+    const next = !expertMode
+    localStorage.setItem('cl_expert_mode', next ? '1' : '0')
+    setExpertMode(next)
+  }
+
+  // Determine stage unlock state
+  const stageUnlocked = (stageKey: StageKey, prerequisite: StageKey | null): boolean => {
+    if (expertMode) return true
+    if (prerequisite === null) return true              // Stage 1 always unlocked
+    return stageCompletion[prerequisite] === true
+  }
+
+  // Stage started heuristic: stage2 "started" means any formation panel was visited
+  const stage2Started = stageCompletion.stage1
+
+  const screeningBadge   = useScreeningBadge(stageCompletion.stage2, stage2Started)
+  const monitoringBadge  = useMonitoringBadge(currentProjectId)
+
+  const w = sidebarOpen ? 'w-48' : 'w-12'
+
+  return (
+    <>
+      <nav className={`${w} border-r border-theme flex flex-col items-center py-3 shrink-0 bg-page transition-all duration-200 relative`}>
+        {/* Logo */}
+        <div
+          className="mb-2 cursor-pointer hover:opacity-80 transition-opacity relative"
+          onClick={() => useUIStore.getState().setView('landing')}
+          title="Go to landing page"
+        >
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2">
+              <Logo width={120} />
+              {expertMode && (
+                <span className="text-[8px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1 py-0.5 rounded">
+                  EXPERT
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="relative">
+              <Logo iconOnly />
+              {expertMode && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border border-page" />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Collapse toggle (floating border button) */}
+        <button
+          onClick={() => setSidebar(!sidebarOpen)}
+          className="absolute top-4 -right-3 w-6 h-6 flex items-center justify-center rounded-full border border-theme bg-card hover:bg-tertiary text-muted hover:text-secondary shadow-md z-50 cursor-pointer"
+          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          {sidebarOpen ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
+        </button>
+
+        {/* Nav groups */}
+        <div className="flex flex-col w-full px-1 mt-1 gap-2 overflow-y-auto flex-1 min-h-0">
+          {STAGE_GROUPS.map((group) => {
+            const unlocked = stageUnlocked(group.stageKey, group.prerequisite)
+            const isComplete = stageCompletion[group.stageKey]
+            const isCurrent = !isComplete && unlocked
+
+            return (
+              <div key={group.stageKey}>
+                {/* Group header */}
+                {sidebarOpen ? (
+                  <div className="px-2 mb-0.5 flex items-center gap-1.5">
+                    <span className={`text-[10px] font-bold font-mono uppercase tracking-wider select-none
+                      ${unlocked ? 'text-secondary' : 'text-muted/40'}`}
+                    >
+                      {group.label}
+                    </span>
+                    <StageHeaderIndicator
+                      isLocked={!unlocked}
+                      isComplete={isComplete}
+                      isCurrent={isCurrent}
+                    />
+                  </div>
+                ) : (
+                  <div className="border-t border-theme/30 mx-1 mb-1 pt-0.5" />
+                )}
+
+                {/* Items */}
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activePanel === item.panel
+                    const isLocked = !unlocked
+
+                    const handleClick = () => {
+                      setPanel(item.panel)
+                    }
+
+                    return (
+                      <button
+                        key={item.panel}
+                        onClick={handleClick}
+                        className={`w-full flex items-center py-1.5 rounded-md transition text-xs font-mono
+                          ${sidebarOpen ? 'gap-2 px-2' : 'justify-center px-0'}
+                          ${isActive
+                            ? 'bg-accent text-white'
+                            : isLocked
+                              ? 'text-muted/50 hover:bg-tertiary hover:text-secondary'
+                              : 'text-muted hover:bg-tertiary hover:text-secondary'
+                          }`}
+                        title={isLocked ? `${item.label} (Read-Only Mode)` : item.label}
+                      >
+                        {isLocked
+                          ? <Lock size={13} className="shrink-0 text-amber-500/80" />
+                          : <Icon size={13} className="shrink-0" />
+                        }
+
+                        {sidebarOpen && (
+                          <span className="truncate flex-1 text-left">{item.label}</span>
+                        )}
+
+                        {/* Screening badge */}
+                        {sidebarOpen && item.panel === 'screening' && (
+                          <ScreeningItemBadge badge={screeningBadge} />
+                        )}
+
+                        {/* Monitoring badge */}
+                        {sidebarOpen && item.panel === 'monitoring' && (
+                          <MonitoringItemBadge badge={monitoringBadge} />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Bottom controls */}
+        <div className={`mt-auto pt-4 border-t border-theme/20 flex shrink-0 ${sidebarOpen ? 'flex-row justify-around w-full px-2 py-1' : 'flex-col items-center gap-2 pb-2'}`}>
+          {/* Reference drawer trigger */}
+          <button
+            onClick={() => setRefDrawerOpen(true)}
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-tertiary text-muted"
+            title="Open reference drawer (Methodology, Validation, Benchmark Guide)"
+          >
+            <HelpCircle size={15} />
+          </button>
+
+          {/* Expert mode toggle */}
+          <button
+            onClick={toggleExpertMode}
+            className={`w-8 h-8 flex items-center justify-center rounded text-xs font-mono font-bold transition
+              ${expertMode
+                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                : 'text-muted/40 hover:bg-tertiary hover:text-muted'
+              }`}
+            title={expertMode ? 'Expert mode ON (click to disable locking)' : 'Expert mode OFF (click to bypass stage locks)'}
+          >
+            {sidebarOpen ? (expertMode ? 'EXP' : 'exp') : 'E'}
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-tertiary text-muted"
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
+          {/* Sign Out */}
+          <button
+            onClick={() => { logout(); setView('landing') }}
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-red-500/20 text-red-400 hover:text-red-300"
+            title="Sign out"
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
+      </nav>
+
+      {/* Reference drawer overlay */}
+      {refDrawerOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setRefDrawerOpen(false)}
+          />
+          <ReferenceDrawer onClose={() => setRefDrawerOpen(false)} />
+        </>
+      )}
+    </>
   )
 }

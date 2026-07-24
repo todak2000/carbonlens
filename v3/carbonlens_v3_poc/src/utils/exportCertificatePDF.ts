@@ -188,7 +188,7 @@ export function openCertificatePDF(cert: CertificateRecord): void {
     <div class="two-col">
       <table>
         <tbody>
-          <tr><td>Mobile Plume</td><td>${cert.mobilePlume.toFixed(2)} Mt</td></tr>
+          <tr><td>Structural Trapping</td><td>${cert.mobilePlume.toFixed(2)} Mt</td></tr>
           <tr><td>Residual Trapping</td><td>${cert.residualTrapping.toFixed(2)} Mt</td></tr>
           <tr><td>Solubility Trapping</td><td>${cert.solubilityTrapping.toFixed(2)} Mt</td></tr>
           <tr><td>Overpressure Risk</td><td style="color:${cert.overpressureRisk ? '#dc2626' : '#065f46'}">${cert.overpressureRisk ? 'YES' : 'None'}</td></tr>
