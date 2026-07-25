@@ -1,0 +1,11 @@
+CarbonLens v3 Logic Validation Findings
+============================================================
+
+Otway (Victoria, Australia)
+  [WARN] util-pct-range: >100% at 0.05 Mt/yr: DOE capacity may understate actual (normal for aquifer sweep)
+
+Rotterdam / North Sea (North Sea, Netherlands)
+  [WARN] bhp-margin-positive: Physical constraint: 1.75 Mt/yr single-well exceeds safe rate at this k/P - needs multi-well or rate reduction
+
+Alberta Basin (Alberta, Canada)
+  [WARN] bhp-margin-positive: Physical constraint: 2.00 Mt/yr single-well exceeds safe rate at this k/P - needs multi-well or rate reduction
