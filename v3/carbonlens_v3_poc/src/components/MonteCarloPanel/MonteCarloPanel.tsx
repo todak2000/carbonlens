@@ -32,18 +32,17 @@ function downloadCSV(result: MCResult) {
   URL.revokeObjectURL(url)
 }
 
-function RangeBar({ p10, p50, p90, unit, fmt }: { p10: number; p50: number; p90: number; unit: string; fmt: (v: number) => string }) {
-  const span = p90 - p10
-  const p10pct = 0
-  const p50pct = span > 0 ? ((p50 - p10) / span) * 100 : 50
+function RangeBar({ p90, p50, p10, unit, fmt }: { p90: number; p50: number; p10: number; unit: string; fmt: (v: number) => string }) {
+  const span = Math.max(1e-6, p10 - p90)
+  const p50pct = span > 0 ? Math.max(0, Math.min(100, ((p50 - p90) / span) * 100)) : 50
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-xs font-mono text-muted">
-        <span>P10: {fmt(p10)} {unit}</span>
-        <span>P90: {fmt(p90)} {unit}</span>
+        <span>P90 (Low): {fmt(p90)} {unit}</span>
+        <span>P10 (High): {fmt(p10)} {unit}</span>
       </div>
       <div className="relative h-4 rounded-full bg-slate-800 border border-theme/20 overflow-hidden">
-        <div className="absolute inset-y-0 bg-accent/25 rounded-full" style={{ left: `${p10pct}%`, right: '0%' }} />
+        <div className="absolute inset-y-0 bg-accent/25 rounded-full" style={{ left: '0%', right: '0%' }} />
         <div className="absolute top-0 bottom-0 w-1 bg-accent shadow" style={{ left: `${p50pct}%` }} title={`P50: ${fmt(p50)} ${unit}`} />
       </div>
       <div className="text-center text-xs font-mono text-secondary">
@@ -216,13 +215,13 @@ export default function MonteCarloPanel() {
               {/* Storage capacity */}
               <div className="bg-tertiary/20 rounded-lg p-4 space-y-1.5 border border-theme/20">
                 <p className="text-[10px] text-muted font-mono uppercase tracking-wider font-bold">Storage Capacity (DOE Volumetric)</p>
-                <RangeBar p10={result.p10_Mt} p50={result.p50_Mt} p90={result.p90_Mt} unit="Mt CO₂" fmt={formatMt} />
+                <RangeBar p90={result.p90_Mt} p50={result.p50_Mt} p10={result.p10_Mt} unit="Mt CO₂" fmt={formatMt} />
               </div>
 
               {/* Pressure buildup */}
               <div className="bg-tertiary/20 rounded-lg p-4 space-y-1.5 border border-theme/20">
                 <p className="text-[10px] text-muted font-mono uppercase tracking-wider font-bold">Peak Pressure Buildup</p>
-                <RangeBar p10={result.p10_P} p50={result.p50_P} p90={result.p90_P} unit="MPa" fmt={formatMPa} />
+                <RangeBar p90={result.p10_P} p50={result.p50_P} p10={result.p90_P} unit="MPa" fmt={formatMPa} />
               </div>
 
               {/* Summary table */}

@@ -42,10 +42,10 @@ export interface DepletedFieldCapacityResult {
   co2DensityAbandonment: number
   /** Storage capacity — P50 estimate [Mt] */
   storageMt: number
-  /** Storage capacity — P10 (conservative, 75% fill) [Mt] */
-  storageP10_Mt: number
-  /** Storage capacity — P90 (optimistic, full pore volume) [Mt] */
+  /** Storage capacity — P90 (conservative, 60% fill) [Mt] */
   storageP90_Mt: number
+  /** Storage capacity — P10 (optimistic, 100% fill) [Mt] */
+  storageP10_Mt: number
   /** Bg at initial conditions [m³res/m³std] */
   bg_initial: number
   /** Method label for UI */
@@ -78,15 +78,15 @@ export function computeDepletedFieldCapacity(
   const rho_co2 = co2DensitySpanWagner(T_res_K, P_abandon_MPa * 1e6)
 
   const storageMt      = gasFilledPV_m3 * fillFactor_P50 * rho_co2 / 1e9
-  const storageP10_Mt  = gasFilledPV_m3 * 0.60 * rho_co2 / 1e9
-  const storageP90_Mt  = gasFilledPV_m3 * 1.00 * rho_co2 / 1e9
+  const storageP90_Mt  = gasFilledPV_m3 * 0.60 * rho_co2 / 1e9
+  const storageP10_Mt  = gasFilledPV_m3 * 1.00 * rho_co2 / 1e9
 
   return {
     gasFilledPV_m3,
     co2DensityAbandonment: rho_co2,
     storageMt,
-    storageP10_Mt,
     storageP90_Mt,
+    storageP10_Mt,
     bg_initial,
     method: 'Gas-replacement volumetric (Bachu et al. 2007)',
   }

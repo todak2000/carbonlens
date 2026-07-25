@@ -18,6 +18,7 @@ const SCENE_W = 3.0
 
 export default function CaprockMesh() {
   const showGridView = useUIStore((s) => s.showGridView)
+  const showCaprock  = useUIStore((s) => s.showCaprock)
   const result       = useSimulationStore((s) => s.result)
   const isAnimating  = useSimulationStore((s) => s.isAnimating)
   const thickness    = useFormationStore((s) => s.params.thickness)
@@ -57,7 +58,7 @@ export default function CaprockMesh() {
     return { capGeometry: plane, capEdgesGeo: new THREE.EdgesGeometry(plane) }
   }, [gridData?.boundary_polygon])
 
-  if (!showGridView) return null
+  if (!showGridView || !showCaprock) return null
 
   return (
     <group position={[0, -0.4, 0]}>

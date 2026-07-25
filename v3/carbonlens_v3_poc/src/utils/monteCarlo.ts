@@ -111,7 +111,7 @@ export function runMonteCarlo(
       areaMultiplier: areaMult,
       thicknessMultiplier: thickMult,
       storageCapacity_Mt: result.totalCapacity,
-      peakPressure_MPa: result.injectionPressure,
+      peakPressure_MPa: Math.max(0, result.injectionPressure - sampledParams.pressure),
     })
   }
 
@@ -120,12 +120,12 @@ export function runMonteCarlo(
 
   return {
     realizations,
-    p10_Mt: percentile(caps, 0.1),
-    p50_Mt: percentile(caps, 0.5),
-    p90_Mt: percentile(caps, 0.9),
-    p10_P: percentile(press, 0.1),
-    p50_P: percentile(press, 0.5),
-    p90_P: percentile(press, 0.9),
+    p90_Mt: percentile(caps, 0.1), // P90 capacity: 90% exceedance (conservative/low estimate)
+    p50_Mt: percentile(caps, 0.5), // P50 capacity: 50% exceedance (expected estimate)
+    p10_Mt: percentile(caps, 0.9), // P10 capacity: 10% exceedance (optimistic/high estimate)
+    p10_P: percentile(press, 0.1),  // P10 peak pressure (low pressure)
+    p50_P: percentile(press, 0.5),  // P50 peak pressure (expected pressure)
+    p90_P: percentile(press, 0.9),  // P90 peak pressure (high/conservative pressure bound)
     runTimeMs: performance.now() - t0,
   }
 }

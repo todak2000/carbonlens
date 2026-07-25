@@ -394,59 +394,127 @@ function FormationMesh() {
     }
     const postYears = anyInjecting ? 0 : Math.max(0, timestep - endYear)
 
-    const co2Color: [number, number, number] = [0.02, 0.95, 0.78]
+    // 3-stop CO2 saturation colormap: fringe (aqua) → column (lime) → core (yellow)
+    const co2Color: [number, number, number] = [1.00, 0.92, 0.20]      // bright yellow: dense CO2 core near wellbore
+    const co2MidColor: [number, number, number] = [0.25, 0.98, 0.30]   // lime green: medium CO2 column
+    const co2FringeColor: [number, number, number] = [0.02, 0.85, 0.78] // aqua: thin plume fringe at periphery
     const brineColor: [number, number, number] = [0.08, 0.18, 0.48]
     const gangliaColor: [number, number, number] = [0.95, 0.65, 0.10]
     const dissolvedColor: [number, number, number] = [0.15, 0.40, 0.80]
     const mineralColor: [number, number, number] = [0.45, 0.50, 0.45]
+
+    // VE saturation grid: 60×60 row-major Float32Array with η/H per cell.
+    // Coordinate system: vertex (x, z) ∈ [-1.5, 1.5] maps to VE cell (fi, fj) ∈ [0, 59].
+    // This matches wellToGridIndex() in VESolver.ts (HALF_SPAN = 1.5).
+    const VE_N = 60
+    const VE_HALF = 1.5
+    const veSatGrid = result?.veSatGrid ?? null
 
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i)
       const ny = (y + h / 2) / h
 
       let co2Sat = 0
+
+      // Closest well distance — needed for post-injection edgeFactor regardless of sat source.
       let wellDist = 1000
       for (const w of wells) {
         const dx = x - w.x, dz = z - w.z
-        const dist = Math.sqrt(dx * dx + dz * dz)
-        if (dist < wellDist) wellDist = dist
+        wellDist = Math.min(wellDist, Math.sqrt(dx * dx + dz * dz))
+      }
 
-        const cum = cumulativeInjection(w.injectionRate, timestep, w.rampUpYears, w.rampDownYears, projectYears)
-        const maxCum = w.injectionRate * projectYears
-        const fill = Math.min(1, cum / Math.max(0.001, maxCum))
+      if (veSatGrid) {
+        // ── VE-grid path: simulation-accurate plume extent ──────────────────
+        // Map normalized vertex position to VE grid index.
+        const fi = Math.max(0, Math.min(VE_N - 1, Math.round((x + VE_HALF) / (2 * VE_HALF) * (VE_N - 1))))
+        const fj = Math.max(0, Math.min(VE_N - 1, Math.round((z + VE_HALF) / (2 * VE_HALF) * (VE_N - 1))))
+        const veSat = veSatGrid[fi * VE_N + fj]  // η/H ∈ [0, 1]
 
-        const plumeR = Math.min(1.4, 0.7 * Math.sqrt(fill) + 0.04)
-        if (dist >= plumeR) continue
+        if (veSat > 0.001) {
+          // Buoyancy-stratified: CO2 accumulates at top. heightW biases colour toward
+          // the upper formation (same shape used in the fallback path below).
+          const heightW = Math.max(0, Math.min(1, (ny - 0.15) / 0.65))
+          // ×5 amplification: raw VE saturations at 3000 mD can be thin even at peak.
+          let sat = Math.min(1, veSat * heightW * 5)
+          // Minimum visibility for cells within the VE footprint (veSat >= etaThresh/H).
+          // etaThresh = max(1.0, thickness × 0.025) / thickness ≈ 0.025 at typical depth.
+          // Without this floor, footprint cells at η = 5-20 m (η/H = 0.025-0.10) render
+          // nearly transparent (sat ≈ 0.06-0.25) while still counting toward the 6 km² area.
+          // The floor ensures the 3D visual matches the reported footprint extent.
+          if (veSat >= 0.025) sat = Math.max(0.18, sat)
 
-        const radial = 1 - (dist / Math.max(0.001, plumeR)) ** 2
-        const heightW = Math.max(0, Math.min(1, (ny - 0.15) / 0.65))
-
-        let sat = radial * heightW * fill * 0.9
-
-        if (postYears > 0) {
-          const edgeFactor = 0.1 + 0.9 * Math.min(1, dist / Math.max(0.001, plumeR))
-          const decay = 1 / (1 + Math.exp(-(postYears - 4) * 0.6))
-          const localDecay = Math.min(1, decay * edgeFactor)
-          const residualGanglia = 0.18
-          const dissolvedFrac = 0.08
-          const mineralized = 0.04
-          const totalResidual = residualGanglia + dissolvedFrac + mineralized
-          const mobileLeaves = localDecay * (1 - totalResidual)
-          sat *= Math.max(totalResidual, 1 - mobileLeaves)
+          if (postYears > 0 && sat > 0) {
+            const edgeFactor = 0.1 + 0.9 * Math.min(1, wellDist / VE_HALF)
+            const decay = 1 / (1 + Math.exp(-(postYears - 4) * 0.6))
+            const localDecay = Math.min(1, decay * edgeFactor)
+            const residualGanglia = 0.18
+            const dissolvedFrac = 0.08
+            const mineralized = 0.04
+            const totalResidual = residualGanglia + dissolvedFrac + mineralized
+            const mobileLeaves = localDecay * (1 - totalResidual)
+            sat *= Math.max(totalResidual, 1 - mobileLeaves)
+          }
+          co2Sat = sat
         }
+      } else {
+        // ── Fallback: analytical plume radius (no VE solver active) ─────────
+        for (const w of wells) {
+          const dx = x - w.x, dz = z - w.z
+          const dist = Math.sqrt(dx * dx + dz * dz)
 
-        if (sat > co2Sat) co2Sat = sat
+          const cum = cumulativeInjection(w.injectionRate, timestep, w.rampUpYears, w.rampDownYears, projectYears)
+          const maxCum = w.injectionRate * projectYears
+          const fill = Math.min(1, cum / Math.max(0.001, maxCum))
+
+          const plumeR = Math.min(1.4, 0.7 * Math.sqrt(fill) + 0.04)
+          if (dist >= plumeR) continue
+
+          const radial = 1 - (dist / Math.max(0.001, plumeR)) ** 2
+          const heightW = Math.max(0, Math.min(1, (ny - 0.15) / 0.65))
+
+          let sat = radial * heightW * fill * 0.9
+
+          if (postYears > 0) {
+            const edgeFactor = 0.1 + 0.9 * Math.min(1, dist / Math.max(0.001, plumeR))
+            const decay = 1 / (1 + Math.exp(-(postYears - 4) * 0.6))
+            const localDecay = Math.min(1, decay * edgeFactor)
+            const residualGanglia = 0.18
+            const dissolvedFrac = 0.08
+            const mineralized = 0.04
+            const totalResidual = residualGanglia + dissolvedFrac + mineralized
+            const mobileLeaves = localDecay * (1 - totalResidual)
+            sat *= Math.max(totalResidual, 1 - mobileLeaves)
+          }
+
+          if (sat > co2Sat) co2Sat = sat
+        }
       }
 
       const s = Math.min(1, co2Sat)
       const baseR = base[i * 3], baseG = base[i * 3 + 1], baseB = base[i * 3 + 2]
 
       if (s > 0.005) {
-        // Brine → CO2 transition: blue at low sat, teal at high sat
-        const phase = Math.min(1, s * 2.5)
-        const mixR = brineColor[0] * (1 - phase) + co2Color[0] * phase
-        const mixG = brineColor[1] * (1 - phase) + co2Color[1] * phase
-        const mixB = brineColor[2] * (1 - phase) + co2Color[2] * phase
+        // 3-stop CO2 saturation colormap — distinguishes thin fringe from dense core by hue:
+        //   s 0→0.30: navy blue → aqua (peripheral plume fringe, thin CO2 layer)
+        //   s 0.30→0.65: aqua → lime green (transitional column)
+        //   s 0.65→1.0: lime → bright yellow (wellbore core, maximum CO2 column height)
+        let mixR: number, mixG: number, mixB: number
+        if (s <= 0.30) {
+          const t = s / 0.30
+          mixR = brineColor[0] * (1 - t) + co2FringeColor[0] * t
+          mixG = brineColor[1] * (1 - t) + co2FringeColor[1] * t
+          mixB = brineColor[2] * (1 - t) + co2FringeColor[2] * t
+        } else if (s <= 0.65) {
+          const t = (s - 0.30) / 0.35
+          mixR = co2FringeColor[0] * (1 - t) + co2MidColor[0] * t
+          mixG = co2FringeColor[1] * (1 - t) + co2MidColor[1] * t
+          mixB = co2FringeColor[2] * (1 - t) + co2MidColor[2] * t
+        } else {
+          const t = (s - 0.65) / 0.35
+          mixR = co2MidColor[0] * (1 - t) + co2Color[0] * t
+          mixG = co2MidColor[1] * (1 - t) + co2Color[1] * t
+          mixB = co2MidColor[2] * (1 - t) + co2Color[2] * t
+        }
         // If post-injection, shift toward residual colors
         if (postYears > 3) {
           const resT = Math.min(1, (postYears - 3) / 5)
@@ -512,6 +580,7 @@ function CaprockLayer() {
   const params = useFormationStore((s) => s.params)
   const gridData = useFormationStore((s) => s.gridData)
   const result = useSimulationStore((s) => s.result)
+  const showCaprock = useUIStore((s) => s.showCaprock)
   const type = params.geometryType
   const h = 0.3 + params.thickness / 500
   const caprockThickness = 0.028
@@ -557,6 +626,8 @@ function CaprockLayer() {
     const yOff = getDeformation(type, x, z) + (fbm(x * 1.5 + 50, z * 1.5 + 50, 2, seed) - 0.5) * 0.04
     sealOutlinePts.push([x, yOff, z])
   }
+
+  if (!showCaprock) return null
 
   return (
     <group position={[0, -0.4 + h / 2, 0]}>
@@ -1616,6 +1687,28 @@ const FORMATTERS: Record<string, (v: number) => string> = {
 
 const COMPUTED_PROPS = new Set<string>(['ift', 'co2Density', 'solubility'])
 
+// ── Plume dimension labels rendered inside the 3D Canvas ─────────────────────
+function PlumeLabelAnnotation() {
+  const result = useSimulationStore((s) => s.result)
+  if (!result) return null
+
+  const radius = result.vePlumeRadius ?? result.plumeRadius
+  const area   = result.vePlumeArea ?? null
+
+  return (
+    <group position={[0, -0.4, 0]}>
+      <Text position={[0, 0.42, 0]} fontSize={0.050} color="#00e8c8" anchorX="center" fillOpacity={0.95}>
+        {`Plume R: ${radius.toFixed(0)} m`}
+      </Text>
+      {area != null && (
+        <Text position={[0, 0.35, 0]} fontSize={0.050} color="#00e8c8" anchorX="center" fillOpacity={0.95}>
+          {`Area: ${area.toFixed(2)} km\u00B2`}
+        </Text>
+      )}
+    </group>
+  )
+}
+
 function StatsOverlay() {
   const cp = useUIStore((s) => s.colorProperty)
   const params = useFormationStore((s) => s.params)
@@ -1663,51 +1756,6 @@ function StatsOverlay() {
       <div className="text-[8px] text-muted/60 mt-1.5 pt-1 border-t border-theme/50">
         Range: {cp === 'custom' ? '0 – 1' : `${range?.min ?? 0} – ${range?.max ?? 1}`}
       </div>
-
-      {showGridView && (
-        <>
-          <div className="mt-2 pt-1.5 border-t border-theme/50">
-            <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Trapping</div>
-            <div className="space-y-0.5 text-[8px]">
-              <div className="flex justify-between"><span>Structural</span><span className="text-accent">✓ Seal</span></div>
-              <div className="flex justify-between">
-                <span>Residual</span>
-                <span className="text-muted">{result ? `${(result.residualTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(1)}%` : '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Solubility</span>
-                <span className="text-muted">{result ? `${(result.solubilityTrapping / (result.residualTrapping + result.solubilityTrapping + (result.mobilePlume || 1)) * 100).toFixed(1)}%` : '—'}</span>
-              </div>
-              <div className="flex justify-between"><span>Mineral</span><span className="text-muted">△ slow</span></div>
-            </div>
-          </div>
-
-          {result && (
-            <div className="mt-2 pt-1.5 border-t border-theme/50">
-              <div className="text-[8px] text-secondary font-semibold uppercase tracking-wider mb-1">Plume</div>
-              <div className="space-y-0.5 text-[8px]">
-                <div className="flex justify-between">
-                  <span>Radius</span>
-                  <span className="text-accent">{result.plumeRadius.toFixed(1)} m</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Height</span>
-                  <span className="text-accent">{result.plumeHeight.toFixed(1)} m</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Fill</span>
-                  <span className="text-muted">{result.capacityUtilPct.toFixed(1)}%</span>
-                </div>
-                {result.overpressureRisk && (
-                  <div className="flex justify-between text-error font-bold mt-1 pt-1 border-t border-error">
-                    <span>⚠ Overpressure</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
     </div>
   )
 }
@@ -1839,6 +1887,8 @@ export default function ReservoirViewer() {
   const projectYears = useUIStore((s) => s.projectYears)
   const showGridView = useUIStore((s) => s.showGridView)
   const toggleGridView = useUIStore((s) => s.toggleGridView)
+  const showCaprock = useUIStore((s) => s.showCaprock)
+  const toggleCaprock = useUIStore((s) => s.toggleCaprock)
 
   useEffect(() => {
     if (isAnimating) {
@@ -1986,6 +2036,12 @@ export default function ReservoirViewer() {
           >
             {showGridView ? '⊞ Grid' : '⊡ Mesh'}
           </button>
+          <button onClick={toggleCaprock}
+            className={`text-[9px] font-mono px-2 py-1 rounded border ${showCaprock ? 'bg-tertiary text-muted hover:text-secondary border-theme' : 'bg-amber-700/70 text-amber-200 border-amber-600'}`}
+            title={showCaprock ? 'Hide caprock seal (reveal plume from top)' : 'Show caprock seal'}
+          >
+            {showCaprock ? '⬛ Seal' : '⬜ Seal'}
+          </button>
         </div>
       </div>
 
@@ -2020,6 +2076,7 @@ export default function ReservoirViewer() {
             {showGridView && <WellGlowLights />}
             {showGridView && <PressureWaveRings />}
             {showGridView && <ConvectionFingers />}
+            <PlumeLabelAnnotation />
             <BoundingBox />
             <GridHelper />
             <OrbitControls makeDefault enableDamping dampingFactor={0.12} minDistance={1.2} maxDistance={8} />
@@ -2028,7 +2085,6 @@ export default function ReservoirViewer() {
           <SimulationHUD />
           <ColorLegendOverlay />
           <TimestepSlider />
-          <CurrentPhaseLabel />
           <DepthRuler />
         </div>
       )}

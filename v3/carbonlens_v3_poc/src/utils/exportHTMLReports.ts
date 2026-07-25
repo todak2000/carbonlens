@@ -9,6 +9,8 @@ import { computeYearly, computeGeomechanicsResult } from '../hooks/useSimulation
 import { wellRateAtTime } from './gridParser'
 import { useUIStore } from '../store/uiStore'
 import { renderSimEngineAttribution, renderProvenanceTableRows } from '../data/modelRegistry'
+import { jouleThomstonCooling, radialTemperatureProfile, reservoirTemperature, type ThermalParams } from '../engine/plume/thermalEffects'
+import { co2PhaseState } from '../engine/plume/thermalEffects'
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -347,6 +349,11 @@ function generateEconomicsNPVChartSVG(
     : jurisdiction === 'AE' ? 15
     : jurisdiction === 'DZ' ? 5
     : 0
+  // MYR→USD conversion: MY credit is face-value MYR; must convert to USD for arithmetic.
+  const MYR_PER_USD_1 = 4.4
+  const credit45qUSD = (jurisdiction === 'MY' || jurisdiction === 'MY_SAR')
+    ? Math.round((credit45q / MYR_PER_USD_1) * 100) / 100
+    : credit45q
   // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
   const carbonPriceDisplay = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
     : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
@@ -354,9 +361,8 @@ function generateEconomicsNPVChartSVG(
     : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
     : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
     : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
-    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t (≈ USD ${credit45qUSD.toFixed(2)}/t at MYR/USD ${MYR_PER_USD_1})`
     : `USD ${credit45q}/t`
-  const carbonPrice = Math.max(credit45q, 10)
   const discountRate = 0.08
 
   // Compute NPV profiles
@@ -368,11 +374,12 @@ function generateEconomicsNPVChartSVG(
   let runningNPVWithCredit = -capex
 
   for (let y = 1; y <= numYears; y++) {
-    const rev = carbonPrice * yearlyRate
-    const revWithCredit = credit45q * yearlyRate
+    const revWithCredit = credit45qUSD * yearlyRate
     const op = opexPerTonne * yearlyRate
 
-    runningNPV += (rev - op) / Math.pow(1 + discountRate, y)
+    // "No credits" scenario: pure cost, zero carbon revenue
+    runningNPV += (0 - op) / Math.pow(1 + discountRate, y)
+    // "With credits" scenario: credit revenue offsets operating cost
     runningNPVWithCredit += (revWithCredit - op) / Math.pow(1 + discountRate, y)
 
     profile.push({
@@ -496,7 +503,7 @@ function generateSensitivityTornadoSVG(
   const sensitivityData = [
     { label: `Area (±${areaPct}%)`,      negPct: -areaPct,  posPct: areaPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p50 * (1 - areaPct/100),  valPos: p50 * (1 + areaPct/100) },
     { label: `Thickness (±${thickPct}%)`, negPct: -thickPct, posPct: thickPct, colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p50 * (1 - thickPct/100), valPos: p50 * (1 + thickPct/100) },
-    { label: `Porosity (±${poroPct}%)`,   negPct: -poroPct,  posPct: poroPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p10, valPos: p90 },
+    { label: `Porosity (±${poroPct}%)`,   negPct: -poroPct,  posPct: poroPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p90, valPos: p10 },
     { label: `Permeability (±${permPct}%)`, negPct: -Math.min(permPct, 40), posPct: Math.min(permPct, 40), colorNeg: '#f87171', colorPos: '#4ade80', valNeg: p50 * (1 - Math.min(permPct,40)/100), valPos: p50 * (1 + Math.min(permPct,40)/100) },
   ]
 
@@ -656,7 +663,7 @@ function buildHMCalibrationCard(hmResult: OptimizationResult): string {
 }
 
 function buildMCUncertaintyCard(mc: PersistedMCResult): string {
-  const spread = mc.p10_Mt > 0 ? mc.p90_Mt / mc.p10_Mt : 0
+  const spread = mc.p90_Mt > 0 ? mc.p10_Mt / mc.p90_Mt : 0
   const spreadLabel = spread < 2 ? 'Low — well-constrained' : spread < 5 ? 'Moderate — typical for appraisal' : 'High — further characterisation needed'
   const spreadColor = spread < 2 ? '#00c4a0' : spread < 5 ? '#f59e0b' : '#ef4444'
   return `
@@ -666,9 +673,9 @@ function buildMCUncertaintyCard(mc: PersistedMCResult): string {
       <span style="font-size:7.5pt;color:#64748b;">${mc.realizations} LHS realizations &bull; ${mc.formationName}</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:8pt;margin-bottom:8px;">
-      <div style="text-align:center;background:rgba(239,68,68,0.08);border-radius:6px;padding:6px 4px;">
-        <div style="font-size:7pt;color:#64748b;">P10 (Conservative)</div>
-        <div style="font-size:11pt;font-weight:700;color:#ef4444;">${mc.p10_Mt.toFixed(2)}</div>
+      <div style="text-align:center;background:rgba(34,197,94,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">P90 (Conservative)</div>
+        <div style="font-size:11pt;font-weight:700;color:#22c55e;">${mc.p90_Mt.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
       <div style="text-align:center;background:rgba(0,196,160,0.08);border-radius:6px;padding:6px 4px;border:1px solid rgba(0,196,160,0.3);">
@@ -676,13 +683,13 @@ function buildMCUncertaintyCard(mc: PersistedMCResult): string {
         <div style="font-size:11pt;font-weight:700;color:#00c4a0;">${mc.p50_Mt.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
-      <div style="text-align:center;background:rgba(34,197,94,0.08);border-radius:6px;padding:6px 4px;">
-        <div style="font-size:7pt;color:#64748b;">P90 (Optimistic)</div>
-        <div style="font-size:11pt;font-weight:700;color:#22c55e;">${mc.p90_Mt.toFixed(2)}</div>
+      <div style="text-align:center;background:rgba(239,68,68,0.08);border-radius:6px;padding:6px 4px;">
+        <div style="font-size:7pt;color:#64748b;">P10 (Optimistic)</div>
+        <div style="font-size:11pt;font-weight:700;color:#ef4444;">${mc.p10_Mt.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
       <div style="text-align:center;background:rgba(59,130,246,0.08);border-radius:6px;padding:6px 4px;">
-        <div style="font-size:7pt;color:#64748b;">P90/P10 Spread</div>
+        <div style="font-size:7pt;color:#64748b;">P10/P90 Spread</div>
         <div style="font-size:11pt;font-weight:700;color:#3b82f6;">${spread.toFixed(1)}×</div>
         <div style="font-size:7pt;color:#64748b;">ratio</div>
       </div>
@@ -789,6 +796,7 @@ function buildBackPage(opts: {
           <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
             <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
             <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong> &mdash; Co-supervisor, UTP Malaysia<br>
             <strong style="color:white;">Dr. Berihun Negash Mamo</strong> &mdash; Advisor, UTP Malaysia
           </div>
         </div>
@@ -975,6 +983,11 @@ function buildExecutiveSummaryBody(
     : jurisdiction === 'AE' ? 15
     : jurisdiction === 'DZ' ? 5
     : 0
+  // MYR→USD conversion: MY credit is face-value MYR; must convert to USD for arithmetic.
+  const MYR_PER_USD_2 = 4.4
+  const credit45qUSD_2 = (jurisdiction === 'MY' || jurisdiction === 'MY_SAR')
+    ? Math.round((credit45q / MYR_PER_USD_2) * 100) / 100
+    : credit45q
   // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
   const carbonPriceDisplay = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
     : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
@@ -982,9 +995,9 @@ function buildExecutiveSummaryBody(
     : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
     : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
     : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
-    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t (≈ USD ${credit45qUSD_2.toFixed(2)}/t at MYR/USD ${MYR_PER_USD_2})`
     : `USD ${credit45q}/t`
-  const creditRevenue = credit45q * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+  const creditRevenue = credit45qUSD_2 * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
 
   const utilisation = result.capacityUtilPct ?? 0
   const utilisationStr = utilisation.toFixed(1)
@@ -1052,7 +1065,10 @@ function buildExecutiveSummaryBody(
         ? 'badge-amber'
         : 'badge-red'
     const heaveClass = geomechanics.surfaceHeave < 10 ? 'badge-green' : geomechanics.surfaceHeave < 30 ? 'badge-amber' : 'badge-red'
-    const maipHeadroom = geomechanics.maip - (result.injectionPressure ?? 0)
+    // MAIP headroom derived from geomechanics-internal injection pressure via maipMargin,
+    // not from result.injectionPressure (which is the FD block pressure with closed-box BCs
+    // and can exceed MAIP due to numerical pressure buildup, giving nonsensical negative headroom).
+    const maipHeadroom = geomechanics.maip * geomechanics.maipMargin / 100
     const maipClass = maipHeadroom > 2 ? 'badge-green' : maipHeadroom > 0 ? 'badge-amber' : 'badge-red'
 
     geoSection = `
@@ -1071,8 +1087,12 @@ function buildExecutiveSummaryBody(
     </table>`
   }
 
-  // Phase state
-  const phaseLabel = params.temperature > 31.1 && params.pressure > 7.38 ? 'supercritical' : 'subcritical'
+  // Phase state: use geothermal effective temperature when available so the phase
+  // classification matches the EOS conditions used throughout the simulation.
+  const effectiveTempC_exec = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100
+    : params.temperature
+  const phaseLabel = effectiveTempC_exec > 31.1 && params.pressure > 7.38 ? 'supercritical' : 'subcritical'
 
   void creditRevenue
   void carbonPriceDisplay
@@ -1138,8 +1158,8 @@ function buildExecutiveSummaryBody(
         <tbody>
           <tr><td>Stored CO&#x2082;</td><td><strong>${result.storageCapacity?.toFixed(2) ?? '—'} Mt</strong></td></tr>
           <tr><td>P50 Capacity</td><td>${result.totalCapacity?.toFixed(2) ?? '—'} Mt</td></tr>
-          <tr><td>P10 (optimistic)</td><td>${result.p90?.toFixed(2) ?? '—'} Mt</td></tr>
-          <tr><td>P90 (conservative)</td><td>${result.p10?.toFixed(2) ?? '—'} Mt</td></tr>
+          <tr><td>P10 (optimistic)</td><td>${result.p10?.toFixed(2) ?? '—'} Mt</td></tr>
+          <tr><td>P90 (conservative)</td><td>${result.p90?.toFixed(2) ?? '—'} Mt</td></tr>
           <tr><td>Capacity Utilisation</td><td>${utilisationStr}%</td></tr>
           <tr><td>Storage Efficiency (Cc)</td><td>${result.storageEfficiency?.toFixed(2) ?? '2.00'}%</td></tr>
         </tbody>
@@ -1260,7 +1280,7 @@ function buildExecutiveSummaryBody(
           <tr><td>OPEX (per tonne)</td><td>$${opexPerTonne.toFixed(2)}/t</td></tr>
           <tr><td>Total OPEX</td><td>$${totalOpex.toFixed(1)}M</td></tr>
           <tr><td>Levelized Cost (LCO₂S)</td><td><strong>$${breakevenCost.toFixed(2)}/t</strong></td></tr>
-          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45q < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45q).toFixed(2)}/t</span></td></tr>
+          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45qUSD_2 < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45qUSD_2).toFixed(2)}/t</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1361,7 +1381,7 @@ function buildExecutiveSummaryBody(
   <!-- Overpressure Risk -->
   <div style="border:2px solid #ef4444; border-radius:8px; padding:14px 16px; margin:14px 0; background:#fee2e2;">
     <p style="font-size:11pt; font-weight:700; color:#991b1b; margin-bottom:6px;">&#x26A0; RESERVOIR OVERPRESSURE RISK DETECTED</p>
-    <p style="font-size:9.5pt; color:#7f1d1d;">The cumulative injected CO&#x2082; volume (${result.storageCapacity?.toFixed(2) ?? '—'} Mt) exceeds the P90 (conservative) storage capacity estimate (${result.p10?.toFixed(2) ?? '—'} Mt). This indicates a significant risk of reservoir overpressure. Reduce the injection rate, extend the injection period, or conduct detailed pressure management analysis before proceeding.</p>
+    <p style="font-size:9.5pt; color:#7f1d1d;">The cumulative injected CO&#x2082; volume (${result.storageCapacity?.toFixed(2) ?? '—'} Mt) exceeds the P90 (conservative) storage capacity estimate (${result.p90?.toFixed(2) ?? '—'} Mt). This indicates a significant risk of reservoir overpressure. Reduce the injection rate, extend the injection period, or conduct detailed pressure management analysis before proceeding.</p>
   </div>` : ''}
 
   <!-- Recommendations -->
@@ -1674,7 +1694,12 @@ export function openPermitApplication(
   // Computed values
   // area (km²) × thickness (m) / 1000 → km³; multiply by porosity for pore volume
   const grossPoreVolume = params.area * (params.thickness / 1000) * params.porosity  // km³
-  const phaseLabel = params.temperature > 31.1 && params.pressure > 7.38 ? 'supercritical' : 'subcritical'
+  // Effective reservoir temperature: use geothermal gradient when configured, else user input.
+  // This matches the EOS temperature used throughout the simulation engine (useSimulation.ts).
+  const effectiveTempC = (params.geothermalGradient != null && params.surfaceTemperatureC != null)
+    ? params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100
+    : params.temperature
+  const phaseLabel = effectiveTempC > 31.1 && params.pressure > 7.38 ? 'supercritical' : 'subcritical'
   const estimatedFracPressure = 0.9 * (params.pressure + params.depth * 0.0226)
 
   const totalWellRate = wells.reduce((s, w) => s + (w.injectionRate ?? 0), 0)
@@ -1697,7 +1722,8 @@ export function openPermitApplication(
   const muCO2_Pas   = (result?.co2Viscosity ?? 0.05) / 1000
   const rhoCO2_kgm3 = result?.co2Density   ?? 700
   // Brine viscosity from Vogel/Andrade correlation (valid 0–200°C)
-  const T_K_aor     = (params.temperature ?? 80) + 273.15
+  // Use effectiveTempC (geothermal) to match the EOS temperature used in the simulation.
+  const T_K_aor     = effectiveTempC + 273.15
   const muBrine_Pas = Math.exp(-3.7188 + 578.919 / (T_K_aor - 137.546)) * 1e-3
   const aorYear     = projectYears ?? 50
   const aorRadiusDynamic = (result != null && wells.length > 0)
@@ -1726,15 +1752,11 @@ export function openPermitApplication(
   const mobile       = result?.mobilePlume ?? 0
   const dissolvedOnly = Math.max(0, solubility - mineral)  // still in aqueous phase
   const storedTotal  = result?.storageCapacity ?? 0
-  // Use storageCapacity as the percentage denominator — the simulation engine guarantees
-  // residual + solubility + mobile = storageCapacity (analytical model) so each row is a
-  // true partition of total injected.  If PlumeGrid boundary outflow causes a gap > 1%,
-  // fall back to the component sum so percentages still add to 100% and note the outflow.
   const componentSum = residual + solubility + mobile  // solubility already includes mineral
   const boundaryGap  = storedTotal - componentSum
-  const trappingRef  = storedTotal > 0 && boundaryGap / Math.max(storedTotal, 1) < 0.05
-    ? storedTotal
-    : (componentSum > 0 ? componentSum : storedTotal)
+  // Always use componentSum as the denominator so the four displayed rows sum to exactly 100%.
+  // storedTotal includes boundary outflow which is not a trapping component row.
+  const trappingRef  = componentSum > 0 ? componentSum : storedTotal
   const pctR    = trappingRef > 0 ? ((residual     / trappingRef) * 100).toFixed(1) : '0.0'
   const pctS    = trappingRef > 0 ? ((dissolvedOnly / trappingRef) * 100).toFixed(1) : '0.0'
   const pctM    = trappingRef > 0 ? ((mineral      / trappingRef) * 100).toFixed(1) : '0.0'
@@ -1763,16 +1785,21 @@ export function openPermitApplication(
     : jurisdiction === 'AE' ? 15
     : jurisdiction === 'DZ' ? 5
     : 0
-  // Local-currency display label — CA TIER is priced in CAD; all others used as USD equivalents
+  // MYR→USD conversion: MY credit is face-value MYR; must convert to USD for arithmetic.
+  const MYR_PER_USD_3 = 4.4
+  const credit45qUSD_3 = (jurisdiction === 'MY' || jurisdiction === 'MY_SAR')
+    ? Math.round((credit45q / MYR_PER_USD_3) * 100) / 100
+    : credit45q
+  // Local-currency display label
   const carbonPriceDisplayPermit = jurisdiction === 'US' ? `USD ${credit45q}/t (45Q tax credit)`
     : jurisdiction === 'EU' ? `EUR ${credit45q}/t (EU ETS)`
     : jurisdiction === 'UK' ? `GBP ${credit45q}/t (UK ETS)`
     : (jurisdiction === 'AU' || jurisdiction === 'Australia') ? `AUD ${credit45q}/t`
     : jurisdiction === 'Norway' ? `NOK ${credit45q}/t (CO₂ tax)`
     : jurisdiction === 'CA' ? `CAD 65/t (≈ USD ${credit45q}/t, Alberta TIER 2024)`
-    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t`
+    : (jurisdiction === 'MY' || jurisdiction === 'MY_SAR') ? `MYR ${credit45q}/t (≈ USD ${credit45qUSD_3.toFixed(2)}/t at MYR/USD ${MYR_PER_USD_3})`
     : `USD ${credit45q}/t`
-  const creditRevenue = credit45q * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
+  const creditRevenue = credit45qUSD_3 * Math.max(storedTotal, (storedTotal > 0 ? storedTotal / Math.max(1, projectYears ?? 20) : wells.reduce((s, w) => s + w.injectionRate, 0)) * (projectYears ?? 20))
 
   // Geomechanics section
   let geoSection6: string
@@ -1790,7 +1817,9 @@ export function openPermitApplication(
         ? 'badge-amber'
         : 'badge-red'
     const heaveClass = geomechanics.surfaceHeave < 10 ? 'badge-green' : geomechanics.surfaceHeave < 30 ? 'badge-amber' : 'badge-red'
-    const maipHeadroom = geomechanics.maip - (result?.injectionPressure ?? 0)
+    // MAIP headroom from geomechanics-internal Theis injection pressure via maipMargin.
+    // Do NOT subtract result.injectionPressure (FD block pressure with closed-box BCs).
+    const maipHeadroom = geomechanics.maip * geomechanics.maipMargin / 100
     const maipClass = maipHeadroom > 2 ? 'badge-green' : maipHeadroom > 0 ? 'badge-amber' : 'badge-red'
 
     const sfCrit = geomechanics.safetyFactor >= 1.5 ? '&#x2713; Acceptable (&#x2265;1.5)' : geomechanics.safetyFactor >= 1.0 ? '&#x26A0; Marginal (1.0–1.5)' : '&#x2717; Below minimum'
@@ -1803,7 +1832,7 @@ export function openPermitApplication(
       <tbody>
         <tr><td>Safety Factor (Mohr-Coulomb)</td><td>${geomechanics.safetyFactor.toFixed(3)}</td><td>${sfBadge} ${sfCrit}</td></tr>
         <tr><td>Fracture Pressure (Hubbert-Willis, Mohr-Coulomb adjusted)</td><td>${geomechanics.fracturePressure.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
-        <tr><td>Nordbotten (2005) Composite Injection Pressure</td><td>${result?.injectionPressure?.toFixed(2) ?? '—'} MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>FD Solver Block Pressure at Injection Well <em style="font-size:8pt;color:#94a3b8;">— implicit finite-difference, closed-box BCs</em></td><td>${result?.injectionPressure?.toFixed(2) ?? '—'} MPa</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Peaceman BHP (skin S=0, r<sub>w</sub>=0.1 m) <em style="font-size:8pt;color:#94a3b8;">— steady-state near-wellbore</em></td><td>${(() => {
           // BHP must be ≥ reservoir pressure (P_i) to inject — if the stored field is below P_i
           // it is a stale placeholder from a prior formation profile; fall back to injectionPressure.
@@ -1827,13 +1856,33 @@ export function openPermitApplication(
         <tr><td>Caprock Stress</td><td>${geomechanics.capRockStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Surface Heave</td><td>${geomechanics.surfaceHeave.toFixed(1)} mm</td><td><span class="${heaveClass}">${heaveCrit}</span></td></tr>
         <tr><td>Seismicity Risk</td><td>${geomechanics.inducedSeismicityRisk.toUpperCase()}</td><td><span class="${seisClass}">${seisCrit}</span></td></tr>
+        <tr><td>Fault Slip Potential (dCFF)</td><td>${geomechanics.faultSlipPotential.toFixed(3)} MPa</td><td>${geomechanics.faultSlipPotential > 0.1 ? '<span class="badge-amber">&#x26A0; Monitor — elevated fault reactivation risk' : '<span class="badge-green">&#x2713; Below threshold'}</span></td></tr>
+        <tr><td>Dynamic Coulomb Failure Function (&#x394;CFF)</td><td>${geomechanics.dcff != null ? geomechanics.dcff.toFixed(3) + ' MPa' : '—'}</td><td>${geomechanics.dcff != null ? (geomechanics.dcff > 0.01 ? '<span class="badge-amber">Positive &#x394;CFF — increased failure probability on optimally oriented faults' : '<span class="badge-green">&#x394;CFF negligible') : '<span class="badge-green">REF'}</span></td></tr>
+        <tr><td>Pressure Front Radius</td><td>${geomechanics.pressureFrontRadius?.toFixed(0) ?? '—'} m</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Overburden Stress (S<sub>v</sub>)</td><td>${geomechanics.overburdenStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Friction Angle (Mohr-Coulomb)</td><td>${geomechanics.frictionAngle.toFixed(1)}&#xB0;</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Cohesion (Mohr-Coulomb)</td><td>${geomechanics.cohesion.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Biot Coefficient</td><td>${geomechanics.biotCoefficient.toFixed(3)}</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Mohr-Coulomb Margin</td><td>${geomechanics.mohrSafetyMargin.toFixed(3)}</td><td>${geomechanics.mohrFailed ? '<span class="badge-red">&#x2717; FAILED</span>' : '<span class="badge-green">&#x2713; PASS</span>'}</td></tr>
         <tr><td>MAIP Headroom</td><td>${maipHeadroom.toFixed(2)} MPa</td><td><span class="${maipClass}">${maipHeadroom > 2 ? '&#x2713; Adequate' : maipHeadroom > 0 ? '&#x26A0; Monitor' : '&#x2717; Exceeded'}</span></td></tr>
       </tbody>
     </table>
     <p style="font-size:9pt; color:#64748b; margin-top:8px;">
       All geomechanical criteria must be demonstrated to the competent authority prior to injection permit issuance.
-    </p>`
+    </p>
+    <div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;margin-top:12px;border-radius:4px;">
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 6px 0;font-weight:600;">Pressure Model Reconciliation Note</p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:0;">
+        Two bounding pressure estimates are reported in this section. The <strong>MAIP Headroom</strong> value is derived from the
+        Theis (1935) analytical model, which treats the aquifer as effectively infinite. At high permeability (e.g. 3000 mD),
+        the Theis injection pressure remains close to initial reservoir pressure and the headroom to MAIP is large. The
+        <strong>FD Solver Block Pressure</strong> represents the opposite bound: a fully sealed, closed-box domain where all
+        injected CO<sub>2</sub> volume must be accommodated by compressibility alone, producing the maximum possible pressure
+        buildup for the given pore volume. Real formation pressures lie between these two limits depending on boundary
+        connectivity, lateral brine drainage, and aquifer support. Injection rate management must ensure that bottomhole
+        pressure (BHP) remains below MAIP (${geomechanics.maip.toFixed(2)} MPa) under both modelling assumptions.
+      </p>
+    </div>`
   }
 
   const orgName = organization ?? ''
@@ -1914,18 +1963,50 @@ export function openPermitApplication(
       <tr><td>Thickness (storage interval)</td><td style="vertical-align:top;white-space:nowrap;">${params.thickness?.toFixed(1) ?? '—'} m</td></tr>
       <tr><td>Porosity</td><td style="vertical-align:top;white-space:nowrap;">${(params.porosity * 100)?.toFixed(1) ?? '—'}%</td></tr>
       <tr><td>Permeability</td><td style="vertical-align:top;white-space:nowrap;">${params.permeability?.toFixed(1) ?? '—'} mD</td></tr>
-      <tr><td>Initial Pore Pressure</td><td style="vertical-align:top;white-space:nowrap;">${params.pressure?.toFixed(2) ?? '—'} MPa</td></tr>
-      <tr><td>Temperature</td><td style="vertical-align:top;white-space:nowrap;">${params.temperature?.toFixed(1) ?? '—'} °C</td></tr>
+      <tr><td>Initial Pore Pressure</td><td style="vertical-align:top;">${params.pressure?.toFixed(2) ?? '—'} MPa${(() => {
+        const hydrostatic_MPa = 1025 * 9.81 * params.depth / 1e6
+        const ratio = params.pressure / hydrostatic_MPa
+        if (ratio < 0.70) return ` <em style="color:#d97706;font-size:8.5pt;">(&#x26A0; Sub-hydrostatic: ${(ratio * 100).toFixed(0)}% of hydrostatic ${hydrostatic_MPa.toFixed(1)} MPa at this depth. Verify the measured value — sub-hydrostatic aquifers are uncommon offshore; affects CO&#x2082; phase stability and injectivity estimates.)</em>`
+        if (ratio > 1.30) return ` <em style="color:#d97706;font-size:8.5pt;">(&#x26A0; Overpressured: ${(ratio * 100).toFixed(0)}% of hydrostatic — enable the Overpressured Formation flag.)</em>`
+        return ''
+      })()}</td></tr>
+      <tr><td>Temperature</td><td style="vertical-align:top;white-space:nowrap;">${(() => {
+        if (params.geothermalGradient != null && params.surfaceTemperatureC != null) {
+          const tMid = params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100
+          return `${tMid.toFixed(1)} °C <em style="color:#6b7280;font-size:8pt;">(derived: ${params.surfaceTemperatureC}°C surface + ${params.geothermalGradient}°C/100m gradient at ${(params.depth + params.thickness / 2).toFixed(0)} m mid-depth)</em>`
+        }
+        return `${params.temperature?.toFixed(1) ?? '—'} °C`
+      })()}</td></tr>
       <tr><td>Formation Area</td><td style="vertical-align:top;white-space:nowrap;">${params.area?.toFixed(2) ?? '—'} km²</td></tr>
       <tr><td>Net-to-Gross Ratio</td><td style="vertical-align:top;white-space:nowrap;">${(params.netToGross * 100)?.toFixed(1) ?? '—'}%</td></tr>
       <tr><td>Geometry Type</td><td style="vertical-align:top;white-space:nowrap;">${params.geometryType ?? '—'}</td></tr>
       <tr><td>Salinity (monovalent NaCl-equiv.)</td><td style="vertical-align:top;">${params.monovalentSalinity?.toFixed(3) ?? '—'} mol/kg${params.monovalentSalinity != null && params.monovalentSalinity < 0.1 ? ' <em style="color:#d97706;">(&#x26A0; near zero — Duan-Sun model requires &gt;0.1 mol/kg)</em>' : ''}</td></tr>
       <tr><td>Salinity (bivalent CaCl&#x2082;-equiv.)</td><td style="vertical-align:top;white-space:nowrap;">${params.bivalentSalinity?.toFixed(3) ?? '—'} mol/kg</td></tr>
       <tr><td>Hydrocarbon Content (CH&#x2084;/N&#x2082;)</td><td style="vertical-align:top;white-space:nowrap;">CH&#x2084;: ${(params.methaneFraction * 100).toFixed(1)}% &nbsp;|&nbsp; N&#x2082;: ${(params.nitrogenFraction * 100).toFixed(1)}%</td></tr>
+      <tr><td>Formation Type</td><td>${params.formationType ? params.formationType.replace(/_/g, ' ') : '—'}</td></tr>
+      <tr><td>Overpressured Formation</td><td>${params.isOverpressured != null ? (params.isOverpressured ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
+      <tr><td>Lithology Class</td><td>${params.lithologyClass ? params.lithologyClass.charAt(0).toUpperCase() + params.lithologyClass.slice(1) : '—'}</td></tr>
+      <tr><td>Fractured Reservoir</td><td>${params.fracturedReservoir != null ? (params.fracturedReservoir ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
+      <tr><td>Gas Initially In Place (GIIP)</td><td>${params.giip != null ? params.giip.toFixed(2) + ' Bscf' : '—'}</td></tr>
+      <tr><td>Abandonment Pressure</td><td>${params.abandonmentPressure != null ? params.abandonmentPressure.toFixed(2) + ' MPa' : '—'}</td></tr>
+      <tr><td>Connate Water Saturation (S<sub>wi</sub>)</td><td>${params.swiConnate != null ? (params.swiConnate * 100).toFixed(1) + '%' : '15.0% (default)'}</td></tr>
     </tbody>
   </table>
 
-  <h3>2.2 Caprock &amp; Seal Properties</h3>
+  <h3>2.2 Heterogeneity &amp; Anisotropy Corrections</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Impact</th></tr></thead>
+    <tbody>
+      <tr><td>Dykstra-Parsons V<sub>dp</sub> (Permeability Variation)</td><td>${params.k_Vdp != null ? params.k_Vdp.toFixed(3) : '0 (homogeneous)'}</td><td>${params.k_Vdp != null && params.k_Vdp > 0.05 ? 'Sweep efficiency &amp; AoR corrected for heterogeneity' : 'Homogeneous flow assumed'}</td></tr>
+      <tr><td>k<sub>h</sub>/k<sub>v</sub> Anisotropy Ratio</td><td>${params.k_layer_ratio != null ? params.k_layer_ratio.toFixed(1) : '1.0 (isotropic)'}</td><td>${params.k_layer_ratio != null && params.k_layer_ratio > 1 ? 'Vertical permeability reduced — impedes buoyancy migration' : 'Isotropic flow'}</td></tr>
+      <tr><td>Number of Permeability Layers</td><td>${params.n_layers != null ? params.n_layers.toString() : '1 (homogeneous)'}</td><td>${params.n_layers != null && params.n_layers > 1 ? 'Multi-layer sweep correction applied' : 'Single-layer model'}</td></tr>
+      <tr><td>Sweep Efficiency (E<sub>s</sub>)</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency * 100).toFixed(1) + '%' : '—'}</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency < 0.7 ? '&#x26A0; Low sweep — heterogeneity reduces effective pore volume' : '&#x2713; Adequate sweep') : 'Run simulation'}</td></tr>
+      <tr><td>AoR Heterogeneity Factor</td><td>${result?.aorHeterogeneityFactor != null ? result.aorHeterogeneityFactor.toFixed(2) + '×' : '1.0×'}</td><td>${result?.aorHeterogeneityFactor != null && result.aorHeterogeneityFactor > 1 ? 'AoR radius inflated for heterogeneity (Shook &amp; Mitchell 2009)' : 'No heterogeneity correction'}</td></tr>
+      ${result?.heterogeneityCorrected ? `<tr><td>Calibrated Effective Permeability (k<sub>eff</sub>)</td><td>${params.k_eff_calibrated_mD != null ? params.k_eff_calibrated_mD.toFixed(1) + ' mD' : '—'}</td><td>VE gravity-current calibrated from field anchor (Boait 2012 inversion)</td></tr>` : ''}
+    </tbody>
+  </table>
+
+  <h3>2.3 Caprock &amp; Seal Properties</h3>
   <table>
     <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
     <tbody>
@@ -1939,10 +2020,176 @@ export function openPermitApplication(
     </tbody>
   </table>
 
-  <h3>2.3 CO&#x2082; Phase State at Reservoir Conditions</h3>
+  <h3>2.4 CO&#x2082; Phase State at Reservoir Conditions</h3>
   <div class="section-box">
-    <p>At reservoir conditions of <strong>${params.temperature?.toFixed(1) ?? '—'}°C</strong> and <strong>${params.pressure?.toFixed(2) ?? '—'} MPa</strong>, CO&#x2082; is expected to be in <strong class="${phaseLabel === 'supercritical' ? 'accent' : 'risk-moderate'}">${phaseLabel}</strong> phase. ${phaseLabel === 'supercritical' ? `Supercritical CO&#x2082; at these conditions has a density of approximately <strong>${result?.co2Density?.toFixed(0) ?? params.pressure > 0 ? '~600–850' : '—'} kg/m&#xB3;</strong>, providing efficient storage per unit pore volume.` : `Subcritical conditions reduce storage efficiency. Consider increasing injection depth or targeting a warmer/higher-pressure formation for improved storage efficiency.`}</p>
+    <p>At reservoir conditions of <strong>${effectiveTempC.toFixed(1)}°C</strong>${params.geothermalGradient != null ? ` (geothermal gradient, surface ${params.surfaceTemperatureC?.toFixed(1) ?? '—'}°C + ${params.geothermalGradient} °C/100 m × ${(params.depth + params.thickness / 2).toFixed(0)} m mid-depth)` : ''} and <strong>${params.pressure?.toFixed(2) ?? '—'} MPa</strong>, CO&#x2082; is expected to be in <strong class="${phaseLabel === 'supercritical' ? 'accent' : 'risk-moderate'}">${phaseLabel}</strong> phase. ${phaseLabel === 'supercritical' ? `Supercritical CO&#x2082; at these conditions has a density of approximately <strong>${result?.co2Density?.toFixed(0) ?? '~600–850'} kg/m&#xB3;</strong> (Span-Wagner 1996 EOS), providing efficient storage per unit pore volume.` : `Subcritical conditions reduce storage efficiency. Consider increasing injection depth or targeting a warmer/higher-pressure formation for improved storage efficiency.`}</p>
   </div>
+
+  <h3>2.5 Thermal Effects &amp; Near-Wellbore Temperature</h3>
+  ${(() => {
+    const hasGeo = params.geothermalGradient != null && params.surfaceTemperatureC != null
+    const midDepth = params.depth + params.thickness / 2
+    const whp = Math.min(params.pressure + 5, 30)
+    const resTemp = hasGeo ? reservoirTemperature(midDepth, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }) : params.temperature
+    const jtDelta = jouleThomstonCooling(whp, params.pressure, resTemp)
+    const jtWellbore = resTemp + jtDelta
+    const phaseAtRes = co2PhaseState(resTemp, params.pressure)
+    const phaseAtWellbore = co2PhaseState(jtWellbore, params.pressure)
+    const rProfile = [10, 50, 100, 500].map(r => ({ r, dT: radialTemperatureProfile(r, Math.max(projectYears ?? 20, 0.01), jtDelta, 1e-6) }))
+    return `
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">Near-wellbore thermal effects govern CO&#x2082; phase behaviour, injectivity, and geomechanical stress near the injection interval. The Joule-Thomson (JT) effect cools the CO&#x2082; stream as it expands from the wellhead into the reservoir. Thermal recovery via heat diffusion then restores the geothermal temperature within ~100 m of the wellbore.</p>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Geothermal Gradient</h4>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Surface Reference Temperature</td><td>${params.surfaceTemperatureC?.toFixed(1) ?? '—'} &#xB0;C</td></tr>
+        <tr><td>Geothermal Gradient</td><td>${params.geothermalGradient != null ? (params.geothermalGradient * 10).toFixed(1) + ' &#xB0;C/km' : '—'}</td></tr>
+        <tr><td>Temperature at Reservoir Top</td><td>${result?.temperatureAtTopC?.toFixed(1) ?? (hasGeo ? reservoirTemperature(params.depth, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }).toFixed(1) : '—')} &#xB0;C</td></tr>
+        <tr><td>Temperature at Reservoir Base</td><td>${result?.temperatureAtBaseC?.toFixed(1) ?? (hasGeo ? reservoirTemperature(params.depth + params.thickness, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }).toFixed(1) : '—')} &#xB0;C</td></tr>
+        <tr><td>Mid-Reservoir Temperature</td><td>${resTemp.toFixed(1)} &#xB0;C</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Joule-Thomson Cooling</h4>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Wellhead Injection Pressure (P<sub>wh</sub>)</td><td>${whp.toFixed(2)} MPa</td></tr>
+        <tr><td>Reservoir Pressure (P<sub>res</sub>)</td><td>${params.pressure.toFixed(2)} MPa</td></tr>
+        <tr><td>Mid-Reservoir Temperature (T)</td><td>${resTemp.toFixed(1)} &#xB0;C</td></tr>
+        <tr><td>JT Coefficient &#x3BC;<sub>JT</sub></td><td>${jtDelta < 0 ? (-jtDelta / Math.max(0.001, whp - params.pressure)).toFixed(2) : '0.70'} K/MPa (Ziabakhsh-Ganji &amp; Kooi 2012 — screening estimate)</td></tr>
+        <tr><td>JT Delta-T Near Wellbore</td><td><strong style="color:${jtDelta < -5 ? '#ef4444' : jtDelta < -2 ? '#f59e0b' : '#10b981'};">${jtDelta.toFixed(2)} &#xB0;C</strong></td></tr>
+        <tr><td>Effective Wellbore Temperature</td><td>${jtWellbore.toFixed(1)} &#xB0;C</td></tr>
+        <tr><td>CO&#x2082; Phase at Reservoir</td><td>${phaseAtRes.toUpperCase()}</td></tr>
+        <tr><td>CO&#x2082; Phase at Wellbore (post-JT)</td><td><span class="${phaseAtWellbore === 'supercritical' ? 'badge-green' : 'badge-amber'}">${phaseAtWellbore.toUpperCase()}</span> ${phaseAtWellbore !== 'supercritical' ? '&#x26A0; JT cooling may cause phase transition near the wellbore, reducing injectivity' : ''}</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Radial Temperature Profile History</h4>
+    <table>
+      <thead><tr><th>Distance from Wellbore (m)</th><th>Temperature Perturbation (&#x394;T, &#xB0;C)</th><th>Effective Temperature (&#xB0;C)</th></tr></thead>
+      <tbody>
+        ${rProfile.map(({ r, dT }) => `
+        <tr>
+          <td>${r.toFixed(0)} m</td>
+          <td style="color:${dT < -2 ? '#ef4444' : dT < -0.5 ? '#f59e0b' : '#475569'};">${dT.toFixed(2)} &#xB0;C</td>
+          <td>${(resTemp + dT).toFixed(1)} &#xB0;C</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:8pt; margin-top:6px;">Radial profile computed from line-source heat conduction solution (erfc). JT cooling is strongest at the wellbore face (r&#x2192;0) and decays with distance. Thermal diffusivity: 1.0&#x00D7;10<sup>-6</sup> m&#x00B2;/s (typical sandstone). At distances &gt; 200 m, the formation temperature returns to the geothermal baseline.</p>
+  </div>`
+  })()}
+
+  <h3>2.6 PVT Field Statistics (Spatial Density Variation)</h3>
+  ${result?.pvtStats ? `
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The in-situ CO&#x2082; density field varies spatially because reservoir pressure changes with distance from the injection well. The single-point density assumption (${result?.co2Density?.toFixed(0) ?? '—'} kg/m&#xB3;) is replaced by a field average evaluated from Span-Wagner EOS at each pressure field point, providing a more accurate capacity estimate.</p>
+    <table>
+      <thead><tr><th>Statistic</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Minimum CO&#x2082; Density (plume edge)</td><td style="color:${result.pvtStats.subcriticalPoints > 0 ? '#d97706' : '#475569'};">${result.pvtStats.densityMin_kgm3.toFixed(1)} kg/m&#xB3; ${result.pvtStats.subcriticalPoints > 0 ? '&#x26A0; Subcritical points detected' : ''}</td></tr>
+        <tr><td>Maximum CO&#x2082; Density (wellbore)</td><td>${result.pvtStats.densityMax_kgm3.toFixed(1)} kg/m&#xB3;</td></tr>
+        <tr><td>Mean Field-Average Density</td><td>${result.pvtStats.densityMean_kgm3.toFixed(1)} kg/m&#xB3;</td></tr>
+        <tr><td>Density Range</td><td>${(parseFloat(result.pvtStats.densityMax_kgm3.toFixed(1)) - parseFloat(result.pvtStats.densityMin_kgm3.toFixed(1))).toFixed(1)} kg/m&#xB3;</td></tr>
+        <tr><td>Capacity Correction Factor (weighted)</td><td>${result.pvtStats.densityWeightedCapacityFactor != null ? (result.pvtStats.densityWeightedCapacityFactor * 100).toFixed(1) + '%' : '—'}</td><tr>
+        <tr><td>Phase Warning</td><td>${result.pvtStats.phaseWarning || 'None'}</td></tr>
+        <tr><td>Subcritical Field Points</td><td>${result.pvtStats.subcriticalPoints}</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:8pt;color:#64748b;margin-top:8px;">
+      The single-point density (${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;, Section 2.4) is evaluated directly from the Span-Wagner EOS at initial reservoir T and P. The PVT field mean (${result.pvtStats.densityMean_kgm3.toFixed(1)} kg/m&#xB3;) is evaluated via bilinear interpolation from a precomputed 20&#xD7;40 table at each pressure-field point. Discrepancies of 1&#x2013;2% between these values reflect (a) the difference between initial pressure and the spatially-varying FD pressure field, and (b) bilinear vs direct EOS evaluation near the CO&#x2082; critical region. The Capacity Correction Factor (${result.pvtStats.densityWeightedCapacityFactor != null ? (result.pvtStats.densityWeightedCapacityFactor * 100).toFixed(1) : '—'}%) quantifies the adjustment required if the field-average density replaces the single-point assumption in storage capacity calculations.
+    </p>
+  </div>` : '<p class="muted">PVT field statistics not available. Run the simulation with geothermal gradient enabled to compute spatially-varying density.</p>'}
+
+  <h3>2.7 Site Screening Criteria (Bachu 2003)</h3>
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The following criteria evaluate the site&#x2019;s technical suitability for CO&#x2082; geological storage following the Bachu (2003) screening framework. Each criterion is scored Pass (green), Marginal (amber), or Fail (red) based on the current formation properties.</p>
+  </div>
+  ${(() => {
+    const criteria: Array<{ name: string; key: string; pass: boolean; marginal: boolean; note: string }> = [
+      {
+        name: 'Depth (> 800 m for supercritical CO\u2082)',
+        key: 'depth',
+        pass: params.depth >= 1000,
+        marginal: params.depth >= 800 && params.depth < 1000,
+        note: params.depth >= 1000 ? 'Supercritical conditions assured' : params.depth >= 800 ? 'Marginal — near critical point' : 'Too shallow for supercritical storage',
+      },
+      {
+        name: 'Permeability (> 50 mD for injectivity)',
+        key: 'perm',
+        pass: params.permeability >= 200,
+        marginal: params.permeability >= 50 && params.permeability < 200,
+        note: params.permeability >= 200 ? 'Good injectivity' : params.permeability >= 50 ? 'Adequate — may require additional wells' : 'Low permeability — injectivity risk',
+      },
+      {
+        name: 'Porosity (> 10% for storage)',
+        key: 'poro',
+        pass: params.porosity >= 0.15,
+        marginal: params.porosity >= 0.10 && params.porosity < 0.15,
+        note: params.porosity >= 0.15 ? 'Good storage pore volume' : params.porosity >= 0.10 ? 'Marginal storage efficiency' : 'Low porosity',
+      },
+      {
+        name: 'Caprock Integrity (friction angle > 25\u00b0)',
+        key: 'caprock',
+        pass: (params.caprockFriction ?? 0) >= 30,
+        marginal: (params.caprockFriction ?? 0) >= 25 && (params.caprockFriction ?? 0) < 30,
+        note: (params.caprockFriction ?? 0) >= 30 ? 'Competent seal' : (params.caprockFriction ?? 0) >= 25 ? 'Adequate — verify' : 'Weak caprock',
+      },
+      {
+        name: 'Net-to-Gross (> 0.5)',
+        key: 'ntg',
+        pass: params.netToGross >= 0.7,
+        marginal: params.netToGross >= 0.5 && params.netToGross < 0.7,
+        note: params.netToGross >= 0.7 ? 'High net reservoir' : params.netToGross >= 0.5 ? 'Moderate' : 'High shale fraction',
+      },
+      {
+        name: 'Storage Volume (P50 > injection target)',
+        key: 'volume',
+        pass: (result?.totalCapacity ?? 0) > (result?.storageCapacity ?? 0) * 1.2,
+        marginal: (result?.totalCapacity ?? 0) > (result?.storageCapacity ?? 0),
+        note: result?.totalCapacity != null ? `${((result.totalCapacity / Math.max(result.storageCapacity ?? 1, 0.001))).toFixed(1)}× headroom` : 'Run simulation',
+      },
+      {
+        name: 'Geomechanical Safety (SF > 1.5)',
+        key: 'geoSF',
+        pass: (geomechanics?.safetyFactor ?? 0) >= 1.5,
+        marginal: (geomechanics?.safetyFactor ?? 0) >= 1.0 && (geomechanics?.safetyFactor ?? 0) < 1.5,
+        note: geomechanics != null ? `SF = ${geomechanics.safetyFactor.toFixed(2)}` : 'Not assessed',
+      },
+      {
+        name: 'Containment Probability (> 80%)',
+        key: 'containment',
+        pass: (result?.containmentProbability ?? 0) >= 0.8,
+        marginal: (result?.containmentProbability ?? 0) >= 0.5 && (result?.containmentProbability ?? 0) < 0.8,
+        note: result?.containmentProbability != null ? `${(result.containmentProbability * 100).toFixed(0)}%` : 'Not assessed',
+      },
+    ]
+    const passCount = criteria.filter(c => c.pass).length
+    const marginalCount = criteria.filter(c => !c.pass && c.marginal).length
+    const failCount = criteria.filter(c => !c.pass && !c.marginal).length
+    const score = Math.round((passCount / criteria.length) * 100)
+    const scoreBadge = score >= 70 ? 'badge-green' : score >= 40 ? 'badge-amber' : 'badge-red'
+    const scoreLabel = score >= 70 ? 'PASS' : score >= 40 ? 'MARGINAL' : 'FAIL'
+    return `
+  <div style="margin-bottom:12px;">
+    <span class="${scoreBadge}" style="font-size:10pt; padding:4px 14px;">SCREENING SCORE: ${score}% (${scoreLabel})</span>
+    <span style="font-size:8pt; color:#64748b; margin-left:10px;">${passCount} pass, ${marginalCount} marginal, ${failCount} fail</span>
+  </div>
+  <table>
+    <thead><tr><th>Criterion</th><th>Status</th><th>Note</th></tr></thead>
+    <tbody>
+      ${criteria.map(c => `
+      <tr>
+        <td>${c.name}</td>
+        <td>${c.pass ? '<span class="badge-green">PASS</span>' : c.marginal ? '<span class="badge-amber">MARGINAL</span>' : '<span class="badge-red">FAIL</span>'}</td>
+        <td style="font-size:8.5pt;">${c.note}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`
+  })()}
 
   <!-- =====================================================================
        SECTION 3: INJECTION WELL PROGRAMME
@@ -2029,6 +2276,20 @@ export function openPermitApplication(
       </div>`
       })()}
     </div>
+  </div>
+
+  <h3>3.5 Wellbore Hydraulics &amp; BHP Margin</h3>
+  <div class="section-box">
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th><th>Significance</th></tr></thead>
+      <tbody>
+        <tr><td>Peaceman Wellbore BHP (reservoir-side)</td><td>${result?.peacemanBHP != null && result.peacemanBHP >= params.pressure ? result.peacemanBHP.toFixed(2) + ' MPa' : (result?.injectionPressure?.toFixed(2) ?? '—') + ' MPa'}</td><td>Darcy-flow pressure at sandface (Peaceman 1978)</td></tr>
+        <tr><td>Max Wellbore Pressure (WHP design ceiling)</td><td>${result?.hydrostaticBHP_MPa != null ? result.hydrostaticBHP_MPa.toFixed(2) + ' MPa' : '—'}</td><td>Design-max WHP + CO&#x2082; column weight: hydraulic capacity ceiling for surface equipment sizing</td></tr>
+        <tr><td>Tubing Friction Drop (&Delta;P<sub>fric</sub>)</td><td>${result?.tubingFrictionDrop_MPa != null ? result.tubingFrictionDrop_MPa.toFixed(3) + ' MPa' : '—'}</td><td>Darcy-Weisbach single-phase CO&#x2082; friction (4&quot; nominal tubing, Blasius correlation)</td></tr>
+        <tr><td>BHP Margin to Fracture (vs Peaceman BHP)</td><td style="color:${(result?.bhpMargin_MPa ?? 1) > 2 ? '#10b981' : (result?.bhpMargin_MPa ?? 1) > 0 ? '#f59e0b' : '#ef4444'}; font-weight:700;">${result?.bhpMargin_MPa != null ? result.bhpMargin_MPa.toFixed(2) + ' MPa' : '&#x2014;'}</td><td>${result?.bhpMargin_MPa != null ? (result.bhpMargin_MPa > 2 ? '&#x2713; Safe operating margin (fracture pressure minus Peaceman BHP)' : result.bhpMargin_MPa > 0 ? '&#x26A0; Marginal: consider reducing injection rate' : '&#x2717; Fracture risk: reduce injection rate') : 'Run simulation to compute'}</td></tr>
+        <tr><td>Injectivity Index (J)</td><td>${result?.injectivityIndex != null && result.injectivityIndex > 0 ? result.injectivityIndex.toFixed(1) + ' m&#x00B3;/(d·MPa)' : '—'}</td><td>J = q / &Delta;P — diagnostic for injectivity performance</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- =====================================================================
@@ -2126,9 +2387,9 @@ export function openPermitApplication(
     <tbody>
       <tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">${params.area.toFixed(2)} km² &times; ${(params.thickness / 1000).toFixed(4)} km &times; ${(params.porosity * 100).toFixed(1)}% porosity</span></td><td>${grossPoreVolume.toFixed(4)} km³</td></tr>
       <tr><td>CO&#x2082; Density at Reservoir Conditions</td><td>${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;</td></tr>
-      <tr><td>P10 Capacity (optimistic, 10th percentile)</td><td>${result?.p90?.toFixed(2) ?? '—'} Mt</td></tr>
+      <tr><td>P10 Capacity (optimistic, 10th percentile)</td><td>${result?.p10?.toFixed(2) ?? '—'} Mt</td></tr>
       <tr><td>P50 Capacity (best estimate, 50th percentile)</td><td>${result?.totalCapacity?.toFixed(2) ?? '—'} Mt</td></tr>
-      <tr><td>P90 Capacity (conservative, 90th percentile)</td><td>${result?.p10?.toFixed(2) ?? '—'} Mt</td></tr>
+      <tr><td>P90 Capacity (conservative, 90th percentile)</td><td>${result?.p90?.toFixed(2) ?? '—'} Mt</td></tr>
       <tr><td>Capacity Utilisation (this project)</td><td>${result?.capacityUtilPct?.toFixed(1) ?? '—'}%</td></tr>
       <tr><td>Storage Efficiency Coefficient (Cc)</td><td>2.0% (DOE P50)</td></tr>
       ${result?.vePlumeArea != null ? `<tr><td>VE Plume Footprint (2D vertical equilibrium)</td><td>${result.vePlumeArea.toFixed(3)} km²</td></tr>` : ''}
@@ -2167,10 +2428,47 @@ export function openPermitApplication(
     <strong style="color:#92400e;">&#x26A0; Trapping values are all zero.</strong>
     <span style="color:#92400e;font-size:9pt;"> The simulation may have been exported before completion, or was reset after the last run. Re-run the full simulation (Run button) and wait for it to reach the final project year before exporting this permit. The storageCapacity (${storedTotal.toFixed(2)} Mt) reflects cumulative injection but the trapping breakdown requires the stateful simulation to have run to completion.</span>
   </div>` : ''}
-  <p class="muted" style="font-size:8pt;">Percentages computed against the tracked component mass (residual + solubility + mobile), which is internally mass-conserved by the analytical simulation model. Mineral trapping only activates after year 50. <sup>†</sup> Dissolution and mineral rows are non-overlapping subsets: mineral row shows dissolved CO&#x2082; that has further precipitated as carbonate; dissolution row shows the remaining aqueous fraction. Together they equal the total solubility-trapped volume.</p>`
+  <p class="muted" style="font-size:8pt;">Percentages computed against the sum of tracked trapping components (residual + solubility + mobile). Any difference between this total and cumulative injection is boundary outflow shown in Section 5.4. Mineral trapping only activates after year 50. <sup>†</sup> Dissolution and mineral rows are non-overlapping subsets: mineral row shows dissolved CO&#x2082; that has further precipitated as carbonate; dissolution row shows the remaining aqueous fraction. Together they equal the total solubility-trapped volume.</p>`
   })() : '<p class="muted">Simulation not completed or still at year 0. Run the full simulation to populate trapping mechanism distribution.</p>'}
 
-  <h3>5.3 Project Economics &amp; Financial Viability</h3>
+  <h3>5.3 Physics-Based Formation Capacity (Bachu et al. 2007)</h3>
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The following four independent trapping capacities are computed from formation properties alone using the Bachu et al. (2007) framework. Unlike the DOE statistical method (Section 5.1), these capacities quantify the formation&#x2019;s total physical storage potential — not just the fraction utilised by the current injection programme.</p>
+    <table>
+      <thead><tr><th>Capacity Component</th><th>Volume (Mt)</th><th>% of Total</th></tr></thead>
+      <tbody>
+        <tr><td>Structural/Closure Trapping</td><td><strong>${result?.structuralCapacity?.toFixed(2) ?? '—'}</strong></td><td>${result?.totalFormationCapacity != null && result.totalFormationCapacity > 0 && result?.structuralCapacity != null ? ((result.structuralCapacity / result.totalFormationCapacity) * 100).toFixed(1) + '%' : '—'}</td></tr>
+        <tr><td>Residual (Capillary) Trapping</td><td>${result?.residualCapacity?.toFixed(2) ?? '—'}</td><td>${result?.totalFormationCapacity != null && result.totalFormationCapacity > 0 && result?.residualCapacity != null ? ((result.residualCapacity / result.totalFormationCapacity) * 100).toFixed(1) + '%' : '—'}</td></tr>
+        <tr><td>Dissolution Trapping</td><td>${result?.dissolutionCapacity?.toFixed(2) ?? '—'}</td><td>${result?.totalFormationCapacity != null && result.totalFormationCapacity > 0 && result?.dissolutionCapacity != null ? ((result.dissolutionCapacity / result.totalFormationCapacity) * 100).toFixed(1) + '%' : '—'}</td></tr>
+        <tr><td>Mineral Trapping</td><td>${result?.mineralCapacity?.toFixed(2) ?? '—'}</td><td>${result?.totalFormationCapacity != null && result.totalFormationCapacity > 0 && result?.mineralCapacity != null ? ((result.mineralCapacity / result.totalFormationCapacity) * 100).toFixed(1) + '%' : '—'}</td></tr>
+        <tr style="background:#e0f2fe;"><td><strong>Total Formation Capacity</strong></td><td><strong>${result?.totalFormationCapacity?.toFixed(2) ?? '—'} Mt</strong></td><td><strong>100%</strong></td></tr>
+        <tr><td>Formation Capacity Utilisation</td><td colspan="2">${result?.formationCapacityUtil != null ? result.formationCapacityUtil.toFixed(1) + '% ' + (result.formationCapacityUtil > 100 ? '<span class="badge-red">EXCEEDS FORMATION CAPACITY</span>' : result.formationCapacityUtil > 80 ? '<span class="badge-amber">NEAR CAPACITY</span>' : '<span class="badge-green">ADEQUATE HEADROOM</span>') : '—'}</td></tr>
+      </tbody>
+    </table>
+    <div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;margin-top:12px;border-radius:4px;">
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 5px 0;font-weight:600;">DOE Statistical vs Physics-Based Capacity: Why the Values Differ</p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:0;">
+        The DOE P50 capacity (Section 5.1: ${result?.p50?.toFixed(2) ?? '—'} Mt) applies a statistical storage efficiency coefficient Cc = 2.0% to the gross pore volume. This coefficient is a basin-average derived from a population of US saline aquifers and represents the fraction of pore volume realistically accessible across a range of geological settings. It is not a physical limit for any specific formation.
+        The physics-based total formation capacity (Section 5.3: ${result?.totalFormationCapacity?.toFixed(2) ?? '—'} Mt) independently sums the maximum CO&#x2082; retainable by structural, residual, dissolution, and mineral trapping given this formation's measured properties. It represents the theoretical upper bound for this specific site.
+        The two frameworks answer different questions: DOE provides a probabilistic screening bandwidth for regulatory comparison across sites; Bachu provides the site-specific physical ceiling. The current injection programme (${storedTotal.toFixed(2)} Mt) represents ${result?.formationCapacityUtil?.toFixed(1) ?? '—'}% of the Bachu physical capacity, indicating adequate physical storage headroom, even though it exceeds the DOE P50 statistical estimate (${result?.capacityUtilPct?.toFixed(1) ?? '—'}% utilisation). Both metrics must be reported to the competent authority; the DOE exceedance triggers the warning in Section 5.1.
+      </p>
+    </div>
+  </div>
+  <h3>5.4 Mass Balance &amp; Boundary Outflow</h3>
+  <div class="section-box">
+    <table>
+      <thead><tr><th>Component</th><th>Volume (Mt)</th></tr></thead>
+      <tbody>
+        <tr><td>Cumulative Injection (total stored)</td><td><strong>${storedTotal.toFixed(4)}</strong></td></tr>
+        <tr><td>Tracked in Trapping Components</td><td>${trappingRef.toFixed(4)}</td></tr>
+        <tr><td>Mass Balance Boundary Gap</td><td style="color:${boundaryGap > 0.01 * storedTotal ? '#d97706' : '#10b981'}; font-weight:${boundaryGap > 0.01 * storedTotal ? '700' : '400'};">${boundaryGap.toFixed(4)} (${storedTotal > 0 ? (boundaryGap / storedTotal * 100).toFixed(2) : '0.00'}%)</td></tr>
+        <tr><td>Mass Balance Error (&#x3B5;)</td><td style="color:${(result?.massBalanceError ?? 0) > 0.01 ? '#d97706' : '#10b981'};">${result?.massBalanceError != null ? result.massBalanceError.toFixed(4) + ' Mt' : '—'}</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:8pt; margin-top:6px;">A positive boundary gap indicates CO&#x2082; that exited the simulation grid and is not tracked in the trapping breakdown. The mass balance error &#x3B5; = injected &#x2212; (residual + dissolved + mobile) from the analytical model. Values &lt; 1% of cumulative injection are within numerical tolerance.</p>
+  </div>
+
+  <h3>5.5 Project Economics &amp; Financial Viability</h3>
   <div class="two-col" style="page-break-inside: avoid; margin-bottom: 15px;">
     <div>
       <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase;">Financial Summary</p>
@@ -2182,7 +2480,7 @@ export function openPermitApplication(
           <tr><td>OPEX (per tonne)</td><td>$${opexPerTonne.toFixed(2)}/t</td></tr>
           <tr><td>Total OPEX</td><td>$${totalOpex.toFixed(1)}M</td></tr>
           <tr><td>Levelized Cost (LCO₂S)</td><td><strong>$${breakevenCost.toFixed(2)}/t</strong></td></tr>
-          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45q < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45q).toFixed(2)}/t</span></td></tr>
+          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:${breakevenCost - credit45qUSD_3 < 0 ? '#ef4444' : '#10b981'};">$${(breakevenCost - credit45qUSD_3).toFixed(2)}/t</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -2228,7 +2526,7 @@ export function openPermitApplication(
   ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
   ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
 
-  <h3>5.4 Reservoir Parameter Sensitivity Analysis</h3>
+  <h3>5.6 Reservoir Parameter Sensitivity Analysis</h3>
   <p class="muted">
     One-at-a-time (OAT) sensitivity of P50 storage capacity. Bar widths reflect the actual uncertainty ranges used in the Monte Carlo run for this formation — axes are rebuilt per simulation, not cached from prior runs.
     Injection pressure overpressure (ΔP = BHP − P<sub>i</sub>) varies inversely with permeability and thickness: a 20% reduction in either parameter increases ΔP by ~25%, elevating the geomechanical fracture risk.
@@ -2418,14 +2716,6 @@ export function openPreScreeningReport(
   hmResult?: OptimizationResult,
   mcResult?: PersistedMCResult,
 ): void {
-  // Open executive summary and permit report as separate documents to avoid data repetition.
-  openExecutiveSummary(
-    formation, result, geo, wells,
-    formationName, location,
-    undefined, organization,
-    snapshots, projectYears, timestep,
-    jurisdiction, hmResult, mcResult,
-  )
   openPermitApplication(
     formation, result, geo, wells,
     formationName, location, jurisdiction, organization,

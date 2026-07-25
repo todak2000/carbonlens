@@ -158,13 +158,16 @@ export function computePVTFieldStats(
   let maxRho = -Infinity
   let subcritical = 0
 
+  const geothermalT_C = geothermalConfig
+    ? (() => {
+        const midDepth_m = geothermalConfig.topDepthM + geothermalConfig.thicknessM * 0.5
+        const raw = geothermalConfig.surfaceT_C + geothermalConfig.gradient_per100m * midDepth_m / 100
+        return Math.max(T_MIN_C, Math.min(T_MAX_C, raw))
+      })()
+    : null
+
   for (const pt of pressureField) {
-    let T_at_point = T_C
-    if (geothermalConfig) {
-      const depthEst = pt.pressure * 1e6 / (1050 * 9.81)
-      const raw = geothermalConfig.surfaceT_C + geothermalConfig.gradient_per100m * depthEst / 100
-      T_at_point = Math.max(T_MIN_C, Math.min(T_MAX_C, raw))
-    }
+    const T_at_point = geothermalT_C ?? T_C
     const rho = lookupCO2Density(T_at_point, pt.pressure)
     sum += rho
     if (rho < minRho) minRho = rho

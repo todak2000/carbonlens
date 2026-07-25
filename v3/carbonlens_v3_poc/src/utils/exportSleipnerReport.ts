@@ -727,6 +727,7 @@ export function openSleipnerReport(): void {
         <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
           <strong style="color:white;">Daniel T. Olagunju</strong>, Author, MSc Researcher, UTP Malaysia<br>
           <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong>, Supervisor, UTP Malaysia<br>
+          <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong>, Co-supervisor, UTP Malaysia<br>
           <strong style="color:white;">Dr. Berihun Negash Mamo</strong>, Advisor, UTP Malaysia
         </div>
       </div>

@@ -220,6 +220,51 @@ export const METHODOLOGY: MethodologySection[] = [
     ],
   },
   {
+    domain: 'Thermal Transport',
+    equations: [
+      {
+        name: 'Linear geothermal gradient',
+        formula: 'T(z) = T_surface + G\u2009\u00b7\u2009z',
+        params: 'T_surface: surface temperature (\u00b0C); G: geothermal gradient (\u00b0C/km, default 30); z: depth (km)',
+        reference: 'Benson & Cole (2008) Science 325:1072\u20131077',
+        notes: 'Applied to each VE grid cell at formation mid-point depth. User-adjustable via Formation panel (G in \u00b0C/100 m).',
+      },
+      {
+        name: 'Joule-Thomson near-wellbore cooling',
+        formula: '\u0394T_JT = \u2212\u03bc_JT \u00b7 \u0394P;\u2003\u03bc_JT \u2248 0.70 K/MPa (T < 50\u00b0C), 0.50 K/MPa (50\u2013100\u00b0C), 0.35 K/MPa (> 100\u00b0C)',
+        params: '\u0394P = P_wellhead \u2212 P_reservoir (MPa); \u03bc_JT: Joule-Thomson coefficient',
+        reference: 'Ziabakhsh-Ganji & Kooi (2012) Int. J. GHG Control 11S:S21\u2013S34',
+        notes: 'Piecewise-linear \u03bc_JT approximation. Accurate to \u00b115% vs NIST REFPROP at supercritical conditions. Cooling is strongest at wellbore face and decays radially via erfc diffusion.',
+      },
+      {
+        name: 'Radial thermal recovery (line-source erfc)',
+        formula: '\u0394T(r, t) = \u0394T\u2080 \u00b7 erfc(r / (2\u221a(\u03b1 t)));  erfc approximation: Abramowitz & Stegun (1964) \u00a77.1.26',
+        params: '\u0394T\u2080: JT temperature perturbation at wellbore (\u00b0C); \u03b1: thermal diffusivity (m\u00b2/s, default 1\u00d710\u207b\u2076); r: radial distance (m); t: time (s)',
+        reference: 'Mathias et al. (2010) Transp. Porous Media 79(2):265\u2013284',
+        notes: 'Combined with geothermal gradient to give T(r,t) at each VE grid cell. T feeds Span-Wagner density and Fenghour viscosity, creating a spatially-varying fluid property field in the plume solver.',
+      },
+    ],
+  },
+  {
+    domain: 'Structural Geometry',
+    equations: [
+      {
+        name: 'VE structural dip gravity flux correction (Nilsen 2012)',
+        formula: 'q_grav = \u2212(k\u00b7\u03b7/\u03bc) \u00b7 (\u0394\u03c1\u00b7g/2) \u00b7 \u2207(\u03b7 \u2212 2D)',
+        params: 'D(i,j): formation top depth map (m TVD, positive downward); \u03b7: CO\u2082 column height (m); \u0394\u03c1: density difference (kg/m\u00b3). CO\u2082 migrates toward smaller D (up-dip).',
+        reference: 'Nilsen, Nordbotten & Raynaud (2012) Comput. Geosci. 16(2):399\u2013416',
+        notes: 'D(i,j) computed from HorizonShapeParams: planar dip (tilted), sinusoidal fold (anticline), Gaussian dome, or imported grid. Extends flat-caprock VE equation (Nordbotten & Celia 2006 eq. 3.5) to dipping formations without requiring corner-point geometry. Screening-grade; not valid for sub-cell structural complexity.',
+      },
+      {
+        name: 'Fault transmissibility multiplier (Manzocchi 1999)',
+        formula: 'T_face = T_open \u00d7 sealingFactor;\u2003sealingFactor \u2208 [0, 1] (0 = sealing, 1 = open)',
+        params: 'T_open: open-fault face transmissibility (k\u00b7A/\u0394x); sealingFactor: per-fault user input derived from clay smear, throw, and juxtaposition; T_face: effective transmissibility after sealing correction.',
+        reference: 'Manzocchi et al. (1999) Petroleum Geoscience 5(1):53\u201363',
+        notes: 'Fault traces rasterised onto VE Cartesian grid faces. Multiple overlapping faults use minimum multiplier (most sealing). Fault dip and throw are recorded but do not alter grid geometry (no NNC handling). Sufficient for screening-grade fault seal assessment (Bachu 2003 criterion 9: trap geometry integrity).',
+      },
+    ],
+  },
+  {
     domain: 'Benchmark Validation',
     equations: [
       {

@@ -257,6 +257,18 @@ export default function FormationPanel() {
     useUIStore.getState().saveCurrentProject()
   }, [params, wells])
 
+  // Auto-derive temperature from geothermal gradient when both gradient and surface T are provided
+  useEffect(() => {
+    if (params.geothermalGradient != null && params.surfaceTemperatureC != null) {
+      const tMid = params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100
+      const rounded = Math.round(tMid * 10) / 10
+      if (Math.abs(rounded - params.temperature) > 0.05) {
+        setParams({ temperature: rounded })
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.geothermalGradient, params.surfaceTemperatureC, params.depth, params.thickness])
+
   // ── MARS IFT prediction (sub-step 5) ─────────────────────────────────────────
   const marsIFT = useMemo(() => {
     try {
@@ -623,8 +635,20 @@ export default function FormationPanel() {
                 <Slider label="Reservoir Pressure" value={params.pressure} min={5} max={60} step={0.1} unit=" MPa"
                   onChange={(v) => setParams({ pressure: v })} badge={criterionStatus('pressure')} />
 
-                <Slider label="Temperature" value={params.temperature} min={20} max={200} step={1} unit=" °C"
-                  onChange={(v) => setParams({ temperature: v })} badge={criterionStatus('temperature')} />
+                {params.geothermalGradient != null && params.surfaceTemperatureC != null ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted font-mono">Temperature</span>
+                      <span className="text-teal-400 font-mono font-bold">{params.temperature?.toFixed(1)} °C</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-teal-400/70 bg-teal-500/10 border border-teal-500/20 rounded px-2 py-1">
+                      Auto-derived from geothermal gradient. Clear gradient to set manually.
+                    </div>
+                  </div>
+                ) : (
+                  <Slider label="Temperature" value={params.temperature} min={20} max={200} step={1} unit=" °C"
+                    onChange={(v) => setParams({ temperature: v })} badge={criterionStatus('temperature')} />
+                )}
 
                 <div>
                   <div className="flex justify-between text-[11px] mb-0.5">
@@ -655,12 +679,6 @@ export default function FormationPanel() {
                     }}
                     className="w-full rounded bg-tertiary border border-theme/30 px-2 py-1 text-[11px] font-mono text-secondary" />
                 </div>
-
-                {params.geothermalGradient != null && params.surfaceTemperatureC != null && (
-                  <div className="text-[10px] font-mono text-teal-400 bg-teal-500/10 border border-teal-500/20 rounded px-2 py-1">
-                    Reservoir midpoint T: {(params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100).toFixed(1)}°C
-                  </div>
-                )}
 
                 <div>
                   <label className="text-[11px] text-muted font-mono block mb-1.5 uppercase tracking-wider font-bold">Salt Type</label>
@@ -926,9 +944,9 @@ export default function FormationPanel() {
             <div className="rounded bg-tertiary/50 border border-theme/30 px-2 py-1.5 space-y-0.5">
               <div className="text-[8px] text-muted font-mono uppercase tracking-wider mb-1">DOE Storage Envelope</div>
               {[
-                { label: 'P10 (0.51%)', val: rateEnvelope.totalCapacityP10, color: '#94a3b8' },
-                { label: 'P50 (2.0%)',  val: rateEnvelope.totalCapacityP50, color: '#34d399' },
-                { label: 'P90 (5.5%)',  val: rateEnvelope.totalCapacityP90, color: '#fb923c' },
+                { label: 'P90 (0.51%)', val: rateEnvelope.totalCapacityP90, color: '#34d399' },
+                { label: 'P50 (2.0%)',  val: rateEnvelope.totalCapacityP50, color: '#38bdf8' },
+                { label: 'P10 (5.5%)',  val: rateEnvelope.totalCapacityP10, color: '#fb923c' },
               ].map(({ label, val, color }) => (
                 <div key={label} className="flex justify-between text-[9px] font-mono">
                   <span className="text-muted">{label}</span>

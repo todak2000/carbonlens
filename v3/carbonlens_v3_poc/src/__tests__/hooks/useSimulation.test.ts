@@ -81,10 +81,10 @@ describe('computeYearly', () => {
     expect(r.injectionPressure).toBeLessThanOrEqual(BASE_PARAMS.pressure + 25 + 0.001)
   })
 
-  it('p10 < p50 < p90 capacity ordering is always maintained', () => {
+  it('p90 < p50 < p10 capacity ordering is always maintained', () => {
     const r = computeYearly(BASE_PARAMS, 10, 30, null)
-    expect(r.p10).toBeLessThan(r.p50)
-    expect(r.p50).toBeLessThan(r.p90)
+    expect(r.p90).toBeLessThan(r.p50)
+    expect(r.p50).toBeLessThan(r.p10)
   })
 
   it('CO2 density is physically plausible at supercritical conditions', () => {

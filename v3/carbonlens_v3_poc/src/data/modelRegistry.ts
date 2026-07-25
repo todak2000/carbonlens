@@ -228,17 +228,17 @@ export const MODEL_REGISTRY: ModelEntry[] = [
     id: 'brine-viscosity-constant',
     domain: 'brine-thermodynamics',
     property: 'Brine Viscosity',
-    name: 'Constant brine viscosity (no correlation implemented)',
-    shortName: 'Brine viscosity (constant 6\u00d710\u207b\u2074 Pa\u00b7s)',
+    name: 'Vogel-Antoine temperature-dependent brine viscosity',
+    shortName: 'Brine viscosity (Vogel-Antoine, T-dependent)',
     type: 'empirical',
-    status: 'hardcoded-constant',
+    status: 'active',
     citation: {
-      authors: 'N/A',
-      year: 2026,
-      note: 'Assumed 6\u00d710\u207b\u2074 Pa\u00b7s, representative of formation brine at ~60\u00b0C and moderate salinity.',
+      authors: 'Vogel, H. (1921); Antoine, C. (1888)',
+      year: 1921,
+      note: 'mu = 2.414e-5 * 10^(247.8 / (T_K - 140)), clamped to [1.5e-4, 1.5e-3] Pa\u00b7s. Captures supercritical-reservoir temperature range (30-200\u00b0C) without salinity or pressure correction.',
     },
-    implementedIn: 'engine/plume/saturationSolver.ts',
-    knownLimitations: 'No temperature, pressure, or salinity dependence. Use Batzle & Wang (1992) or Phillips et al. (1981) for T/P/S-sensitive cases. Planned PhD-era upgrade.',
+    implementedIn: 'hooks/useSimulation.ts',
+    knownLimitations: 'No salinity or pressure dependence. For high-salinity brines (>150 g/L TDS) or pressures >30 MPa, use Batzle & Wang (1992) or Phillips et al. (1981). Upgraded from hardcoded constant (6e-4 Pa\u00b7s) in July 2026.',
   },
 
   // ── Transport Properties ──────────────────────────────────────────────────
@@ -785,7 +785,110 @@ export const MODEL_REGISTRY: ModelEntry[] = [
     },
     implementedIn: 'engine/plume/thermalEffects.ts',
     exportedAs: 'reservoirTemperature',
-    knownLimitations: 'No radial temperature profile or Joule-Thomson correction in screening mode. Use full thermal simulator for injection near-wellbore cooling.',
+    knownLimitations: 'Depth-averaged T used for VE property field; cell-by-cell depth correction requires topDepthField from structural module.',
+  },
+
+  {
+    id: 'thermal-jt-cooling',
+    domain: 'thermal',
+    property: 'Joule-Thomson Near-Wellbore Cooling',
+    name: 'Ziabakhsh-Ganji & Kooi (2012) Joule-Thomson coefficient for CO\u2082-brine',
+    shortName: 'Ziabakhsh-Ganji & Kooi (2012) JT cooling',
+    type: 'classical',
+    status: 'active',
+    citation: {
+      authors: 'Ziabakhsh-Ganji, Z. & Kooi, H.',
+      year: 2012,
+      title: 'An equation of state for thermodynamic equilibrium of gas mixtures and brines to allow simulation of the effects of impurities in subsurface CO\u2082 storage',
+      journal: 'Int. J. Greenhouse Gas Control 11S:S21\u2013S34',
+      doi: '10.1016/j.ijggc.2012.07.025',
+      note: 'JT coefficient: \u03bc_JT \u2248 0.50\u20130.70 K/MPa at supercritical conditions (T > 31\u00b0C, P > 7.38 MPa)',
+    },
+    implementedIn: 'engine/plume/thermalEffects.ts',
+    exportedAs: 'jouleThomstonCooling',
+    knownLimitations: 'Piecewise-linear approximation of \u03bc_JT vs T; rigorous values require NIST REFPROP. Valid for screening-grade JT estimate (\u00b115%).',
+    changelog: [
+      { date: '2026-07-24', description: 'Coupled into VE solver via thermalPropertyField.ts per-cell T evaluation.' },
+    ],
+  },
+
+  {
+    id: 'thermal-radial-diffusion',
+    domain: 'thermal',
+    property: 'Near-Wellbore Thermal Recovery',
+    name: 'Line-source heat conduction erfc solution (Benson & Cole 2008; Mathias, Hardisty, Trudell & Zimmerman 2009)',
+    shortName: 'Radial heat diffusion erfc (Mathias et al. 2009)',
+    type: 'classical',
+    status: 'active',
+    citation: {
+      authors: 'Mathias, S.A., Hardisty, P.E., Trudell, M.R. & Zimmerman, R.W.',
+      year: 2009,
+      title: 'Approximate solutions for pressure buildup during CO\u2082 injection in brine aquifers',
+      journal: 'Transport in Porous Media 79(2):265\u2013284',
+      doi: '10.1007/s11242-008-9316-7',
+      note: 'Benson & Cole (2008) Elements 4(5):325\u2013331 DOI:10.2113/gselements.4.5.325; analytical thermal recovery model',
+    },
+    implementedIn: 'engine/plume/thermalEffects.ts',
+    exportedAs: 'radialTemperatureProfile',
+    knownLimitations: 'Semi-infinite line-source assumption; valid for r >> wellbore radius. Thermal anisotropy and bedding-parallel conductivity not included.',
+    changelog: [
+      { date: '2026-07-24', description: 'Coupled into VE solver via thermalPropertyField.ts; erfc solution provides T(r,t) field for Span-Wagner + Fenghour property evaluation.' },
+    ],
+  },
+
+  {
+    id: 'plume-structural-dip',
+    domain: 'plume-migration',
+    property: 'Structural Dip CO\u2082 Migration',
+    name: 'VE top-surface topography with structural gradient correction (Nilsen et al. 2012)',
+    shortName: 'Nilsen et al. (2012) VE structural dip',
+    type: 'numerical',
+    status: 'active',
+    citation: {
+      authors: 'Nilsen, H.M., Nordbotten, J.M. & Raynaud, X.',
+      year: 2012,
+      title: 'Characterization of the CO\u2082 storage capacity based on a top-surface grid',
+      journal: 'Computational Geosciences 16(2):399\u2013416',
+      doi: '10.1007/s10596-011-9257-z',
+      note: 'Driving force: \u2207(\u03b7 \u2212 2D) where D = caprock top depth (m TVD); CO\u2082 migrates up-dip toward smaller D.',
+    },
+    implementedIn: 'engine/ve/VESolver.ts',
+    exportedAs: 'VESolver',
+    validatedAgainst: [
+      { testFile: '__tests__/engine/ve/structuralDipVE.test.ts', expectedRange: 'Up-dip migration for 3\u00b0 dip; dome pooling at apex; flat baseline within 5% mass balance tolerance.' },
+    ],
+    knownLimitations: 'Cartesian grid with depth correction; cannot represent overhanging geometries, salt diapirs, or reverse-fault cross-connections. Screening-grade structural trapping only.',
+    changelog: [
+      { date: '2026-07-24', description: 'Added topDepthField to VEGrid; VESolver.step() applies \u2207(\u03b7\u22122D) structural gravity correction. Depth map built from HorizonShapeParams via buildTopDepthField().' },
+    ],
+  },
+
+  {
+    id: 'plume-fault-transmissibility',
+    domain: 'plume-migration',
+    property: 'Fault Transmissibility',
+    name: 'Manzocchi et al. (1999) fault transmissibility multiplier',
+    shortName: 'Manzocchi et al. (1999) fault mult.',
+    type: 'empirical',
+    status: 'active',
+    citation: {
+      authors: 'Manzocchi, T. et al.',
+      year: 1999,
+      title: 'Fault transmissibility multipliers for flow simulation models',
+      journal: 'Petroleum Geoscience 5(1):53\u201363',
+      doi: '10.1144/petgeo.5.1.53',
+      note: 'sealingFactor \u2208 [0,1] (0=sealing, 1=open) from FaultDefinition maps to face transmissibility multiplier T_face = T_open \u00d7 sealingFactor.',
+    },
+    implementedIn: 'engine/classical/faultTransmissibility.ts',
+    exportedAs: 'buildFaultMultField',
+    validatedAgainst: [
+      { testFile: '__tests__/engine/classical/faultTransmissibility.test.ts', expectedRange: 'Fully sealing fault sets face mult = 0; fully open fault leaves all mults = 1; partial sealing \u2208 [0,1].' },
+      { testFile: '__tests__/engine/ve/structuralDipVE.test.ts', expectedRange: 'Sealing fault reduces cross-fault plume area vs unfaulted baseline.' },
+    ],
+    knownLimitations: 'Fault trace rasterised at sub-cell resolution; fault dip and throw do not alter grid geometry (no 3D fault displacement). Transmissivity multiplier is the only fault representation; no across-fault juxtaposition analysis.',
+    changelog: [
+      { date: '2026-07-24', description: 'Rasterises FaultDefinition traces onto VE grid faces. Multiple overlapping faults use minimum (most sealing) multiplier.' },
+    ],
   },
 
   // ── Benchmark Validation ──────────────────────────────────────────────────
@@ -921,7 +1024,7 @@ export function renderPhysicsFootnote(): string {
   const domains: ModelDomain[] = [
     'co2-thermodynamics', 'brine-thermodynamics', 'transport-properties',
     'relative-permeability', 'trapping-mechanisms', 'pressure-solver', 'plume-migration',
-    'storage-screening', 'geomechanics',
+    'storage-screening', 'geomechanics', 'thermal',
   ]
   const lines: string[] = []
   for (const domain of domains) {
@@ -948,11 +1051,10 @@ export function getClassicalComponents(): Array<{ property: string; model: strin
 }
 
 /**
- * Returns all entries with a pending PhD-era upgrade (brine viscosity,
- * solubility in divalent brines, etc.).
+ * Returns all entries with a pending PhD-era upgrade (solubility in divalent
+ * brines, CO2 viscosity at high P/T, etc.).
  */
 export const PHD_UPGRADE_IDS: string[] = [
-  'brine-viscosity-constant',
   'co2-viscosity-laesecke',
   'co2-solubility-duan-sun',
   'co2-solubility-duan-2006',

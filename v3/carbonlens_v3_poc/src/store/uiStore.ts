@@ -52,6 +52,7 @@ interface UIState {
   warningCount: number
   blowoutActive: boolean
   showGridView: boolean
+  showCaprock: boolean
   demoActive: boolean
   currentProjectId: string | null
   currentProjectName: string | null
@@ -60,6 +61,7 @@ interface UIState {
   setStageCompleteAll: (stages: StageCompletion) => void
   saveCurrentProject: () => Promise<void>
   toggleGridView: () => void
+  toggleCaprock: () => void
   setDemoActive: (v: boolean) => void
   setProjectYears: (y: number) => void
   setView: (v: View) => void
@@ -102,7 +104,8 @@ export const useUIStore = create<UIState>((set, get) => ({
   showPressureField: true,
   warningCount: 0,
   blowoutActive: false,
-  showGridView: false,
+  showGridView: true,
+  showCaprock: true,
   demoActive: false,
   currentProjectId: null,
   currentProjectName: null,
@@ -174,6 +177,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     }
   },
   toggleGridView: () => set((s) => ({ showGridView: !s.showGridView })),
+  toggleCaprock: () => set((s) => ({ showCaprock: !s.showCaprock })),
   setDemoActive: (v) => set({ demoActive: v }),
   setProjectYears: (y) => set({ projectYears: y }),
   setView: (v) => set({ view: v }),

@@ -39,9 +39,13 @@ export function saturationToColor(
     case 'imbibition': return IMBIBITION_PURPLE
     case 'free': {
       const s = Math.max(0, Math.min(1, sat))
-      if (s < 0.20) return lerp3(BRINE_LIGHT, CO2_AMBER,  s / 0.20)
-      if (s < 0.60) return lerp3(CO2_AMBER,   CO2_ORANGE, (s - 0.20) / 0.40)
-      return              lerp3(CO2_ORANGE,   CO2_RED,    (s - 0.60) / 0.40)
+      // Warm pale-gold start: even trace CO2 (sat ~ 0.05) is clearly non-brine.
+      // Previous start (BRINE_LIGHT, cold blue) blended into the dark-navy brine
+      // background, making the spreading plume fringe invisible in the grid view.
+      const FAINT_CO2: [number, number, number] = [0.96, 0.86, 0.28]
+      if (s < 0.25) return lerp3(FAINT_CO2,  CO2_AMBER,  s / 0.25)
+      if (s < 0.60) return lerp3(CO2_AMBER,  CO2_ORANGE, (s - 0.25) / 0.35)
+      return              lerp3(CO2_ORANGE,  CO2_RED,    (s - 0.60) / 0.40)
     }
     default: return BRINE_DEEP
   }

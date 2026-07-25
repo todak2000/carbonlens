@@ -160,8 +160,8 @@ export interface PressureFieldPoint {
 export interface SimulationResult {
   storageCapacity: number   // actual CO2 stored = totalCum (Mt)
   totalCapacity: number     // DOE P50 realistic capacity (2% of total pore volume, Mt)
-  capacityP10: number       // DOE P10 capacity (0.51% Cc, Mt)
-  capacityP90: number       // DOE P90 capacity (5.5% Cc, Mt)
+  capacityP90: number       // DOE P90 capacity (0.51% Cc, conservative, Mt)
+  capacityP10: number       // DOE P10 capacity (5.5% Cc, optimistic, Mt)
   capacityUtilPct: number   // utilisation = storageCapacity / totalCapacity * 100
   overpressureRisk: boolean // true when stored CO2 exceeds P90 capacity (pressure unsafe)
   plumeRadius: number
@@ -181,15 +181,16 @@ export interface SimulationResult {
   containmentProbability: number
   ift: number | null
   adAssessment: ADResult | null
-  p10: number  // DOE storage capacity P10 (low estimate, Mt)
-  p50: number  // DOE storage capacity P50 (best estimate, Mt)
-  p90: number  // DOE storage capacity P90 (high estimate, Mt)
+  p90: number  // DOE storage capacity P90 (conservative / low estimate, Mt)
+  p50: number  // DOE storage capacity P50 (expected estimate, Mt)
+  p10: number  // DOE storage capacity P10 (optimistic / high estimate, Mt)
   storageEfficiency: number   // effective P50 Cc as % (= Cc_P50 × 100 = 2.0%) for transparency
   peacemanBHP?: number        // Peaceman (1978) wellbore BHP — accounts for skin & completion (MPa)
   injectivityIndex?: number   // J = q / ΔP  [m³/(d·MPa)] — diagnostic for injectivity assessment
   haliteRisk?: import('../engine/classical/haliteRisk').HaliteRiskResult
   vePlumeArea?: number        // VE solver: 2D plume footprint (km²)
   vePlumeRadius?: number      // VE solver: effective circular radius of VE plume (m)
+  veSatGrid?: Float32Array | null  // VE solver: per-cell saturation (η/H), 60×60 row-major, for 3D render
   // Physics-based independent trapping capacities (Bachu et al. 2007 framework)
   // Each capacity is derived solely from formation properties — none is a residual of the others.
   structuralCapacity: number      // closure trap volume × ρ_CO₂ from geometry (Mt)

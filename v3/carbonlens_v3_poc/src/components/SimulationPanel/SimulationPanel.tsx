@@ -575,7 +575,7 @@ function ResultDisplay({ result }: { result: NonNullable<ReturnType<typeof useSi
       <div className="flex items-center justify-between bg-tertiary/40 rounded-lg px-2.5 py-1.5 border border-theme/30">
         <span className="text-[10px] text-muted font-mono uppercase tracking-wider font-bold">DOE Range</span>
         <span className="text-xs font-mono text-success font-semibold">
-          P90 {result.capacityP10.toFixed(2)} Mt &nbsp;|&nbsp; P50 {result.totalCapacity.toFixed(2)} Mt &nbsp;|&nbsp; P10 {result.capacityP90.toFixed(2)} Mt
+          P90 {result.capacityP90.toFixed(2)} Mt &nbsp;|&nbsp; P50 {result.totalCapacity.toFixed(2)} Mt &nbsp;|&nbsp; P10 {result.capacityP10.toFixed(2)} Mt
         </span>
       </div>
 

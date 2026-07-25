@@ -39,6 +39,24 @@ export interface VEGrid {
   ny: number
   dx_m: number   // cell width in x (m)
   dy_m: number   // cell height in y (m)
+  /**
+   * Formation top depth at each cell (m TVD, positive downward).
+   * When present, the VE gravity flux uses the structural dip correction:
+   *   driving force proportional to grad(eta - 2*D)  instead of grad(eta) alone
+   * CO2 migrates toward shallower topDepth (smaller D = up-dip).
+   *
+   * Reference: Nordbotten & Celia (2006) WRR 42:W01407 section 3, eq. 3.5.
+   * Length = nx*ny, row-major.
+   */
+  topDepthField?: Float32Array
+  /**
+   * Per-face transmissibility multipliers (0=sealing, 1=open).
+   * Layout: first nx*ny entries are x-direction faces (i to i+1),
+   *         next  nx*ny entries are y-direction faces (j to j+1).
+   * Face index: j*nx + i for x-faces; nx*ny + j*nx + i for y-faces.
+   * Built by buildFaultMultField(). Default: all 1 (no faults).
+   */
+  faultMultField?: Float32Array
 }
 
 export interface VEFluidProps {
@@ -185,6 +203,8 @@ export class VESolver {
     wells: VEWellSource[],
     dPdx_Pa_m?: Float32Array,
     dPdy_Pa_m?: Float32Array,
+    co2DensityField?: Float32Array,
+    co2ViscosityField?: Float32Array,
   ): VEState {
     const { nx, ny, dx_m, dy_m } = this.grid
     const { co2Viscosity, thickness } = this.fluid
@@ -267,15 +287,28 @@ export class VESolver {
           const deta_dx = (etaR - etaL) / dx_m
           let flux_x = 0
 
-          const gravGrad = dRhog_half * deta_dx
-          const etaFaceGrav = gravGrad < 0 ? etaL : etaR  // upwind
-          flux_x -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
+          // Per-cell viscosity (thermal coupling) — harmonic mean at face
+          const muL = co2ViscosityField?.[kL] ?? co2Viscosity
+          const muR = co2ViscosityField?.[kR] ?? co2Viscosity
+          const muFace = 2 * muL * muR / (muL + muR)
+
+          // Structural dip correction: grad(eta - 2*D) where D = topDepth (positive down)
+          // Shallower D means up-dip direction; CO2 migrates toward smaller D.
+          const dD_dx = (this.grid.topDepthField)
+            ? (this.grid.topDepthField[kR] - this.grid.topDepthField[kL]) / dx_m
+            : 0
+          // Full driving gradient including structural term
+          const structGravGrad = dRhog_half * (deta_dx - 2 * dD_dx)
+          const etaFaceGrav = structGravGrad < 0 ? etaL : etaR  // upwind
+          // Fault transmissibility multiplier for this x-face
+          const xFaceMult = this.grid.faultMultField?.[kL] ?? 1
+          flux_x -= (kPermFace * xFaceMult * etaFaceGrav / muFace) * structGravGrad
 
           // Pressure gradient advection (if provided)
           if (dPdx_Pa_m) {
             const dp_dx = (dPdx_Pa_m[kL] + dPdx_Pa_m[kR]) * 0.5
-            const etaFacePres = dp_dx < 0 ? etaL : etaR  // upwind (flow in −∇P direction)
-            flux_x -= (kPermFace * etaFacePres / co2Viscosity) * dp_dx
+            const etaFacePres = dp_dx < 0 ? etaL : etaR  // upwind (flow in -grad(P) direction)
+            flux_x -= (kPermFace * xFaceMult * etaFacePres / muFace) * dp_dx
           }
 
           const contrib = flux_x * dt_sub / (dx_m * phi_eff)
@@ -302,14 +335,26 @@ export class VESolver {
           const deta_dy = (etaT - etaB) / dy_m
           let flux_y = 0
 
-          const gravGrad = dRhog_half * deta_dy
-          const etaFaceGrav = gravGrad < 0 ? etaB : etaT  // upwind
-          flux_y -= (kPermFace * etaFaceGrav / co2Viscosity) * gravGrad
+          // Per-cell viscosity (thermal coupling) — harmonic mean at face
+          const muB = co2ViscosityField?.[kB] ?? co2Viscosity
+          const muT = co2ViscosityField?.[kT] ?? co2Viscosity
+          const muFaceY = 2 * muB * muT / (muB + muT)
+
+          // Structural dip correction in y-direction
+          const dD_dy = (this.grid.topDepthField)
+            ? (this.grid.topDepthField[kT] - this.grid.topDepthField[kB]) / dy_m
+            : 0
+          const structGravGradY = dRhog_half * (deta_dy - 2 * dD_dy)
+          const etaFaceGrav = structGravGradY < 0 ? etaB : etaT  // upwind
+          // Fault transmissibility multiplier for this y-face (stored at offset n)
+          const n_cells = nx * ny
+          const yFaceMult = this.grid.faultMultField?.[n_cells + kB] ?? 1
+          flux_y -= (kPermFace * yFaceMult * etaFaceGrav / muFaceY) * structGravGradY
 
           if (dPdy_Pa_m) {
             const dp_dy = (dPdy_Pa_m[kB] + dPdy_Pa_m[kT]) * 0.5
             const etaFacePres = dp_dy < 0 ? etaB : etaT
-            flux_y -= (kPermFace * etaFacePres / co2Viscosity) * dp_dy
+            flux_y -= (kPermFace * yFaceMult * etaFacePres / muFaceY) * dp_dy
           }
 
           const contrib = flux_y * dt_sub / (dy_m * phi_eff)

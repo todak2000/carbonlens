@@ -42,6 +42,11 @@ import {
 } from '../engine/ve'
 import { solveFDPressure } from '../engine/ve/FDPressureSolver'
 import { computePVTFieldStats } from '../engine/pvt/co2PVTTable'
+import { computeThermalPropertyField } from '../engine/classical/thermalPropertyField'
+import { buildTopDepthField } from '../engine/classical/structuralDepthMap'
+import { buildFaultMultField } from '../engine/classical/faultTransmissibility'
+import type { ThermalParams } from '../engine/plume/thermalEffects'
+import { DEFAULT_THERMAL } from '../engine/plume/thermalEffects'
 
 // VE grid dimensions — 60×60 matches MRST benchmark resolution (500 m/cell on 30 km domain)
 // Increasing from the original 40×40 (750 m/cell) unlocks lateral plume spreading:
@@ -131,17 +136,17 @@ export function computeYearly(
       params.pressure,          // initial (pre-depletion) reservoir pressure
       params.abandonmentPressure,
     )
-    capacityP10    = depleted.storageP10_Mt
-    totalCapacity  = depleted.storageMt         // P50
-    capacityP90    = depleted.storageP90_Mt
+    capacityP90    = depleted.storageP90_Mt     // P90 (conservative / low)
+    totalCapacity  = depleted.storageMt         // P50 (expected)
+    capacityP10    = depleted.storageP10_Mt     // P10 (optimistic / high)
   } else {
     // DOE capacity coefficient framework (Goodman et al. 2011)
-    const Cc_P10 = 0.0051
-    const Cc_P50 = 0.0200
-    const Cc_P90 = 0.0550
-    capacityP10   = totalPoreVolume * Cc_P10 * rhoCO2_init / 1e9
-    totalCapacity = totalPoreVolume * Cc_P50 * rhoCO2_init / 1e9
+    const Cc_P90 = 0.0051  // 90% exceedance probability (Conservative / Low estimate)
+    const Cc_P50 = 0.0200  // 50% exceedance probability (Expected estimate)
+    const Cc_P10 = 0.0550  // 10% exceedance probability (Optimistic / High estimate)
     capacityP90   = totalPoreVolume * Cc_P90 * rhoCO2_init / 1e9
+    totalCapacity = totalPoreVolume * Cc_P50 * rhoCO2_init / 1e9
+    capacityP10   = totalPoreVolume * Cc_P10 * rhoCO2_init / 1e9
   }
 
   // ── Position-dependent storage ─────────────────────────────────────────────
@@ -172,7 +177,10 @@ export function computeYearly(
   const perm_m2 = params.permeability * 9.869e-16
   const ct = 1e-9
   const t_sec = year * 365.25 * 24 * 3600
-  const muBrine_Pas = 6e-4                            // brine viscosity ~60–80 °C saline aquifer
+  // Vogel-Antoine temperature-dependent brine viscosity (valid 20-200 °C)
+  // Calibrated to IAPWS data: ~1.0 mPa·s at 20°C, 0.47 mPa·s at 60°C, 0.28 mPa·s at 100°C
+  // clamped to [0.15, 1.5] mPa·s to avoid extrapolation artifacts
+  const muBrine_Pas = Math.max(1.5e-4, Math.min(1.5e-3, 2.414e-5 * Math.pow(10, 247.8 / (T_K_eff - 140))))
   const alpha_b = perm_m2 / (phi * muBrine_Pas * ct)  // brine hydraulic diffusivity (far-field carrier)
   const kr_CO2 = 0.3                                  // average CO₂ relative permeability in plume
   const mu_eff = visc / Math.max(0.01, kr_CO2)        // effective CO₂-zone viscosity (Pa·s)
@@ -596,12 +604,22 @@ export function computeYearly(
   // Complements peacemanBHP (reservoir-side Darcy pressure drawdown) with a
   // surface-facility perspective: "given a wellhead injection pressure, what arrives
   // at the perforations?"
-  // WHP default: 10 MPa — typical surface CO2 injection line pressure.
-  const WHP_MPA = 10
+  // WHP: use the same wellbore default as wellboreModel.ts to ensure consistency.
+  const WHP_MPA = DEFAULT_WELLBORE.surfacePressure_MPa
   const hydrostaticBHP_MPa = WHP_MPA + (rhoCO2 * 9.81 * params.depth) / 1e6
-  const fracPressure_MPa = (params.overburdenGradient ?? 0.023) * params.depth
-  // Safety margin: fracture pressure minus the more demanding of the two BHP estimates.
-  const bhpMargin_MPa = fracPressure_MPa - Math.max(peacemanBHP, hydrostaticBHP_MPa)
+  // Hubbert-Willis (1957) fracture pressure: sigma_h = K0 * (Sv - Pp) + Pp
+  // Same formula as computeGeomechanicsResult — ensures BHP margin is referenced
+  // against the same governing fracture limit shown in Section 6 of the report.
+  const nu_hw = params.poissonRatio ?? 0.30
+  const K0_hw = nu_hw / (1 - nu_hw)
+  const Sv_hw = (params.overburdenGradient ?? 0.023) * params.depth
+  const fracPressure_MPa = K0_hw * (Sv_hw - params.pressure) + params.pressure
+  // Safety margin: fracture pressure minus the Peaceman BHP (Darcy sandface pressure).
+  // peacemanBHP is the operating wellbore pressure at the perforations derived from
+  // Darcy radial flow — the physically correct reference for fracture risk assessment.
+  // hydrostaticBHP uses the design-max WHP (DEFAULT_WELLBORE) and is a ceiling scenario
+  // displayed separately in the report for hydraulic design context only.
+  const bhpMargin_MPa = fracPressure_MPa - peacemanBHP
 
   const k_Vdp = params.k_Vdp ?? 0
   const heterogeneityCorrected = k_Vdp > 0.05
@@ -1123,29 +1141,17 @@ export function useSimulation(gridRef?: React.RefObject<{
             dPdx_Pa_m = fdResult.dPdx_Pa_m
             dPdy_Pa_m = fdResult.dPdy_Pa_m
 
-            // FD-derived injection pressure: block pressure at highest-pressure well
+            // FD-derived injection pressure: block pressure at highest-pressure well.
+            // Only injectionPressure is updated here — peacemanBHP is preserved from the
+            // outer computeYearly() analytical calculation (Nordbotten + Peaceman 1978).
+            // The FD closed-box pressure can be very large (sealed domain) and must NOT
+            // overwrite the physically correct near-wellbore BHP from the open-aquifer model.
             if (fdResult.P_well_Pa.length > 0) {
               const P_fd_max_Pa = Math.max(...fdResult.P_well_Pa)
               const P_fd_MPa    = P_fd_max_Pa / 1e6
-
-              // Peaceman near-well BHP correction (Peaceman 1978):
-              //   BHP = P_block + Q·μ_brine·ln(r_eq/r_w) / (2π·k·H)
-              // r_eq = 0.1982·Δx for square cells (Peaceman equivalent radius)
-              const perm_m2_fd   = params.permeability * 9.869e-16
-              const r_eq         = 0.1982 * cellWidth_m_ve
-              const r_w          = 0.1   // m
-              let fdBHP_MPa      = P_fd_MPa
-              for (const vw of veWells) {
-                const peaceman_dP_MPa = (vw.q_m3s * 6e-4 * Math.log(r_eq / r_w))
-                  / (2 * Math.PI * perm_m2_fd * params.thickness) / 1e6
-                fdBHP_MPa = Math.max(fdBHP_MPa, P_fd_MPa + peaceman_dP_MPa)
-              }
-              // Cap: BHP cannot exceed fracture pressure (defensive guard)
-              const bhpCap = params.pressure + 30
               newResult = {
                 ...newResult,
                 injectionPressure: P_fd_MPa,
-                peacemanBHP:       Math.min(fdBHP_MPa, bhpCap),
               }
             }
           } catch {
@@ -1155,8 +1161,40 @@ export function useSimulation(gridRef?: React.RefObject<{
           }
         }
 
-        // ── VE plume step (now driven by FD ∇P + gravity) ──────────────────
-        const veState = st.veSolver.step(veWells, dPdx_Pa_m, dPdy_Pa_m)
+        // ── Thermal property field (G-feature: spatially-varying rho, mu) ─────
+        // Build T(i,j) from geothermal gradient + JT cooling, then evaluate
+        // Span-Wagner density and Fenghour viscosity at each cell's temperature.
+        let co2DensityField: Float32Array | undefined
+        let co2ViscosityField: Float32Array | undefined
+        if (params.geothermalGradient != null && params.surfaceTemperatureC != null && veWells.length > 0) {
+          const thermalParams: ThermalParams = {
+            surfaceTemperature_C:    params.surfaceTemperatureC,
+            geothermalGradient_CPerKm: params.geothermalGradient * 10,  // deg C/100m to deg C/km
+            injectionTemperature_C:  params.temperature,
+            thermalDiffusivity_m2s:  DEFAULT_THERMAL.thermalDiffusivity_m2s,
+          }
+          try {
+            const tf = computeThermalPropertyField({
+              grid: { nx: VE_NX, ny: VE_NY, dx_m: cellWidth_m_ve, dy_m: cellWidth_m_ve },
+              topDepth_m:           params.depth,
+              thickness_m:          params.thickness,
+              pressure_MPa:         params.pressure,
+              wellheadPressure_MPa: Math.min(params.pressure + 5, 30),
+              year,
+              wellIndices:          veWells.map(w => ({ i: w.i, j: w.j })),
+              thermalParams,
+              methaneFrac:          params.methaneFraction ?? 0,
+              nitrogenFrac:         params.nitrogenFraction ?? 0,
+            })
+            co2DensityField  = tf.densityField
+            co2ViscosityField = tf.viscosityField
+          } catch {
+            // Thermal field failed: fall back to uniform properties (silent degradation)
+          }
+        }
+
+        // ── VE plume step (now driven by FD grad(P) + gravity + thermal + structural) ──────────────────
+        const veState = st.veSolver.step(veWells, dPdx_Pa_m, dPdy_Pa_m, co2DensityField, co2ViscosityField)
         // VE solver tracks residual trapping via Killough-Land hysteresis cell-by-cell.
         // During active injection the plume only expands (drainage), so trappedMass_Mt ≈ 0,
         // which correctly reflects the absence of imbibition-driven snap-off in an expanding plume.
@@ -1170,6 +1208,7 @@ export function useSimulation(gridRef?: React.RefObject<{
           vePlumeRadius:    veState.plumeRadius_m,
           residualTrapping: veResidual,
           mobilePlume:      veMobile,
+          veSatGrid:        new Float32Array(veState.saturation),  // 60×60 η/H for 3D renderer
         }
       }
 
@@ -1378,13 +1417,50 @@ export function useSimulation(gridRef?: React.RefObject<{
         porosity:     params.porosity,
         Swi:          params.swiConnate ?? 0.15,   // Fix 5: param-driven Swi
         thickness:    params.thickness,
+        // Footprint threshold: 2.5% of formation thickness (min 1 m).
+        // Counts only cells with a physically meaningful CO2 column.
+        // Default 0.01 m (1 cm) captures numerical diffusion tails and
+        // reports a wildly overestimated footprint for large/thin formations.
+        // The code comment in VESolver says "set ~5 m for seismic comparison";
+        // 2.5% of thickness gives 5 m for a 200 m formation and scales correctly
+        // for thinner or thicker zones.
+        etaThresh:    Math.max(1.0, params.thickness * 0.025),
       }
       const permField = uniformPermField(VE_NX, VE_NY, params.permeability)
-      st.veSolver = new VESolver(
-        { nx: VE_NX, ny: VE_NY, dx_m, dy_m },
-        veFluid,
-        permField,
-      )
+
+      // ── Structural depth map ─────────────────────────────────────────────
+      // Build topDepthField from the geological model's active injection zone.
+      // Falls back to flat (undefined) if no geological model is loaded.
+      const geoModel = useGeologicalStore.getState().model
+      const activeZone = geoModel?.zones.find(z => z.activeForInjection)
+      const topDepthField = activeZone
+        ? buildTopDepthField({
+            grid: { nx: VE_NX, ny: VE_NY, dx_m, dy_m },
+            baseDepth_m: params.depth,
+            horizonShape: activeZone.horizonShape,
+            params: activeZone.horizonParams,
+            modelWidth_m:  geoModel?.modelWidthM  ?? Math.sqrt(params.area * 1e6),
+            modelLength_m: geoModel?.modelLengthM ?? Math.sqrt(params.area * 1e6),
+          })
+        : undefined
+
+      // ── Fault transmissibility field ──────────────────────────────────────
+      const faultMultField = (geoModel && geoModel.faults.length > 0)
+        ? buildFaultMultField(
+            { nx: VE_NX, ny: VE_NY, dx_m, dy_m },
+            geoModel.faults,
+            geoModel.modelWidthM ?? Math.sqrt(params.area * 1e6),
+            geoModel.modelLengthM ?? Math.sqrt(params.area * 1e6),
+          )
+        : undefined
+
+      const veGrid = {
+        nx: VE_NX, ny: VE_NY, dx_m, dy_m,
+        ...(topDepthField  ? { topDepthField }  : {}),
+        ...(faultMultField ? { faultMultField } : {}),
+      }
+
+      st.veSolver = new VESolver(veGrid, veFluid, permField)
       st.veSolver.reset()
     } catch {
       st.veSolver = null

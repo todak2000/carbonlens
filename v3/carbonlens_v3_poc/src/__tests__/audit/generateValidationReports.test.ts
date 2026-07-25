@@ -1179,8 +1179,8 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
 
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">P10 Low Estimate</div>
-      <div class="kpi-value">${sr.p10.toFixed(1)} Mt</div>
+      <div class="kpi-label">P90 Low Estimate</div>
+      <div class="kpi-value">${sr.p90.toFixed(1)} Mt</div>
       <div class="kpi-sub">Cc = 0.51% efficiency</div>
     </div>
     <div class="kpi-card">
@@ -1850,9 +1850,9 @@ At reservoir conditions: **T = ${p.temperature.toFixed(1)} °C**, **P = ${p.pres
 
 | Estimate | Value | Efficiency (Cc) |
 |---|---|---|
-| P10 (conservative) | **${sr.p10.toFixed(3)} Mt** | 0.51% |
+| P90 (conservative) | **${sr.p90.toFixed(3)} Mt** | 0.51% |
 | P50 (best estimate) | **${sr.p50.toFixed(3)} Mt** | 2.00% |
-| P90 (optimistic) | **${sr.p90.toFixed(3)} Mt** | 5.50% |
+| P10 (optimistic) | **${sr.p10.toFixed(3)} Mt** | 5.50% |
 | Containment Probability | **${(sr.containmentProbability*100).toFixed(1)}%** | NTG + trapped fraction |
 
 ### CO₂ Mass Distribution — Total Injected: ${cumInj.toFixed(4)} Mt
