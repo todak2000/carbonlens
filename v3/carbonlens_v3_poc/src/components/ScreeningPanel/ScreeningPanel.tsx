@@ -132,7 +132,10 @@ export default function ScreeningPanel() {
     const caprock = 0.5 + frictionScore * 0.5
     const storageScore = Math.min(1, Math.log(1 + params.area * params.thickness * params.porosity) / 12)
 
-    const regulatoryScores: Record<string, number> = { US: 0.8, EU: 0.85, Norway: 0.9, Australia: 0.75, Malaysia: 0.65 }
+    const regulatoryScores: Record<string, number> = {
+      US: 0.8, EU: 0.85, Norway: 0.9, Australia: 0.75, Malaysia: 0.65,
+      CA: 0.78, AE: 0.50, DZ: 0.38, NG: 0.32, ID: 0.42, EG: 0.38,
+    }
     const regulatory = regulatoryScores[jurisdiction] ?? 0.7
 
     const overall = depth * 0.15 + phase * 0.15 + reservoir * 0.25 + caprock * 0.15 + storageScore * 0.2 + regulatory * 0.1

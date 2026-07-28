@@ -221,7 +221,9 @@ export default function GeomechanicsPanel() {
   const maip = useMemo(() => 0.9 * fracPres, [fracPres])
 
   const maipMargin = (maip - injPres) / maip * 100
-  const presFrontR = Math.sqrt(4 * params.permeability * 1e-15 * 86400 * 365 * 20 / (params.porosity * 5e-5 * 1e-9 * 2.25)) / 1000
+  // Theis pressure-front radius over 20-yr horizon — brine diffusivity (far-field carrier)
+  // Uses brine viscosity ~6e-4 Pa·s (not CO2 viscosity) and correct mD→m² factor 9.869e-16
+  const presFrontR = Math.sqrt(4 * params.permeability * 9.869e-16 * 86400 * 365 * 20 / (params.porosity * 6e-4 * 1e-9)) / 1000
 
   const heaveM = useMemo(() => {
     if (!simResult) return null

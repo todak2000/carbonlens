@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
+import { useFormationStore } from '../../store/formationStore'
 import { User, ArrowLeft, MonitorPlay, Pencil, Check, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 import DemoModeOverlay from '../DemoMode/DemoModeOverlay'
@@ -39,6 +40,7 @@ export default function MainLayout() {
   const stageCompletion = useUIStore((s) => s.stageCompletion)
   const setStageComplete = useUIStore((s) => s.setStageComplete)
   const geologyExpanded = useUIStore((s) => s.geologyExpanded)
+  const formationCountry = useFormationStore((s) => s.formationCountry)
 
   // Project metadata from DB (country, presetId)
   const [projectCountry, setProjectCountry] = useState('')
@@ -138,7 +140,7 @@ export default function MainLayout() {
                 ) : (
                   <div className="flex items-center gap-1 group">
                     <span className="text-xs font-semibold text-primary font-mono truncate max-w-[160px]">{currentProjectName}</span>
-                    {projectCountry && <span className="text-[9px] text-muted font-mono">| {projectCountry}</span>}
+                    {(projectCountry || formationCountry) && <span className="text-[9px] text-muted font-mono">| {projectCountry || formationCountry}</span>}
                     <button onClick={() => setEditingName(true)} className="opacity-0 group-hover:opacity-100 text-muted hover:text-primary transition-opacity"><Pencil size={11} /></button>
                   </div>
                 )}

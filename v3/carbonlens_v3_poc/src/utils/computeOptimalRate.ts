@@ -1,20 +1,24 @@
 import type { FormationParams, Well } from '../types'
-import { co2DensitySpanWagner } from '../engine'
+import { co2DensityWithImpurities, computeDepletedFieldCapacity } from '../engine'
 import { cumulativeInjection } from './gridParser'
 
 export interface RateEnvelope {
   optimalRate: number   // P50 DOE — target rate per well (Mt/yr)
-  minRate: number       // P10 DOE — lower bound; below this, formation is under-utilised
-  maxRate: number       // P90 DOE — upper bound; beyond this, overpressure risk
-  totalCapacityP50: number  // Mt
-  totalCapacityP10: number  // Mt
-  totalCapacityP90: number  // Mt
+  minRate: number       // P90 (conservative) lower bound — below this, formation is under-utilised
+  maxRate: number       // P10 (optimistic) upper bound — beyond this, overpressure risk
+  totalCapacityP50: number  // Mt — expected capacity (50% exceedance)
+  totalCapacityP10: number  // Mt — optimistic capacity (10% exceedance, HIGH)
+  totalCapacityP90: number  // Mt — conservative capacity (90% exceedance, LOW)
 }
 
 /**
  * Derive per-well optimal/min/max injection rates such that the total
- * cumulative injection over `projectYears` matches the DOE P50 (optimal),
- * P10 (lower bound), and P90 (upper bound) storage capacities.
+ * cumulative injection over `projectYears` matches DOE capacity estimates.
+ *
+ * DOE exceedance probability convention (Goodman 2011):
+ *   P90 = 90% exceedance = conservative/low (Cc = 0.0051)  → minRate
+ *   P50 = 50% exceedance = expected        (Cc = 0.0200)  → optimalRate
+ *   P10 = 10% exceedance = optimistic/high (Cc = 0.0550)  → maxRate
  *
  * Because cumulativeInjection is linear in `rate`, we solve directly:
  *   optimalRate = P50_capacity / (nWells × cumulativeAtUnitRate)
@@ -25,13 +29,33 @@ export function computeOptimalRate(
   projectYears: number,
 ): RateEnvelope {
   const T_K = params.temperature + 273.15
-  const rhoCO2 = co2DensitySpanWagner(T_K, params.pressure * 1e6)
-  const A = params.area * 1e6       // m²
-  const totalPoreVolume = A * params.thickness * params.netToGross * params.porosity  // m³
 
-  const totalCapacityP10 = totalPoreVolume * 0.0051 * rhoCO2 / 1e9  // Mt
-  const totalCapacityP50 = totalPoreVolume * 0.0200 * rhoCO2 / 1e9  // Mt
-  const totalCapacityP90 = totalPoreVolume * 0.0550 * rhoCO2 / 1e9  // Mt
+  // Route capacity calculation by formation type — must match useSimulation.ts
+  const isDepletedField = params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil'
+  let totalCapacityP10: number
+  let totalCapacityP50: number
+  let totalCapacityP90: number
+
+  if (isDepletedField && params.giip != null && params.abandonmentPressure != null) {
+    // Gas-replacement volumetric (Bachu et al. 2007): area changes do NOT affect capacity.
+    // fillFactor_P50=0.60 and lithologyClass must match useSimulation.ts to keep all three
+    // capacity sources (panel, rateEnv, sim) consistent (checked by capacityConsistencyAudit).
+    const dep = computeDepletedFieldCapacity(
+      params.giip, T_K, params.pressure, params.abandonmentPressure,
+      0.60, params.methaneFraction, params.nitrogenFraction, params.lithologyClass,
+    )
+    totalCapacityP90 = dep.storageP90_Mt   // conservative (carbonate 30%, sandstone 40%)
+    totalCapacityP50 = dep.storageMt        // expected    (carbonate 50%, sandstone 60%)
+    totalCapacityP10 = dep.storageP10_Mt    // optimistic  (carbonate 75%, sandstone 85%)
+  } else {
+    // DOE Goodman 2011 saline aquifer — gross pore volume (no NTG, matching useSimulation)
+    const rhoCO2 = co2DensityWithImpurities(T_K, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
+    const A = params.area * 1e6       // m²
+    const totalPoreVolume = A * params.thickness * params.porosity  // m³ (gross, no NTG)
+    totalCapacityP90 = totalPoreVolume * 0.0051 * rhoCO2 / 1e9  // conservative (90% exceedance)
+    totalCapacityP50 = totalPoreVolume * 0.0200 * rhoCO2 / 1e9  // expected   (50% exceedance)
+    totalCapacityP10 = totalPoreVolume * 0.0550 * rhoCO2 / 1e9  // optimistic (10% exceedance)
+  }
 
   const nWells = Math.max(1, wells.length)
 
@@ -45,8 +69,9 @@ export function computeOptimalRate(
 
   return {
     optimalRate:        totalCapacityP50 / (nWells * safeUnitCum),
-    minRate:            totalCapacityP10 / (nWells * safeUnitCum),
-    maxRate:            totalCapacityP90 / (nWells * safeUnitCum),
+    // P90 (conservative, low Cc) → lower rate bound; P10 (optimistic, high Cc) → upper rate bound
+    minRate:            totalCapacityP90 / (nWells * safeUnitCum),
+    maxRate:            totalCapacityP10 / (nWells * safeUnitCum),
     totalCapacityP50,
     totalCapacityP10,
     totalCapacityP90,
@@ -65,9 +90,9 @@ export function classifyRate(rate: number, env: RateEnvelope): RateStatus {
 }
 
 export const RATE_STATUS_META: Record<RateStatus, { label: string; color: string; bg: string }> = {
-  exceeds_max: { label: 'Exceeds P90 — overpressure risk',       color: '#f87171', bg: 'rgba(239,68,68,0.15)' },
-  high:        { label: 'Above optimal — approaching P90 limit', color: '#fb923c', bg: 'rgba(251,146,60,0.12)' },
-  optimal:     { label: 'Near optimal (DOE P50)',                 color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
-  low:         { label: 'Below optimal — formation under-used',   color: '#facc15', bg: 'rgba(250,204,21,0.10)' },
-  below_min:   { label: 'Below P10 — very low utilisation',       color: '#94a3b8', bg: 'rgba(148,163,184,0.08)' },
+  exceeds_max: { label: 'Above P10 limit — overpressure risk',       color: '#f87171', bg: 'rgba(239,68,68,0.15)' },
+  high:        { label: 'Above optimal — approaching P10 limit',     color: '#fb923c', bg: 'rgba(251,146,60,0.12)' },
+  optimal:     { label: 'Near optimal (DOE P50)',                     color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
+  low:         { label: 'Below optimal — formation under-used',       color: '#facc15', bg: 'rgba(250,204,21,0.10)' },
+  below_min:   { label: 'Below P90 conservative — very low utilisation', color: '#94a3b8', bg: 'rgba(148,163,184,0.08)' },
 }

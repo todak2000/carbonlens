@@ -1,7 +1,8 @@
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
-import { GeometryType } from '../../types'
+import { useSimulationStore } from '../../store/simulationStore'
+import { GeometryType, Jurisdiction } from '../../types'
 import { WellboreSchematic } from '../WellboreSchematic'
 import { parseLAS } from '../../utils/lasParser'
 import { parseEclipseDeck } from '../../utils/eclipseParser'
@@ -19,7 +20,8 @@ import {
   computeTr, computePr, evaluateMars, scaleInput,
   subEquation, subScaler, supEquation, supScaler,
   assessApplicabilityDomain, determinePhase,
-  co2DensitySpanWagner, co2ViscosityFenghour, brineDensityGarcia,
+  co2DensitySpanWagner, co2DensityWithImpurities, co2ViscosityFenghour, brineDensityGarcia,
+  computeDepletedFieldCapacity,
 } from '../../engine'
 
 // ── Sub-step labels ────────────────────────────────────────────────────────────
@@ -189,6 +191,7 @@ export default function FormationPanel() {
   const stageCompletion = useUIStore((s) => s.stageCompletion)
   const setStageComplete = useUIStore((s) => s.setStageComplete)
   const setPanel = useUIStore((s) => s.setPanel)
+  const setJurisdiction = useUIStore((s) => s.setJurisdiction)
 
   // ── Sub-step navigation ──────────────────────────────────────────────────────
   const [subStep, setSubStep] = useState<SubStep>(1)
@@ -219,6 +222,7 @@ export default function FormationPanel() {
   const gridData = useFormationStore((s) => s.gridData)
   const loadPreset = useFormationStore((s) => s.load)
   const activePreset = useFormationStore((s) => s.activePresetName)
+  const formationCountry = useFormationStore((s) => s.formationCountry)
   const [presetChangeMode, setPresetChangeMode] = useState(false)
 
   interface OptNotice { formation: string; perWellRate: number; totalRate: number }
@@ -307,7 +311,7 @@ export default function FormationPanel() {
       const T_K = params.temperature + 273.15
       const P_Pa = params.pressure * 1e6
       const phase = determinePhase(T_K, params.pressure, params.methaneFraction, params.nitrogenFraction)
-      const co2Density = co2DensitySpanWagner(T_K, params.pressure)
+      const co2Density = co2DensitySpanWagner(T_K, P_Pa)
       const co2Visc = co2ViscosityFenghour(T_K, co2Density)
       const brineDensity = brineDensityGarcia(T_K, P_Pa, params.monovalentSalinity)
       return { co2Density, co2Visc, brineDensity, phase }
@@ -323,16 +327,30 @@ export default function FormationPanel() {
   const step5CanProceed = (params.methaneFraction + params.nitrogenFraction) < 0.95
 
   const handleApplySafeRate = useCallback(() => {
-    const opt = autoOptimizeWells(params, Math.max(1, wells.length), wells)
+    const opt = autoOptimizeWells(params, Math.max(1, wells.length), wells, projectYears)
     setWells(opt.wells)
-  }, [params, wells, setWells])
+    // Clear stale simulation results so the sim panel shows updated inputs,
+    // not results computed at the old rate.
+    useSimulationStore.getState().reset()
+    setStageComplete('stage3', false)
+    setOptNotice({ formation: activePreset ?? 'Formation', perWellRate: opt.perWellRate, totalRate: opt.totalRate })
+  }, [params, wells, setWells, projectYears, activePreset, setStageComplete])
 
   const handlePresetLoad = useCallback((preset: typeof FORMATION_PRESETS[0]) => {
-    loadPreset(preset.params, undefined, preset.name)
-    const opt = autoOptimizeWells(preset.params, Math.max(1, wells.length), wells)
+    // Explicitly clear geothermal gradient fields so the preset's measured temperature
+    // is always authoritative. Users can re-enter gradient values afterward if needed.
+    loadPreset(
+      { ...preset.params, geothermalGradient: undefined, surfaceTemperatureC: undefined },
+      undefined,
+      preset.name,
+      preset.country,
+    )
+    const opt = autoOptimizeWells(preset.params, Math.max(1, wells.length), wells, projectYears)
     setWells(opt.wells)
     setOptNotice({ formation: preset.name, perWellRate: opt.perWellRate, totalRate: opt.totalRate })
-  }, [loadPreset, wells, setWells])
+    // Auto-select the regulatory jurisdiction for this formation's country
+    setJurisdiction(preset.jurisdiction as Jurisdiction)
+  }, [loadPreset, wells, setWells, setJurisdiction])
 
   const fileRef = useRef<HTMLInputElement>(null)
   const gridFileRef = useRef<HTMLInputElement>(null)
@@ -572,8 +590,38 @@ export default function FormationPanel() {
 
       // ── 3. Rock Quality ──────────────────────────────────────────────────────
       case 3: {
-        const poreVol = params.area * 1e6 * params.thickness * params.netToGross * params.porosity / 1e9  // km³
-        const capacityP50 = poreVol * 0.02 * (fluidProps?.co2Density ?? 700) / 1e6  // Mt
+        const isDepletedField = params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil'
+        const hasDepletedData  = isDepletedField && params.giip != null && params.abandonmentPressure != null
+
+        // Capacity estimates — routing by formation type to match the simulation engine
+        let capacityP90_Mt: number, capacityP50_Mt: number, capacityP10_Mt: number
+        let capacityMethod: string
+        let poreVol_km3: number | null = null
+
+        if (hasDepletedData) {
+          // Gas-replacement volumetric method (Bachu et al. 2007) — same as useSimulation
+          const T_K = params.temperature + 273.15
+          const dep = computeDepletedFieldCapacity(params.giip!, T_K, params.pressure, params.abandonmentPressure!, 0.85, params.methaneFraction, params.nitrogenFraction)
+          capacityP90_Mt = dep.storageP90_Mt   // 60% fill factor — conservative
+          capacityP50_Mt = dep.storageMt        // 85% fill factor — expected
+          capacityP10_Mt = dep.storageP10_Mt    // 100% fill factor — optimistic
+          capacityMethod = 'Gas-replacement volumetric (Bachu 2007)'
+        } else {
+          // DOE Goodman 2011 saline aquifer method
+          // Gross pore volume — NTG is not applied because Cc coefficients already
+          // implicitly capture NTG effects from the training dataset (matches useSimulation)
+          const A = params.area * 1e6         // m²
+          const poreVol_m3 = A * params.thickness * params.porosity
+          poreVol_km3 = poreVol_m3 / 1e9     // km³ (display only)
+          // Use impurity-aware density to match the simulation engine
+          const T_K_cap = params.temperature + 273.15
+          const rho = co2DensityWithImpurities(T_K_cap, params.pressure * 1e6, params.methaneFraction, params.nitrogenFraction)
+          capacityP90_Mt = poreVol_m3 * 0.0051 * rho / 1e9  // conservative (90% exceedance)
+          capacityP50_Mt = poreVol_m3 * 0.0200 * rho / 1e9  // expected   (50% exceedance)
+          capacityP10_Mt = poreVol_m3 * 0.0550 * rho / 1e9  // optimistic (10% exceedance)
+          capacityMethod = 'DOE Goodman 2011 (saline aquifer)'
+        }
+
         const injIdx = screeningResult.criteria.find((c) => c.id === 'injectivity')
         return (
           <div className="space-y-4">
@@ -598,14 +646,35 @@ export default function FormationPanel() {
               </div>
 
               <div className="rounded-xl bg-tertiary/30 border border-theme/20 p-4 space-y-2">
-                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-2 border-b border-theme/10 pb-1 font-bold">Geological Volumetric Estimates</div>
+                <div className="text-[10px] text-muted font-mono uppercase tracking-wider mb-2 border-b border-theme/10 pb-1 font-bold">
+                  {hasDepletedData ? 'Gas-Replacement Capacity' : 'DOE Volumetric Estimates'}
+                </div>
+                {poreVol_km3 != null && (
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-muted">Gross pore volume:</span>
+                    <span className="text-secondary font-bold">{poreVol_km3.toFixed(3)} km³</span>
+                  </div>
+                )}
+                {hasDepletedData && (
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-muted">GIIP:</span>
+                    <span className="text-secondary font-bold">{params.giip!.toFixed(1)} Bcm</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-muted">Pore volume:</span>
-                  <span className="text-secondary font-bold">{poreVol.toFixed(3)} km³</span>
+                  <span className="text-muted">P10 (optimistic):</span>
+                  <span className="text-blue-400 font-bold">{capacityP10_Mt.toFixed(2)} Mt</span>
                 </div>
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-muted">Capacity P50 (DOE 2011):</span>
-                  <span className="text-emerald-400 font-bold">{capacityP50.toFixed(2)} Mt</span>
+                  <span className="text-muted">P50 (expected):</span>
+                  <span className="text-emerald-400 font-bold">{capacityP50_Mt.toFixed(2)} Mt</span>
+                </div>
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-muted">P90 (conservative):</span>
+                  <span className="text-amber-400 font-bold">{capacityP90_Mt.toFixed(2)} Mt</span>
+                </div>
+                <div className="text-[8px] text-muted font-mono pt-1 border-t border-theme/10">
+                  {capacityMethod} | P90 = 90% exceedance (low), P10 = 10% exceedance (high)
                 </div>
                 {injIdx && (
                   <div className="flex items-center justify-between text-xs font-mono border-t border-theme/10 pt-1.5 mt-1.5">
@@ -663,6 +732,23 @@ export default function FormationPanel() {
                       setParams({ geothermalGradient: v })
                     }}
                     className="w-full rounded bg-tertiary border border-theme/30 px-2 py-1 text-[11px] font-mono text-secondary" />
+                  {activePreset && params.geothermalGradient != null && params.surfaceTemperatureC != null && (() => {
+                    const presetDef = FORMATION_PRESETS.find((p) => p.name === activePreset)
+                    if (!presetDef) return null
+                    const derivedT = Math.round((params.surfaceTemperatureC + params.geothermalGradient * (params.depth + params.thickness / 2) / 100) * 10) / 10
+                    const measuredT = presetDef.params.temperature
+                    if (Math.abs(derivedT - measuredT) < 2) return null
+                    return (
+                      <div className="mt-1 flex items-start gap-1.5 text-[9px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1.5 leading-relaxed">
+                        <AlertTriangle size={9} className="shrink-0 mt-0.5" />
+                        <span>
+                          Gradient overrides {activePreset} measured T. Derived: {derivedT}°C vs measured: {measuredT}°C.
+                          CO2 density error: {Math.abs(1 - derivedT / measuredT) > 0.1 ? 'significant — capacity figures will be wrong.' : 'minor.'}
+                          Clear gradient to restore preset temperature.
+                        </span>
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 <div>
@@ -1137,6 +1223,18 @@ export default function FormationPanel() {
                     </button>
                   )}
                 </div>
+                {activePreset && formationCountry && !presetChangeMode && (
+                  <div className="mt-2 flex items-center gap-2 text-[9px] font-mono text-muted">
+                    <span className="text-accent font-semibold">{formationCountry}</span>
+                    <span className="opacity-40">|</span>
+                    <span>{(() => {
+                      const p = FORMATION_PRESETS.find((pr) => pr.name === activePreset)
+                      return p?.location ?? ''
+                    })()}</span>
+                    <span className="opacity-40">|</span>
+                    <span className="text-amber-400">Jurisdiction auto-set</span>
+                  </div>
+                )}
                 {optNotice && (
                   <div className="mt-2.5 px-2.5 py-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-2">
                     <CheckCircle2 size={12} className="text-emerald-400 shrink-0 mt-0.5" />

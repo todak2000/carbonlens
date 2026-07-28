@@ -18,6 +18,7 @@ interface FormationState {
   gridData: GridFileData | null
   wellCounter: number
   activePresetName: string | null
+  formationCountry: string | null
   useIMPES: boolean
   setParams: (partial: Partial<FormationParams>) => void
   setGeometry: (type: GeometryType) => void
@@ -25,7 +26,7 @@ interface FormationState {
   setMonovalent: (val: number) => void
   setBivalent: (val: number) => void
   reset: () => void
-  load: (params: FormationParams, wells?: Well[], presetId?: string) => void
+  load: (params: FormationParams, wells?: Well[], presetId?: string, country?: string) => void
   addWell: () => void
   removeWell: (id: string) => void
   setWells: (wells: Well[]) => void
@@ -71,6 +72,7 @@ export const useFormationStore = create<FormationState>((set) => ({
   gridData: null,
   wellCounter: 1,
   activePresetName: null,
+  formationCountry: null,
   useIMPES: false,
 
   setParams: (partial) => set((s) => ({
@@ -101,14 +103,15 @@ export const useFormationStore = create<FormationState>((set) => ({
     params: { ...s.params, bivalentSalinity: val, saltType: val > 0 && s.params.monovalentSalinity > 0 ? 'Mixed' : val > 0 ? 'CaCl2' : s.params.monovalentSalinity > 0 ? 'NaCl' : 'Mixed' },
   })),
 
-  reset: () => set({ params: { ...DEFAULTS }, wells: [...DEFAULT_WELLS], las: null, wellCounter: 1, activePresetName: null }),
+  reset: () => set({ params: { ...DEFAULTS }, wells: [...DEFAULT_WELLS], las: null, wellCounter: 1, activePresetName: null, formationCountry: null }),
 
-  load: (params, wells, presetId) => {
+  load: (params, wells, presetId, country) => {
     set({
       params: sanitizeFormationParams({ ...params }),
       wells: wells ? [...wells] : [...DEFAULT_WELLS],
       wellCounter: wells ? wells.length : 1,
       activePresetName: presetId ?? null,
+      formationCountry: country ?? null,
     })
     // Auto-sync geological model when loading a preset
     try {

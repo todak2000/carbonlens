@@ -209,8 +209,8 @@ export default function Dashboard() {
     }
     await db.projects.put(project)
     await loadProjects()
-    // Pass presetId so formationStore.activePresetName is set correctly from the start
-    loadFormation(project.formation, undefined, project.presetId ?? undefined)
+    // Pass presetId and country so formationStore reflects the preset and country from creation
+    loadFormation(project.formation, undefined, project.presetId ?? undefined, project.country ?? undefined)
 
     useUIStore.getState().setCurrentProjectId(project.id)
     useUIStore.getState().setCurrentProjectName(project.name)
@@ -287,9 +287,9 @@ export default function Dashboard() {
   const openProject = (project: StoredProject) => {
     // Restore presetId so FormationPanel highlights the active preset on re-open
     if (project.wells?.length) {
-      useFormationStore.getState().load(project.formation, project.wells, project.presetId ?? undefined)
+      useFormationStore.getState().load(project.formation, project.wells, project.presetId ?? undefined, project.country ?? undefined)
     } else {
-      loadFormation(project.formation, undefined, project.presetId ?? undefined)
+      loadFormation(project.formation, undefined, project.presetId ?? undefined, project.country ?? undefined)
     }
     if (project.simulationResult) {
       // Use restoreCompleted so status becomes 'complete' and ResultDisplay renders

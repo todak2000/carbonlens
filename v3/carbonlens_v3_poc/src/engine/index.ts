@@ -24,3 +24,4 @@ export {
   computeHeterogeneityCorrections,
 } from './classical'
 export type { HeterogeneityCorrectionResult } from './classical'
+export { computeDepletedFieldCapacity } from './classical/depletedFieldCapacity'

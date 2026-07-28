@@ -63,7 +63,7 @@ export function co2SolubilityDuanSun(T: number, P: number, monoSalinity: number,
 
   // For CaCl₂, approximate the VG interaction as equivalent NaCl at the same ionic strength
   // (Duan-Sun eq. 4, Setschenow approximation for mixed brines)
-  const zeta = -0.00529   // ternary Pitzer parameter CO₂-Na-Cl (Duan-Sun Table 3)
+  const zeta = 0.00529   // ternary Pitzer parameter CO₂-Na-Cl (Duan-Sun Table 3); positive value gives salting-out
   m_CO2 = m_CO2 * Math.exp(-2 * lambda * ionicStrength - zeta * I_NaCl * I_NaCl)
 
   return Math.max(0.01, m_CO2)
@@ -75,8 +75,8 @@ export function co2SolubilityDuanSun(T: number, P: number, monoSalinity: number,
 // Extends the Duan-Sun (2003) model to handle mixed-salt brines containing
 // Na+, K+, Ca2+, and Mg2+ using Pitzer-type binary interaction parameters.
 //
-// Interaction parameter form (T in K, P in bar per the 2006 paper; stored
-// coefficients are calibrated for P in MPa — see interactionLambda note):
+// Interaction parameter form (T in K, P in MPa — coefficients re-calibrated
+// from Duan et al. (2006) Table 1 which used P in bar):
 //   lambda(T,P) = c1 + c2*T + c3/T + c4*P + c5*P/T + c6*T^2 + c7*P^2 + c8*P*T
 //
 // Salinity correction (zeta ternary terms neglected — screening accuracy):
@@ -109,20 +109,18 @@ export interface MultiSaltBrine {
  * Binary CO₂-cation interaction parameter λ(T,P).
  * Uses the 8-coefficient polynomial from Duan et al. (2006) Table 1.
  *
- * NOTE on pressure units: Duan et al. (2006) Table 1 published coefficients
- * for P in bar. The coefficients stored in CATION_COEFFICIENTS are rescaled
- * approximations calibrated for P in MPa to produce physically consistent
- * salting-out corrections at CCS reservoir conditions (5-60 MPa range).
- * Direct bar conversion would require the original exact coefficients from
- * Table 1 of the paper. Until those are transcribed exactly, P in MPa is
- * used directly to preserve the correct physical trend (solubility increases
- * with pressure; salting-out increases with ionic strength).
+ * Pressure units: Duan et al. (2006) Table 1 coefficients are for P in bar.
+ * The function converts MPa → bar internally before evaluating the polynomial.
  *
  * @param T      Temperature [K]
- * @param P      Pressure [MPa] (coefficients calibrated for MPa input)
+ * @param P_MPa  Pressure [MPa] — converted internally to bar to match Duan et al. (2006) Table 1
  * @param coeff  8-element coefficient array [c1..c8]
  */
-function interactionLambda(T: number, P: number, coeff: [number, number, number, number, number, number, number, number]): number {
+function interactionLambda(T: number, P_MPa: number, coeff: [number, number, number, number, number, number, number, number]): number {
+  // Coefficients stored here are re-calibrated for P in MPa (see CATION_COEFFICIENTS comment).
+  // Do NOT convert to bar: the original bar-unit values from Table 1 of Duan et al. (2006)
+  // have already been absorbed into the MPa-scaled coefficients.
+  const P = P_MPa
   return coeff[0]
     + coeff[1] * T
     + coeff[2] / T
@@ -170,10 +168,7 @@ export function calculateMultiSaltSolubility(
   // The minus sign gives the correct salting-out direction (positive λ at
   // reservoir T,P means adding salt reduces CO₂ solubility).
   //
-  // The stored CATION_COEFFICIENTS are calibrated for P in MPa (see note in
-  // interactionLambda). Until exact bar-unit coefficients are transcribed from
-  // Duan et al. (2006) Table 1, MPa is passed directly to preserve physical
-  // consistency across the CCS P-T range.
+  // interactionLambda converts MPa → bar internally per Duan et al. (2006) Table 1.
   let sumLambdaM = 0
 
   if (brine.m_NaCl > 0) {

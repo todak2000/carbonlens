@@ -34,6 +34,25 @@ export interface HaliteRiskResult {
 }
 
 /**
+ * Equilibrium water content of the CO₂-rich phase (mass fraction kg_H2O / kg_fluid).
+ *
+ * Simplified from Spycher & Pruess (2005) Geochim. Cosmochim. Acta 69(13):3309.
+ * Uses Buck (1981) saturation pressure + enhancement factor ≈ 2.5 for dissolved-CO₂
+ * activity correction. Valid for T = 10–120°C, P = 5–80 MPa (supercritical range).
+ *
+ * Typical values: 0.002–0.005 at 50–100°C, 10–30 MPa.
+ * The previous approximation (χ_w ≈ ρ_CO₂/ρ_brine ≈ 0.41) was wrong by ~100×,
+ * inflating the dryout radius by an order of magnitude.
+ */
+function co2WaterContent_kgPerKg(T_C: number, P_MPa: number): number {
+  // Buck (1981) saturation pressure of water (MPa), valid 10-120°C
+  const P_sat_MPa = 6.1121e-4 * Math.exp((18.678 - T_C / 234.5) * T_C / (257.14 + T_C))
+  // Enhancement factor (≈ 2.5) accounts for non-ideal CO₂-H₂O mixing at high P
+  const y_w = Math.min(0.04, 2.5 * P_sat_MPa / Math.max(P_MPa, 0.1))
+  return Math.max(5e-4, y_w * 18.015 / (y_w * 18.015 + (1.0 - y_w) * 44.01))
+}
+
+/**
  * Compute halite precipitation risk for a single injection well.
  *
  * @param injectionRate_MtPerYear  Peak injection rate (Mt/yr)
@@ -46,6 +65,7 @@ export interface HaliteRiskResult {
  * @param brineDensity_kgm3        Brine density (kg/m³)
  * @param temperature_C            Reservoir temperature (°C)
  * @param projectYears             Injection duration (years) — sets cumulative exposure
+ * @param pressure_MPa             Reservoir pressure (MPa) — needed for χ_w; default 15
  */
 export function computeHaliteRisk(
   injectionRate_MtPerYear: number,
@@ -58,6 +78,7 @@ export function computeHaliteRisk(
   brineDensity_kgm3: number,
   temperature_C: number,
   projectYears: number,
+  pressure_MPa: number = 15,
 ): HaliteRiskResult {
   // ── Salinity in g/L ───────────────────────────────────────────────────────
   // NaCl MW = 58.44, CaCl₂ MW = 110.98  (g/mol)
@@ -73,14 +94,17 @@ export function computeHaliteRisk(
   const t_s = projectYears * 365.25 * 24 * 3600
 
   // ── Dryout radius — Zeidouni (2009) Eq. 17 ───────────────────────────────
-  // Volume of water evaporated into CO₂ stream = Q_CO₂ · t · χ_w
-  // where χ_w ≈ ρ_CO₂/ρ_brine (mass fraction of water in saturated CO₂ ≈ 0.5–2%)
-  // Conservative: χ_w ≈ ρ_CO₂/ρ_brine (order-of-magnitude correct for screening)
+  // Mass balance: M_CO₂_injected × χ_w = π × r_d² × h × φ × Swi × ρ_brine
+  //   r_d = sqrt[ Q_CO₂_mass × t × χ_w / (π × h × φ × Swi × ρ_brine) ]
+  //       = sqrt[ q_m3s × ρ_CO₂ × t_s × χ_w / (π × h × φ × Swi × ρ_brine) ]
+  //
+  // χ_w: equilibrium water content (kg H₂O / kg CO₂-rich fluid) from Spycher & Pruess (2005).
+  // Previous code used χ_w ≈ ρ_CO₂/ρ_brine ≈ 0.41 — wrong by ~100×, inflating r_d ~10×.
   const Swi_eff = Math.max(Swi, 0.05)
-  const rho_ratio = co2Density_kgm3 / Math.max(brineDensity_kgm3, 1)
-  const denominator = Math.PI * thickness_m * porosity * Swi_eff / rho_ratio
+  const chi_w = co2WaterContent_kgPerKg(temperature_C, pressure_MPa)
+  const denominator = Math.PI * thickness_m * porosity * Swi_eff * Math.max(brineDensity_kgm3, 1)
   const dryoutRadius_m = denominator > 0
-    ? Math.sqrt(Math.max(0, (q_m3s * t_s) / denominator))
+    ? Math.sqrt(Math.max(0, q_m3s * co2Density_kgm3 * t_s * chi_w / denominator))
     : 0
 
   // ── Temperature multiplier: higher T → more water evaporation ─────────────

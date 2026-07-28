@@ -805,7 +805,7 @@ export const MODEL_REGISTRY: ModelEntry[] = [
       note: 'JT coefficient: \u03bc_JT \u2248 0.50\u20130.70 K/MPa at supercritical conditions (T > 31\u00b0C, P > 7.38 MPa)',
     },
     implementedIn: 'engine/plume/thermalEffects.ts',
-    exportedAs: 'jouleThomstonCooling',
+    exportedAs: 'jouleThomsonCooling',
     knownLimitations: 'Piecewise-linear approximation of \u03bc_JT vs T; rigorous values require NIST REFPROP. Valid for screening-grade JT estimate (\u00b115%).',
     changelog: [
       { date: '2026-07-24', description: 'Coupled into VE solver via thermalPropertyField.ts per-cell T evaluation.' },

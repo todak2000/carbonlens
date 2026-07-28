@@ -4,6 +4,7 @@
  */
 import type { FormationParams } from '../types'
 import { computeYearly } from '../hooks/useSimulation'
+import { useFormationStore } from '../store/formationStore'
 
 // ── Latin Hypercube Sampling ─────────────────────────────────────────────────
 export function latinHypercube(n: number, d: number): number[][] {
@@ -79,6 +80,15 @@ export function runMonteCarlo(
   const samples = latinHypercube(N, 4)
   const realizations: MCRealization[] = []
 
+  // Determine the peak injection rate year — pressure must be evaluated here, not at
+  // project end where the ramp-down has reduced rate to zero (which produced ΔP = 0).
+  const storeWells = useFormationStore.getState().wells
+  const maxRampDown = storeWells.length > 0
+    ? Math.max(0, ...storeWells.map(w => w.rampDownYears ?? 0))
+    : 0
+  // Last year of sustained peak injection (just before ramp-down begins)
+  const peakYear = Math.max(1, projectYears - maxRampDown - 1)
+
   for (let i = 0; i < N; i++) {
     const logMin = Math.log(1 - permUncertPct / 100)
     const logMax = Math.log(1 + permUncertPct / 100)
@@ -102,7 +112,10 @@ export function runMonteCarlo(
       thickness: Math.max(1, (baseParams.thickness ?? 50) * thickMult),
     }
 
-    const result = computeYearly(sampledParams, projectYears, projectYears, null)
+    // Evaluate at peakYear for pressure (injection is active) and capacity (volumetric,
+    // year-independent). evaluating at projectYears gives rate=0 after ramp-down, so
+    // injectionPressure = initial pressure and ΔP = 0 — a known bug now fixed.
+    const result = computeYearly(sampledParams, peakYear, projectYears, null)
 
     realizations.push({
       id: i,

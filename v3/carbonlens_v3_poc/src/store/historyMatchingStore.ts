@@ -61,13 +61,11 @@ export const useHistoryMatchingStore = create<HistoryMatchingState>((set, get) =
     }
   },
   applyToFormation: (currentFormationParams) => {
-    const { matchableParams } = get();
     set({
       previousFormationSnapshot: { ...currentFormationParams },
       isAppliedToFormation: true,
     });
-    // Caller is responsible for updating formationStore — this just tracks state
-    return matchableParams;
+    // Caller is responsible for updating formationStore — read matchableParams from store after this call.
   },
   revertFormation: () => {
     set({ isAppliedToFormation: false, previousFormationSnapshot: null });

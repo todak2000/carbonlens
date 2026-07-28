@@ -21,14 +21,18 @@ export function wellRateAtTime(rate: number, t: number, rampUp: number, rampDown
 }
 
 export function cumulativeInjection(rate: number, t: number, rampUp: number, rampDown: number, totalYears: number): number {
-  if (t <= 0) return 0
-  if (t <= rampUp) return 0.5 * rate * t * t / rampUp
+  // Clamp t to [0, totalYears] to prevent negative dt in ramp-down and post-injection drift.
+  const t_eff = Math.min(Math.max(0, t), totalYears)
+  if (t_eff <= 0) return 0
+  if (t_eff <= rampUp) return 0.5 * rate * t_eff * t_eff / rampUp
   let cum = 0.5 * rate * rampUp
-  if (t <= totalYears - rampDown) return cum + rate * (t - rampUp)
-  cum += rate * (totalYears - rampDown - rampUp)
-  const dt = t - (totalYears - rampDown)
+  const plateauEnd = totalYears - rampDown
+  if (t_eff <= plateauEnd) return cum + rate * (t_eff - rampUp)
+  // Guard against no-plateau case (rampUp + rampDown >= totalYears): plateau duration >= 0.
+  cum += rate * Math.max(0, plateauEnd - rampUp)
+  const dt = t_eff - plateauEnd
   cum += rate * dt * (1 - dt / (2 * rampDown))
-  return cum
+  return Math.max(0, cum)
 }
 
 export function parseCarbonGrid(text: string): GridFileData {

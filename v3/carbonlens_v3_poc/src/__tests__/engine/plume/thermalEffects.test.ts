@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   reservoirTemperature,
-  jouleThomstonCooling,
+  jouleThomsonCooling,
   radialTemperatureProfile,
   effectiveTemperature,
   isCO2Supercritical,
@@ -22,12 +22,12 @@ describe('thermalEffects', () => {
   })
 
   it('JT cooling is negative (temperature decrease)', () => {
-    const dT = jouleThomstonCooling(25, 15, 50)
+    const dT = jouleThomsonCooling(25, 15, 50)
     expect(dT).toBeLessThan(0)
   })
 
   it('JT cooling is zero when no pressure drop', () => {
-    const dT = jouleThomstonCooling(15, 15, 50)
+    const dT = jouleThomsonCooling(15, 15, 50)
     expect(dT).toBe(0)
   })
 

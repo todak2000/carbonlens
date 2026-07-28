@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
@@ -32,6 +32,9 @@ export default function SimulationPanel() {
 
   const [projectCountry, setProjectCountry] = useState('')
   const [inputsVerified, setInputsVerified] = useState(false)
+  // Track total rate so we detect when wells were updated from the Formation panel
+  // (e.g. "Apply safe rate") and reset the verification checkbox accordingly.
+  const prevTotalRateRef = useRef<number | null>(null)
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const [pendingRunFn, setPendingRunFn] = useState<(() => void) | null>(null)
   const currentProjectId = useUIStore((s) => s.currentProjectId)
@@ -47,6 +50,18 @@ export default function SimulationPanel() {
       if (p) setProjectCountry(p.country ?? '')
     })
   }, [currentProjectId])
+
+  // When wells are updated externally (e.g. "Apply safe rate" from Formation panel),
+  // uncheck "Freeze parameters" so the user sees the updated inputs and must re-verify
+  // before running. We compare the total rate rather than object identity to avoid
+  // false triggers from unrelated re-renders.
+  useEffect(() => {
+    const currentTotal = wells.reduce((s, w) => s + w.injectionRate, 0)
+    if (prevTotalRateRef.current !== null && Math.abs(currentTotal - prevTotalRateRef.current) > 0.0005) {
+      setInputsVerified(false)
+    }
+    prevTotalRateRef.current = currentTotal
+  }, [wells])
 
   const screeningResult = useMemo(() => assessStorageScreening(params), [params])
 
@@ -558,7 +573,7 @@ function ResultDisplay({ result }: { result: NonNullable<ReturnType<typeof useSi
             ⚠ Reservoir Overpressure Risk
           </div>
           <p className="text-xs text-error/80 font-mono leading-relaxed">
-            Cumulative injection ({result.storageCapacity.toFixed(2)} Mt) has exceeded the P90 capacity limit
+            Cumulative injection ({result.storageCapacity.toFixed(2)} Mt) has exceeded the P90 conservative capacity
             ({result.capacityP90.toFixed(2)} Mt). Sustained overpressure will cause reservoir pressure
             to approach <strong>caprock fracture pressure</strong> — the primary CO₂ leakage pathway.
           </p>
@@ -575,7 +590,7 @@ function ResultDisplay({ result }: { result: NonNullable<ReturnType<typeof useSi
       <div className="flex items-center justify-between bg-tertiary/40 rounded-lg px-2.5 py-1.5 border border-theme/30">
         <span className="text-[10px] text-muted font-mono uppercase tracking-wider font-bold">DOE Range</span>
         <span className="text-xs font-mono text-success font-semibold">
-          P90 {result.capacityP90.toFixed(2)} Mt &nbsp;|&nbsp; P50 {result.totalCapacity.toFixed(2)} Mt &nbsp;|&nbsp; P10 {result.capacityP10.toFixed(2)} Mt
+          P90 {result.capacityP90.toFixed(2)} Mt (low) &nbsp;|&nbsp; P50 {result.totalCapacity.toFixed(2)} Mt &nbsp;|&nbsp; P10 {result.capacityP10.toFixed(2)} Mt (high)
         </span>
       </div>
 

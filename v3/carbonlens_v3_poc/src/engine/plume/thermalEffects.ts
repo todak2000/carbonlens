@@ -59,7 +59,7 @@ export function reservoirTemperature(depth_m: number, params: ThermalParams): nu
  * @param temperature_C           reservoir temperature (°C)
  * @returns temperature reduction at wellbore face (°C, negative = cooling)
  */
-export function jouleThomstonCooling(
+export function jouleThomsonCooling(
   wellheadPressure_MPa: number,
   reservoirPressure_MPa: number,
   temperature_C: number,
@@ -133,7 +133,7 @@ export function effectiveTemperature(
   params: ThermalParams,
 ): number {
   const T_res = reservoirTemperature(depth_m, params)
-  const dT_JT = jouleThomstonCooling(wellheadPressure_MPa, reservoirPressure_MPa, T_res)
+  const dT_JT = jouleThomsonCooling(wellheadPressure_MPa, reservoirPressure_MPa, T_res)
 
   // JT cooling is strongest at the wellbore face (r→0) and decays radially
   // Use radial heat diffusion to model spatial extent

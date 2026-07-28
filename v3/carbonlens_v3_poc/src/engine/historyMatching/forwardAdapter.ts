@@ -276,7 +276,7 @@ export function runForwardModel(
     const V_p_plume_fa = Math.max(1, Math.PI * plumeRadius * plumeRadius * plumeHeight * phi * ntg);
     const S_g_plume_fa = Math.min(1 - 0.15, cumVolM3 / V_p_plume_fa);
     const V_brine_fa = V_p_plume_fa * (1 - S_g_plume_fa);
-    const dissFick_fa = 2 * A_contact_fa * rhoBrine * X_sat_fa * Math.sqrt(D_eff_fa * t_sec_fa) / 1e9;
+    const dissFick_fa = 2 * A_contact_fa * rhoBrine * X_sat_fa * Math.sqrt(D_eff_fa * t_sec_fa / Math.PI) / 1e9;
     const t_onset_fa  = Math.max(2, 50 / Math.sqrt(params.permeability));
     const t_yr_fa     = Math.max(1, year);
     const f_conv_fa   = t_yr_fa <= t_onset_fa
@@ -323,7 +323,7 @@ export function runForwardModel(
     const formationCapacityUtil = totalCum / Math.max(0.001, totalFormationCapacity) * 100;
 
     const capacityUtilPct = (totalCum / Math.max(0.001, totalCapacity)) * 100;
-    const overpressureRisk = totalCum > capacityP90;
+    const overpressureRisk = totalCum > totalCapacity;  // exceeds P50 — consistent with rate optimisation target
 
     const trappedFrac = totalCum > 0.001
       ? (residualTrappingScaled + solubilityTrapping + mineralTrappingFA) / totalCum

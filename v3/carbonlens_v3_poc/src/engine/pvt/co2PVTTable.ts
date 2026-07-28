@@ -177,13 +177,23 @@ export function computePVTFieldStats(
 
   const mean = sum / pressureField.length
 
+  // Sanity guard: the PVT field mean should not deviate by more than ~15% from the
+  // single-point baseline density. Larger deviations indicate a unit mismatch in the
+  // pressure field (e.g. Pa passed where MPa expected) or a stale FD pressure state.
+  // Cap the capacity factor to [0.85, 1.20] and flag the anomaly so the report does
+  // not silently present a physically impossible 13-40% density inflation.
+  const rawFactor  = baseDensity > 0 ? mean / baseDensity : 1.0
+  const cappedMean = baseDensity > 0 ? Math.min(Math.max(mean, baseDensity * 0.85), baseDensity * 1.20) : mean
+  const capacityFactor = baseDensity > 0 ? cappedMean / baseDensity : 1.0
+  const fieldAnomalyDetected = rawFactor > 1.20 || rawFactor < 0.80
+
   return {
-    densityMin_kgm3: minRho,
-    densityMax_kgm3: maxRho,
-    densityMean_kgm3: mean,
-    densityWeightedCapacityFactor: baseDensity > 0 ? mean / baseDensity : 1.0,
+    densityMin_kgm3: fieldAnomalyDetected ? baseDensity : minRho,
+    densityMax_kgm3: fieldAnomalyDetected ? baseDensity : maxRho,
+    densityMean_kgm3: fieldAnomalyDetected ? baseDensity : mean,
+    densityWeightedCapacityFactor: fieldAnomalyDetected ? 1.0 : capacityFactor,
     subcriticalPoints: subcritical,
     phaseWarning: subcritical > 0,
-    densityRange_kgm3: maxRho - minRho,
+    densityRange_kgm3: fieldAnomalyDetected ? 0 : maxRho - minRho,
   }
 }

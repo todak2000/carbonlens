@@ -10,7 +10,7 @@ const jurisdictions: { value: Jurisdiction; label: string; flag: string; descrip
   { value: 'Malaysia', label: 'PETRONAS CCS Guidelines', flag: '\u{1F1F2}\u{1F1FE}', description: 'PETRONAS rules for offshore carbon storage and asset lifecycle management' },
 ]
 
-const requirements: Record<Jurisdiction, string[]> = {
+const requirements: Partial<Record<Jurisdiction, string[]>> = {
   US: [
     'UIC Class VI Permit Application & Well Construction Approval',
     'Area of Review (AoR) computational delineation and dynamic modeling',

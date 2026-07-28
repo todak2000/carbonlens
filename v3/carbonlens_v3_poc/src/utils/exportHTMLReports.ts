@@ -9,7 +9,7 @@ import { computeYearly, computeGeomechanicsResult } from '../hooks/useSimulation
 import { wellRateAtTime } from './gridParser'
 import { useUIStore } from '../store/uiStore'
 import { renderSimEngineAttribution, renderProvenanceTableRows } from '../data/modelRegistry'
-import { jouleThomstonCooling, radialTemperatureProfile, reservoirTemperature, type ThermalParams } from '../engine/plume/thermalEffects'
+import { jouleThomsonCooling, radialTemperatureProfile, reservoirTemperature, type ThermalParams } from '../engine/plume/thermalEffects'
 import { co2PhaseState } from '../engine/plume/thermalEffects'
 
 // ---------------------------------------------------------------------------
@@ -487,6 +487,45 @@ function generateSensitivityTornadoSVG(
     return `<div style="padding:10px; border:1px dashed #cbd5e1; border-radius:6px; color:#64748b; font-size:8.5pt;">Run simulation to view sensitivity tornado chart.</div>`
   }
 
+  const isDepletedField = params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil'
+
+  // For depleted fields, capacity is GIIP-based (Bachu 2007 gas-replacement volumetric).
+  // Area, thickness, and porosity do not drive capacity — GIIP (initial gas in place) does.
+  // Show a GIIP uncertainty bar instead of the saline-aquifer geometric parameters.
+  if (isDepletedField) {
+    // Use the simulation engine's P10/P90 (fill-factor-based): these come from computeDepletedFieldCapacity.
+    // The MC result gives p10_Mt = p50_Mt = p90_Mt for depleted fields (GIIP not sampled), so never use it here.
+    const p10 = result?.p10 ?? p50 * (100 / 85)
+    const p90 = result?.p90 ?? p50 * (60  / 85)
+
+    // Fill factors by lithology — Bachu et al. (2007) IJGGC 1(4):430 Table 3
+    const litho = params.lithologyClass ?? 'sandstone'
+    const fills = litho === 'carbonate'
+      ? { p90: '30%', p50: '50%', p10: '75%' }
+      : litho === 'chalk'
+      ? { p90: '25%', p50: '40%', p10: '65%' }
+      : { p90: '40%', p50: '60%', p10: '85%' }  // sandstone default
+
+    return `
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">P50 Capacity Sensitivity (Base: ${p50.toFixed(1)} Mt) — Bachu 2007 Gas-Replacement Volumetric</p>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px 18px;">
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 10px 0;font-weight:600;">Depleted Field: Capacity is GIIP-Bound (${litho.charAt(0).toUpperCase() + litho.slice(1)} fill factors, Bachu 2007)</p>
+      <p style="font-size:8.5pt;color:#0369a1;margin:0 0 10px 0;">For depleted gas/oil fields, storage capacity is determined by the original gas/oil in place (GIIP/OIIP) and gas-replacement fill factor. Fill factors for ${litho}: P50 = ${fills.p50}, P90 = ${fills.p90}, P10 = ${fills.p10} (Bachu et al. 2007, Table 3). Geometric parameters are used to estimate GIIP but do not independently drive capacity in the Monte Carlo.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:8.5pt;">
+        <thead><tr style="background:#e0f2fe;"><th style="padding:5px 8px;text-align:left;">Scenario</th><th style="padding:5px 8px;text-align:right;">Fill Factor</th><th style="padding:5px 8px;text-align:right;">Capacity (Mt)</th></tr></thead>
+        <tbody>
+          <tr style="background:#f0fdf4;"><td style="padding:5px 8px;">P10 (optimistic)</td><td style="padding:5px 8px;text-align:right;">${fills.p10}</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#16a34a;">${p10.toFixed(2)}</td></tr>
+          <tr><td style="padding:5px 8px;">P50 (expected)</td><td style="padding:5px 8px;text-align:right;">${fills.p50}</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#00c4a0;">${p50.toFixed(2)}</td></tr>
+          <tr style="background:#fef2f2;"><td style="padding:5px 8px;">P90 (conservative)</td><td style="padding:5px 8px;text-align:right;">${fills.p90}</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#dc2626;">${p90.toFixed(2)}</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:7.5pt;color:#64748b;margin:8px 0 0 0;">Reference: Bachu et al. (2007) IJGGC 1(4):430. Fill factors represent CO&#x2082; replacing produced hydrocarbons in the pore space. P90 assumes conservative partial fill; P50 is the expected commercial fill; P10 assumes optimistic high fill.</p>
+    </div>
+  </div>
+  `
+  }
+
   // Use actual MC config uncertainty values if available, otherwise fall back to fixed defaults.
   // This prevents axis labels from leaking a prior formation's cached parameter bands.
   const areaPct   = mcResult?.areaUncertPct   ?? 20
@@ -497,8 +536,9 @@ function generateSensitivityTornadoSVG(
   const permPct   = mcResult?.permUncertPct   ?? 30
 
   // P10/P90 from MC run are the authoritative bar endpoints; fall back to linear scaling
-  const p10 = mcResult?.p10_Mt ?? p50 * (1 - areaPct / 100)
-  const p90 = mcResult?.p90_Mt ?? p50 * (1 + areaPct / 100)
+  // P10 = optimistic/high (10% exceedance), P90 = conservative/low (90% exceedance)
+  const p10 = mcResult?.p10_Mt ?? p50 * (1 + areaPct / 100)
+  const p90 = mcResult?.p90_Mt ?? p50 * (1 - areaPct / 100)
 
   const sensitivityData = [
     { label: `Area (±${areaPct}%)`,      negPct: -areaPct,  posPct: areaPct,  colorNeg: '#ef4444', colorPos: '#22c55e', valNeg: p50 * (1 - areaPct/100),  valPos: p50 * (1 + areaPct/100) },
@@ -662,8 +702,23 @@ function buildHMCalibrationCard(hmResult: OptimizationResult): string {
   `
 }
 
-function buildMCUncertaintyCard(mc: PersistedMCResult): string {
-  const spread = mc.p90_Mt > 0 ? mc.p10_Mt / mc.p90_Mt : 0
+function buildMCUncertaintyCard(mc: PersistedMCResult, params?: FormationParams): string {
+  const isDepletedField = params?.formationType === 'depleted_gas' || params?.formationType === 'depleted_oil'
+
+  // For depleted fields the MC engine samples area/thickness/porosity which do not
+  // drive GIIP-based capacity, so mc.p90_Mt === mc.p50_Mt === mc.p10_Mt (all equal).
+  // Override with Bachu (2007) fill-factor bounds derived from the P50 estimate:
+  //   P90 = 60% fill (conservative),  P50 = 85% fill,  P10 = 100% fill.
+  const displayP50 = mc.p50_Mt
+  // Fill factor ratios by lithology (Bachu 2007): carbonate 30/50/75, chalk 25/40/65, sandstone 40/60/85
+  const _mcLithoBase = params?.lithologyClass ?? 'sandstone'
+  const _mcFillRatio = _mcLithoBase === 'carbonate' ? { p90: 0.30 / 0.50, p10: 0.75 / 0.50 }
+    : _mcLithoBase === 'chalk'                       ? { p90: 0.25 / 0.40, p10: 0.65 / 0.40 }
+    :                                                  { p90: 0.40 / 0.60, p10: 0.85 / 0.60 }
+  const displayP90 = isDepletedField ? mc.p50_Mt * _mcFillRatio.p90 : mc.p90_Mt
+  const displayP10 = isDepletedField ? mc.p50_Mt * _mcFillRatio.p10 : mc.p10_Mt
+
+  const spread = displayP90 > 0 ? displayP10 / displayP90 : 0
   const spreadLabel = spread < 2 ? 'Low — well-constrained' : spread < 5 ? 'Moderate — typical for appraisal' : 'High — further characterisation needed'
   const spreadColor = spread < 2 ? '#00c4a0' : spread < 5 ? '#f59e0b' : '#ef4444'
   return `
@@ -675,17 +730,17 @@ function buildMCUncertaintyCard(mc: PersistedMCResult): string {
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:8pt;margin-bottom:8px;">
       <div style="text-align:center;background:rgba(34,197,94,0.08);border-radius:6px;padding:6px 4px;">
         <div style="font-size:7pt;color:#64748b;">P90 (Conservative)</div>
-        <div style="font-size:11pt;font-weight:700;color:#22c55e;">${mc.p90_Mt.toFixed(2)}</div>
+        <div style="font-size:11pt;font-weight:700;color:#22c55e;">${displayP90.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
       <div style="text-align:center;background:rgba(0,196,160,0.08);border-radius:6px;padding:6px 4px;border:1px solid rgba(0,196,160,0.3);">
         <div style="font-size:7pt;color:#64748b;">P50 (Expected)</div>
-        <div style="font-size:11pt;font-weight:700;color:#00c4a0;">${mc.p50_Mt.toFixed(2)}</div>
+        <div style="font-size:11pt;font-weight:700;color:#00c4a0;">${displayP50.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
       <div style="text-align:center;background:rgba(239,68,68,0.08);border-radius:6px;padding:6px 4px;">
         <div style="font-size:7pt;color:#64748b;">P10 (Optimistic)</div>
-        <div style="font-size:11pt;font-weight:700;color:#ef4444;">${mc.p10_Mt.toFixed(2)}</div>
+        <div style="font-size:11pt;font-weight:700;color:#ef4444;">${displayP10.toFixed(2)}</div>
         <div style="font-size:7pt;color:#64748b;">Mt CO₂</div>
       </div>
       <div style="text-align:center;background:rgba(59,130,246,0.08);border-radius:6px;padding:6px 4px;">
@@ -700,7 +755,16 @@ function buildMCUncertaintyCard(mc: PersistedMCResult): string {
       </div>
     </div>
     <p style="font-size:7.5pt;color:${spreadColor};font-weight:600;margin:0;">Uncertainty assessment: ${spreadLabel}</p>
-    <p style="font-size:7.5pt;color:#64748b;margin-top:2px;">Sampled: permeability ±${mc.permUncertPct}%, porosity ±${(mc.poroUncertAbs * 100).toFixed(1)}%, area ±${mc.areaUncertPct}%, thickness ±${mc.thickUncertPct}%. DOE Goodman (2011) volumetric method.</p>
+    ${isDepletedField
+      ? (() => {
+          const _mcLitho = params?.lithologyClass ?? 'sandstone'
+          const _mcF = _mcLitho === 'carbonate' ? { p90: '30%', p50: '50%', p10: '75%' }
+            : _mcLitho === 'chalk'               ? { p90: '25%', p50: '40%', p10: '65%' }
+            :                                      { p90: '40%', p50: '60%', p10: '85%' }
+          return `<p style="font-size:7.5pt;color:#64748b;margin-top:2px;">Bachu (2007) gas-replacement bounds (${_mcLitho}): P90 = ${_mcF.p90} fill, P50 = ${_mcF.p50} fill, P10 = ${_mcF.p10} fill. Geometric MC parameters do not independently drive depleted-field capacity.</p>`
+        })()
+      : `<p style="font-size:7.5pt;color:#64748b;margin-top:2px;">Sampled: permeability ±${mc.permUncertPct}%, porosity ±${(mc.poroUncertAbs * 100).toFixed(1)}%, area ±${mc.areaUncertPct}%, thickness ±${mc.thickUncertPct}%. DOE Goodman (2011) volumetric method.</p>`
+    }
   </div>
   `
 }
@@ -1135,7 +1199,7 @@ function buildExecutiveSummaryBody(
     <div class="kpi-card">
       <div class="kpi-label">P50 Capacity</div>
       <div class="kpi-value">${result.totalCapacity?.toFixed(1) ?? '—'}</div>
-      <div class="kpi-sub">Mt &mdash; P90 ${result.p10?.toFixed(1) ?? '—'} / P10 ${result.p90?.toFixed(1) ?? '—'} Mt</div>
+      <div class="kpi-sub">Mt &mdash; P90 ${result.p90?.toFixed(1) ?? '—'} / P10 ${result.p10?.toFixed(1) ?? '—'} Mt</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Safety Rating</div>
@@ -1169,9 +1233,9 @@ function buildExecutiveSummaryBody(
       <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px;">DOE CAPACITY RANGE (Mt)</p>
       <div style="position:relative; margin:8px 0 16px;">
         <div style="display:flex; justify-content:space-between; font-size:8pt; color:#64748b; margin-bottom:2px;">
-          <span>P90 (cons.) ${result.p10?.toFixed(1) ?? '—'}</span>
+          <span>P90 (cons.) ${result.p90?.toFixed(1) ?? '—'}</span>
           <span>P50 ${result.totalCapacity?.toFixed(1) ?? '—'}</span>
-          <span>P10 (opt.) ${result.p90?.toFixed(1) ?? '—'}</span>
+          <span>P10 (opt.) ${result.p10?.toFixed(1) ?? '—'}</span>
         </div>
         <div class="bar-track">
           <div style="width:100%; background:linear-gradient(90deg,#10b98133,#10b981,#059669); height:8px; border-radius:4px;"></div>
@@ -1246,7 +1310,7 @@ function buildExecutiveSummaryBody(
   ` : ''}
 
   ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
-  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
+  ${mcResult ? buildMCUncertaintyCard(mcResult, params) : ''}
 
   <!-- Injection Well Programme -->
   <h2>Injection Well Programme</h2>
@@ -1381,7 +1445,7 @@ function buildExecutiveSummaryBody(
   <!-- Overpressure Risk -->
   <div style="border:2px solid #ef4444; border-radius:8px; padding:14px 16px; margin:14px 0; background:#fee2e2;">
     <p style="font-size:11pt; font-weight:700; color:#991b1b; margin-bottom:6px;">&#x26A0; RESERVOIR OVERPRESSURE RISK DETECTED</p>
-    <p style="font-size:9.5pt; color:#7f1d1d;">The cumulative injected CO&#x2082; volume (${result.storageCapacity?.toFixed(2) ?? '—'} Mt) exceeds the P90 (conservative) storage capacity estimate (${result.p90?.toFixed(2) ?? '—'} Mt). This indicates a significant risk of reservoir overpressure. Reduce the injection rate, extend the injection period, or conduct detailed pressure management analysis before proceeding.</p>
+    <p style="font-size:9.5pt; color:#7f1d1d;">The cumulative injected CO&#x2082; volume (${result.storageCapacity?.toFixed(2) ?? '—'} Mt) exceeds the P50 (expected) storage capacity estimate (${result.p50?.toFixed(2) ?? '—'} Mt). This indicates a significant risk of reservoir overpressure. Reduce the injection rate, extend the injection period, or conduct detailed pressure management analysis before proceeding.</p>
   </div>` : ''}
 
   <!-- Recommendations -->
@@ -1858,7 +1922,7 @@ export function openPermitApplication(
         <tr><td>Seismicity Risk</td><td>${geomechanics.inducedSeismicityRisk.toUpperCase()}</td><td><span class="${seisClass}">${seisCrit}</span></td></tr>
         <tr><td>Fault Slip Potential (dCFF)</td><td>${geomechanics.faultSlipPotential.toFixed(3)} MPa</td><td>${geomechanics.faultSlipPotential > 0.1 ? '<span class="badge-amber">&#x26A0; Monitor — elevated fault reactivation risk' : '<span class="badge-green">&#x2713; Below threshold'}</span></td></tr>
         <tr><td>Dynamic Coulomb Failure Function (&#x394;CFF)</td><td>${geomechanics.dcff != null ? geomechanics.dcff.toFixed(3) + ' MPa' : '—'}</td><td>${geomechanics.dcff != null ? (geomechanics.dcff > 0.01 ? '<span class="badge-amber">Positive &#x394;CFF — increased failure probability on optimally oriented faults' : '<span class="badge-green">&#x394;CFF negligible') : '<span class="badge-green">REF'}</span></td></tr>
-        <tr><td>Pressure Front Radius</td><td>${geomechanics.pressureFrontRadius?.toFixed(0) ?? '—'} m</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Pressure Front Radius</td><td>${geomechanics.pressureFrontRadius?.toFixed(2) ?? '—'} km</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Overburden Stress (S<sub>v</sub>)</td><td>${geomechanics.overburdenStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Friction Angle (Mohr-Coulomb)</td><td>${geomechanics.frictionAngle.toFixed(1)}&#xB0;</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Cohesion (Mohr-Coulomb)</td><td>${geomechanics.cohesion.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
@@ -1987,7 +2051,7 @@ export function openPermitApplication(
       <tr><td>Overpressured Formation</td><td>${params.isOverpressured != null ? (params.isOverpressured ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
       <tr><td>Lithology Class</td><td>${params.lithologyClass ? params.lithologyClass.charAt(0).toUpperCase() + params.lithologyClass.slice(1) : '—'}</td></tr>
       <tr><td>Fractured Reservoir</td><td>${params.fracturedReservoir != null ? (params.fracturedReservoir ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
-      <tr><td>Gas Initially In Place (GIIP)</td><td>${params.giip != null ? params.giip.toFixed(2) + ' Bscf' : '—'}</td></tr>
+      <tr><td>Gas Initially In Place (GIIP)</td><td>${params.giip != null ? params.giip.toFixed(2) + ' Bcm' : '—'}</td></tr>
       <tr><td>Abandonment Pressure</td><td>${params.abandonmentPressure != null ? params.abandonmentPressure.toFixed(2) + ' MPa' : '—'}</td></tr>
       <tr><td>Connate Water Saturation (S<sub>wi</sub>)</td><td>${params.swiConnate != null ? (params.swiConnate * 100).toFixed(1) + '%' : '15.0% (default)'}</td></tr>
     </tbody>
@@ -2022,7 +2086,7 @@ export function openPermitApplication(
 
   <h3>2.4 CO&#x2082; Phase State at Reservoir Conditions</h3>
   <div class="section-box">
-    <p>At reservoir conditions of <strong>${effectiveTempC.toFixed(1)}°C</strong>${params.geothermalGradient != null ? ` (geothermal gradient, surface ${params.surfaceTemperatureC?.toFixed(1) ?? '—'}°C + ${params.geothermalGradient} °C/100 m × ${(params.depth + params.thickness / 2).toFixed(0)} m mid-depth)` : ''} and <strong>${params.pressure?.toFixed(2) ?? '—'} MPa</strong>, CO&#x2082; is expected to be in <strong class="${phaseLabel === 'supercritical' ? 'accent' : 'risk-moderate'}">${phaseLabel}</strong> phase. ${phaseLabel === 'supercritical' ? `Supercritical CO&#x2082; at these conditions has a density of approximately <strong>${result?.co2Density?.toFixed(0) ?? '~600–850'} kg/m&#xB3;</strong> (Span-Wagner 1996 EOS), providing efficient storage per unit pore volume.` : `Subcritical conditions reduce storage efficiency. Consider increasing injection depth or targeting a warmer/higher-pressure formation for improved storage efficiency.`}</p>
+    <p>At reservoir conditions of <strong>${effectiveTempC.toFixed(1)}°C</strong>${params.geothermalGradient != null ? ` (geothermal gradient, surface ${params.surfaceTemperatureC?.toFixed(1) ?? '—'}°C + ${params.geothermalGradient} °C/100 m × ${(params.depth + params.thickness / 2).toFixed(0)} m mid-depth)` : ''} and <strong>${params.pressure?.toFixed(2) ?? '—'} MPa</strong>, CO&#x2082; is expected to be in <strong class="${phaseLabel === 'supercritical' ? 'accent' : 'risk-moderate'}">${phaseLabel}</strong> phase. ${phaseLabel === 'supercritical' ? `Supercritical CO&#x2082; at these conditions has a density of approximately <strong>${result?.co2Density?.toFixed(0) ?? '~600–850'} kg/m&#xB3;</strong> (${(params.methaneFraction > 0 || params.nitrogenFraction > 0) ? 'Peng-Robinson EOS with Li &amp; Yan 2009 binary interaction parameters for impure CO&#x2082; stream' : 'Span-Wagner 1996 EOS'}), providing efficient storage per unit pore volume.` : `Subcritical conditions reduce storage efficiency. Consider increasing injection depth or targeting a warmer/higher-pressure formation for improved storage efficiency.`}</p>
   </div>
 
   <h3>2.5 Thermal Effects &amp; Near-Wellbore Temperature</h3>
@@ -2030,8 +2094,12 @@ export function openPermitApplication(
     const hasGeo = params.geothermalGradient != null && params.surfaceTemperatureC != null
     const midDepth = params.depth + params.thickness / 2
     const whp = Math.min(params.pressure + 5, 30)
+    // Lithology-aware thermal diffusivity for label and radial profile
+    const thermalDiffStr = params.lithologyClass === 'carbonate'
+      ? '1.2&#x00D7;10<sup>-6</sup> m&#x00B2;/s (typical carbonate)'
+      : '1.0&#x00D7;10<sup>-6</sup> m&#x00B2;/s (typical sandstone)'
     const resTemp = hasGeo ? reservoirTemperature(midDepth, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }) : params.temperature
-    const jtDelta = jouleThomstonCooling(whp, params.pressure, resTemp)
+    const jtDelta = jouleThomsonCooling(whp, params.pressure, resTemp)
     const jtWellbore = resTemp + jtDelta
     const phaseAtRes = co2PhaseState(resTemp, params.pressure)
     const phaseAtWellbore = co2PhaseState(jtWellbore, params.pressure)
@@ -2044,8 +2112,8 @@ export function openPermitApplication(
     <table>
       <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
       <tbody>
-        <tr><td>Surface Reference Temperature</td><td>${params.surfaceTemperatureC?.toFixed(1) ?? '—'} &#xB0;C</td></tr>
-        <tr><td>Geothermal Gradient</td><td>${params.geothermalGradient != null ? (params.geothermalGradient * 10).toFixed(1) + ' &#xB0;C/km' : '—'}</td></tr>
+        <tr><td>Surface Reference Temperature</td><td>${params.surfaceTemperatureC?.toFixed(1) ?? '<em style="color:#64748b;">Not configured — set in Formation Settings</em>'} &#xB0;C</td></tr>
+        <tr><td>Geothermal Gradient</td><td>${params.geothermalGradient != null ? (params.geothermalGradient * 10).toFixed(1) + ' &#xB0;C/km' : '<em style="color:#64748b;">Not configured — formation temperature used directly</em>'}</td></tr>
         <tr><td>Temperature at Reservoir Top</td><td>${result?.temperatureAtTopC?.toFixed(1) ?? (hasGeo ? reservoirTemperature(params.depth, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }).toFixed(1) : '—')} &#xB0;C</td></tr>
         <tr><td>Temperature at Reservoir Base</td><td>${result?.temperatureAtBaseC?.toFixed(1) ?? (hasGeo ? reservoirTemperature(params.depth + params.thickness, { surfaceTemperature_C: params.surfaceTemperatureC!, geothermalGradient_CPerKm: params.geothermalGradient! * 10, injectionTemperature_C: params.temperature, thermalDiffusivity_m2s: 1e-6 }).toFixed(1) : '—')} &#xB0;C</td></tr>
         <tr><td>Mid-Reservoir Temperature</td><td>${resTemp.toFixed(1)} &#xB0;C</td></tr>
@@ -2079,7 +2147,7 @@ export function openPermitApplication(
         </tr>`).join('')}
       </tbody>
     </table>
-    <p class="muted" style="font-size:8pt; margin-top:6px;">Radial profile computed from line-source heat conduction solution (erfc). JT cooling is strongest at the wellbore face (r&#x2192;0) and decays with distance. Thermal diffusivity: 1.0&#x00D7;10<sup>-6</sup> m&#x00B2;/s (typical sandstone). At distances &gt; 200 m, the formation temperature returns to the geothermal baseline.</p>
+    <p class="muted" style="font-size:8pt; margin-top:6px;">Radial profile computed from line-source heat conduction solution (erfc). JT cooling is strongest at the wellbore face (r&#x2192;0) and decays with distance. Thermal diffusivity: ${thermalDiffStr}. At distances &gt; 200 m, the formation temperature returns to the geothermal baseline.</p>
   </div>`
   })()}
 
@@ -2100,7 +2168,12 @@ export function openPermitApplication(
       </tbody>
     </table>
     <p style="font-size:8pt;color:#64748b;margin-top:8px;">
-      The single-point density (${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;, Section 2.4) is evaluated directly from the Span-Wagner EOS at initial reservoir T and P. The PVT field mean (${result.pvtStats.densityMean_kgm3.toFixed(1)} kg/m&#xB3;) is evaluated via bilinear interpolation from a precomputed 20&#xD7;40 table at each pressure-field point. Discrepancies of 1&#x2013;2% between these values reflect (a) the difference between initial pressure and the spatially-varying FD pressure field, and (b) bilinear vs direct EOS evaluation near the CO&#x2082; critical region. The Capacity Correction Factor (${result.pvtStats.densityWeightedCapacityFactor != null ? (result.pvtStats.densityWeightedCapacityFactor * 100).toFixed(1) : '—'}%) quantifies the adjustment required if the field-average density replaces the single-point assumption in storage capacity calculations.
+      The single-point density (${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;, Section 2.4) is evaluated directly from the Span-Wagner EOS at initial reservoir T and P. The PVT field mean (${result.pvtStats.densityMean_kgm3.toFixed(1)} kg/m&#xB3;) is evaluated via bilinear interpolation from a precomputed 20&#xD7;40 table at each pressure-field point. ${(() => {
+        const singlePt = result?.co2Density ?? 0
+        const fieldMean = result.pvtStats.densityMean_kgm3
+        const discPct = singlePt > 0 ? Math.abs((fieldMean - singlePt) / singlePt * 100) : 0
+        return `The actual discrepancy is ${discPct.toFixed(1)}% — driven primarily by pressure differences between the initial reservoir pressure and the spatially-varying FD pressure field after injection repressurises the formation.`
+      })()} The Capacity Correction Factor (${result.pvtStats.densityWeightedCapacityFactor != null ? (result.pvtStats.densityWeightedCapacityFactor * 100).toFixed(1) : '—'}%) quantifies the adjustment if the field-average density replaced the single-point assumption for saline aquifer pore-volume capacity estimates.${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? ' <strong>Note:</strong> For depleted gas/oil fields, the Bachu (2007) gas-replacement capacity (Section 5.1) uses CO&#x2082; density at abandonment pressure — not the field-average density shown here. This correction factor does not apply to the GIIP-based capacity estimate.' : ''}
     </p>
   </div>` : '<p class="muted">PVT field statistics not available. Run the simulation with geothermal gradient enabled to compute spatially-varying density.</p>'}
 
@@ -2381,17 +2454,26 @@ export function openPermitApplication(
        ===================================================================== -->
   <h2>5. Storage Capacity Analysis</h2>
 
-  <h3>5.1 DOE Statistical Capacity Estimate (Goodman et al. 2011)</h3>
+  <h3>5.1 ${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? 'Gas-Replacement Volumetric Capacity (Bachu et al. 2007)' : 'DOE Statistical Capacity Estimate (Goodman et al. 2011)'}</h3>
   <table>
     <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
     <tbody>
-      <tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">${params.area.toFixed(2)} km² &times; ${(params.thickness / 1000).toFixed(4)} km &times; ${(params.porosity * 100).toFixed(1)}% porosity</span></td><td>${grossPoreVolume.toFixed(4)} km³</td></tr>
-      <tr><td>CO&#x2082; Density at Reservoir Conditions</td><td>${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;</td></tr>
+      ${!(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? `<tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">${params.area.toFixed(2)} km² &times; ${(params.thickness / 1000).toFixed(4)} km &times; ${(params.porosity * 100).toFixed(1)}% porosity</span></td><td>${grossPoreVolume.toFixed(4)} km³</td></tr>` : ''}
+      <tr><td>CO&#x2082; Density${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? ' at Abandonment Conditions<br><span style="font-size:8pt;color:#64748b;">Used in gas-replacement capacity formula (Bachu 2007). At P<sub>aband</sub> = ' + (params.abandonmentPressure?.toFixed(2) ?? '—') + ' MPa.</span>' : ' at Reservoir Conditions'}</td><td>${result?.co2Density?.toFixed(1) ?? '—'} kg/m&#xB3;</td></tr>
       <tr><td>P10 Capacity (optimistic, 10th percentile)</td><td>${result?.p10?.toFixed(2) ?? '—'} Mt</td></tr>
       <tr><td>P50 Capacity (best estimate, 50th percentile)</td><td>${result?.totalCapacity?.toFixed(2) ?? '—'} Mt</td></tr>
       <tr><td>P90 Capacity (conservative, 90th percentile)</td><td>${result?.p90?.toFixed(2) ?? '—'} Mt</td></tr>
       <tr><td>Capacity Utilisation (this project)</td><td>${result?.capacityUtilPct?.toFixed(1) ?? '—'}%</td></tr>
-      <tr><td>Storage Efficiency Coefficient (Cc)</td><td>2.0% (DOE P50)</td></tr>
+      ${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil')
+        ? (() => {
+            const _litho = params.lithologyClass ?? 'sandstone'
+            const _f = _litho === 'carbonate' ? { p90: '30%', p50: '50%', p10: '75%' }
+              : _litho === 'chalk'             ? { p90: '25%', p50: '40%', p10: '65%' }
+              :                                  { p90: '40%', p50: '60%', p10: '85%' }
+            return `<tr><td>Gas-Replacement Fill Factor (${_litho}, Bachu 2007)</td><td>P90: ${_f.p90} / P50: ${_f.p50} / P10: ${_f.p10}</td></tr>`
+          })()
+        : `<tr><td>Storage Efficiency Coefficient (Cc)</td><td>2.0% (DOE P50)</td></tr>`
+      }
       ${result?.vePlumeArea != null ? `<tr><td>VE Plume Footprint (2D vertical equilibrium)</td><td>${result.vePlumeArea.toFixed(3)} km²</td></tr>` : ''}
       ${result?.vePlumeArea != null || result?.vePlumeRadius != null ? `<tr><td>VE Effective Plume Radius${wells.length > 1 ? ' (composite, derived from footprint)' : ''}</td><td>${(() => {
         // For multi-well runs the per-well analytical vePlumeRadius is physically inconsistent
@@ -2406,7 +2488,16 @@ export function openPermitApplication(
       })()}</td></tr>` : ''}
     </tbody>
   </table>
-  <p class="muted">Capacity estimates follow DOE Goodman et al. (2011) methodology applied to gross pore volume. Storage efficiency coefficient Cc = 2.0% represents the P50 statistical estimate for saline aquifer storage.</p>
+  ${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil')
+    ? (() => {
+        const _litho2 = params.lithologyClass ?? 'sandstone'
+        const _f2 = _litho2 === 'carbonate' ? { p90: '30%', p50: '50%', p10: '75%' }
+          : _litho2 === 'chalk'              ? { p90: '25%', p50: '40%', p10: '65%' }
+          :                                    { p90: '40%', p50: '60%', p10: '85%' }
+        return `<p class="muted">Capacity estimates follow Bachu et al. (2007) gas-replacement volumetric methodology. Storage capacity equals GIIP converted to CO&#x2082; mass via density ratio and multiplied by the lithology-specific fill factor (${_litho2}: P90 ${_f2.p90}, P50 ${_f2.p50}, P10 ${_f2.p10}). Area, thickness, and porosity are used to derive GIIP, not as independent drivers.</p>`
+      })()
+    : `<p class="muted">Capacity estimates follow DOE Goodman et al. (2011) methodology applied to gross pore volume. Storage efficiency coefficient Cc = 2.0% represents the P50 statistical estimate for saline aquifer storage.</p>`
+  }
 
   <h3>5.2 Trapping Mechanism Distribution (at project end)</h3>
   ${(result != null && storedTotal > 0) ? (() => {
@@ -2446,12 +2537,19 @@ export function openPermitApplication(
       </tbody>
     </table>
     <div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;margin-top:12px;border-radius:4px;">
+      ${(params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? `
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 5px 0;font-weight:600;">Bachu Gas-Replacement vs Physics-Based Capacity: Why the Values Differ</p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:0;">
+        The Bachu (2007) P50 capacity (Section 5.1: ${result?.p50?.toFixed(2) ?? '—'} Mt) uses a gas-replacement volumetric approach: CO₂ occupies the void space left by produced hydrocarbons, limited by a fill factor (P50 = 85%). This is the primary regulatory capacity metric for depleted fields.
+        The physics-based total formation capacity (Section 5.3: ${result?.totalFormationCapacity?.toFixed(2) ?? '—'} Mt) independently sums structural, residual, dissolution, and mineral trapping potential. For depleted fields this typically exceeds the gas-replacement estimate as it accounts for additional trapping mechanisms beyond simple voidage replacement.
+        The current injection programme (${storedTotal.toFixed(2)} Mt) represents ${result?.formationCapacityUtil?.toFixed(1) ?? '—'}% of the Bachu physical capacity. Both metrics should be reported to the competent authority.
+      </p>` : `
       <p style="font-size:9pt;color:#0c4a6e;margin:0 0 5px 0;font-weight:600;">DOE Statistical vs Physics-Based Capacity: Why the Values Differ</p>
       <p style="font-size:9pt;color:#0c4a6e;margin:0;">
         The DOE P50 capacity (Section 5.1: ${result?.p50?.toFixed(2) ?? '—'} Mt) applies a statistical storage efficiency coefficient Cc = 2.0% to the gross pore volume. This coefficient is a basin-average derived from a population of US saline aquifers and represents the fraction of pore volume realistically accessible across a range of geological settings. It is not a physical limit for any specific formation.
         The physics-based total formation capacity (Section 5.3: ${result?.totalFormationCapacity?.toFixed(2) ?? '—'} Mt) independently sums the maximum CO&#x2082; retainable by structural, residual, dissolution, and mineral trapping given this formation's measured properties. It represents the theoretical upper bound for this specific site.
         The two frameworks answer different questions: DOE provides a probabilistic screening bandwidth for regulatory comparison across sites; Bachu provides the site-specific physical ceiling. The current injection programme (${storedTotal.toFixed(2)} Mt) represents ${result?.formationCapacityUtil?.toFixed(1) ?? '—'}% of the Bachu physical capacity, indicating adequate physical storage headroom, even though it exceeds the DOE P50 statistical estimate (${result?.capacityUtilPct?.toFixed(1) ?? '—'}% utilisation). Both metrics must be reported to the competent authority; the DOE exceedance triggers the warning in Section 5.1.
-      </p>
+      </p>`}
     </div>
   </div>
   <h3>5.4 Mass Balance &amp; Boundary Outflow</h3>
@@ -2524,7 +2622,7 @@ export function openPermitApplication(
   ${generateEconomicsNPVChartSVG(params, wells, result, projectYears, jurisdiction)}
 
   ${hmResult ? buildHMCalibrationCard(hmResult) : ''}
-  ${mcResult ? buildMCUncertaintyCard(mcResult) : ''}
+  ${mcResult ? buildMCUncertaintyCard(mcResult, params) : ''}
 
   <h3>5.6 Reservoir Parameter Sensitivity Analysis</h3>
   <p class="muted">

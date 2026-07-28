@@ -116,5 +116,8 @@ export const useSimulationStore = create<SimulationState>((set) => ({
 
   clearSnapshots: () => set({ snapshots: [] }),
 
-  reset: () => set({ status: 'idle', result: null, completedResult: null, completedWells: null, completedParams: null, completedGeomechanics: null, geomechanics: null, validation: null, forceRun: false, progress: 0, isAnimating: false, baselineResult: null, baselineParams: null, snapshots: [] }),
+  reset: () => {
+    set({ status: 'idle', result: null, completedResult: null, completedWells: null, completedParams: null, completedGeomechanics: null, geomechanics: null, validation: null, forceRun: false, progress: 0, isAnimating: false, baselineResult: null, baselineParams: null, snapshots: [] })
+    useUIStore.getState().setBlowout(false)
+  },
 }))

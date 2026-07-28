@@ -50,6 +50,9 @@ export default function OverviewPanel() {
       case 'EU': return 60
       case 'Norway': return 70
       case 'Australia': return 45
+      case 'Malaysia': return 35
+      case 'CA': return 65
+      case 'AE': return 20
       default: return 0
     }
   }, [jurisdiction])
@@ -67,7 +70,7 @@ export default function OverviewPanel() {
             {currentProjectName || 'Untitled Project'} — Reservoir Analytics
           </h1>
           <p className="text-xs text-muted mt-1 leading-relaxed">
-            Real-time feasibility feasibility metrics, regulatory alignment, and geomechanical limits for CO₂ sequestration.
+            Real-time feasibility metrics, regulatory alignment, and geomechanical limits for CO₂ sequestration.
           </p>
         </div>
         <div className="flex items-center gap-2">

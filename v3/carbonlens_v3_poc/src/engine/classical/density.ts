@@ -217,8 +217,12 @@ export function co2DensitySpanWagner(T: number, P: number): number {
 }
 
 /**
- * Alias with the historically-used name — same computation.
- * @deprecated prefer co2DensitySpanWagner
+ * Legacy alias — delegates to co2DensitySpanWagner (Helmholtz EOS).
+ * @deprecated Use co2DensitySpanWagner for pure CO₂ or co2DensityWithImpurities
+ *   for mixed streams (CH₄, N₂). Despite the "PR" name, this is NOT a
+ *   Peng-Robinson implementation; it calls the Span-Wagner EOS unchanged.
+ *   Export reports that describe "PR EOS with Li & Yan 2009 parameters" refer
+ *   to co2DensityWithImpurities, not this function.
  */
 export function co2DensityPR(T: number, P: number): number {
   return co2DensitySpanWagner(T, P)

@@ -17,6 +17,8 @@ import { runMonteCarlo, REPORT_MC_CONFIG } from '../../utils/monteCarlo'
 export default function ExportPanel() {
   const params = useFormationStore((s) => s.params)
   const wells = useFormationStore((s) => s.wells)
+  const activePresetName = useFormationStore((s) => s.activePresetName)
+  const formationCountry = useFormationStore((s) => s.formationCountry)
   const result = useSimulationStore((s) => s.result)
   const completedResult = useSimulationStore((s) => s.completedResult)
   const geomechanics = useSimulationStore((s) => s.geomechanics)
@@ -27,6 +29,7 @@ export default function ExportPanel() {
   const jurisdiction = useUIStore((s) => s.jurisdiction)
   const projectYears = useUIStore((s) => s.projectYears)
   const simulationYear = useUIStore((s) => s.timestep)
+  const currentProjectName = useUIStore((s) => s.currentProjectName)
   const user = useAuthStore((s) => s.user)
   const organization = useAuthStore((s) => s.user?.organization ?? '')
   const [exporting, setExporting] = useState<'package' | 'excel' | null>(null)
@@ -56,24 +59,24 @@ export default function ExportPanel() {
   }, [setLastMCResult])
 
   const { formationName, formationLocation, presetJurisdiction } = useMemo(() => {
-    const preset = FORMATION_PRESETS.find(
-      (p) => p.params.depth === params.depth && p.params.porosity === params.porosity,
-    )
+    // Use store-tracked preset name as primary source — no fragile depth+porosity matching
+    const preset = activePresetName
+      ? FORMATION_PRESETS.find((p) => p.name === activePresetName)
+      : null
     return {
-      formationName: preset?.name ?? 'Custom Formation',
-      formationLocation: preset?.location ?? 'User-defined site',
+      formationName: activePresetName ?? currentProjectName ?? 'Custom Formation',
+      formationLocation: preset?.location ?? (formationCountry ? formationCountry : 'User-defined site'),
       presetJurisdiction: preset?.jurisdiction ?? null,
     }
-  }, [params.depth, params.porosity])
-  
+  }, [activePresetName, currentProjectName, formationCountry])
+
   const [copied, setCopied] = useState(false)
   const [reportTemplate, setReportTemplate] = useState<string>(presetJurisdiction ?? jurisdiction)
 
   useEffect(() => {
-    if (presetJurisdiction) {
-      setReportTemplate(presetJurisdiction)
-    }
-  }, [presetJurisdiction])
+    // When jurisdiction is auto-set from a preset load, sync the report template
+    setReportTemplate(jurisdiction)
+  }, [jurisdiction])
 
   const template: PermitTemplate = PERMIT_TEMPLATES[reportTemplate] ?? PERMIT_TEMPLATES[DEFAULT_JURISDICTION]
 
@@ -126,13 +129,15 @@ export default function ExportPanel() {
     const fp = simSnap.completedParams
     const fw = simSnap.completedWells
     const fg = simSnap.completedGeomechanics ?? simSnap.geomechanics
-    const preset = FORMATION_PRESETS.find((p) => p.params.depth === fp.depth && p.params.porosity === fp.porosity)
-    const presetName = preset?.name ?? 'Custom Formation'
+    const resolvedPresetName = useFormationStore.getState().activePresetName
+    const resolvedCountry = useFormationStore.getState().formationCountry
+    const preset = resolvedPresetName ? FORMATION_PRESETS.find((p) => p.name === resolvedPresetName) : null
+    const presetName = resolvedPresetName ?? uiSnap.currentProjectName ?? 'Custom Formation'
     const mcResult = runMCForReport(fp, presetName, uiSnap.projectYears)
     openPreScreeningReport(
       fp, snap, fg, fw,
       presetName,
-      preset?.location ?? 'User-defined site',
+      preset?.location ?? (resolvedCountry ?? 'User-defined site'),
       reportTemplate,
       authSnap.user?.organization ?? '',
       simSnap.snapshots,
@@ -200,14 +205,26 @@ export default function ExportPanel() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Pre-screening report and details (60% width equivalent: col-span-7) */}
         <div className="lg:col-span-7 space-y-6">
+          {/* Formation identity — shown in all reports */}
+          <div className="rounded-lg border border-theme/20 bg-tertiary/20 px-4 py-2.5 flex items-center gap-3 text-[11px] font-mono">
+            <span className="text-muted uppercase tracking-wider">Formation</span>
+            <span className="text-accent font-bold truncate">{formationName}</span>
+            {formationLocation && formationLocation !== 'User-defined site' && (
+              <>
+                <span className="text-muted opacity-40">|</span>
+                <span className="text-muted truncate">{formationLocation}</span>
+              </>
+            )}
+          </div>
+
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 space-y-4 shadow-md">
             <h3 className="text-sm font-mono font-bold text-emerald-400 uppercase tracking-wider border-b border-emerald-500/20 pb-2 flex items-center gap-2">
               <FileText size={16} /> CO₂ Pre-Screening Report
             </h3>
-            
+
             <p className="text-xs text-secondary leading-relaxed font-mono">
-              Unified permit pre-screening report including Executive Overview, Area of Review (AoR), 
-              storage capacity volumetric assessment, caprock geomechanics envelope, MRV strategy plan, 
+              Unified permit pre-screening report including Executive Overview, Area of Review (AoR),
+              storage capacity volumetric assessment, caprock geomechanics envelope, MRV strategy plan,
               and regulatory checklists. Ready for regulatory pre-application submission.
             </p>
             

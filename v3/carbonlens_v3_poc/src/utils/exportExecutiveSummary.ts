@@ -14,6 +14,7 @@
 import { jsPDF } from 'jspdf'
 import { FormationParams, SimulationResult, GeomechanicsResult } from '../types'
 
+
 // ── Brand colours — light-theme, print-safe ────────────────────────────────
 const CLR = {
   // Page background is white — all text must be dark enough to read on white
@@ -127,7 +128,7 @@ export function generateRecommendations(
     )
   } else {
     recs.push(
-      `Mobile plume fraction is ${mobilePct.toFixed(0)}% of total stored volume. ` +
+      `Structural trapping fraction is ${mobilePct.toFixed(0)}% of total stored volume. ` +
       `Enhanced monitoring and injection rate controls are recommended to manage plume migration.`,
     )
   }
@@ -290,8 +291,8 @@ export function exportExecutiveSummary(
     {
       label: 'STORAGE CAPACITY',
       main: `${result.p50.toFixed(0)} Mt CO\u2082`,
-      sub1: `P10: ${result.p90.toFixed(0)} Mt`,   // P10 = optimistic/high (PE convention)
-      sub2: `P90: ${result.p10.toFixed(0)} Mt`,   // P90 = conservative/low (PE convention)
+      sub1: `P10: ${result.p10.toFixed(0)} Mt`,   // P10 = optimistic/high (DOE 10% exceedance)
+      sub2: `P90: ${result.p90.toFixed(0)} Mt`,   // P90 = conservative/low (DOE 90% exceedance)
       note: `P50 best estimate \u2014 Cc=${result.storageEfficiency.toFixed(1)}% (DOE Goodman 2011)`,
     },
     {
@@ -376,7 +377,7 @@ export function exportExecutiveSummary(
     { label: 'Residual trapping',          value: result.residualTrapping, color: CLR.emerald },
     { label: 'Dissolution (aqueous phase)', value: dissolvedOnly,           color: [56, 189, 248]  as const },
     { label: 'Mineral trapping',           value: result.mineralTrapping,  color: [167, 139, 250] as const },
-    { label: 'Mobile plume',               value: result.mobilePlume,      color: CLR.amber },
+    { label: 'Structural Trapping',        value: result.mobilePlume,      color: CLR.amber },
   ]
   const barMaxW = W - M * 2 - 52
   const barH = 4.5
@@ -444,7 +445,7 @@ export function exportExecutiveSummary(
     `Thickness: ${params.thickness} m`,
     `Porosity: ${(params.porosity * 100).toFixed(0)}%`,
     `Permeability: ${params.permeability} mD`,
-    `Temperature: ${params.temperature}\u00B0C`,
+    `Temperature: ${params.temperature}\u00B0C${params.geothermalGradient != null && params.surfaceTemperatureC != null ? ' (gradient-derived)' : ''}`,
     `Area: ${params.area} km\u00B2`,
   ]
 
@@ -493,7 +494,11 @@ export function exportExecutiveSummary(
   const brandW = doc.getTextWidth('CarbonLens')
   doc.setFont('helvetica', 'normal')
   setTxt(doc, [150, 170, 200] as const)
-  doc.text(' \u2014 ' + window.location.hostname + ' \u2014 Generated ' + date, M + brandW, ftY)
+  doc.text(
+    ' \u2014 ' + window.location.hostname + ' \u2014 Generated ' + date + '  |  37 models across 11 domains \u2014 see validation report \u00a77',
+    M + brandW,
+    ftY,
+  )
 
   // Right: institution disclaimer (single line, no MARS/ML/Sleipner reference)
   setTxt(doc, [150, 170, 200] as const)

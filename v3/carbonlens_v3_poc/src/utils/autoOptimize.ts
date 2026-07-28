@@ -1,5 +1,6 @@
 import type { FormationParams, Well } from '../types'
 import { validateGeomechanics } from '../hooks/useSimulation'
+import { computeOptimalRate } from './computeOptimalRate'
 
 export interface OptimizeResult {
   wells: Well[]
@@ -147,11 +148,13 @@ export function autoOptimizeWells(
   params: FormationParams,
   numWells: number,
   existingWells: Well[],
+  projectYears: number = 30,
 ): OptimizeResult {
   const hazard = buildHazardMap(params)
   const halfSpan = 1.5
   const positions = findSafePositions(hazard, numWells, halfSpan)
 
+  // Use existing ramp schedule if available, otherwise sensible defaults
   const wells: Well[] = positions.map((p, i) => {
     const prev = existingWells[i]
     return {
@@ -165,31 +168,54 @@ export function autoOptimizeWells(
     }
   })
 
-  let low = 0.001
-  let high = 1.0   // cap at 1 Mt/yr per well — matches typical CCS project scale (Sleipner: ~0.9 Mt/yr)
-  let bestRate = 0.001
+  // ── Step 1: Derive capacity-based rate bounds ──────────────────────────────
+  // computeOptimalRate accounts for formation type (saline vs depleted gas),
+  // DOE Goodman Cc coefficients, project years, well count, and ramp schedule.
+  //   optimalRate = P50 capacity / (n_wells × cumulative_injection_at_unit_rate)
+  //   maxRate     = P10 capacity / (n_wells × ...)  — optimistic ceiling
+  const envelope = computeOptimalRate(params, wells, projectYears)
 
-  for (let iter = 0; iter < 30; iter++) {
+  // Search up to slightly above P10 ceiling so the binary search can bracket
+  // the true geomechanics ceiling. Cap at a physical maximum (20 Mt/yr per well).
+  const searchCeiling = Math.min(envelope.maxRate * 1.15, 20.0)
+
+  // ── Step 2: Binary search for geomechanics-safe maximum rate ──────────────
+  // validateGeomechanics checks Theis BHP < fracture pressure and Mohr-Coulomb
+  // stability. The search now spans the full capacity range, not 0–1 Mt/yr.
+  let low = 0.001
+  let high = Math.max(searchCeiling, 0.01)
+  let geomechanicsSafeMax = 0.001
+
+  for (let iter = 0; iter < 40; iter++) {
     const mid = (low + high) / 2
     const testWells = wells.map((w) => ({
       injectionRate: mid,
       rampUpYears: w.rampUpYears,
       rampDownYears: w.rampDownYears,
     }))
-    const v = validateGeomechanics(params, testWells)
-    if (v.valid) {
-      bestRate = mid
+    if (validateGeomechanics(params, testWells).valid) {
+      geomechanicsSafeMax = mid
       low = mid
     } else {
       high = mid
     }
   }
 
+  // ── Step 3: Optimal rate = min(geomechanicsCeiling, P50 capacity rate) ───
+  // We target P50 (fill formation to expected capacity over project lifetime).
+  // If geomechanics cannot reach P50, we are pressure-limited — return the max
+  // safe rate and the caller should surface a "needs more wells" warning.
+  // Never exceed P10 (overpressure / overfill risk).
+  const finalRate = Math.max(
+    0.001,
+    Math.min(geomechanicsSafeMax, envelope.optimalRate),
+  )
+
   return {
-    wells: wells.map((w) => ({ ...w, injectionRate: Math.max(0.001, bestRate) })),
-    totalRate: bestRate * numWells,
-    perWellRate: Math.max(0.001, bestRate),
-    safe: bestRate > 0.001,
+    wells: wells.map((w) => ({ ...w, injectionRate: finalRate })),
+    totalRate: finalRate * numWells,
+    perWellRate: finalRate,
+    safe: geomechanicsSafeMax >= envelope.optimalRate,
     placements: positions,
   }
 }

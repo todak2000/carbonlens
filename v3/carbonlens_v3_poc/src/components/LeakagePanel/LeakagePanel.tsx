@@ -126,7 +126,7 @@ export default function LeakagePanel() {
     const totalRate = wells.reduce((s, w) => s + w.injectionRate, 0)
     const perm_m2 = params.permeability * 9.869e-16
     const Q_m3s = totalRate * 1e9 / (700 * 365.25 * 24 * 3600)
-    const alpha = perm_m2 / (params.porosity * 5e-5 * 1e-9)
+    const alpha = perm_m2 / (params.porosity * 4.5e-10)   // brine compressibility ~4.5e-10 Pa⁻¹ (standard reservoir value)
     const u = 0.01 / (4 * alpha * 365.25 * 24 * 3600)
     const e1 = u <= 1
       ? Math.max(0, -0.5772156649 - Math.log(Math.max(u, 1e-300)) + u)

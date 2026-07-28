@@ -133,8 +133,12 @@ export function computeYearly(
     const depleted = computeDepletedFieldCapacity(
       params.giip,
       T_K_eff,
-      params.pressure,          // initial (pre-depletion) reservoir pressure
+      params.pressure,          // initial (pre-depletion) reservoir pressure [MPa]
       params.abandonmentPressure,
+      0.60,                     // default P50 fill; overridden by lithologyClass if provided
+      params.methaneFraction,
+      params.nitrogenFraction,
+      params.lithologyClass,    // carbonate: fills {0.30, 0.50, 0.75}; sandstone: {0.40, 0.60, 0.85}
     )
     capacityP90    = depleted.storageP90_Mt     // P90 (conservative / low)
     totalCapacity  = depleted.storageMt         // P50 (expected)
@@ -175,7 +179,16 @@ export function computeYearly(
   const visc = co2ViscosityFenghour(T_K_eff, rhoCO2_mobile)
 
   const perm_m2 = params.permeability * 9.869e-16
-  const ct = 1e-9
+  // Total compressibility ct = c_rock + c_fluid [Pa^-1]
+  // Formation-specific defaults per Domenico and Schwartz (1998) "Physical and Chemical Hydrogeology":
+  //   Carbonate: 2e-10 Pa^-1 (stiff matrix, low compressibility)
+  //   Chalk: 5e-9 Pa^-1 (high porosity, highly compressible)
+  //   Sandstone / default: 5e-10 Pa^-1 (typical consolidated sandstone)
+  // The prior hardcoded 1e-9 Pa^-1 overstated sandstone compressibility by ~2x.
+  const lithClassCt = params.lithologyClass ?? 'sandstone'
+  const ct = lithClassCt === 'carbonate' ? 2e-10
+    : lithClassCt === 'chalk' ? 5e-9
+    : 5e-10
   const t_sec = year * 365.25 * 24 * 3600
   // Vogel-Antoine temperature-dependent brine viscosity (valid 20-200 °C)
   // Calibrated to IAPWS data: ~1.0 mPa·s at 20°C, 0.47 mPa·s at 60°C, 0.28 mPa·s at 100°C
@@ -406,7 +419,8 @@ export function computeYearly(
   const V_brine_m3 = V_p_plume * (1 - S_g_plume)                   // brine pore volume in plume (m³)
 
   // Kinetic (Fick) limit — dominates at early time when brine is unsaturated.
-  const dissolutionFick  = 2 * A_contact * rhoBrine * X_sat * Math.sqrt(D_eff_conv * t_sec_diss) / 1e9
+  // Ennis-King & Paterson (2005): m = 2 × A × C_sat × sqrt(D × t / π)  — note the 1/√π factor.
+  const dissolutionFick  = 2 * A_contact * rhoBrine * X_sat * Math.sqrt(D_eff_conv * t_sec_diss / Math.PI) / 1e9
   // Temporal convective enhancement (Neufeld et al. 2010, GRL 37:L22404; Backhaus et al. 2011, PRL 106:104501).
   // Convection onset: t_onset ≈ 50/√k_mD years — empirical fit to Slim & Ramakrishnan (2010) Phys. Fluids.
   // After onset, density-driven fingers accelerate dissolution up to 3× the diffusion-only rate.
@@ -523,7 +537,7 @@ export function computeYearly(
   )
 
   const capacityUtilPct = (totalCum / Math.max(0.001, totalCapacity)) * 100
-  const overpressureRisk = totalCum > capacityP90
+  const overpressureRisk = totalCum > totalCapacity  // exceeds P50 — consistent with rate optimisation target
 
   const trappedFrac = storageAtYear > 0.001 ? (residualTrapping + solubilityTrapping) / storageAtYear : 0
 
@@ -576,13 +590,14 @@ export function computeYearly(
         maxWellRate,
         h_m,
         phi,
-        SWI_CONNATE,                        // Fix 5: use param-driven Swi
+        SWI_CONNATE,
         params.monovalentSalinity,
         params.bivalentSalinity,
         rhoCO2_mobile,
         rhoBrine,
         params.temperature,
         projectYears,
+        params.pressure,  // needed for Spycher-Pruess χ_w water content
       )
     : undefined
 
@@ -607,13 +622,22 @@ export function computeYearly(
   // WHP: use the same wellbore default as wellboreModel.ts to ensure consistency.
   const WHP_MPA = DEFAULT_WELLBORE.surfacePressure_MPa
   const hydrostaticBHP_MPa = WHP_MPA + (rhoCO2 * 9.81 * params.depth) / 1e6
-  // Hubbert-Willis (1957) fracture pressure: sigma_h = K0 * (Sv - Pp) + Pp
-  // Same formula as computeGeomechanicsResult — ensures BHP margin is referenced
-  // against the same governing fracture limit shown in Section 6 of the report.
-  const nu_hw = params.poissonRatio ?? 0.30
-  const K0_hw = nu_hw / (1 - nu_hw)
-  const Sv_hw = (params.overburdenGradient ?? 0.023) * params.depth
-  const fracPressure_MPa = K0_hw * (Sv_hw - params.pressure) + params.pressure
+  // Hubbert-Willis fracture pressure — identical formula to computeGeomechanicsResult
+  // so the BHP margin is referenced against the same governing limit shown in Section 6.
+  // Uses stressRatioK0 (measured in-situ) for σh, and poissonRatio for the H-W gradient.
+  // Bug fix: previous version used ν/(1-ν) as K0, which differs from stressRatioK0
+  // and produced a third inconsistent fracture pressure value.
+  const _pois_bhp = params.poissonRatio ?? 0.30
+  const _og_bhp   = params.overburdenGradient ?? 0.023
+  const _k0_bhp   = params.stressRatioK0 ?? 0.82
+  const Sv_bhp    = _og_bhp * params.depth
+  const sh_bhp    = Sv_bhp * _k0_bhp
+  const baseFrac_bhp = (Sv_bhp - params.pressure) * _pois_bhp / (1.0 - _pois_bhp) + params.pressure
+  const mu_bhp    = Math.tan(params.caprockFriction * Math.PI / 180)
+  const fracPressure_MPa = Math.max(
+    baseFrac_bhp * (1.0 + mu_bhp * 0.15) * Math.max(0.85, 1.0 - (params.biotCoefficient - 0.4) * 0.12),
+    sh_bhp,
+  )
   // Safety margin: fracture pressure minus the Peaceman BHP (Darcy sandface pressure).
   // peacemanBHP is the operating wellbore pressure at the perforations derived from
   // Darcy radial flow — the physically correct reference for fracture risk assessment.
@@ -761,9 +785,10 @@ export interface GeomechValidation {
 }
 
 export function validateGeomechanics(params: FormationParams, wells: { injectionRate: number; rampUpYears: number; rampDownYears: number }[]): GeomechValidation {
-  const POISSON = 0.30
-  const OG = 0.023
-  const K0 = 0.82
+  // Use formation-specific geomechanical parameters (not global hardcoded defaults)
+  const POISSON = params.poissonRatio ?? 0.30
+  const OG = params.overburdenGradient ?? 0.023
+  const K0 = params.stressRatioK0 ?? 0.82
 
   const depth = params.depth
   const pp = params.pressure
@@ -914,8 +939,14 @@ export function computeGeomechanicsResult(
   let injPres = pp
   if (totalRate > 0) {
     const perm_m2 = params.permeability * 9.869e-16
-    const Q_m3s = totalRate * 1e9 / (700 * 365.25 * 24 * 3600)
-    const visc = 5e-5
+    // Use EOS-derived CO2 density and viscosity at reservoir conditions
+    const T_K_geo = params.temperature + 273.15
+    const P_Pa_geo = Math.max(0.5e6, Math.min(80e6, params.pressure * 1e6))
+    const rhoCO2_geo = co2DensityWithImpurities(T_K_geo, P_Pa_geo, params.methaneFraction ?? 0, params.nitrogenFraction ?? 0)
+    const rhoCO2_geo_safe = Number.isFinite(rhoCO2_geo) && rhoCO2_geo > 50 && rhoCO2_geo < 1100 ? rhoCO2_geo : 700
+    const visc_geo = co2ViscosityFenghour(T_K_geo, rhoCO2_geo_safe)
+    const visc = Number.isFinite(visc_geo) && visc_geo > 1e-6 ? visc_geo : 5e-5
+    const Q_m3s = totalRate * 1e9 / (rhoCO2_geo_safe * 365.25 * 24 * 3600)
     const ct = 1e-9
     const alpha_d = perm_m2 / (params.porosity * visc * ct)
     const u = (0.1 * 0.1) / (4 * alpha_d * 365.25 * 24 * 3600)
@@ -972,7 +1003,8 @@ export function computeGeomechanicsResult(
     const E_gpa = params.reservoirYoungsModulus ?? 5
     const fracCompliance = params.fracturedReservoir ? 0.20 : 1.0
     const E_eff = E_gpa * fracCompliance * 1e9
-    surfaceHeave = Math.max(0, 2 / Math.PI * (1 - 0.25 * 0.25) * dP_Pa * V / (E_eff * Math.max(100, depth) ** 2))
+    const nu_geo = _poisson  // use formation Poisson ratio, not hardcoded 0.25
+    surfaceHeave = Math.max(0, 2 / Math.PI * (1 - nu_geo * nu_geo) * dP_Pa * V / (E_eff * Math.max(100, depth) ** 2))
   }
 
   // MAIP pressure-front radius: Theis characteristic diffusion length over a 20-year

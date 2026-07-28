@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CarbonLens v3 — Capacity Consistency Audit</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600;700;800&display=swap');
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'IBM Plex Sans',sans-serif; font-size:9.5pt; color:#1e293b; background:#f8fafc; padding:24px; }
+    h1 { font-size:22pt; color:#0d1f3c; font-weight:800; }
+    h2 { font-size:12pt; color:#0d1f3c; font-weight:700; margin:20px 0 10px; border-bottom:2px solid #00c4a0; padding-bottom:5px; }
+    .header { background:linear-gradient(160deg,#071629,#1e3a5f); color:white; padding:28px 32px; border-radius:12px; margin-bottom:24px; }
+    .header h1 { color:white; margin-bottom:6px; }
+    .header p { color:#94a3b8; font-size:9pt; }
+    .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px 0; }
+    .kpi { background:white; border:1px solid #e2e8f0; border-radius:8px; padding:14px 16px; border-top:3px solid #00c4a0; }
+    .kpi-label { font-size:6.5pt; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; font-weight:600; margin-bottom:4px; }
+    .kpi-value { font-size:18pt; font-weight:800; color:#0d1f3c; font-family:'IBM Plex Mono',monospace; }
+    table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; margin:12px 0; }
+    thead th { background:#0d1f3c; color:white; padding:7px 10px; text-align:left; font-size:8pt; font-weight:600; }
+    tbody td { padding:5px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+    .bug-legend { background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:14px 16px; margin:12px 0; font-size:8.5pt; }
+    .bug-legend h3 { color:#c2410c; margin-bottom:8px; font-size:10pt; }
+    .bug-item { margin:4px 0; display:flex; gap:8px; }
+    .bug-id { font-family:monospace; background:#fee2e2; color:#991b1b; padding:1px 6px; border-radius:4px; font-size:7.5pt; white-space:nowrap; }
+    .meta { font-size:7.5pt; color:#94a3b8; margin-top:16px; border-top:1px solid #e2e8f0; padding-top:10px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>CarbonLens v3 — Capacity Consistency Audit</h1>
+  <p>Cross-engine consistency checks: Formation Panel Step 3 vs computeOptimalRate vs useSimulation — all three must agree</p>
+  <p style="margin-top:6px;color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:8pt">Generated: 2026-07-26T14:34:31.239Z • 16 formations • Tolerance: 2%</p>
+</div>
+
+<div class="bug-legend">
+  <h3>Bugs this suite was designed to catch</h3>
+  <div class="bug-item"><span class="bug-id">BUG-01</span>Formation Panel Step 3 used DOE Goodman for depleted_gas (gave 84 Mt instead of ~2 Mt for Duyong at 500 km²)</div>
+  <div class="bug-item"><span class="bug-id">BUG-02</span>computeOptimalRate used DOE Goodman for depleted_gas (rate envelope off by ~40x; Formation Intelligence Card wrong)</div>
+  <div class="bug-item"><span class="bug-id">BUG-03</span>P10/P90 Cc coefficient semantics inverted in computeOptimalRate vs useSimulation (P90 was HIGH in one, LOW in the other)</div>
+  <div class="bug-item"><span class="bug-id">BUG-04</span>Geothermal gradient params persisted across preset loads, silently overriding preset measured temperatures (Sleipner: 37°C became 69.6°C)</div>
+  <div class="bug-item"><span class="bug-id">BUG-05</span>NTG applied in old Formation Panel DOE formula but not in useSimulation (systematic factor mismatch for all aquifer formations)</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">Formations Tested</div><div class="kpi-value">16</div></div>
+  <div class="kpi"><div class="kpi-label">Total Checks</div><div class="kpi-value">156</div></div>
+  <div class="kpi" style="border-top-color:#10b981"><div class="kpi-label">Passing</div><div class="kpi-value" style="color:#065f46">155</div></div>
+  <div class="kpi" style="border-top-color:#f59e0b"><div class="kpi-label">Warnings</div><div class="kpi-value" style="color:#92400e">1</div></div>
+  <div class="kpi" style="border-top-color:#ef4444"><div class="kpi-label">Failures</div><div class="kpi-value" style="color:#991b1b">0</div></div>
+</div>
+
+<div style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;margin:12px 0;font-weight:700;color:#065f46">✓ All 156 consistency checks passed. No cross-engine mismatches detected.</div>
+
+<h2>Summary</h2>
+<table>
+  <thead><tr>
+    <th>Formation</th><th>Location</th><th>Type</th><th>Jurisdiction</th>
+    <th>Status</th><th style="text-align:center">Pass</th><th style="text-align:center">Warn</th><th style="text-align:center">Fail</th>
+  </tr></thead>
+  <tbody><tr>
+      <td style="font-weight:600">Sleipner Utsira</td>
+      <td style="font-size:7.5pt;color:#64748b">North Sea, Norway</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Norway</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Mount Simon</td>
+      <td style="font-size:7.5pt;color:#64748b">Illinois Basin, USA</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">US</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Snøhvit Tubåen</td>
+      <td style="font-size:7.5pt;color:#64748b">Barents Sea, Norway</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Norway</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Gorgon</td>
+      <td style="font-size:7.5pt;color:#64748b">Barrow Island, Australia</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Australia</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Johansen</td>
+      <td style="font-size:7.5pt;color:#64748b">Norwegian North Sea, offshore Bergen, Norway</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Norway</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">In Salah</td>
+      <td style="font-size:7.5pt;color:#64748b">Central Algeria</td>
+      <td><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">depleted</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">DZ</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">12</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Kasawari</td>
+      <td style="font-size:7.5pt;color:#64748b">Sarawak, Malaysia</td>
+      <td><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">depleted</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Malaysia</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">12</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Duyong</td>
+      <td style="font-size:7.5pt;color:#64748b">Terengganu, Malaysia</td>
+      <td><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">depleted</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Malaysia</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">12</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Otway</td>
+      <td style="font-size:7.5pt;color:#64748b">Victoria, Australia</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Australia</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Malay Basin</td>
+      <td style="font-size:7.5pt;color:#64748b">South China Sea, Malaysia</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">Malaysia</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Niger Delta</td>
+      <td style="font-size:7.5pt;color:#64748b">Niger Delta, Nigeria</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">NG</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">North Sumatra Basin</td>
+      <td style="font-size:7.5pt;color:#64748b">Northern Sumatra, Indonesia</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">ID</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Nile Delta</td>
+      <td style="font-size:7.5pt;color:#64748b">Northern Egypt</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">EG</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Abu Dhabi Basin</td>
+      <td style="font-size:7.5pt;color:#64748b">Abu Dhabi, UAE</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">AE</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Rotterdam / North Sea</td>
+      <td style="font-size:7.5pt;color:#64748b">North Sea, Netherlands</td>
+      <td><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">depleted</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">EU</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#fef3c7;color:#92400e;border:1px solid #fde68a">⚠ WARN</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">11</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">1</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr><tr>
+      <td style="font-weight:600">Alberta Basin</td>
+      <td style="font-size:7.5pt;color:#64748b">Alberta, Canada</td>
+      <td><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">aquifer</span></td>
+      <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">CA</span></td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">9</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
+      <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
+    </tr></tbody>
+</table>
+
+<h2>Detailed Findings</h2>
+
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Sleipner Utsira</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">North Sea, Norway</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=27.842 Mt, Sim=27.842 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=27.842 Mt, Sim=27.842 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=27.842, RateEnv=27.842 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=76.564, P50=27.842, P90=7.100 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=76.564, P50=27.842, P90=7.100 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=76.564, P50=27.842, P90=7.100 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=37°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">696.74 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">1.0312 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.4303, opt=1.6874, max=4.6403 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Mount Simon</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Illinois Basin, USA</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=11.714 Mt, Sim=11.714 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=11.714 Mt, Sim=11.714 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=11.714, RateEnv=11.714 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=32.214, P50=11.714, P90=2.987 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=32.214, P50=11.714, P90=2.987 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=32.214, P50=11.714, P90=2.987 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=52°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">733.97 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.3347 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.1810, opt=0.7099, max=1.9524 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Snøhvit Tubåen</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Barents Sea, Norway</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.590 Mt, Sim=1.590 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=1.590 Mt, Sim=1.590 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.590, RateEnv=1.590 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=4.371, P50=1.590, P90=0.405 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=4.371, P50=1.590, P90=0.405 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=4.371, P50=1.590, P90=0.405 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=90°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">679.30 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.1325 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.0246, opt=0.0963, max=0.2649 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Gorgon</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Barrow Island, Australia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=5.070 Mt, Sim=5.070 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=5.070 Mt, Sim=5.070 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=5.070, RateEnv=5.070 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=13.943, P50=5.070, P90=1.293 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=13.943, P50=5.070, P90=1.293 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=13.943, P50=5.070, P90=1.293 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=65°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">704.17 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.2535 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.0784, opt=0.3073, max=0.8450 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Johansen</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Norwegian North Sea, offshore Bergen, Norway</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=48.821 Mt, Sim=48.821 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=48.821 Mt, Sim=48.821 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=48.821, RateEnv=48.821 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=134.258, P50=48.821, P90=12.449 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=134.258, P50=48.821, P90=12.449 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=134.258, P50=48.821, P90=12.449 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=98°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">650.95 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.4882 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.7545, opt=2.9589, max=8.1368 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">In Salah</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Central Algeria</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[depleted_gas]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">12 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=64.335 Mt, Sim=64.335 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=64.335 Mt, Sim=64.335 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=64.335, RateEnv=64.335 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
+        <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=64.335 Mt ≈ GIIP=64.335 Mt (DOE-wrong=0.052 Mt)</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
+        <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=64.335 Mt ≈ GIIP=64.335 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
+        <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=64.335 Mt, 4xArea=64.335 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
+        <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=64.335 Mt, 4xArea=64.335 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=91°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">210.47 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=2.7523, opt=3.8991, max=4.5872 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Kasawari</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Sarawak, Malaysia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[depleted_gas]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">12 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=53.076 Mt, Sim=53.076 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=53.076 Mt, Sim=53.076 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=53.076, RateEnv=53.076 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
+        <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=53.076 Mt ≈ GIIP=53.076 Mt (DOE-wrong=3.823 Mt)</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
+        <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=53.076 Mt ≈ GIIP=53.076 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
+        <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=53.076 Mt, 4xArea=53.076 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
+        <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=53.076 Mt, 4xArea=53.076 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=45°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">544.55 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=2.2706, opt=3.2167, max=3.7844 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Duyong</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Terengganu, Malaysia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[depleted_gas]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">12 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.904 Mt, Sim=1.904 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=1.904 Mt, Sim=1.904 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.904, RateEnv=1.904 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
+        <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=1.904 Mt ≈ GIIP=1.904 Mt (DOE-wrong=1.724 Mt)</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
+        <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=1.904 Mt ≈ GIIP=1.904 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
+        <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=1.904 Mt, 4xArea=1.904 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
+        <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=1.904 Mt, 4xArea=1.904 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=50°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">582.38 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.0814, opt=0.1154, max=0.1357 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Otway</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Victoria, Australia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=0.238 Mt, Sim=0.238 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=0.238 Mt, Sim=0.238 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=0.238, RateEnv=0.238 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=0.654, P50=0.238, P90=0.061 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=0.654, P50=0.238, P90=0.061 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=0.654, P50=0.238, P90=0.061 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=75°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">583.22 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.0793 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.0037, opt=0.0144, max=0.0397 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Malay Basin</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">South China Sea, Malaysia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=12.147 Mt, Sim=12.147 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=12.147 Mt, Sim=12.147 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=12.147, RateEnv=12.147 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=33.403, P50=12.147, P90=3.097 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=33.403, P50=12.147, P90=3.097 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=33.403, P50=12.147, P90=3.097 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=75°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">404.88 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.1012 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.1877, opt=0.7362, max=2.0244 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Niger Delta</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Niger Delta, Nigeria</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=41.774 Mt, Sim=41.774 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=41.774 Mt, Sim=41.774 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=41.774, RateEnv=41.774 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=114.879, P50=41.774, P90=10.652 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=114.879, P50=41.774, P90=10.652 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=114.879, P50=41.774, P90=10.652 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=80°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">464.16 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.1671 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.6456, opt=2.5318, max=6.9624 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">North Sumatra Basin</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Northern Sumatra, Indonesia</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=15.357 Mt, Sim=15.357 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=15.357 Mt, Sim=15.357 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=15.357, RateEnv=15.357 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=42.231, P50=15.357, P90=3.916 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=42.231, P50=15.357, P90=3.916 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=42.231, P50=15.357, P90=3.916 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=78°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">430.89 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.0853 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.2373, opt=0.9307, max=2.5595 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Nile Delta</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Northern Egypt</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=64.056 Mt, Sim=64.056 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=64.056 Mt, Sim=64.056 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=64.056, RateEnv=64.056 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=176.154, P50=64.056, P90=16.334 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=176.154, P50=64.056, P90=16.334 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=176.154, P50=64.056, P90=16.334 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=90°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">544.69 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.1830 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.9900, opt=3.8822, max=10.6760 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Abu Dhabi Basin</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Abu Dhabi, UAE</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=70.711 Mt, Sim=70.711 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=70.711 Mt, Sim=70.711 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=70.711, RateEnv=70.711 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=194.455, P50=70.711, P90=18.031 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=194.455, P50=70.711, P90=18.031 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=194.455, P50=70.711, P90=18.031 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=110°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">552.43 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.1414 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=1.0928, opt=4.2855, max=11.7852 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#fef3c7;border-bottom:2px solid #fde68a;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Rotterdam / North Sea</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">North Sea, Netherlands</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[depleted_gas]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">11 PASS</span>
+            <span style="color:#92400e">1 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=66.117 Mt, Sim=66.117 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=66.117 Mt, Sim=66.117 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=66.117, RateEnv=66.117 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
+        <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=66.117 Mt ≈ GIIP=66.117 Mt (DOE-wrong=3.234 Mt)</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
+        <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=66.117 Mt ≈ GIIP=66.117 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
+        <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=66.117 Mt, 4xArea=66.117 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
+        <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=66.117 Mt, 4xArea=66.117 Mt, change=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=100°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#fef3c7;color:#92400e;border:1px solid #fde68a">⚠ WARN</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">37.69 kg/m³</td>
+        <td style="font-size:7.5pt;color:#92400e">Low density 37.69 kg/m³: subcritical or near-critical CO2 at these T/P conditions. Capacity will be underestimated.</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=2.8285, opt=4.0071, max=4.7142 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+      <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Alberta Basin</span>
+            <span style="margin-left:10px;font-size:8.5pt;color:#64748b">Alberta, Canada</span>
+            <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[saline_aquifer]</span>
+          </div>
+          <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
+            <span style="color:#065f46">9 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
+            <span style="color:#991b1b">0 FAIL</span>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:8.5pt">
+          <thead><tr style="background:#0d1f3c;color:white">
+            <th style="padding:5px 8px;text-align:left;width:16%">Check ID</th>
+            <th style="padding:5px 8px;text-align:left;width:22%">Description</th>
+            <th style="padding:5px 8px;text-align:left;width:7%">Status</th>
+            <th style="padding:5px 8px;text-align:left;width:26%">Observed</th>
+            <th style="padding:5px 8px;text-align:left">Notes / Actions</th>
+          </tr></thead>
+          <tbody>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
+        <td style="font-weight:600">Panel P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=175.422 Mt, Sim=175.422 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
+        <td style="font-weight:600">RateEnv P50 === Sim P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=175.422 Mt, Sim=175.422 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
+        <td style="font-weight:600">Panel P50 === RateEnv P50</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=175.422, RateEnv=175.422 Mt, diff=0.00%</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
+        <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
+        <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
+        <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">no-gradient-override</td>
+        <td style="font-weight:600">No geothermal gradient in preset params (correct)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">● INFO</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">geothermalGradient=null, surfaceTemperatureC=null — preset temperature=75°C is authoritative</td>
+        <td style="font-size:7.5pt;color:#475569"></td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
+        <td style="font-weight:600">CO2 density in physical range</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">626.51 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">capacity-per-area</td>
+        <td style="font-weight:600">P50 capacity / area in plausible range (saline aquifer)</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">0.0877 Mt/km²</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr>
+      <tr style="background:#f8fafc">
+        <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
+        <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">min=2.7111, opt=10.6316, max=29.2370 Mt/yr/well</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
+      </tr></tbody>
+        </table>
+      </div>
+
+<div class="meta">
+  CarbonLens v3 Capacity Consistency Audit — capacityConsistencyAudit.test.ts<br>
+  Checks: Panel vs Sim P50 agreement (±2%), P10≥P50≥P90 ordering, depleted-gas GIIP routing, area independence, gradient-override contamination, CO2 density range, rate envelope bounds<br>
+  Capacity sources: Formation Panel Step 3 logic • computeOptimalRate • useSimulation (computeYearly yr20)<br>
+  Physics: Span-Wagner (1996) EOS • Bachu et al. (2007) gas-replacement volumetric • DOE Goodman (2011) Cc framework
+</div>
+
+</body>
+</html>

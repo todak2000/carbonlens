@@ -48,7 +48,7 @@ interface SimSnapshot {
 }
 
 function makeSnapshot(result: SimulationResult): SimSnapshot {
-  const total = result.residualTrapping + result.solubilityTrapping + Math.max(result.mobilePlume, 0.01)
+  const total = result.residualTrapping + result.solubilityTrapping + (result.mineralTrapping ?? 0) + Math.max(result.mobilePlume, 0.01)
   return {
     drho: result.densityDiff || 200,
     visc: result.co2Viscosity || 5e-5,

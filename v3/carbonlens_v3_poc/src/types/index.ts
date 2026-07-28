@@ -2,7 +2,7 @@ export type ColorProperty = 'porosity' | 'permeability' | 'salinity' | 'ift' | '
 export type GeometryType = 'anticline' | 'dome' | 'fault' | 'layered' | 'stratigraphic' | 'channel' | 'gridfile'
 export type SaltType = 'NaCl' | 'CaCl2' | 'Mixed'
 export type FormationType = 'saline_aquifer' | 'depleted_gas' | 'depleted_oil' | 'hybrid'
-export type Jurisdiction = 'US' | 'EU' | 'Malaysia' | 'Australia' | 'Norway'
+export type Jurisdiction = 'US' | 'EU' | 'Malaysia' | 'Australia' | 'Norway' | 'MY' | 'AU' | 'DZ' | 'NG' | 'ID' | 'EG' | 'AE' | 'CA'
 export type SimulationStatus = 'idle' | 'running' | 'complete' | 'error'
 export type ProjectVisibility = 'private' | 'shared'
 
@@ -117,7 +117,7 @@ export interface FormationParams {
   stressRatioK0?: number                // σh/σv ratio — extensional ~0.55–0.65, compressional ~0.90–1.20 (default 0.82)
   reservoirYoungsModulus?: number       // Young's modulus [GPa] for heave calc — 5 sandstone, 15–30 carbonate (default 5)
   fracturedReservoir?: boolean          // true → apply fracture compliance factor (0.20×) to heave estimate
-  lithologyClass?: 'carbonate' | 'sandstone'  // reservoir matrix type — governs mineral trapping kinetics
+  lithologyClass?: 'carbonate' | 'sandstone' | 'chalk'  // reservoir matrix type — governs mineral trapping kinetics
   // ── Heterogeneous formation parameters ──────────────────────────────────────
   k_Vdp?: number                       // Dykstra-Parsons permeability variation coefficient V (0 to 0.85); default 0 = homogeneous
   k_layer_ratio?: number               // kh/kv anisotropy ratio (≥1); default 1 = isotropic
@@ -163,7 +163,7 @@ export interface SimulationResult {
   capacityP90: number       // DOE P90 capacity (0.51% Cc, conservative, Mt)
   capacityP10: number       // DOE P10 capacity (5.5% Cc, optimistic, Mt)
   capacityUtilPct: number   // utilisation = storageCapacity / totalCapacity * 100
-  overpressureRisk: boolean // true when stored CO2 exceeds P90 capacity (pressure unsafe)
+  overpressureRisk: boolean // true when stored CO2 exceeds P50 capacity (consistent with rate optimisation target)
   plumeRadius: number
   plumeHeight: number  // vertical extent of CO2 plume (m)
   injectionPressure: number // pressure at the wellbore (MPa)

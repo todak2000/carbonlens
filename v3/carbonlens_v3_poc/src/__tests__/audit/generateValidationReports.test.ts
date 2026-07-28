@@ -36,6 +36,196 @@ import {
   supEquation, supScaler,
 } from '../../engine'
 import type { MultiSaltBrine } from '../../engine'
+import { renderProvenanceTableRows, renderSimEngineAttribution } from '../../data/modelRegistry'
+
+type JMap = Record<string, {
+  authority: string; legislation: string; permitType: string; complianceItems: string[]
+}>
+const JURISDICTION_META: JMap = {
+  US: {
+    authority: 'U.S. Environmental Protection Agency (EPA), Underground Injection Control Program',
+    legislation: '40 CFR Parts 124, 144, 146 — Safe Drinking Water Act (SDWA)',
+    permitType: 'Class VI UIC Permit',
+    complianceItems: [
+      'Area of Review (AoR) delineation',
+      'No-migration petition data',
+      'USDW characterisation report',
+      'Financial responsibility mechanism',
+      'Post-injection site care plan — 50 yr monitoring',
+      'Mechanical integrity testing (MIT) protocol',
+    ],
+  },
+  EU: {
+    authority: 'Member State Competent Authority (Directive 2009/31/EC)',
+    legislation: 'Directive 2009/31/EC on the Geological Storage of CO₂',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Storage complex characterisation',
+      'CO₂ stream composition (purity ≥ 95%)',
+      'Comprehensive risk assessment (HAZID/HAZOP)',
+      'Monitoring plan — corrective and routine',
+      'Financial security before injection',
+      'Post-transfer liability plan',
+    ],
+  },
+  UK: {
+    authority: 'North Sea Transition Authority (NSTA)',
+    legislation: 'Energy Act 2008 / CCS Licensing Regulations 2010',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Storage site characterisation report',
+      'CO₂ stream composition (≥ 95%)',
+      'Risk assessment (HAZID/HAZOP/bow-tie)',
+      'Monitoring and remediation plan',
+      'Financial security',
+      'Post-closure obligations (min 20 yr)',
+    ],
+  },
+  AU: {
+    authority: 'NOPSEMA',
+    legislation: 'OPGGS Act 2006; GHG Storage Regulations 2021',
+    permitType: 'GHG Storage Injection Licence',
+    complianceItems: [
+      'Site plan and formation characterisation',
+      'Injection and monitoring program',
+      'Well integrity management plan',
+      'Environmental plan (EPBC Act)',
+      'Financial assurance (rehabilitation bond)',
+      'Site closure and post-closure plan',
+    ],
+  },
+  MY: {
+    authority: 'PETRONAS / Ministry of Natural Resources',
+    legislation: 'CCUS Act 2025; Petroleum Development Act 1974',
+    permitType: 'CO₂ Storage Licence',
+    complianceItems: [
+      'Formation characterisation (PCR)',
+      'CO₂ stream specification',
+      'Environmental Impact Assessment',
+      'MRV plan',
+      'Financial assurance mechanism',
+      'Emergency response plan',
+    ],
+  },
+  MY_SAR: {
+    authority: 'PETRONAS / Sarawak State Government',
+    legislation: 'CCUS Act 2025; Sarawak Oil Mining Ordinance',
+    permitType: 'CO₂ Storage Licence (Sarawak)',
+    complianceItems: [
+      'Formation characterisation (PCR)',
+      'CO₂ stream specification',
+      'Sarawak EIA',
+      'MRV plan',
+      'Financial assurance',
+      'Local content participation',
+    ],
+  },
+  NG: {
+    authority: 'Nigerian Upstream Petroleum Regulatory Commission (NUPRC)',
+    legislation: 'Petroleum Industry Act 2021; Climate Change Act 2021',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Site characterisation per NUPRC standards',
+      'EIA — Federal Ministry of Environment',
+      'Community Development Agreement',
+      'CO₂ stream certification',
+      'MRV framework (NCCAP)',
+      'Financial assurance / abandonment fund',
+    ],
+  },
+  ID: {
+    authority: 'MEMR / SKK Migas',
+    legislation: 'PP 19/2023 on CCS; MEMR Reg 2/2023',
+    permitType: 'CCS Business Licence',
+    complianceItems: [
+      'CCS Business Activity Plan (RKHCCS)',
+      'Working Area designation',
+      'CO₂ injection monitoring plan',
+      'Environmental document (AMDAL)',
+      'Financial guarantee for closure',
+      'Post-injection monitoring (min 5 yr)',
+    ],
+  },
+  EG: {
+    authority: 'EMRA / EEAA',
+    legislation: 'Climate Change Act 2023; Environmental Law 4/1994',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Site characterisation report',
+      'Environmental impact assessment',
+      'CO₂ stream composition certification',
+      'Monitoring and remediation plan',
+      'Financial security mechanism',
+      'Closure and post-closure plan',
+    ],
+  },
+  AE: {
+    authority: 'Ministry of Energy & Infrastructure (MOEI)',
+    legislation: 'Federal Law on CCS (in development); ADNOC CCS Guidelines',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Site characterisation report',
+      'EIA — EAD approval',
+      'CO₂ stream purity certification',
+      'MRV plan',
+      'Financial assurance',
+      'Decommissioning plan',
+    ],
+  },
+  CA: {
+    authority: 'Alberta Energy Regulator (AER) / BC Oil & Gas Commission',
+    legislation: 'Alberta CCS Regulatory Framework; BC GHG Storage Act',
+    permitType: 'Carbon Sequestration Agreement',
+    complianceItems: [
+      'Storage site characterisation',
+      'Injection and monitoring scheme',
+      'Well integrity program',
+      'Environmental protection plan',
+      'Financial security (AER Directive)',
+      'Post-closure stewardship',
+    ],
+  },
+  DZ: {
+    authority: 'Sonatrach / Ministry of Energy',
+    legislation: 'Algerian CCS Framework; Hydrocarbons Law 19-13',
+    permitType: 'CO₂ Storage Permit',
+    complianceItems: [
+      'Geological site characterisation',
+      'CO₂ stream composition',
+      'EIA — Ministry of Environment',
+      'Monitoring plan',
+      'Financial guarantee',
+      'Site closure plan',
+    ],
+  },
+}
+
+function buildRegulatorySection(jurisdiction: string, presetName: string): string {
+  const jur = JURISDICTION_META[jurisdiction]
+  if (!jur) return ''
+  const items = jur.complianceItems.map((item: string) =>
+    `<li style="font-size:8pt;color:#1e293b;line-height:1.8">${item}</li>`
+  ).join('')
+  return `
+  <h2>0 · Pre-Screening Regulatory Framework</h2>
+  <table>
+    <thead><tr><th style="width:160px">Aspect</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>Jurisdiction</td><td><strong>${jurisdiction}</strong></td></tr>
+      <tr><td>Regulatory Authority</td><td>${jur.authority}</td></tr>
+      <tr><td>Primary Legislation</td><td>${jur.legislation}</td></tr>
+      <tr><td>Permit Type</td><td>${jur.permitType}</td></tr>
+      <tr><td>Formation</td><td>${presetName}</td></tr>
+    </tbody>
+  </table>
+  <h3 style="margin-top:10px;font-size:9pt">Regulatory Compliance Checklist</h3>
+  <p style="font-size:8pt;color:#64748b;margin-bottom:6px">Pre-screening items applicable to this jurisdiction.</p>
+  <ul style="margin:0 0 8px 18px;padding:0">${items}</ul>
+  <div class="callout" style="margin-top:10px">
+    <div class="callout-title">Pre-Screening Assessment</div>
+    <p>This report provides <strong>screening-level physics validation</strong> for the ${presetName} formation under ${jurisdiction} jurisdiction. The regulatory framework above identifies the applicable permit pathway. Full compliance demonstration requires a jurisdiction-specific permit pre-application report generated via the CarbonLens Export panel.</p>
+  </div>`
+}
 
 // ─── Design tokens (mirror PDF) ──────────────────────────────────────────────
 const T = {
@@ -868,7 +1058,7 @@ function buildCoverPage(preset: (typeof FORMATION_PRESETS)[0], simResult: any, g
     <div>
       <div class="cover-meta-label">Simulation Scenario</div>
       <div class="cover-meta-val" style="font-size:9pt">1.0 Mt/yr · 20 Years</div>
-      <div class="cover-meta-sub">Theis radial flow · DOE Goodman 2011</div>
+      <div class="cover-meta-sub">Theis radial flow · ${(p.formationType === 'depleted_gas' || p.formationType === 'depleted_oil') ? 'Bachu 2007 gas-replacement' : 'DOE Goodman 2011'}</div>
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
@@ -898,14 +1088,8 @@ function buildBackPage(preset: (typeof FORMATION_PRESETS)[0]): string {
       </p>
       <div style="padding:12px 14px;background:rgba(0,196,160,0.1);border-left:3px solid ${T.teal};border-radius:0 6px 6px 0">
         <div style="font-size:7pt;color:${T.teal};font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Physics Engine Models</div>
-        <div style="font-size:8pt;color:#cbd5e1">
-          Span-Wagner EOS · Peng-Robinson + Li &amp; Yan (2009) Impure CO₂ · Garcia Brine Density · Fenghour Viscosity ·
-          Duan-Sun (2003) Solubility · Duan et al. (2006) Multi-Salt · MARS IFT (Olagunju) ·
-          Nordbotten (2005) Plume · Hesse et al. (2008) Post-Injection · Land (1968) Trapping ·
-          Killough (1976) Hysteresis · van Genuchten-Mualem (1980) kr · Brooks &amp; Corey (1964) kr ·
-          Millington-Quirk (1961) Diffusivity · Rayleigh Convective Mixing ·
-          Theis (1935) + E₁ Pad&eacute; AoR · Shook-Mitchell (2009) Sweep · Kopp et al. (2010) Storage Efficiency ·
-          DOE Goodman (2011) Capacity · Hubbert-Willis / Mohr-Coulomb Geomechanics
+        <div style="font-size:7.5pt;color:#cbd5e1;line-height:1.65">
+          ${renderSimEngineAttribution()}
         </div>
       </div>
     </div>
@@ -913,28 +1097,14 @@ function buildBackPage(preset: (typeof FORMATION_PRESETS)[0]): string {
     <div>
       <div style="height:3px;background:linear-gradient(90deg,${T.blue},${T.teal});width:48px;border-radius:2px;margin-bottom:14px"></div>
       <h2 style="color:white;font-size:12pt;font-weight:700;margin:0 0 10px;border:none;padding:0">Key References</h2>
-      <ul style="color:#94a3b8;font-size:7.5pt;line-height:1.8;padding-left:14px;margin:0">
-        <li>Span &amp; Wagner (1996), CO₂ EOS. <em>J. Phys. Chem. Ref. Data</em> 25(6):1509</li>
-        <li>Peng &amp; Robinson (1976) + Li &amp; Yan (2009), Impure CO₂ (CH₄, N₂, H₂S, SO₂)</li>
-        <li>Garcia (2001), Brine density. <em>LBNL-49023</em></li>
-        <li>Fenghour, Wakeham &amp; Vesovic (1998), CO₂ viscosity (full correlation). <em>JPCRD</em> 27(1):31</li>
-        <li>Duan &amp; Sun (2003), CO₂ solubility (regression fit, &plusmn;5-10%). <em>Chem. Geology</em> 193:257</li>
-        <li>Duan, Sun, Zhu &amp; Chou (2006), Multi-salt extension: Ca&sup2;+, Mg&sup2;+, K+. <em>Marine Chemistry</em> 98(2-4):131</li>
-        <li>Olagunju (in prep.), IFT via MARS regression. MSc UTP Malaysia</li>
-        <li>Nordbotten et al. (2005), Two-phase plume migration</li>
-        <li>Hesse, Orr &amp; Tchelepi (2008), Post-injection gravity current (two shocks). <em>J. Fluid Mech.</em> 611:35</li>
-        <li>Land (1968), Residual trapping. <em>Trans. AIME</em> 243:149</li>
-        <li>Killough (1976), Hysteresis in kr</li>
-        <li>van Genuchten-Mualem (1980), Primary relative permeability; Brooks &amp; Corey (1964) available for carbonates</li>
-        <li>Millington &amp; Quirk (1961), Effective diffusivity</li>
-        <li>Shook &amp; Mitchell (2009), Sweep efficiency (SPE-119897)</li>
-        <li>Kopp, Class &amp; Helmig (2010), Storage efficiency. <em>IJGGC</em> 4(5):831</li>
-        <li>Goodman et al. (2011), Storage capacity. <em>IJGGC</em> 5(4):853</li>
-        <li>Theis (1935) + E₁ Pad&eacute; approximant, Pressure transient / AoR. <em>Trans. AGU</em> 16:519</li>
-        <li>Hubbert &amp; Willis (1957), Fracture pressure. <em>Trans. AIME</em> 210:153</li>
-        <li>Teatini et al. (2011), Surface heave. <em>JGR</em> 116:B08204</li>
-        <li>Furre et al. (2017), Sleipner benchmark. <em>Energy Procedia</em> 114:3916</li>
-      </ul>
+      <p style="color:#94a3b8;font-size:7.5pt;line-height:1.7;margin:0 0 10px">
+        Complete model citations with DOIs are listed in <strong>Section 7 · Model &amp; Reference Citations</strong> of this report. The full model registry spans <strong>37 entries</strong> across CO₂ thermodynamics, brine thermodynamics, transport properties, relative permeability, capillary pressure, trapping mechanisms, pressure solvers, plume migration, storage screening, geomechanics, and thermal domains.
+      </p>
+      <p style="color:#94a3b8;font-size:7.5pt;line-height:1.7;margin:0">
+        Sleipner-specific validation references:<br>
+        Furre et al. (2017) — <em>Energy Procedia</em> 114:3916 · Chadwick et al. (2009) — <em>Energy Procedia</em> 1:2103 · Boait et al. (2012) — <em>JGR</em> 117:B03309<br>
+        Arts et al. (2004) — <em>Energy</em> 29:1383 · Zweigel et al. (2004) — <em>Geol. Soc. Spec. Publ.</em> 233:165
+      </p>
     </div>
   </div>
 
@@ -1149,7 +1319,7 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
   const donutData = [
     { label: 'Residual',    value: sr.residualTrapping,   color: '#00c4a0' },
     { label: 'Dissolution', value: sr.solubilityTrapping, color: '#3b82f6' },
-    { label: 'Mobile',      value: sr.mobilePlume,        color: '#f59e0b' },
+    { label: 'Structural',   value: sr.mobilePlume,        color: '#f59e0b' },
     { label: 'Mineral',     value: sr.mineralTrapping,    color: '#a78bfa' },
   ].filter(d => d.value > 1e-6)
   const donutSvg = svgDonut(donutData)
@@ -1171,6 +1341,17 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
   )
   const surfCm   = gr.surfaceHeave * 100
 
+  // Fill factor labels — match computeDepletedFieldCapacity lithologyClass logic
+  const isDepField = p.formationType === 'depleted_gas' || p.formationType === 'depleted_oil'
+  const litho = p.lithologyClass ?? 'sandstone'
+  const fillLabels = isDepField
+    ? litho === 'carbonate'
+      ? { p90: '30% fill (carbonate, Bachu 2007)', p50: '50% fill (carbonate, Bachu 2007)', p10: '75% fill (carbonate, Bachu 2007)' }
+      : litho === 'chalk'
+      ? { p90: '25% fill (chalk, Bachu 2007)', p50: '40% fill (chalk, Bachu 2007)', p10: '65% fill (chalk, Bachu 2007)' }
+      : { p90: '40% fill (sandstone, Bachu 2007)', p50: '60% fill (sandstone, Bachu 2007)', p10: '85% fill (sandstone, Bachu 2007)' }
+    : { p90: 'Cc = 0.51% (DOE Goodman 2011)', p50: 'Cc = 2.00% (DOE Goodman 2011)', p10: 'Cc = 5.50% (DOE Goodman 2011)' }
+
   const page2 = `
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
   ${pageHeader}
@@ -1181,17 +1362,17 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
     <div class="kpi-card">
       <div class="kpi-label">P90 Low Estimate</div>
       <div class="kpi-value">${sr.p90.toFixed(1)} Mt</div>
-      <div class="kpi-sub">Cc = 0.51% efficiency</div>
+      <div class="kpi-sub">${fillLabels.p90}</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P50 Best Estimate</div>
       <div class="kpi-value" style="color:${T.teal}">${sr.p50.toFixed(1)} Mt</div>
-      <div class="kpi-sub">Cc = 2.00% efficiency</div>
+      <div class="kpi-sub">${fillLabels.p50}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">P90 High Estimate</div>
-      <div class="kpi-value">${sr.p90.toFixed(1)} Mt</div>
-      <div class="kpi-sub">Cc = 5.50% efficiency</div>
+      <div class="kpi-label">P10 High Estimate</div>
+      <div class="kpi-value">${sr.p10.toFixed(1)} Mt</div>
+      <div class="kpi-sub">${fillLabels.p10}</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Containment Probability</div>
@@ -1204,7 +1385,7 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
   <div class="two-col" style="gap:12px;margin-bottom:8px;align-items:start">
     <div>${donutSvg}</div>
     <div style="font-size:8pt;color:${T.slate};line-height:1.7;padding-top:4px">
-      <p>Each mechanism solved <strong>independently</strong>. Mobile is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
+      <p>Each mechanism solved <strong>independently</strong>. The free-phase fraction is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
       <p style="margin-top:4px">Formation capacity utilization: <strong>${sr.formationCapacityUtil.toFixed(1)}%</strong> (${cumInj.toFixed(2)} Mt / ${sr.totalFormationCapacity.toFixed(2)} Mt total).</p>
       <p style="margin-top:4px">Mass balance ε = <strong>${sr.massBalanceError.toFixed(3)} Mt</strong> (${sr.massBalanceError > 0 ? ((sr.massBalanceError / Math.max(0.001, cumInj)) * 100).toFixed(1) + '% — capacity-limited' : '0.0% — model consistent'}).</p>
       <p style="margin-top:4px">Plume radius: <strong>${sr.plumeRadius.toFixed(1)} m</strong> · Height: <strong>${sr.plumeHeight.toFixed(1)} m</strong></p>
@@ -1255,13 +1436,13 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
         <td class="mono"><strong>${sr.totalFormationCapacity.toFixed(3)} Mt</strong></td>
         <td class="mono"><strong>${cumInj.toFixed(3)} Mt</strong></td>
         <td class="mono"><strong>${sr.formationCapacityUtil.toFixed(1)}%</strong></td>
-        <td style="font-size:7.5pt;color:${T.slate}">Hydrodynamic mobile plume: ${sr.mobilePlume.toFixed(3)} Mt</td>
+        <td style="font-size:7.5pt;color:${T.slate}">Hydrodynamic free-phase: ${sr.mobilePlume.toFixed(3)} Mt</td>
       </tr>
     </tbody>
   </table>
   <div style="font-size:7.5pt;color:${T.slate};margin-top:6px">
     Plume radius: ${sr.plumeRadius.toFixed(1)} m &nbsp;·&nbsp; Plume height: ${sr.plumeHeight.toFixed(1)} m
-    &nbsp;·&nbsp; Mobile (free-phase): ${sr.mobilePlume.toFixed(3)} Mt (${(mobFrac*100).toFixed(1)}% of injected)
+    &nbsp;·&nbsp; Structural (free-phase): ${sr.mobilePlume.toFixed(3)} Mt (${(mobFrac*100).toFixed(1)}% of injected)
     &nbsp;·&nbsp; <strong style="color:${sr.massBalanceError > cumInj * 0.05 ? T.amber : T.teal}">ε = ${sr.massBalanceError.toFixed(3)} Mt</strong>
     (${sr.massBalanceError > cumInj * 0.05 ? '⚠ capacity-limited: residual snap-off zone undersized for this injection scenario' : '✓ model consistent: snap-off capacity ≥ Land-predicted residual'})
   </div>
@@ -1403,9 +1584,11 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
         const displayVal = key === 'porosity'
           ? `${(minVal*100).toFixed(1)}% → ${(baseVal*100).toFixed(1)}% → ${(maxVal*100).toFixed(1)}%`
           : `${minVal.toFixed(key==='permeability'?0:1)} → ${baseVal.toFixed(key==='permeability'?0:1)} → ${maxVal.toFixed(key==='permeability'?0:1)} ${unit}`
-        const desc = key === 'thickness' ? 'Linear DOE driver (P50 ∝ h)'
+        const isDepl = p.formationType === 'depleted_gas' || p.formationType === 'depleted_oil'
+        const desc = key === 'permeability' ? 'No capacity effect — affects ΔP only'
+          : isDepl ? 'GIIP-bound: capacity fixed by GIIP + fill factor (Bachu 2007) — not this parameter'
+          : key === 'thickness' ? 'Linear DOE driver (P50 ∝ h)'
           : key === 'porosity' ? 'Linear DOE driver (P50 ∝ φ)'
-          : key === 'permeability' ? 'No capacity effect — affects ΔP only'
           : 'Linear DOE driver (P50 ∝ A)'
         return `<div style="border:1px solid ${T.border};border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:${T.navy};margin-bottom:3px">${key.charAt(0).toUpperCase()+key.slice(1)}: ${displayVal}</div>
@@ -1421,38 +1604,26 @@ function buildContentPages(preset: (typeof FORMATION_PRESETS)[0], data: {
   ${comparisonSection || ''}
 
   <h2 style="margin-top:14px">7 · Model &amp; Reference Citations</h2>
+  <p style="font-size:7.5pt;color:${T.slate};margin-bottom:4px">All models from the <strong>CarbonLens Model Registry</strong> — auto-generated for consistency across all reports.</p>
   <table>
-    <thead><tr><th>Physical Model</th><th>Source Reference</th></tr></thead>
+    <thead><tr><th style="width:22%">Component</th><th style="width:40%">Model / Correlation</th><th style="width:38%">Reference</th></tr></thead>
     <tbody>
-      <tr><td>CO₂ Density (Primary)</td><td>Span &amp; Wagner (1996) <em>J. Phys. Chem. Ref. Data</em> 25(6):1509, ±0.05%</td></tr>
-      <tr><td>CO₂ Density (Impure)</td><td>Peng &amp; Robinson (1976) <em>IEC Fundam.</em> 15(1):59 + Li &amp; Yan (2009) mixing rules for CH₄, N₂, H₂S, SO₂</td></tr>
-      <tr><td>Brine Density</td><td>Garcia (2001) <em>LBNL-49023</em>, NaCl, CaCl₂ and mixed brines</td></tr>
-      <tr><td>CO₂ Viscosity</td><td>Fenghour, Wakeham &amp; Vesovic (1998) <em>JPCRD</em> 27(1):31, full correlation</td></tr>
-      <tr><td>CO₂ Solubility (NaCl)</td><td>Duan &amp; Sun (2003) <em>Chem. Geology</em> 193(3-4):257, regression fit ±5-10%</td></tr>
-      <tr><td>CO₂ Multi-Salt Solubility</td><td>Duan, Sun, Zhu &amp; Chou (2006) <em>Marine Chemistry</em> 98(2-4):131, Ca²+, Mg²+, K+</td></tr>
-      <tr><td>Interfacial Tension</td><td>MARS ML Model, Olagunju (in prep.), MSc UTP Malaysia</td></tr>
-      <tr><td>Effective Diffusivity</td><td>Millington &amp; Quirk (1961), tortuosity-corrected diffusion coefficient</td></tr>
-      <tr><td>Plume Migration</td><td>Nordbotten et al. (2005) two-phase VE plume model</td></tr>
-      <tr><td>Post-Injection Plume</td><td>Hesse, Orr &amp; Tchelepi (2008) <em>J. Fluid Mech.</em> 611:35, gravity current with two propagating shocks</td></tr>
-      <tr><td>Relative Permeability</td><td>van Genuchten-Mualem (1980) primary; Brooks &amp; Corey (1964) for carbonates</td></tr>
-      <tr><td>Hysteresis in kr</td><td>Killough (1976)</td></tr>
-      <tr><td>Residual Trapping</td><td>Land (1968) <em>Trans. AIME</em> 243:149</td></tr>
-      <tr><td>Convective Dissolution</td><td>Rayleigh mixing, Ra_crit = 4π²</td></tr>
-      <tr><td>Capillary Pressure</td><td>Brooks-Corey (1964)</td></tr>
-      <tr><td>Pressure Transient / AoR</td><td>Theis (1935) <em>Trans. AGU</em> 16:519 + E₁ Pad&eacute; approximant, stable for large u</td></tr>
-      <tr><td>Sweep Efficiency</td><td>Shook &amp; Mitchell (2009) SPE-119897, E_s = 1 - exp(-3·PVI·FQI)</td></tr>
-      <tr><td>Storage Efficiency</td><td>Kopp, Class &amp; Helmig (2010) <em>IJGGC</em> 4(5):831, E_c = E_geo × E_s × E_d</td></tr>
-      <tr><td>AoR Heterogeneity</td><td>r_AoR × exp(σ²/4), log-normal permeability distribution</td></tr>
-      <tr><td>Storage Capacity</td><td>Goodman et al. (2011) DOE/NETL-2011/1440, P10/P50/P90</td></tr>
-      <tr><td>Geomechanical Failure</td><td>Hubbert &amp; Willis (1957) fracture gradient + Mohr-Coulomb + Biot</td></tr>
-      <tr><td>Surface Heave</td><td>Nucleus-of-strain approximation, Teatini et al. (2011) <em>JGR</em> 116:B08204</td></tr>
+      ${renderProvenanceTableRows()}
     </tbody>
   </table>
 
-  ${pageFooter(3)}
+  ${pageFooter(4)}
 </div>`
 
-  return page1 + page2 + page3
+  const regulatorySection = buildRegulatorySection(preset.jurisdiction, preset.name)
+  const preScreenPage = regulatorySection ? `
+<div class="content-page page-break" style="padding:14mm 14mm 12mm">
+  ${pageHeader}
+  ${regulatorySection}
+  ${pageFooter(3)}
+</div>` : ''
+
+  return page1 + page2 + preScreenPage + page3
 }
 
 // ─── Master README HTML ───────────────────────────────────────────────────────
@@ -1767,6 +1938,16 @@ function buildMarkdown(preset: (typeof FORMATION_PRESETS)[0], data: {
   const _landSgr = _landSgi / (1 + 2.5 * _landSgi)
   const _landPct = (_landSgr / _landSgi * 100).toFixed(0)
 
+  const _isDepField = p.formationType === 'depleted_gas' || p.formationType === 'depleted_oil'
+  const _litho = p.lithologyClass ?? 'sandstone'
+  const fillLabels = _isDepField
+    ? _litho === 'carbonate'
+      ? { p90: '30% fill (carbonate, Bachu 2007)', p50: '50% fill (carbonate, Bachu 2007)', p10: '75% fill (carbonate, Bachu 2007)' }
+      : _litho === 'chalk'
+      ? { p90: '25% fill (chalk, Bachu 2007)', p50: '40% fill (chalk, Bachu 2007)', p10: '65% fill (chalk, Bachu 2007)' }
+      : { p90: '40% fill (sandstone, Bachu 2007)', p50: '60% fill (sandstone, Bachu 2007)', p10: '85% fill (sandstone, Bachu 2007)' }
+    : { p90: 'Cc = 0.51% (DOE Goodman 2011)', p50: 'Cc = 2.00% (DOE Goodman 2011)', p10: 'Cc = 5.50% (DOE Goodman 2011)' }
+
   const senTable = (['thickness','porosity','permeability','area'] as const).map(key => {
     const s = data.senData[key]
     const unit = key === 'area' ? 'km²' : key === 'porosity' ? '(frac)' : key === 'thickness' ? 'm' : 'mD'
@@ -1848,11 +2029,11 @@ At reservoir conditions: **T = ${p.temperature.toFixed(1)} °C**, **P = ${p.pres
 
 ## 3 · Storage Capacity & Trapping (Year 20)
 
-| Estimate | Value | Efficiency (Cc) |
+| Estimate | Value | Method |
 |---|---|---|
-| P90 (conservative) | **${sr.p90.toFixed(3)} Mt** | 0.51% |
-| P50 (best estimate) | **${sr.p50.toFixed(3)} Mt** | 2.00% |
-| P10 (optimistic) | **${sr.p10.toFixed(3)} Mt** | 5.50% |
+| P90 (conservative) | **${sr.p90.toFixed(3)} Mt** | ${fillLabels.p90} |
+| P50 (best estimate) | **${sr.p50.toFixed(3)} Mt** | ${fillLabels.p50} |
+| P10 (optimistic) | **${sr.p10.toFixed(3)} Mt** | ${fillLabels.p10} |
 | Containment Probability | **${(sr.containmentProbability*100).toFixed(1)}%** | NTG + trapped fraction |
 
 ### CO₂ Mass Distribution — Total Injected: ${cumInj.toFixed(4)} Mt
@@ -1862,7 +2043,7 @@ At reservoir conditions: **T = ${p.temperature.toFixed(1)} °C**, **P = ${p.pres
 | Residual (capillary) | ${sr.residualTrapping.toFixed(4)} | ${residPct}% |
 | Dissolution (solubility) | ${sr.solubilityTrapping.toFixed(4)} | ${soldPct}% |
 | Mineral (carbonate) | ${sr.mineralTrapping.toFixed(4)} | ${minPct}% |
-| Mobile plume (free) | ${sr.mobilePlume.toFixed(4)} | ${mobPct}% |
+| Structural (free-phase) | ${sr.mobilePlume.toFixed(4)} | ${mobPct}% |
 | **Total** | **${cumInj.toFixed(4)}** | **100%** |
 
 Plume radius: **${sr.plumeRadius.toFixed(1)} m** · Plume height: **${sr.plumeHeight.toFixed(1)} m** · Peak injection P: **${sr.injectionPressure.toFixed(3)} MPa**
