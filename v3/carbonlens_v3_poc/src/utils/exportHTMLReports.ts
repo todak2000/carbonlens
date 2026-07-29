@@ -1922,7 +1922,17 @@ export function openPermitApplication(
         <tr><td>Seismicity Risk</td><td>${geomechanics.inducedSeismicityRisk.toUpperCase()}</td><td><span class="${seisClass}">${seisCrit}</span></td></tr>
         <tr><td>Fault Slip Potential (dCFF)</td><td>${geomechanics.faultSlipPotential.toFixed(3)} MPa</td><td>${geomechanics.faultSlipPotential > 0.1 ? '<span class="badge-amber">&#x26A0; Monitor — elevated fault reactivation risk' : '<span class="badge-green">&#x2713; Below threshold'}</span></td></tr>
         <tr><td>Dynamic Coulomb Failure Function (&#x394;CFF)</td><td>${geomechanics.dcff != null ? geomechanics.dcff.toFixed(3) + ' MPa' : '—'}</td><td>${geomechanics.dcff != null ? (geomechanics.dcff > 0.01 ? '<span class="badge-amber">Positive &#x394;CFF — increased failure probability on optimally oriented faults' : '<span class="badge-green">&#x394;CFF negligible') : '<span class="badge-green">REF'}</span></td></tr>
-        <tr><td>Pressure Front Radius</td><td>${geomechanics.pressureFrontRadius?.toFixed(2) ?? '—'} km</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Pressure Front Radius <em style="font-size:8pt;color:#94a3b8;">— Theis infinite-aquifer model; may exceed formation footprint for high-k formations (see note below)</em></td><td>${geomechanics.pressureFrontRadius?.toFixed(2) ?? '—'} km</td><td><span class="${(() => {
+          const pfr = geomechanics.pressureFrontRadius ?? 0
+          const rEq = Math.sqrt(params.area * 1e6 / Math.PI) / 1000
+          return pfr > 5 * rEq ? 'badge-amber' : 'badge-green'
+        })()}">${(() => {
+          const pfr = geomechanics.pressureFrontRadius ?? 0
+          const rEq = Math.sqrt(params.area * 1e6 / Math.PI) / 1000
+          return pfr > 5 * rEq
+            ? `&#x26A0; Exceeds formation radius (${rEq.toFixed(1)} km) — infinite-aquifer assumption; real boundary limits propagation`
+            : 'REF'
+        })()}</span></td></tr>
         <tr><td>Overburden Stress (S<sub>v</sub>)</td><td>${geomechanics.overburdenStress.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Friction Angle (Mohr-Coulomb)</td><td>${geomechanics.frictionAngle.toFixed(1)}&#xB0;</td><td><span class="badge-green">REF</span></td></tr>
         <tr><td>Cohesion (Mohr-Coulomb)</td><td>${geomechanics.cohesion.toFixed(2)} MPa</td><td><span class="badge-green">REF</span></td></tr>
@@ -1946,6 +1956,25 @@ export function openPermitApplication(
         connectivity, lateral brine drainage, and aquifer support. Injection rate management must ensure that bottomhole
         pressure (BHP) remains below MAIP (${geomechanics.maip.toFixed(2)} MPa) under both modelling assumptions.
       </p>
+      ${(() => {
+        const pfr = geomechanics.pressureFrontRadius ?? 0
+        const rEq = Math.sqrt(params.area * 1e6 / Math.PI) / 1000
+        const ratio = pfr / rEq
+        return `<p style="font-size:9pt;color:#0c4a6e;margin:8px 0 0 0;">
+          <strong>Pressure Front Radius vs. Formation Footprint:</strong>
+          The Pressure Front Radius (${pfr.toFixed(1)} km) is ${ratio.toFixed(0)}&#xD7; larger than the formation-equivalent radius
+          (${rEq.toFixed(1)} km from the ${params.area} km&#xB2; injection footprint).
+          This is normal and expected — the PFR and the formation area measure two entirely different things.
+          The PFR is the Theis (1935) characteristic pressure-diffusion length in the <em>connected brine system</em> assuming an
+          infinite aquifer: it represents how far the pressure wave has propagated through undisturbed brine after ${projectYears ?? 20} years,
+          not how far CO&#x2082; has migrated.
+          The "Formation Area" in Section 2 is the CO&#x2082; injection footprint used for pore-volume and capacity calculations —
+          it is the simulation domain, not necessarily the geological boundary of the formation.
+          ${ratio > 10 ? `For a <em>truly bounded</em> formation limited to ${params.area} km&#xB2;, pressure would accumulate faster
+          within that boundary and the infinite-aquifer model would overstate drainage; the FD Solver Block Pressure (closed-box bound above)
+          is the appropriate conservative limit in that case.` : ''}
+        </p>`
+      })()}
     </div>`
   }
 
@@ -2043,16 +2072,20 @@ export function openPermitApplication(
       })()}</td></tr>
       <tr><td>Formation Area</td><td style="vertical-align:top;white-space:nowrap;">${params.area?.toFixed(2) ?? '—'} km²</td></tr>
       <tr><td>Net-to-Gross Ratio</td><td style="vertical-align:top;white-space:nowrap;">${(params.netToGross * 100)?.toFixed(1) ?? '—'}%</td></tr>
+      <tr><td>Bulk Reservoir Volume<br><span style="font-size:8pt;color:#64748b;">${params.area.toFixed(2)} km² × ${(params.thickness/1000).toFixed(4)} km depth-thickness</span></td><td style="vertical-align:top;">${(params.area * params.thickness / 1000).toFixed(4)} km³ &nbsp;≈&nbsp; ${(params.area * params.thickness * 1e6).toFixed(0)} Mm³</td></tr>
+      <tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">Bulk Vol × porosity (${(params.porosity*100).toFixed(1)}%)</span></td><td style="vertical-align:top;">${(params.area * params.thickness / 1000 * params.porosity).toFixed(5)} km³ &nbsp;≈&nbsp; ${(params.area * params.thickness * 1e6 * params.porosity).toFixed(0)} Mm³</td></tr>
+      <tr><td>Net Pore Volume<br><span style="font-size:8pt;color:#64748b;">Gross PV × NTG (${(params.netToGross*100).toFixed(1)}%)</span></td><td style="vertical-align:top;">${(params.area * params.thickness / 1000 * params.porosity * params.netToGross).toFixed(5)} km³ &nbsp;≈&nbsp; ${(params.area * params.thickness * 1e6 * params.porosity * params.netToGross).toFixed(0)} Mm³</td></tr>
+      <tr><td>Simulation Grid (configured in Geology)</td><td style="vertical-align:top;">See Geology panel — default 60×60×20 = 72,000 cells</td></tr>
       <tr><td>Geometry Type</td><td style="vertical-align:top;white-space:nowrap;">${params.geometryType ?? '—'}</td></tr>
       <tr><td>Salinity (monovalent NaCl-equiv.)</td><td style="vertical-align:top;">${params.monovalentSalinity?.toFixed(3) ?? '—'} mol/kg${params.monovalentSalinity != null && params.monovalentSalinity < 0.1 ? ' <em style="color:#d97706;">(&#x26A0; near zero — Duan-Sun model requires &gt;0.1 mol/kg)</em>' : ''}</td></tr>
       <tr><td>Salinity (bivalent CaCl&#x2082;-equiv.)</td><td style="vertical-align:top;white-space:nowrap;">${params.bivalentSalinity?.toFixed(3) ?? '—'} mol/kg</td></tr>
       <tr><td>Hydrocarbon Content (CH&#x2084;/N&#x2082;)</td><td style="vertical-align:top;white-space:nowrap;">CH&#x2084;: ${(params.methaneFraction * 100).toFixed(1)}% &nbsp;|&nbsp; N&#x2082;: ${(params.nitrogenFraction * 100).toFixed(1)}%</td></tr>
-      <tr><td>Formation Type</td><td>${params.formationType ? params.formationType.replace(/_/g, ' ') : '—'}</td></tr>
-      <tr><td>Overpressured Formation</td><td>${params.isOverpressured != null ? (params.isOverpressured ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
-      <tr><td>Lithology Class</td><td>${params.lithologyClass ? params.lithologyClass.charAt(0).toUpperCase() + params.lithologyClass.slice(1) : '—'}</td></tr>
-      <tr><td>Fractured Reservoir</td><td>${params.fracturedReservoir != null ? (params.fracturedReservoir ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '—'}</td></tr>
-      <tr><td>Gas Initially In Place (GIIP)</td><td>${params.giip != null ? params.giip.toFixed(2) + ' Bcm' : '—'}</td></tr>
-      <tr><td>Abandonment Pressure</td><td>${params.abandonmentPressure != null ? params.abandonmentPressure.toFixed(2) + ' MPa' : '—'}</td></tr>
+      <tr><td>Formation Type</td><td>${(() => { const _ft = params.formationType ?? (params.giip != null ? 'depleted_gas' : 'saline_aquifer'); return _ft.replace(/_/g, ' ') + (params.formationType == null ? ' <em style="font-size:8pt;color:#94a3b8;">(inferred)</em>' : '') })()}</td></tr>
+      <tr><td>Overpressured Formation</td><td>${(() => { const _hyd = 1025 * 9.81 * params.depth / 1e6; const _inferred = params.isOverpressured != null ? params.isOverpressured : (params.pressure / _hyd) > 1.15; const _assumed = params.isOverpressured == null ? ' <em style="font-size:8pt;color:#94a3b8;">(assumed)</em>' : ''; return (_inferred ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') + _assumed })()}</td></tr>
+      <tr><td>Lithology Class</td><td>${params.lithologyClass ? params.lithologyClass.charAt(0).toUpperCase() + params.lithologyClass.slice(1) : 'Sandstone <em style="font-size:8pt;color:#94a3b8;">(assumed — no lithology specified)</em>'}</td></tr>
+      <tr><td>Fractured Reservoir</td><td>${params.fracturedReservoir != null ? (params.fracturedReservoir ? '<span class="badge-amber">YES</span>' : '<span class="badge-green">NO</span>') : '<span class="badge-green">NO</span> <em style="font-size:8pt;color:#94a3b8;">(assumed — not specified)</em>'}</td></tr>
+      <tr><td>Gas Initially In Place (GIIP)</td><td>${params.giip != null ? params.giip.toFixed(2) + ' Bcm' : (params.formationType === 'saline_aquifer' || params.formationType == null) ? 'N/A — saline aquifer (GIIP not applicable)' : '— not specified'}</td></tr>
+      <tr><td>Abandonment Pressure</td><td>${params.abandonmentPressure != null ? params.abandonmentPressure.toFixed(2) + ' MPa' : (params.formationType === 'depleted_gas' || params.formationType === 'depleted_oil') ? ((params.pressure * 0.15).toFixed(2) + ' MPa <em style="font-size:8pt;color:#94a3b8;">(estimated: 15% of P_initial — verify with reservoir engineer)</em>') : 'N/A — saline aquifer'}</td></tr>
       <tr><td>Connate Water Saturation (S<sub>wi</sub>)</td><td>${params.swiConnate != null ? (params.swiConnate * 100).toFixed(1) + '%' : '15.0% (default)'}</td></tr>
     </tbody>
   </table>
@@ -2064,7 +2097,7 @@ export function openPermitApplication(
       <tr><td>Dykstra-Parsons V<sub>dp</sub> (Permeability Variation)</td><td>${params.k_Vdp != null ? params.k_Vdp.toFixed(3) : '0 (homogeneous)'}</td><td>${params.k_Vdp != null && params.k_Vdp > 0.05 ? 'Sweep efficiency &amp; AoR corrected for heterogeneity' : 'Homogeneous flow assumed'}</td></tr>
       <tr><td>k<sub>h</sub>/k<sub>v</sub> Anisotropy Ratio</td><td>${params.k_layer_ratio != null ? params.k_layer_ratio.toFixed(1) : '1.0 (isotropic)'}</td><td>${params.k_layer_ratio != null && params.k_layer_ratio > 1 ? 'Vertical permeability reduced — impedes buoyancy migration' : 'Isotropic flow'}</td></tr>
       <tr><td>Number of Permeability Layers</td><td>${params.n_layers != null ? params.n_layers.toString() : '1 (homogeneous)'}</td><td>${params.n_layers != null && params.n_layers > 1 ? 'Multi-layer sweep correction applied' : 'Single-layer model'}</td></tr>
-      <tr><td>Sweep Efficiency (E<sub>s</sub>)</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency * 100).toFixed(1) + '%' : '—'}</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency < 0.7 ? '&#x26A0; Low sweep — heterogeneity reduces effective pore volume' : '&#x2713; Adequate sweep') : 'Run simulation'}</td></tr>
+      <tr><td>Sweep Efficiency (E<sub>s</sub>)</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency * 100).toFixed(1) + '%' : params.k_Vdp != null && params.k_Vdp > 0.05 ? ((1 - params.k_Vdp) * 100).toFixed(0) + '% <em style="font-size:8pt;color:#94a3b8;">(estimated from V_DP = ' + params.k_Vdp.toFixed(2) + ')</em>' : '100% <em style="font-size:8pt;color:#94a3b8;">(assumed homogeneous — run simulation for computed value)</em>'}</td><td>${result?.sweepEfficiency != null ? (result.sweepEfficiency < 0.7 ? '&#x26A0; Low sweep — heterogeneity reduces effective pore volume' : '&#x2713; Adequate sweep') : 'Run simulation'}</td></tr>
       <tr><td>AoR Heterogeneity Factor</td><td>${result?.aorHeterogeneityFactor != null ? result.aorHeterogeneityFactor.toFixed(2) + '×' : '1.0×'}</td><td>${result?.aorHeterogeneityFactor != null && result.aorHeterogeneityFactor > 1 ? 'AoR radius inflated for heterogeneity (Shook &amp; Mitchell 2009)' : 'No heterogeneity correction'}</td></tr>
       ${result?.heterogeneityCorrected ? `<tr><td>Calibrated Effective Permeability (k<sub>eff</sub>)</td><td>${params.k_eff_calibrated_mD != null ? params.k_eff_calibrated_mD.toFixed(1) + ' mD' : '—'}</td><td>VE gravity-current calibrated from field anchor (Boait 2012 inversion)</td></tr>` : ''}
     </tbody>

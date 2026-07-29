@@ -1083,13 +1083,13 @@ export default function FormationPanel() {
 
               <button
                 disabled={!screeningResult.canProceed || (screeningResult.requiresAcknowledgment && !amberAcknowledged)}
-                onClick={() => { setStageComplete('stage2', true); setPanel('simulation') }}
+                onClick={() => { setPanel('geology') }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition
                   disabled:opacity-40 disabled:cursor-not-allowed
                   bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white"
               >
                 <ShieldCheck size={13} />
-                Confirm Formation &amp; Proceed to Simulation
+                Confirm Formation &amp; Continue to Geology →
               </button>
             </div>
           </div>

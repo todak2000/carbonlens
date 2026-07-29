@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Layers, GitBranch, BarChart2, Maximize2, Minimize2 } from 'lucide-react'
+import { Layers, GitBranch, BarChart2, Maximize2, Minimize2, ChevronRight } from 'lucide-react'
 import StratigraphyTab from './StratigraphyTab'
 import FaultsTab from './FaultsTab'
 import PropertyPreviewTab from './PropertyPreviewTab'
@@ -19,6 +19,7 @@ export default function GeologyPanel() {
   const { model, gridNx, gridNy, gridNz, setGridDimensions } = useGeologicalStore()
   const geologyExpanded = useUIStore((s) => s.geologyExpanded)
   const toggleGeologyExpanded = useUIStore((s) => s.toggleGeologyExpanded)
+  const setPanel = useUIStore((s) => s.setPanel)
 
   return (
     <div className="max-w-4xl mx-auto bg-card rounded-xl border border-theme/30 shadow-md flex flex-col">
@@ -105,6 +106,17 @@ export default function GeologyPanel() {
             {(gridNx * gridNy * gridNz).toLocaleString()} cells (Max recommended: 300,000 for web execution)
           </span>
         </div>
+      </div>
+
+      {/* Proceed gate */}
+      <div className="border-t border-theme mt-4 pt-3 px-5 pb-5">
+        <button
+          onClick={() => setPanel('geomechanics')}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white"
+        >
+          <ChevronRight size={13} />
+          Geology Reviewed — Continue to Geomechanics →
+        </button>
       </div>
     </div>
   )

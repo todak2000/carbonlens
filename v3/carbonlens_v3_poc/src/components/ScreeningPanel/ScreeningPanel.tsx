@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react'
-import { Target, ChevronDown, ChevronRight } from 'lucide-react'
+import { Target, ChevronDown, ChevronRight, ShieldCheck } from 'lucide-react'
 import { useFormationStore } from '../../store/formationStore'
 import { useUIStore } from '../../store/uiStore'
 import { assessStorageScreening } from '../../engine/classical/storageScreening'
@@ -115,6 +115,8 @@ function CriterionRow({ criterion }: { criterion: ScreeningCriterion }) {
 export default function ScreeningPanel() {
   const params = useFormationStore((s) => s.params)
   const jurisdiction = useUIStore((s) => s.jurisdiction)
+  const setPanel = useUIStore((s) => s.setPanel)
+  const setStageComplete = useUIStore((s) => s.setStageComplete)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const screeningResult = useMemo(() => assessStorageScreening(params), [params])
@@ -247,6 +249,21 @@ export default function ScreeningPanel() {
           </div>
 
         </div>
+      </div>
+
+      {/* Final workflow gate — unlocks simulation */}
+      <div className="border-t border-theme mt-4 pt-3 px-4 pb-4 space-y-2">
+        <p className="text-[10px] font-mono text-muted leading-relaxed">
+          You have reviewed Formation, Geology, Geomechanics and Screening. Confirming will unlock the Simulation stage.
+        </p>
+        <button
+          disabled={!screeningResult.canProceed}
+          onClick={() => { setStageComplete('stage2', true); setPanel('simulation') }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white"
+        >
+          <ShieldCheck size={13} />
+          All Stages Reviewed — Confirm &amp; Proceed to Simulation
+        </button>
       </div>
     </div>
   )

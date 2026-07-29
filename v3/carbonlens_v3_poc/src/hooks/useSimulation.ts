@@ -923,6 +923,7 @@ export function computeGeomechanicsResult(
   params: FormationParams,
   wells: { injectionRate: number; rampUpYears: number; rampDownYears: number }[],
   simResult: SimulationResult | null,
+  projectYears: number = 20,
 ): GeomechanicsResult {
   const depth = params.depth
   const pp = params.pressure
@@ -1007,14 +1008,31 @@ export function computeGeomechanicsResult(
     surfaceHeave = Math.max(0, 2 / Math.PI * (1 - nu_geo * nu_geo) * dP_Pa * V / (E_eff * Math.max(100, depth) ** 2))
   }
 
-  // MAIP pressure-front radius: Theis characteristic diffusion length over a 20-year
-  // horizon using brine hydraulic diffusivity.  Far-field pressure propagates through
-  // undisturbed brine (μ ≈ 6×10⁻⁴ Pa·s), not CO₂.  The prior formula used CO₂
-  // viscosity (5×10⁻⁵ Pa·s), overestimating the radius by √(μ_brine/μ_CO₂) ≈ 3.5×.
-  const _muBrine_geo = 6e-4   // Pa·s — brine viscosity for pressure-front diffusivity
+  // MAIP pressure-front radius: Theis characteristic diffusion length r = 2√(α·t)
+  // where α = k / (φ μ c_t) is the hydraulic diffusivity.
+  //
+  // Far-field pressure propagates through undisturbed brine, so brine viscosity
+  // (μ ≈ 6×10⁻⁴ Pa·s) is used — NOT CO₂ viscosity.
+  //
+  // Total compressibility c_t = c_pore + φ·c_brine:
+  //   c_pore  = 1×10⁻⁹ Pa⁻¹  (pore-volume compressibility, sandstone/carbonate)
+  //   c_brine = 4.5×10⁻¹⁰ Pa⁻¹ (brine compressibility)
+  // This gives c_t values ranging from ~1.05×10⁻⁹ (φ=0.10) to ~1.25×10⁻⁹ (φ=0.40),
+  // a modest but physically motivated variation vs. a fixed 1×10⁻⁹.
+  //
+  // Note: the result is an INFINITE-AQUIFER estimate.  When c_t or k is very high
+  // (e.g., Sleipner 3000 mD), PFR can greatly exceed the simulation area; this does
+  // not mean CO₂ travels that far — it reflects pressure diffusion in the connected
+  // brine system, which for real formations (e.g., Utsira ~26,000 km²) extends well
+  // beyond the injection footprint.
+  const _muBrine_geo = 6e-4                // Pa·s — brine viscosity
+  const _cBrine      = 4.5e-10             // Pa⁻¹ — brine compressibility
+  const _cPore       = 1e-9               // Pa⁻¹ — pore-volume compressibility
+  const _ct_geo      = _cPore + params.porosity * _cBrine  // total compressibility
+  const _t_geo       = 86400 * 365 * projectYears          // seconds over project life
   const presFrontR = Math.sqrt(
-    4 * params.permeability * 9.869e-16 * 86400 * 365 * 20
-    / (params.porosity * _muBrine_geo * 1e-9),
+    4 * params.permeability * 9.869e-16 * _t_geo
+    / (params.porosity * _muBrine_geo * _ct_geo),
   ) / 1000
 
   return {
@@ -1335,7 +1353,8 @@ export function useSimulation(gridRef?: React.RefObject<{
         : finalResult
 
       // Compute final geomechanics with the actual injected volume for accurate surface heave.
-      const finalGeo = computeGeomechanicsResult(finalParams, finalWells, exportResult)
+      const finalProjectYears = useUIStore.getState().projectYears
+      const finalGeo = computeGeomechanicsResult(finalParams, finalWells, exportResult, finalProjectYears)
       if (exportResult) {
         // Snapshot result + wells + params + geomechanics together so both export
         // documents always describe the same completed run.  Storing geomechanics in
@@ -1373,7 +1392,7 @@ export function useSimulation(gridRef?: React.RefObject<{
     store.setForceRun(false)
     // Populate geomechanics immediately so exports are never "NOT RUN",
     // regardless of whether the user opens the Geomechanics panel.
-    store.setGeomechanics(computeGeomechanicsResult(params, wells, null))
+    store.setGeomechanics(computeGeomechanicsResult(params, wells, null, projectYears))
     store.runSimulation()
     store.setResult(computeYearly(params, 0, projectYears, null))
     store.startAnimation()

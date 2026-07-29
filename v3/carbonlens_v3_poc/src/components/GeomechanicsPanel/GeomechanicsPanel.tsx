@@ -2,7 +2,7 @@ import { useMemo, useRef, useEffect, useCallback, useState } from 'react'
 import { useFormationStore } from '../../store/formationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import { useUIStore } from '../../store/uiStore'
-import { AlertTriangle, CheckCircle, AlertCircle, ArrowUp, Gauge, Zap, Drill, Activity, Brain, Shield } from 'lucide-react'
+import { AlertTriangle, CheckCircle, AlertCircle, ArrowUp, Gauge, Zap, Drill, Activity, Brain, Shield, ChevronRight } from 'lucide-react'
 import { computeWellboreDiagnostics, DEFAULT_WELLBORE } from '../../engine/plume/wellboreModel'
 import { assessFaultReactivation } from '../../engine/plume/faultReactivation'
 import type { FaultGeometry, StressState, FaultRockProperties } from '../../engine/plume/faultReactivation'
@@ -194,6 +194,7 @@ export default function GeomechanicsPanel() {
     [sv, sh, pp, dp, params.biotCoefficient, params.caprockFriction, params.caprockCohesion])
 
   const theme = useUIStore((s) => s.theme)
+  const setPanel = useUIStore((s) => s.setPanel)
   const draw = useCallback(() => {
     if (canvasRef.current) drawMC(canvasRef.current, mData, theme === 'dark')
   }, [mData, theme])
@@ -640,6 +641,17 @@ export default function GeomechanicsPanel() {
           </div>
 
         </div>
+      </div>
+
+      {/* Proceed gate */}
+      <div className="border-t border-theme mt-4 pt-3 px-4 pb-4">
+        <button
+          onClick={() => setPanel('screening')}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white"
+        >
+          <ChevronRight size={13} />
+          Geomechanics Reviewed — Continue to Screening →
+        </button>
       </div>
     </div>
   )
