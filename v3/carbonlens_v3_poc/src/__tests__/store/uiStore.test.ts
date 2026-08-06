@@ -21,7 +21,7 @@ beforeEach(() => {
     show3D: true,
     showGridView: true,
     showStressField: false,
-    showPressureField: true,
+    showPressureField: false,
     unitSystem: 'metric',
     warningCount: 0,
     blowoutActive: false,

@@ -101,7 +101,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   customBlendWeight: 0.5,
   timestep: 1,
   projectYears: 50,
-  showPressureField: true,
+  showPressureField: false,
   warningCount: 0,
   blowoutActive: false,
   showGridView: true,

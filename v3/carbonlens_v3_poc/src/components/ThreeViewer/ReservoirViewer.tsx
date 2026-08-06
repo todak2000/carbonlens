@@ -2021,7 +2021,7 @@ export default function ReservoirViewer() {
           )}
 
           <button onClick={togglePressure}
-            className={`hidden sm:inline-flex items-center text-[9px] font-mono px-2 py-1 rounded border ${showPressure ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
+            className={`inline-flex items-center text-[9px] font-mono px-2 py-1 rounded border ${showPressure ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
           >
             {showPressure ? '✕ P-field' : '⊞ P-field'}
           </button>
