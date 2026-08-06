@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CarbonLens — InnovEx TEC26 A2 Poster v3</title>
+<style>
+  @page { size: 420mm 594mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    width: 420mm; height: 594mm; overflow: hidden;
+    background: #ffffff; color: #0f172a;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+  .page {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    padding: 6mm 9mm 5mm; gap: 2.2mm;
+  }
+
+  /* ── MASTHEAD ─────────────────────────────────────────── */
+  .masthead {
+    background: linear-gradient(115deg, #081c27 0%, #0b2b33 55%, #0d4038 100%);
+    border-radius: 3.5mm; color: #fff;
+    padding: 5mm 8mm 4.5mm;
+    flex: 0 0 auto;
+  }
+  .mast-row { display: flex; justify-content: space-between; align-items: center; }
+  .wordmark { font-size: 25px; font-weight: 800; letter-spacing: 2.5px; }
+  .wordmark .lens { color: #34d399; font-weight: 300; }
+  .ev-badge {
+    border: 0.5mm solid #34d399; color: #a7f3d0; font-size: 14px;
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    padding: 1.2mm 3.5mm; border-radius: 99mm;
+  }
+  .eyebrow {
+    margin-top: 3mm; font-size: 15px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase; color: #6ee7b7;
+  }
+  .masthead h1 {
+    margin-top: 1mm; font-size: 70px; font-weight: 800;
+    line-height: 1.02; letter-spacing: -0.5px;
+  }
+  .masthead h1 .em { color: #34d399; }
+  .value-stmt {
+    margin-top: 2mm; font-size: 21px; line-height: 1.32; color: #e2e8f0;
+  }
+  .value-stmt .em { color: #34d399; font-weight: 700; }
+  .value-stmt b { color: #fff; }
+  .author-line { margin-top: 2.2mm; font-size: 14.5px; color: #94a3b8; }
+  .author-line b { color: #cbd5e1; }
+
+  /* ── SECTION LABELS ───────────────────────────────────── */
+  .zlabel {
+    font-size: 13px; font-weight: 800; letter-spacing: 3px;
+    text-transform: uppercase; color: #059669; margin-bottom: 0.8mm;
+  }
+  .zlabel .num { color: #94a3b8; margin-right: 1.5mm; }
+  .ztitle {
+    font-size: 27px; font-weight: 800; line-height: 1.1; letter-spacing: -0.3px;
+  }
+  .ztitle .em { color: #059669; }
+  .zsub { font-size: 17.5px; line-height: 1.34; color: #334155; margin-top: 1.2mm; }
+  .zsub b { color: #0f172a; }
+
+  /* ── 01 PROBLEM ───────────────────────────────────────── */
+  .problem-zone { flex: 0 0 auto; }
+  .gap-chips { display: flex; gap: 3mm; margin-top: 1.8mm; }
+  .gap-chip {
+    flex: 1; background: #f8fafc;
+    border: 0.35mm solid #e2e8f0; border-left: 1.2mm solid #f59e0b;
+    border-radius: 2mm; padding: 2mm 3.5mm;
+    font-size: 17px; line-height: 1.3; color: #334155;
+  }
+  .gap-chip b {
+    display: block; font-size: 14px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #b45309; margin-bottom: 0.6mm;
+  }
+  .punch {
+    margin-top: 1.8mm; font-size: 20px; font-weight: 700; font-style: italic;
+    color: #0f172a; border-left: 1.2mm solid #10b981;
+    padding-left: 4mm; line-height: 1.28;
+  }
+
+  /* ── 02 SOLUTION ──────────────────────────────────────── */
+  .solution-zone { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .gate-strip { display: flex; gap: 1.8mm; margin-top: 1.8mm; }
+  .gate {
+    flex: 1; background: #0f172a; color: #e2e8f0;
+    border-radius: 2mm; padding: 2mm 2.5mm;
+  }
+  .gate .gnum {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 5mm; height: 5mm; border-radius: 50%; background: #10b981;
+    color: #06281e; font-size: 13px; font-weight: 800; margin-bottom: 0.6mm;
+  }
+  .gate .gname {
+    font-size: 15px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: #ffffff;
+  }
+  .gate .gdesc { font-size: 13px; color: #94a3b8; line-height: 1.2; margin-top: 0.3mm; }
+  .gate.final { background: #065f46; }
+  .gate.final .gnum { background: #fbbf24; color: #451a03; }
+  .gate.final .gdesc { color: #a7f3d0; }
+
+  .answer-row {
+    display: flex; gap: 3.5mm; margin-top: 1.8mm;
+    flex: 1; min-height: 0; align-items: stretch;
+  }
+  .hero-wrap {
+    flex: 1.65; border-radius: 2.5mm; overflow: hidden;
+    border: 0.35mm solid #e2e8f0; box-shadow: 0 1.5mm 5mm rgba(15,23,42,0.12);
+    background: #0e141d; min-height: 0;
+  }
+  .hero-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top; display: block;
+  }
+  .deliver {
+    flex: 1; background: #f0fdf9; border: 0.4mm solid #99f6e4;
+    border-radius: 2.5mm; padding: 2.5mm 3.5mm;
+    display: flex; flex-direction: column; gap: 1.8mm;
+    min-height: 0; overflow: hidden;
+  }
+  .deliver .dhead {
+    font-size: 14px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: #047857; flex: 0 0 auto;
+  }
+  .deliver img {
+    flex: 1; width: 100%; min-height: 0;
+    object-fit: cover; object-position: top;
+    border-radius: 1.5mm; border: 0.3mm solid #ccfbf1; display: block;
+  }
+  .ditem { font-size: 16px; line-height: 1.3; color: #134e4a; flex: 0 0 auto; }
+  .ditem b { color: #0f172a; }
+
+  /* ── 03 EVIDENCE ──────────────────────────────────────── */
+  .evidence-zone { flex: 0 0 auto; }
+  .proof-row { display: flex; gap: 4mm; margin-top: 1.5mm; align-items: stretch; }
+  .bigstat {
+    flex: 0 0 55mm; background: #0f172a; border-radius: 2.5mm;
+    color: #fff; padding: 3mm 3.5mm;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .bigstat .pct { font-size: 62px; font-weight: 800; color: #34d399; line-height: 1; }
+  .bigstat .cap { font-size: 15px; color: #cbd5e1; line-height: 1.3; margin-top: 1mm; }
+  .chart-wrap {
+    flex: 1; background: #f8fafc; border: 0.35mm solid #e2e8f0;
+    border-radius: 2.5mm; padding: 2mm 3.5mm 1.5mm;
+  }
+  .chart-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 0.6mm; }
+  .chart-note { font-size: 12px; color: #64748b; margin-top: 0.5mm; line-height: 1.3; }
+
+  .substats { display: flex; gap: 2mm; margin-top: 1.8mm; }
+  .sstat {
+    flex: 1; background: #f8fafc; border: 0.35mm solid #e2e8f0;
+    border-radius: 2mm; padding: 1.5mm 2.5mm; text-align: center;
+  }
+  .sstat .n {
+    font-size: 28px; font-weight: 800; color: #059669;
+    font-family: "Courier New", monospace;
+  }
+  .sstat .t { font-size: 12.5px; color: #475569; line-height: 1.2; margin-top: 0.3mm; }
+  .phys {
+    margin-top: 1.5mm; font-size: 12px; color: #64748b;
+    line-height: 1.3; border-top: 0.3mm solid #e2e8f0; padding-top: 1.2mm;
+  }
+  .phys b { color: #334155; }
+
+  /* ── 04 IMPACT ────────────────────────────────────────── */
+  .impact-zone { flex: 0 0 auto; }
+  .who-row { display: flex; gap: 2.5mm; margin-top: 1.5mm; }
+  .who {
+    flex: 1; background: #f8fafc; border: 0.35mm solid #e2e8f0;
+    border-top: 1.2mm solid #10b981; border-radius: 2mm; padding: 1.8mm 3mm;
+  }
+  .who .wname { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 0.4mm; }
+  .who .wdesc { font-size: 13.5px; color: #475569; line-height: 1.24; }
+
+  /* ── CTA ──────────────────────────────────────────────── */
+  .cta {
+    background: linear-gradient(115deg, #081c27 0%, #0b2b33 55%, #0d4038 100%);
+    border-radius: 3.5mm; color: #fff;
+    padding: 4mm 6.5mm;
+    display: flex; align-items: center; gap: 6mm;
+    flex: 0 0 auto;
+  }
+  .cta-text { flex: 1; }
+  .cta h2 {
+    font-size: 36px; font-weight: 800; line-height: 1.08; letter-spacing: -0.5px;
+  }
+  .cta h2 .em { color: #fbbf24; }
+  .cta .cta-sub {
+    margin-top: 2mm; font-size: 17px; color: #cbd5e1; line-height: 1.38;
+  }
+  .cta .cta-sub b { color: #fff; }
+  .cta .cta-sub .note {
+    display: inline-block; margin-top: 1.5mm;
+    font-size: 13.5px; color: #6ee7b7;
+    border: 0.4mm solid #10b981; border-radius: 99mm;
+    padding: 0.6mm 3mm; font-weight: 700; letter-spacing: 0.5px;
+  }
+
+  .qr-pair { display: flex; gap: 5mm; align-items: center; }
+
+  .qr-block { text-align: center; }
+  .qr-block canvas {
+    display: block; border-radius: 2mm;
+    background: #fff; padding: 0;
+    margin: 0 auto;
+  }
+  .qr-block .qlab {
+    margin-top: 1.5mm; font-size: 13px; color: #e2e8f0;
+    font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .qr-block .qsub { font-size: 11.5px; color: #94a3b8; margin-top: 0.4mm; }
+
+  .qr-main canvas { width: 46mm; height: 46mm; }
+  .qr-sec  canvas { width: 31mm; height: 31mm; }
+
+  .qr-divider {
+    width: 0.3mm; background: rgba(255,255,255,0.15);
+    align-self: stretch; margin: 2mm 0;
+  }
+
+  /* ── FOOTER ───────────────────────────────────────────── */
+  .footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    font-size: 12px; color: #94a3b8; line-height: 1.3; padding: 0 1mm;
+    flex: 0 0 auto;
+  }
+  .footer .fright { text-align: right; color: #475569; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <div class="masthead">
+    <div class="mast-row">
+      <div class="wordmark">CARBON<span class="lens">LENS</span></div>
+      <div class="ev-badge">InnovEx 2026 &middot; TEC26 &middot; UTP</div>
+    </div>
+    <div class="eyebrow">The first question of every CCS project</div>
+    <h1>Is this site worth <span class="em">detailed study?</span></h1>
+    <div class="value-stmt">
+      <b>CarbonLens answers it in minutes</b>: validated physics, quantified uncertainty,
+      and a <span class="em">regulator-ready screening report</span>, free, in any desktop browser.
+    </div>
+    <div class="author-line">
+      <b>Daniel T. Olagunju</b> &middot; MSc Research, UTP &nbsp;|&nbsp;
+      Supervisors: Dr Okorie Ekwe Agwu &middot; Dr Muhamad Aslam MD Yusof &middot; Advisor: Dr Berihun Negash Mamo
+    </div>
+  </div>
+
+  <!-- ══════════════ 01 THE PROBLEM ══════════════ -->
+  <div class="problem-zone">
+    <div class="zlabel"><span class="num">01</span> The Problem</div>
+    <div class="ztitle">
+      The world must store <span class="em">6 gigatonnes</span> of CO&#8322; per year by 2050.
+      Today it stores <span class="em">50 million.</span>
+    </div>
+    <div class="zsub">
+      Under <b>1% of what net-zero requires</b> (IEA). Suitable formations exist on every inhabited continent.
+      The bottleneck is project development speed: every project starts with a screening question, blocked by two walls.
+    </div>
+    <div class="gap-chips">
+      <div class="gap-chip">
+        <b>Enterprise Simulators</b>
+        US$80,000&ndash;200,000/year in licences, dedicated workstations, weeks of training. Disproportionate for early screening.
+      </div>
+      <div class="gap-chip">
+        <b>Free Alternatives</b>
+        Require MATLAB or Python expertise and significant setup. Produce no regulatory outputs.
+      </div>
+    </div>
+    <div class="punch">
+      "Projects stall not because the geology is unsuitable: the tools to evaluate it are inaccessible."
+    </div>
+  </div>
+
+  <!-- ══════════════ 02 THE SOLUTION ══════════════ -->
+  <div class="solution-zone">
+    <div class="zlabel"><span class="num">02</span> The Solution</div>
+    <div class="ztitle">
+      A complete screening studio in any desktop browser. <span class="em">The end product is a report.</span>
+    </div>
+    <div class="gate-strip">
+      <div class="gate">
+        <div class="gnum">1</div>
+        <div class="gname">Setup</div>
+        <div class="gdesc">Project, country, jurisdiction</div>
+      </div>
+      <div class="gate">
+        <div class="gnum">2</div>
+        <div class="gname">Define</div>
+        <div class="gdesc">Formation + 10-criterion screening gate</div>
+      </div>
+      <div class="gate">
+        <div class="gnum">3</div>
+        <div class="gname">Simulate</div>
+        <div class="gdesc">Plume &middot; pressure &middot; geomechanics</div>
+      </div>
+      <div class="gate">
+        <div class="gnum">4</div>
+        <div class="gname">Analyse</div>
+        <div class="gdesc">Uncertainty range &middot; leakage &middot; economics</div>
+      </div>
+      <div class="gate final">
+        <div class="gnum">5</div>
+        <div class="gname">Report</div>
+        <div class="gdesc">Exec summary PDF + permit pre-application</div>
+      </div>
+    </div>
+    <div class="answer-row">
+      <div class="hero-wrap">
+        <img src="assets/hero_workspace.png" alt="CarbonLens live simulation workspace">
+      </div>
+      <div class="deliver">
+        <div class="dhead">The Deliverable</div>
+        <img src="assets/export_top.png" alt="CarbonLens export and report panel">
+        <div class="ditem">
+          <b>Decision-Maker Report:</b> one-page executive PDF with verdict,
+          capacity estimate, safety rating, and recommendations.
+        </div>
+        <div class="ditem">
+          <b>Permit Pre-Application</b> formatted for <b>5 global regulatory frameworks</b>:
+          US EPA Class VI &middot; EU CCS Directive &middot; Australia NOPSEMA &middot; Norway &middot; Malaysia.
+          Days of document work, reduced to minutes.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 03 THE EVIDENCE ══════════════ -->
+  <div class="evidence-zone">
+    <div class="zlabel"><span class="num">03</span> The Evidence</div>
+    <div class="ztitle">
+      Validated against <span class="em">20 years</span> of the world's longest-running CO&#8322; storage project.
+    </div>
+    <div class="proof-row">
+      <div class="bigstat">
+        <div class="pct">100%</div>
+        <div class="cap">
+          <b>7/7 metrics within accepted tolerance</b> against published Sleipner monitoring data,
+          1996&ndash;2016 (&plusmn;20% band)
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Stored CO&#8322; (Mt): CarbonLens vs published Sleipner monitoring data</div>
+        <svg viewBox="0 0 1000 370" preserveAspectRatio="xMidYMid meet" style="width:100%; height:40mm; display:block;">
+          <rect x="700" y="14" width="22" height="12" fill="#cbd5e1"/>
+          <text x="730" y="26" font-size="22" fill="#475569">Published monitoring</text>
+          <rect x="700" y="36" width="22" height="12" fill="#10b981"/>
+          <text x="730" y="48" font-size="22" fill="#475569">CarbonLens</text>
+          <g>
+            <rect x="110" y="265" width="52" height="55" fill="#cbd5e1"/>
+            <rect x="172" y="272" width="52" height="48" fill="#10b981"/>
+            <rect x="285" y="210" width="52" height="110" fill="#cbd5e1"/>
+            <rect x="347" y="217" width="52" height="103" fill="#10b981"/>
+            <rect x="460" y="155" width="52" height="165" fill="#cbd5e1"/>
+            <rect x="522" y="162" width="52" height="158" fill="#10b981"/>
+            <rect x="635" y="100" width="52" height="220" fill="#cbd5e1"/>
+            <rect x="697" y="107" width="52" height="213" fill="#10b981"/>
+            <rect x="810" y="45"  width="52" height="275" fill="#cbd5e1"/>
+            <rect x="872" y="52"  width="52" height="268" fill="#10b981"/>
+          </g>
+          <g font-size="19" text-anchor="middle">
+            <text x="136" y="256" fill="#64748b">~3.6</text>
+            <text x="198" y="263" fill="#059669" font-weight="700">3.15</text>
+            <text x="311" y="201" fill="#64748b">~7.2</text>
+            <text x="373" y="208" fill="#059669" font-weight="700">6.75</text>
+            <text x="486" y="146" fill="#64748b">~10.8</text>
+            <text x="548" y="153" fill="#059669" font-weight="700">10.35</text>
+            <text x="661" y="91"  fill="#64748b">~14.4</text>
+            <text x="723" y="98"  fill="#059669" font-weight="700">13.95</text>
+            <text x="836" y="36"  fill="#64748b">~18</text>
+            <text x="898" y="43"  fill="#059669" font-weight="700">17.55</text>
+          </g>
+          <line x1="80" y1="320" x2="950" y2="320" stroke="#94a3b8" stroke-width="2"/>
+          <g font-size="20" fill="#475569" text-anchor="middle">
+            <text x="167" y="348">Year 4</text>
+            <text x="342" y="348">Year 8</text>
+            <text x="517" y="348">Year 12</text>
+            <text x="692" y="348">Year 16</text>
+            <text x="867" y="348">Year 20</text>
+          </g>
+        </svg>
+        <div class="chart-note">
+          All five time-steps pass within &plusmn;20%. Systematic under-prediction is expected and documented:
+          real Utsira is a nine-layer formation; CarbonLens is a screening-level bulk model.
+          Sources: Chadwick 2004 &middot; Boait 2012 &middot; Furre 2017.
+        </div>
+      </div>
+    </div>
+    <div class="substats">
+      <div class="sstat">
+        <div class="n">16</div>
+        <div class="t">formation presets across five continents</div>
+      </div>
+      <div class="sstat">
+        <div class="n">5</div>
+        <div class="t">regulatory frameworks with formatted permit output</div>
+      </div>
+      <div class="sstat">
+        <div class="n">20<span style="font-size:17px"> yrs</span></div>
+        <div class="t">of published field data matched at Sleipner</div>
+      </div>
+      <div class="sstat">
+        <div class="n">0</div>
+        <div class="t">installation &middot; backend &middot; licence (MIT open source)</div>
+      </div>
+    </div>
+    <div class="phys">
+      <b>Physics you can cite:</b> Span&ndash;Wagner EOS &middot; Duan&ndash;Sun solubility &middot; Nordbotten composite pressure model &middot;
+      vertically-integrated plume solver &middot; Land&ndash;Killough hysteretic trapping &middot; Leverett caprock seal &middot;
+      Mohr&ndash;Coulomb geomechanics &middot; MARS ML interfacial-tension model (journal paper under review)
+    </div>
+  </div>
+
+  <!-- ══════════════ 04 WHO IT'S FOR ══════════════ -->
+  <div class="impact-zone">
+    <div class="zlabel"><span class="num">04</span> Who It's For</div>
+    <div class="who-row">
+      <div class="who">
+        <div class="wname">Researchers &amp; universities</div>
+        <div class="wdesc">A validated screening lab with no licence budget or IT procurement.</div>
+      </div>
+      <div class="who">
+        <div class="wname">Consultants &amp; developers</div>
+        <div class="wdesc">Rank storage candidates before committing simulation spend.</div>
+      </div>
+      <div class="who">
+        <div class="wname">Regulators</div>
+        <div class="wdesc">Independently verify developer submissions in emerging CCS markets.</div>
+      </div>
+      <div class="who">
+        <div class="wname">Emerging markets globally</div>
+        <div class="wdesc">
+          Built for where tool access is most constrained: Southeast Asia, West Africa, the Middle East,
+          with presets from Kasawari and Malay Basin to the North Sea and beyond.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CTA ══════════════ -->
+  <div class="cta">
+    <div class="cta-text">
+      <h2>Want the full picture? <span class="em">Read the white paper.</span></h2>
+      <div class="cta-sub">
+        Every claim on this poster is documented: physics derivations, validation data,
+        workflow detail, and economics. Scan to read it now.<br>
+        Then open CarbonLens on your <b>desktop or laptop browser</b> and run a real screening in minutes.
+        <br><span class="note">Requires desktop or laptop browser. Not compatible with mobile devices.</span>
+      </div>
+    </div>
+    <div class="qr-pair">
+      <div class="qr-block qr-main">
+        <canvas id="qr-whitepaper"></canvas>
+        <div class="qlab">White Paper</div>
+        <div class="qsub">Scan to read now</div>
+      </div>
+      <div class="qr-divider"></div>
+      <div class="qr-block qr-sec">
+        <canvas id="qr-app"></canvas>
+        <div class="qlab">Try the Studio</div>
+        <div class="qsub">Desktop browser only</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <div class="footer">
+    <div>
+      Screening-level results for pre-feasibility assessment and education. Not a regulatory submission;
+      does not replace detailed reservoir simulation or independent expert review.
+    </div>
+    <div class="fright">CarbonLens v0.1.0 &middot; Open source &middot; MIT License</div>
+  </div>
+
+</div>
+
+<!-- QR Code generation via QRious (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    new QRious({
+      element: document.getElementById('qr-whitepaper'),
+      value: 'https://todak2000.github.io/carbonlens/whitepaper.html',
+      size: 460,
+      background: '#ffffff',
+      foreground: '#0f172a',
+      level: 'H',
+      padding: 10
+    });
+    new QRious({
+      element: document.getElementById('qr-app'),
+      value: 'https://todak2000.github.io/carbonlens/',
+      size: 310,
+      background: '#ffffff',
+      foreground: '#0f172a',
+      level: 'H',
+      padding: 8
+    });
+  });
+</script>
+</body>
+</html>

@@ -94,7 +94,7 @@ export default function ValidationDashboard() {
   ]
 
   return (
-    <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-120px)]">
+    <div className="w-full space-y-5">
       <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider flex items-center gap-1.5">
         <ShieldCheck size={13} /> Validation
       </h2>

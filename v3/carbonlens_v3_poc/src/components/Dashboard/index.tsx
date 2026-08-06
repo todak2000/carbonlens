@@ -379,15 +379,15 @@ export default function Dashboard() {
           NEW PROJECT WIZARD MODAL
           ════════════════════════════════════════════════════════════════════════ */}
       {wizardOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4"
           style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
           onClick={closeWizard}
         >
-          <div className="relative w-full max-w-2xl rounded-2xl border border-theme flex flex-col shadow-2xl bg-card max-h-[85vh]"
+          <div className="relative w-full max-w-2xl rounded-xl sm:rounded-2xl border border-theme flex flex-col shadow-2xl bg-card h-[100dvh] sm:h-auto sm:max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}>
 
             {/* ── Wizard header ── */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-theme">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-theme">
               <div>
                 <div className="text-[10px] font-mono text-emerald-400 tracking-widest uppercase mb-0.5">
                   New Project · Step {wizardStep} of 3
@@ -398,7 +398,7 @@ export default function Dashboard() {
                   {wizardStep === 3 && 'Structural Geometry'}
                 </div>
               </div>
-              <button onClick={closeWizard} className="p-2 rounded-lg bg-tertiary hover:bg-card text-muted hover:text-primary transition">
+              <button onClick={closeWizard} className="p-2 rounded-lg bg-tertiary hover:bg-card text-muted hover:text-primary transition shrink-0">
                 <X size={15} />
               </button>
             </div>
@@ -559,18 +559,18 @@ export default function Dashboard() {
             </div>{/* end scrollable body */}
 
             {/* ── Wizard footer ── */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-theme">
+            <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-4 border-t border-theme">
               <div>
                 {wizardStep > 1 ? (
                   <button onClick={() => setWizardStep((s) => (s - 1) as WizardStep)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">
                     <ChevronLeft size={13} /> Back
                   </button>
                 ) : (
-                  <button onClick={closeWizard} className="px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">Cancel</button>
+                  <button onClick={closeWizard} className="px-3 sm:px-4 py-2 rounded-lg bg-tertiary text-muted hover:text-primary text-xs font-mono transition">Cancel</button>
                 )}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="hidden sm:flex items-center gap-1.5">
                 {[1, 2, 3].map((s) => (
                   <div key={s} className={`w-1.5 h-1.5 rounded-full transition-all ${s === wizardStep ? 'bg-emerald-400 w-4' : s < wizardStep ? 'bg-emerald-400/50' : 'bg-white/15'}`} />
                 ))}
@@ -579,13 +579,13 @@ export default function Dashboard() {
                 {wizardStep < 3 ? (
                   <button onClick={nextStep}
                     disabled={wizardStep === 1 && !wizard.template && !wizard.isCustom}
-                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
+                    className="flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
                     Next <ChevronRight size={13} />
                   </button>
                 ) : (
                   <button onClick={finishWizard}
                     disabled={!wizard.geometry}
-                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
+                    className="flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-mono transition">
                     <Check size={13} /> Create Project
                   </button>
                 )}

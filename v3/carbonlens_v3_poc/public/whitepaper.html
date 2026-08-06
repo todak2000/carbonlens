@@ -320,6 +320,77 @@
       .cover-meta { padding-top: 16px; gap: 20px; font-size: 7.5pt; }
       .cover-meta strong { font-size: 8pt; margin-bottom: 2px; }
     }
+
+    /* ── SCREEN RESPONSIVE (mobile / tablet) ── */
+    @media screen and (max-width: 900px) {
+      .page-wrap { padding: 0 clamp(14px, 4vw, 48px) 48px; }
+    }
+
+    @media screen and (max-width: 768px) {
+      body.has-bar { padding-top: 56px; }
+
+      /* Download bar */
+      .dl-bar {
+        padding: 8px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 56px;
+      }
+      .dl-bar-left { gap: 10px; flex: 1; min-width: 0; }
+      .dl-bar-logo span { font-size: 9pt; }
+      .dl-bar p { font-size: 7pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .dl-btn { padding: 7px 14px; font-size: 8.5pt; white-space: nowrap; }
+
+      /* Cover */
+      .cover {
+        padding: clamp(24px, 6vw, 56px) clamp(14px, 4vw, 56px) 40px;
+        min-height: auto;
+      }
+      .cover-body { padding: 32px 0 24px; }
+      .cover-title { font-size: clamp(20pt, 6vw, 34pt); }
+      .cover-subtitle { font-size: 11pt; max-width: 100%; }
+
+      /* Cover stats grid: 2 columns on tablet */
+      .cover-stats { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+      /* Cover meta: stack on mobile */
+      .cover-meta { grid-template-columns: 1fr; gap: 14px; }
+
+      /* Page wrap */
+      .page-wrap { padding: 0 16px 40px; }
+
+      /* Score grid */
+      .score-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+      /* Team grid */
+      .team-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+
+      /* Doc footer */
+      .doc-footer { flex-direction: column; gap: 6px; }
+
+      /* Table — allow horizontal scroll instead of breaking layout */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* Formula block */
+      .formula-block { overflow-x: auto; }
+
+      /* TOC */
+      .toc { padding: 14px 16px; }
+    }
+
+    @media screen and (max-width: 480px) {
+      body.has-bar { padding-top: 60px; }
+
+      .dl-bar { flex-direction: row; align-items: center; gap: 8px; }
+      .dl-bar-left { min-width: 0; overflow: hidden; }
+
+      .cover-title { font-size: clamp(18pt, 7vw, 28pt); }
+      .cover-stats { grid-template-columns: 1fr; gap: 12px; }
+      .cover-subtitle { font-size: 10pt; }
+
+      .score-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body class="has-bar">
@@ -344,7 +415,7 @@
           <text x="48" y="40" font-family="monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
         </svg>
       </div>
-      <p>Technical White Paper &middot; Prototypes for Humanity 2026</p>
+      <p>Technical White Paper &middot; CarbonLens</p>
     </div>
     <button class="dl-btn" onclick="window.print()">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1124,7 +1195,7 @@
     </section>
 
     <div class="doc-footer">
-      <span>CarbonLens Technical White Paper &middot; June 2026 &middot; Prototypes for Humanity 2026 Submission</span>
+      <span>CarbonLens Technical White Paper &middot; June 2026</span>
       <span>Internal document. Not for distribution without permission.</span>
     </div>
 

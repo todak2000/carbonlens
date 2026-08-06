@@ -262,28 +262,17 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
-      {/* Mobile-only: desktop required notice */}
-      <div className="md:hidden flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-muted)]">
-          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
-        <p className="text-sm font-semibold text-[var(--text-primary)]">Desktop Required</p>
-        <p className="text-xs text-[var(--text-muted)] max-w-xs">The analytics dashboard is optimised for desktop screens. Please open it on a larger device.</p>
-        <button onClick={() => setView('landing')} className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 transition">← Back to app</button>
-      </div>
-      {/* Desktop dashboard */}
-      <div className="hidden md:block">
       {/* Header */}
-      <div className="border-b border-[var(--border)] px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="border-b border-[var(--border)] px-4 md:px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => setView('landing')}
-            className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition">
+            className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <h1 className="font-semibold text-sm">Visitor Analytics</h1>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono">ADMIN</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-1.5 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -327,7 +316,7 @@ export default function AnalyticsDashboard() {
         ) : (
           <>
             {/* Stat cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <StatCard label="Total Visits" value={filteredVisitors.length} sub={hideDevSessions && devSessionCount > 0 ? `${devSessionCount} dev sessions hidden` : undefined} />
               <StatCard label="Unique Sessions" value={uniqueSessions} />
               <StatCard label="Avg Duration" value={fmtDuration(avgDuration)} />
@@ -347,7 +336,6 @@ export default function AnalyticsDashboard() {
             <VisitorTable rows={filteredVisitors} />
           </>
         )}
-      </div>
       </div>
     </div>
   )

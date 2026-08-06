@@ -208,11 +208,92 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
+
+    /* ── SCREEN RESPONSIVE (mobile / tablet) ───────────────────────── */
+    @media screen and (max-width: 900px) {
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Cover page */
+      .cover-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+      .back-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+
+      /* Cover title */
+      .cover-title { font-size: clamp(18pt, 6vw, 28pt) !important; letter-spacing: -0.3px !important; }
+
+      /* Cover formation strip */
+      .cover-formation-strip { flex-wrap: wrap !important; gap: 16px !important; }
+
+      /* Cover meta grid */
+      .cover-meta-grid { grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
+
+      /* KPI grid: 2 columns on mobile */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+      /* Two-col and three-col grids: stack */
+      .two-col { grid-template-columns: 1fr !important; gap: 10px !important; }
+      .three-col { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+      /* Tables: horizontal scroll */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; }
+
+      /* Section boxes */
+      .section-box { padding: 10px 12px !important; }
+
+      /* Sensitivity chart label */
+      .sen-label { width: 70px !important; font-size: 7pt !important; }
+
+      /* Mass balance label */
+      .mass-label { width: 140px !important; font-size: 8pt !important; }
+
+      /* Content page */
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+
+      /* Page header */
+      .page-header { flex-wrap: wrap !important; gap: 6px !important; }
+
+      /* Page footer */
+      .page-footer { flex-direction: column !important; gap: 4px !important; }
+    }
+
+    @media screen and (max-width: 480px) {
+      .cover-title { font-size: clamp(16pt, 7vw, 22pt) !important; }
+      .cover-meta-grid { grid-template-columns: 1fr !important; }
+      .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+      .three-col { grid-template-columns: 1fr !important; }
+      .cover-formation-strip { gap: 12px !important; }
+    }
+
+    @media screen and (max-width: 360px) {
+      .kpi-grid { grid-template-columns: 1fr !important; }
+    }
+
+    /* ── TOP NAV BAR RESPONSIVE ── */
+    @media screen and (max-width: 768px) {
+      .cl-topnav {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+      }
+      .cl-topnav-btns {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+      }
+      .cl-topnav > span:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+    }
 </style>
 </head>
-<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+<body><div class="cl-topnav no-print" style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
   <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Report</span>
-  <div style="display:flex;gap:8px;">
+  <div class="cl-topnav-btns" style="display:flex;gap:8px;flex-wrap:wrap;">
     <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
     <button onclick="window.location.href='index.html'" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:5px 14px;font-size:8pt;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2190; All Reports</button>
   </div>
@@ -251,7 +332,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </div>
       <div class="cover-formation-item">
         <div class="label">Safety Factor (Fs)</div>
-        <div class="val" style="color:#00c4a0">2.28 — LOW RISK</div>
+        <div class="val" style="color:#00c4a0">2.27 — LOW RISK</div>
       </div>
       <div class="cover-formation-item">
         <div class="label">Reservoir Depth</div>
@@ -265,7 +346,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 26 July 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 06 August 2026</span>
     </div>
   </div>
 
@@ -281,7 +362,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">26 July 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">06 August 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
@@ -305,7 +386,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 06 August 2026
     </div>
   </div>
 
@@ -418,7 +499,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>Effective Diffusivity (Dₑff)</td>
         <td class="mono" style="font-size:7.5pt">78.0 °C, φ = 0.22</td>
-        <td><strong>3.107 × 10⁻¹⁰ m²/s</strong></td>
+        <td><strong>3.372 × 10⁻¹⁰ m²/s</strong></td>
         <td>Millington &amp; Quirk (1961) effective diffusivity</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -493,7 +574,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 1 · Generated 26 July 2026</span>
+    <span>Page 1 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -515,7 +596,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 06 August 2026
     </div>
   </div>
 
@@ -525,17 +606,17 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <div class="kpi-card">
       <div class="kpi-label">P90 Low Estimate</div>
       <div class="kpi-value">3.9 Mt</div>
-      <div class="kpi-sub">Cc = 0.51% efficiency</div>
+      <div class="kpi-sub">Cc = 0.51% (DOE Goodman 2011)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P50 Best Estimate</div>
       <div class="kpi-value" style="color:#00c4a0">15.4 Mt</div>
-      <div class="kpi-sub">Cc = 2.00% efficiency</div>
+      <div class="kpi-sub">Cc = 2.00% (DOE Goodman 2011)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P10 High Estimate</div>
       <div class="kpi-value">42.2 Mt</div>
-      <div class="kpi-sub">Cc = 5.50% efficiency</div>
+      <div class="kpi-sub">Cc = 5.50% (DOE Goodman 2011)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Containment Probability</div>
@@ -632,16 +713,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="display:flex;align-items:center;gap:10px">
         <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
   <path d="M18.0,68.0 A52,52,0,0,1,44.0,23.0 L49.0,31.6 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M44.0,23.0 A52,52,0,0,1,53.9,18.5 L57.0,28.1 A42,42,0,0,0,49.0,31.6 Z" fill="#fef3c7" opacity="0.85"/><path d="M53.9,18.5 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,57.0,28.1 Z" fill="#d1fae5" opacity="0.85"/>
-  <line x1="70" y1="68" x2="106.4" y2="33.7" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="70" y1="68" x2="106.2" y2="33.5" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
   <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
-  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">2.28</text>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">2.27</text>
   <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Fs</text>
   <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Safety Factor</text>
   <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">0</text>
   <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">3.0</text>
 </svg>
         <div>
-          <div class="kpi-value" style="color:#00c4a0">2.278</div>
+          <div class="kpi-value" style="color:#00c4a0">2.273</div>
           <div class="kpi-sub">Limit ≥ 1.20 &nbsp; <span class="badge badge-pass">✓ PASS</span></div>
         </div>
       </div>
@@ -651,16 +732,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="display:flex;align-items:center;gap:10px">
         <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
   <path d="M18.0,68.0 A52,52,0,0,1,31.1,33.5 L38.6,40.1 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M31.1,33.5 A52,52,0,0,1,51.6,19.4 L55.1,28.7 A42,42,0,0,0,38.6,40.1 Z" fill="#fef3c7" opacity="0.85"/><path d="M51.6,19.4 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,55.1,28.7 Z" fill="#d1fae5" opacity="0.85"/>
-  <line x1="70" y1="68" x2="89.1" y2="21.8" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="70" y1="68" x2="89.0" y2="21.7" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
   <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
-  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">51.23</text>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">51.11</text>
   <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">%</text>
   <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">MAIP Margin</text>
   <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">-30</text>
   <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">100.0</text>
 </svg>
         <div>
-          <div class="kpi-value" style="color:#00c4a0">51.2%</div>
+          <div class="kpi-value" style="color:#00c4a0">51.1%</div>
           <div class="kpi-sub">MAIP = 33.87 MPa &nbsp; <span class="badge badge-pass">✓ PASS</span></div>
         </div>
       </div>
@@ -675,33 +756,33 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       <tr><td>Fracture Pressure</td><td>Must exceed inj. P</td><td class="mono">37.63 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Maximum Allowable Injection Pressure (MAIP)</td><td>90% × fracture gradient</td><td class="mono">33.87 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>MAIP Safety Margin</td><td>&gt; 0%</td><td class="mono">51.2%</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">20.103 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>MAIP Safety Margin</td><td>&gt; 0%</td><td class="mono">51.1%</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">20.088 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Induced Seismicity Risk</td><td>Low</td><td><strong style="color:#065f46">LOW</strong></td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">0.01879</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">0.07014 cm</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">0.02026</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">0.07341 cm</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Overburden Stress (σᵥ)</td><td>Lithostat</td><td class="mono">33.60 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
       <tr><td>Min. Horizontal Stress (σₕ)</td><td>In-situ</td><td class="mono">37.63 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
-      <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">61.42 km</td><td><span class="badge badge-info">INFO</span></td></tr>
+      <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">58.59 km</td><td><span class="badge badge-info">INFO</span></td></tr>
     </tbody>
   </table>
 
   <div class="callout" style="margin-top:10px">
     <div class="callout-title">Geomechanical Interpretation</div>
     <p>
-      <strong>Safety Factor 2.28:</strong>
+      <strong>Safety Factor 2.27:</strong>
       Well above the minimum regulatory threshold (1.2). The formation presents a <span class="accent">low mechanical risk profile</span> with comfortable headroom before caprock fracture.
     </p>
     <p style="margin-top:5px">
-      <strong>MAIP Margin 51.2%:</strong>
+      <strong>MAIP Margin 51.1%:</strong>
       Comfortable margin between peak wellbore pressure and MAIP — low risk of pressure-induced fracturing.
-      Surface heave of <strong>0.07014 cm</strong> is within satellite InSAR detection thresholds.
+      Surface heave of <strong>0.07341 cm</strong> is within satellite InSAR detection thresholds.
     </p>
   </div>
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 2 · Generated 26 July 2026</span>
+    <span>Page 2 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -723,7 +804,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 06 August 2026
     </div>
   </div>
   
@@ -747,7 +828,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 3 · Generated 26 July 2026</span>
+    <span>Page 3 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -769,7 +850,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">North Sumatra Basin</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">north_sumatra_basin.html</span> · 06 August 2026
     </div>
   </div>
 
@@ -887,25 +968,25 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Thickness: 36.0 → 45.0 → 54.0 m</div>
           <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.260</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.290</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.254</span> / <span class="mono" style="color:#00c4a0">2.273</span> / <span class="mono">2.285</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ h)</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Porosity: 17.6% → 22.0% → 26.4%</div>
           <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.278</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.279</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.272</span> / <span class="mono" style="color:#00c4a0">2.273</span> / <span class="mono">2.273</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ φ)</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Permeability: 160 → 200 → 240 mD</div>
           <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">15.36</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">15.36 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.261</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.290</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.254</span> / <span class="mono" style="color:#00c4a0">2.273</span> / <span class="mono">2.285</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">No capacity effect — affects ΔP only</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Area: 144.0 → 180.0 → 216.0 km²</div>
           <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">12.29</span> / <span class="mono" style="color:#00c4a0">15.36</span> / <span class="mono">18.43 Mt</span></div>
           <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">16.000</span> / <span class="mono" style="color:#00c4a0">16.000</span> / <span class="mono">16.000 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.278</span> / <span class="mono" style="color:#00c4a0">2.278</span> / <span class="mono">2.278</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">2.273</span> / <span class="mono" style="color:#00c4a0">2.273</span> / <span class="mono">2.273</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">Linear DOE driver (P50 ∝ A)</div>
         </div>
     </div>
@@ -966,7 +1047,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>North Sumatra Basin</em></span>
-    <span>Page 4 · Generated 26 July 2026</span>
+    <span>Page 4 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1030,7 +1111,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">North Sumatra Basin Validation Report · 26 July 2026</div>
+    <div style="font-size:7.5pt;color:#475569">North Sumatra Basin Validation Report · 06 August 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

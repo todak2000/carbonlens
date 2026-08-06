@@ -8,6 +8,8 @@ import type { ScreeningCriterion } from '../../engine/classical/storageScreening
 function drawGauge(canvas: HTMLCanvasElement, score: number) {
   const dpr = window.devicePixelRatio || 1
   const rect = canvas.getBoundingClientRect()
+  if (rect.width === 0 || rect.height === 0) return
+
   const W = Math.round(rect.width * dpr)
   const H = Math.round(rect.height * dpr)
   if (canvas.width !== W || canvas.height !== H) {
@@ -21,13 +23,17 @@ function drawGauge(canvas: HTMLCanvasElement, score: number) {
   ctx.fillStyle = '#0f1118'
   ctx.fillRect(0, 0, w, h)
 
-  const cx = w / 2, cy = h / 2 + 15, r = 85
+  // Dynamically scale gauge radius to fit container width and height cleanly
+  const minDim = Math.min(w - 24, h - 36)
+  const r = Math.max(35, Math.min(75, minDim / 2.2))
+  const cx = w / 2, cy = h / 2 + 10
   const arcStart = -0.75 * Math.PI, arcEnd = 0.75 * Math.PI
   const frac = Math.min(1, Math.max(0, score / 100))
   const angle = arcStart + frac * (arcEnd - arcStart)
 
+  const trackWidth = Math.max(8, r * 0.18)
   ctx.strokeStyle = '#1a1d2e'
-  ctx.lineWidth = 18
+  ctx.lineWidth = trackWidth
   ctx.lineCap = 'round'
   ctx.beginPath(); ctx.arc(cx, cy, r, arcStart, arcEnd); ctx.stroke()
 
@@ -36,22 +42,26 @@ function drawGauge(canvas: HTMLCanvasElement, score: number) {
   grad.addColorStop(0.5, '#f59e0b')
   grad.addColorStop(1, '#22c55e')
   ctx.strokeStyle = grad
-  ctx.lineWidth = 14
+  ctx.lineWidth = Math.max(6, trackWidth - 3)
   ctx.lineCap = 'round'
   ctx.beginPath(); ctx.arc(cx, cy, r, arcStart, angle); ctx.stroke()
 
+  // Font sizes scaled to canvas CSS width (ctx.setTransform already handles DPR!)
+  const scoreFontSize = Math.max(18, Math.round(r * 0.38))
   ctx.fillStyle = '#fff'
-  ctx.font = `bold ${32 * dpr}px monospace`
+  ctx.font = `bold ${scoreFontSize}px monospace`
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillText(`${score.toFixed(0)}`, cx, cy - 5)
+  ctx.fillText(`${score.toFixed(0)}`, cx, cy - 4)
 
+  const titleFontSize = Math.max(8, Math.round(r * 0.12))
   ctx.fillStyle = frac < 0.3 ? '#ef4444' : frac < 0.6 ? '#f59e0b' : '#22c55e'
-  ctx.font = `${8 * dpr}px monospace`
-  ctx.fillText('SCREENING SUITABILITY', cx, cy + 28)
+  ctx.font = `bold ${titleFontSize}px monospace`
+  ctx.fillText('SCREENING SUITABILITY', cx, cy + Math.round(r * 0.32))
 
+  const subFontSize = Math.max(8, Math.round(r * 0.11))
   ctx.fillStyle = '#6b7280'
-  ctx.font = `${8 * dpr}px monospace`
-  ctx.fillText('Poor · Fair · Good', cx, h - 14)
+  ctx.font = `${subFontSize}px monospace`
+  ctx.fillText('Poor · Fair · Good', cx, Math.min(h - 10, cy + r + 20))
 }
 
 function formatCriterionValue(c: ScreeningCriterion): string {
@@ -161,7 +171,7 @@ export default function ScreeningPanel() {
   }, [draw])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-theme/20 pb-4">
         <div>
@@ -259,10 +269,10 @@ export default function ScreeningPanel() {
         <button
           disabled={!screeningResult.canProceed}
           onClick={() => { setStageComplete('stage2', true); setPanel('simulation') }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold font-mono transition disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white shadow-md text-center leading-normal"
         >
-          <ShieldCheck size={13} />
-          All Stages Reviewed — Confirm &amp; Proceed to Simulation
+          <ShieldCheck size={14} className="shrink-0" />
+          <span>All Stages Reviewed — Confirm &amp; Proceed to Simulation</span>
         </button>
       </div>
     </div>

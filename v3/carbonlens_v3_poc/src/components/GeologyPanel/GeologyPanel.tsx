@@ -22,11 +22,11 @@ export default function GeologyPanel() {
   const setPanel = useUIStore((s) => s.setPanel)
 
   return (
-    <div className="max-w-4xl mx-auto bg-card rounded-xl border border-theme/30 shadow-md flex flex-col">
+    <div className="w-full bg-card rounded-xl border border-theme/30 shadow-md flex flex-col">
       {/* Header */}
-      <div className="p-5 border-b border-theme/20 shrink-0 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">3D Geological Structural Model</h1>
+      <div className="p-4 md:p-5 border-b border-theme/20 shrink-0 flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-xl font-mono font-bold text-primary uppercase tracking-wider">3D Geological Structural Model</h1>
           <p className="text-xs text-muted font-mono mt-1">
             {model.zones.length} zone{model.zones.length !== 1 ? 's' : ''} · {model.faults.length} fault{model.faults.length !== 1 ? 's' : ''}
             · {(model.modelWidthM / 1000).toFixed(0)} × {(model.modelLengthM / 1000).toFixed(0)} km domain
@@ -34,7 +34,7 @@ export default function GeologyPanel() {
         </div>
         <button
           onClick={toggleGeologyExpanded}
-          className="px-3 py-1.5 rounded-lg border border-theme/30 bg-tertiary/20 text-muted hover:text-secondary font-mono text-[10px] font-bold flex items-center gap-1.5 transition uppercase tracking-wider"
+          className="px-3 py-1.5 rounded-lg border border-theme/30 bg-tertiary/20 text-muted hover:text-secondary font-mono text-[10px] font-bold flex items-center gap-1.5 transition uppercase tracking-wider shrink-0"
           title={geologyExpanded ? "Collapse to Sidebar" : "Expand to wide view"}
         >
           {geologyExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -43,25 +43,25 @@ export default function GeologyPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-theme/20 shrink-0 bg-tertiary/10">
+      <div className="flex border-b border-theme/20 shrink-0 bg-tertiary/10 overflow-x-auto">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-mono font-bold transition border-b-2
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 text-xs font-mono font-bold transition border-b-2 whitespace-nowrap
               ${activeTab === id
                 ? 'border-accent text-accent bg-card'
                 : 'border-transparent text-muted hover:text-secondary'
               }`}
           >
-            <Icon size={14} />
+            <Icon size={14} className="shrink-0" />
             {label}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 min-h-[350px] p-5">
+      <div className="flex-1 min-h-[350px] p-4 md:p-5">
         {activeTab === 'stratigraphy' && <StratigraphyTab />}
         {activeTab === 'faults' && <FaultsTab />}
         {activeTab === 'preview' && <PropertyPreviewTab />}
@@ -100,7 +100,7 @@ export default function GeologyPanel() {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between text-xs font-mono text-muted/60 mt-3 pt-3 border-t border-theme/10">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-muted/60 mt-3 pt-3 border-t border-theme/10">
           <span>Total Computational Grid Cells:</span>
           <span className="font-bold text-secondary">
             {(gridNx * gridNy * gridNz).toLocaleString()} cells (Max recommended: 300,000 for web execution)
@@ -109,13 +109,13 @@ export default function GeologyPanel() {
       </div>
 
       {/* Proceed gate */}
-      <div className="border-t border-theme mt-4 pt-3 px-5 pb-5">
+      <div className="border-t border-theme mt-4 pt-3 px-4 pb-4">
         <button
           onClick={() => setPanel('geomechanics')}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white shadow-md text-center leading-normal"
         >
-          <ChevronRight size={13} />
-          Geology Reviewed — Continue to Geomechanics →
+          <ChevronRight size={14} className="shrink-0" />
+          <span>Geology Reviewed — Continue to Geomechanics →</span>
         </button>
       </div>
     </div>

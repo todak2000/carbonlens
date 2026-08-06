@@ -109,6 +109,99 @@
 
     /* DOC FOOTER */
     .doc-footer { margin-top:60px; padding-top:18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:8pt; color:var(--text-muted); }
+
+    /* ── MOBILE TOC TOGGLE ── */
+    .toc-toggle-btn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 300;
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      align-items: center;
+      justify-content: center;
+    }
+    .toc-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 250;
+    }
+    .toc-overlay.open { display: block; }
+    .guide-toc.mobile-open {
+      transform: translateX(0) !important;
+    }
+
+    /* ── SCREEN RESPONSIVE ── */
+    @media screen and (max-width: 900px) {
+      .guide-content { padding: 28px 32px 60px; }
+    }
+
+    @media screen and (max-width: 768px) {
+      body.has-bar { padding-top: 56px; }
+
+      /* Download bar */
+      .dl-bar {
+        padding: 8px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 56px;
+        align-items: center;
+      }
+      .dl-bar-left { gap: 10px; flex: 1; min-width: 0; overflow: hidden; }
+      .dl-bar-logo span { font-size: 9pt; }
+      .dl-bar p { font-size: 7pt; }
+      .dl-btn { padding: 7px 12px; font-size: 8.5pt; }
+      .dl-bar-links { gap: 12px; }
+      .dl-bar-links a { font-size: 8pt; }
+
+      /* TOC: off-canvas drawer on mobile */
+      .guide-toc {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 260;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        height: 100dvh;
+        width: 280px;
+        padding-top: 60px;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+      }
+
+      /* Content: full width on mobile */
+      .guide-layout { flex-direction: column; }
+      .guide-content { flex: 1; max-width: 100%; padding: 20px 16px 60px; min-width: 0; }
+
+      /* TOC toggle button visible on mobile */
+      .toc-toggle-btn { display: flex; }
+
+      /* Doc footer */
+      .doc-footer { flex-direction: column; gap: 8px; }
+
+      /* Table — horizontal scroll */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* Glossary */
+      .glossary-term { flex-direction: column; gap: 4px; }
+      .gt-key { min-width: unset; }
+    }
+
+    @media screen and (max-width: 480px) {
+      .dl-bar { flex-wrap: wrap; }
+      .dl-bar-links { display: none; }
+      .guide-content { padding: 16px 12px 60px; }
+    }
   </style>
 </head>
 <body class="has-bar">
@@ -141,6 +234,14 @@
     <button class="dl-btn" onclick="window.history.back()">Go to Dashboard</button>
   </div>
 </div>
+
+<!-- Mobile TOC overlay scrim -->
+<div class="toc-overlay" id="toc-overlay"></div>
+
+<!-- Mobile TOC toggle button -->
+<button class="toc-toggle-btn" id="toc-toggle-btn" title="Table of Contents" aria-label="Open table of contents">
+  ☰
+</button>
 
 <div class="guide-layout">
 
@@ -866,6 +967,30 @@
     });
   }, { rootMargin: '-15% 0px -75% 0px' });
   sections.forEach(s => obs.observe(s));
+
+  // Mobile TOC drawer
+  const toc       = document.getElementById('toc');
+  const overlay   = document.getElementById('toc-overlay');
+  const toggleBtn = document.getElementById('toc-toggle-btn');
+
+  function openToc() {
+    toc.classList.add('mobile-open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeToc() {
+    toc.classList.remove('mobile-open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openToc);
+  if (overlay)   overlay.addEventListener('click', closeToc);
+
+  // Close TOC on link click (mobile)
+  links.forEach(l => l.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeToc();
+  }));
 </script>
 </body>
 </html>

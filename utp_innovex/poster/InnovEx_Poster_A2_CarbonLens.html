@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CarbonLens — InnovEx TEC26 A2 Poster</title>
+<style>
+  @page { size: 420mm 594mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    width: 420mm;
+    height: 594mm;
+    overflow: hidden;
+    background: #ffffff;
+    color: #0f172a;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* ── PAGE SHELL ── */
+  .page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 7mm 10mm 6mm;
+    gap: 4mm;
+  }
+
+  /* ── TOP ACCENT BAR ── */
+  .accent-bar {
+    height: 2.5mm;
+    background: linear-gradient(90deg, #00b89a 0%, #00d4b4 40%, #0ea5e9 100%);
+    border-radius: 99mm;
+    margin-bottom: 1mm;
+  }
+
+  /* ── HEADER ── */
+  .hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+  }
+
+  .tagline {
+    font-size: 15px;
+    color: #475569;
+    font-weight: 400;
+    border-left: 0.8mm solid #00b89a;
+    padding-left: 3mm;
+    line-height: 1.3;
+  }
+  .tagline b { color: #0f172a; }
+
+  .event-badge {
+    text-align: right;
+  }
+  .event-badge .ev-label {
+    display: inline-block;
+    background: #f0fdfa;
+    border: 0.4mm solid #00b89a;
+    color: #0f766e;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 1.5mm 3.5mm;
+    border-radius: 99mm;
+    margin-bottom: 1mm;
+  }
+  .event-badge .author {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.4;
+  }
+  .event-badge .author b { color: #0f172a; }
+
+  /* ── HERO SECTION ── */
+  .hero {
+    position: relative;
+    border-radius: 4mm;
+    overflow: hidden;
+    flex-shrink: 0;
+    height: 68mm;
+    background: #0b1220;
+  }
+  .hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    display: block;
+  }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(11,18,32,0.88) 0%, rgba(11,18,32,0.55) 55%, rgba(11,18,32,0.08) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 8mm;
+  }
+  .hero-kicker {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #00b89a;
+    margin-bottom: 2mm;
+  }
+  .hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.08;
+    margin-bottom: 3mm;
+    max-width: 165mm;
+  }
+  .hero-title span { color: #00d4b4; }
+  .hero-sub {
+    font-size: 15.5px;
+    color: rgba(255,255,255,0.82);
+    line-height: 1.4;
+    max-width: 155mm;
+  }
+
+  /* ── STATS ROW ── */
+  .stats {
+    display: flex;
+    gap: 3.5mm;
+    flex-shrink: 0;
+  }
+  .stat {
+    flex: 1;
+    background: #f8fafc;
+    border: 0.35mm solid #e2e8f0;
+    border-radius: 3mm;
+    padding: 3mm 4mm;
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+  }
+  .stat-icon {
+    width: 9mm;
+    height: 9mm;
+    border-radius: 2mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon svg { width: 16px; height: 16px; }
+  .stat-icon.teal { background: #f0fdfa; }
+  .stat-icon.blue { background: #eff6ff; }
+  .stat-icon.amber { background: #fffbeb; }
+  .stat-icon.green { background: #f0fdf4; }
+  .stat-num {
+    font-family: Menlo, "IBM Plex Mono", monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: #00b89a;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.3;
+  }
+
+  /* ── MIDDLE SECTION: problem + screenshot grid ── */
+  .mid {
+    display: flex;
+    gap: 4mm;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* left column: problem/solution + small screens */
+  .mid-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5mm;
+    width: 108mm;
+    flex-shrink: 0;
+  }
+
+  .ps-box {
+    border-radius: 3mm;
+    padding: 4mm 5mm;
+    flex-shrink: 0;
+  }
+  .ps-box.problem {
+    background: #fff1f2;
+    border: 0.35mm solid #fecdd3;
+  }
+  .ps-box.solution {
+    background: #f0fdfa;
+    border: 0.35mm solid #99f6e4;
+  }
+  .ps-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 1.5mm;
+  }
+  .ps-box.problem .ps-label { color: #be123c; }
+  .ps-box.solution .ps-label { color: #0f766e; }
+  .ps-text {
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: #1e293b;
+  }
+  .ps-text b { font-weight: 700; }
+
+  /* feature mini-cards under problem/solution */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    flex: 1;
+    min-height: 0;
+  }
+  .fcard {
+    border-radius: 3mm;
+    overflow: hidden;
+    border: 0.35mm solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 1mm 3mm rgba(15,23,42,0.06);
+    display: flex;
+    flex-direction: column;
+  }
+  .fcard-img {
+    flex: 1;
+    min-height: 0;
+    background: #0b1220;
+    overflow: hidden;
+  }
+  .fcard-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right top;
+    display: block;
+  }
+  .fcard-cap {
+    padding: 2.5mm 3mm 3mm;
+    flex-shrink: 0;
+  }
+  .fcard-cap h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.8mm;
+  }
+  .fcard-cap h4 span { color: #00b89a; }
+  .fcard-cap p {
+    font-size: 11.5px;
+    color: #475569;
+    line-height: 1.35;
+  }
+
+  /* right column: big screenshot + validation highlight */
+  .mid-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3.5mm;
+    min-height: 0;
+  }
+
+  .big-screen {
+    flex: 1;
+    min-height: 0;
+    border-radius: 3.5mm;
+    overflow: hidden;
+    border: 0.35mm solid #e2e8f0;
+    box-shadow: 0 2mm 6mm rgba(15,23,42,0.09);
+    position: relative;
+    background: #0b1220;
+  }
+  .big-screen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right top;
+    display: block;
+  }
+  .screen-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(0deg, rgba(11,18,32,0.85) 0%, transparent 100%);
+    padding: 5mm 4mm 3mm;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .screen-label span { color: #00d4b4; }
+
+  /* validation strip */
+  .val-strip {
+    background: #f8fafc;
+    border: 0.35mm solid #e2e8f0;
+    border-radius: 3mm;
+    padding: 3.5mm 4.5mm;
+    flex-shrink: 0;
+  }
+  .val-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2.5mm;
+  }
+  .val-title span { color: #00b89a; }
+  .val-row {
+    display: flex;
+    gap: 2.5mm;
+    flex-wrap: wrap;
+  }
+  .val-chip {
+    background: #ffffff;
+    border: 0.3mm solid #e2e8f0;
+    border-radius: 99mm;
+    padding: 1mm 3mm;
+    font-size: 11px;
+    color: #334155;
+    white-space: nowrap;
+  }
+  .val-chip.my {
+    background: #f0fdfa;
+    border-color: #00b89a;
+    color: #0f766e;
+    font-weight: 700;
+  }
+
+  /* ── BOTTOM ROW: workflow + QR ── */
+  .bottom {
+    display: flex;
+    gap: 4mm;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+
+  /* workflow steps */
+  .workflow {
+    flex: 1;
+    background: #f8fafc;
+    border: 0.35mm solid #e2e8f0;
+    border-radius: 3mm;
+    padding: 3.5mm 5mm;
+  }
+  .workflow-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2.5mm;
+    letter-spacing: 0.3px;
+  }
+  .steps {
+    display: flex;
+    gap: 0;
+    align-items: center;
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+  }
+  .step-num {
+    width: 7mm;
+    height: 7mm;
+    border-radius: 50%;
+    background: #00b89a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5mm;
+  }
+  .step-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.8mm;
+  }
+  .step-desc {
+    font-size: 10.5px;
+    color: #64748b;
+    line-height: 1.3;
+  }
+  .step-arrow {
+    width: 6mm;
+    flex-shrink: 0;
+    text-align: center;
+    color: #cbd5e1;
+    font-size: 14px;
+  }
+
+  /* QR + CTA */
+  .qr-wrap {
+    width: 52mm;
+    background: #0f172a;
+    border-radius: 3mm;
+    padding: 4mm 4.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5mm;
+    flex-shrink: 0;
+  }
+  .qr-box {
+    width: 38mm;
+    height: 38mm;
+    background: #ffffff;
+    border-radius: 2mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .qr-box svg { width: 36mm; height: 36mm; }
+  .qr-cta {
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .qr-sub {
+    color: #94a3b8;
+    font-size: 10.5px;
+    text-align: center;
+    line-height: 1.35;
+  }
+  .qr-url {
+    color: #00d4b4;
+    font-size: 10px;
+    font-family: Menlo, monospace;
+    text-align: center;
+  }
+
+  /* ── FOOTER ── */
+  .ftr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.3mm solid #e2e8f0;
+    padding-top: 2.5mm;
+    flex-shrink: 0;
+  }
+  .ftr-disc {
+    font-size: 10.5px;
+    color: #94a3b8;
+    line-height: 1.4;
+    max-width: 260mm;
+  }
+  .ftr-right {
+    font-size: 11px;
+    color: #64748b;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .ftr-right b { color: #0f172a; font-family: Menlo, monospace; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOP ACCENT -->
+  <div class="accent-bar"></div>
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="logo-wrap">
+      <!-- Approved CarbonLens logo from src/components/Logo.tsx -->
+      <svg width="190" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(0,2)">
+          <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+          <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+          <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+          <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+          <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+          <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+          <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+          <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+          <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.22)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+        </g>
+        <text x="48" y="23" font-family="'IBM Plex Mono', Menlo, monospace" font-size="19" font-weight="700" fill="#0f172a" letter-spacing="0.5">CARBON</text>
+        <text x="48" y="40" font-family="'IBM Plex Mono', Menlo, monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+      </svg>
+      <div class="tagline">
+        <b>CO&#8322; Storage Simulation Studio</b><br>
+        Browser-based · Free · No installation
+      </div>
+    </div>
+    <div class="event-badge">
+      <div class="ev-label">InnovEx TEC26 &nbsp;·&nbsp; UTP &nbsp;·&nbsp; Sept 2026</div>
+      <div class="author"><b>Daniel T. Olagunju</b><br>MSc Researcher, Universiti Teknologi PETRONAS</div>
+    </div>
+  </div>
+
+  <!-- HERO IMAGE WITH OVERLAY -->
+  <div class="hero">
+    <img src="assets/2.png" alt="CarbonLens CO2 plume simulation — live in browser">
+    <div class="hero-overlay">
+      <div class="hero-kicker">Digital Solution &nbsp;·&nbsp; CCUS Research Tool</div>
+      <div class="hero-title">Simulate CO&#8322; Storage<br><span>in Your Browser</span></div>
+      <div class="hero-sub">Full physics engine: injection simulation, geomechanics safety, Monte Carlo uncertainty and regulatory export — running entirely on your laptop, in seconds.</div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00b89a" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-num">16</div>
+        <div class="stat-label">Real formations validated<br>across 6 continents</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-num">12</div>
+        <div class="stat-label">Regulatory jurisdictions<br>incl. Malaysia CCUS Act 2025</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-num">943</div>
+        <div class="stat-label">Automated physics tests<br>passing</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stat-num">Free</div>
+        <div class="stat-label">Open-source, MIT licence<br>Zero install · Zero backend</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MID SECTION -->
+  <div class="mid">
+
+    <!-- LEFT COLUMN -->
+    <div class="mid-left">
+
+      <!-- Problem -->
+      <div class="ps-box problem">
+        <div class="ps-label">The Problem</div>
+        <div class="ps-text">CCUS simulation requires <b>expensive commercial software</b> (USD 50K+/yr) and specialist engineers, locking out most researchers, regulators and early-stage projects.</div>
+      </div>
+
+      <!-- Solution -->
+      <div class="ps-box solution">
+        <div class="ps-label">Our Solution</div>
+        <div class="ps-text">CarbonLens delivers <b>rigorous CO&#8322; storage screening and simulation</b> as a free, open-source web application. No install. No cloud fees. Physics runs locally in seconds.</div>
+      </div>
+
+      <!-- 4 feature mini cards -->
+      <div class="feature-grid">
+        <div class="fcard">
+          <div class="fcard-img"><img src="assets/3.png" alt="Formation input — geological parameters"></div>
+          <div class="fcard-cap">
+            <h4>Formation <span>Builder</span></h4>
+            <p>Set geology, depth, porosity, temperature and trapping type interactively.</p>
+          </div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-img"><img src="assets/5.png" alt="Geomechanics safety — caprock integrity"></div>
+          <div class="fcard-cap">
+            <h4>Geomechanics <span>Safety</span></h4>
+            <p>Caprock integrity, fracture pressure and fault risk assessed automatically.</p>
+          </div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-img"><img src="assets/4.png" alt="Monte Carlo uncertainty quantification"></div>
+          <div class="fcard-cap">
+            <h4>Monte Carlo <span>Analysis</span></h4>
+            <p>500 realizations in 0.11 s — every output comes with P10/P50/P90 bounds.</p>
+          </div>
+        </div>
+        <div class="fcard">
+          <div class="fcard-img"><img src="assets/9.png" alt="Certificate of Storage Verification"></div>
+          <div class="fcard-cap">
+            <h4>Registry <span>Certificate</span></h4>
+            <p>Sealed, verifiable storage verification records for auditable CCUS projects.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="mid-right">
+
+      <!-- Big screenshot: geomechanics heatmap — most visually striking -->
+      <div class="big-screen">
+        <img src="assets/5.png" alt="Geomechanics safety analysis — CarbonLens">
+        <div class="screen-label">
+          Geomechanics module &mdash; <span>caprock pressure, salinity heatmap and fault risk</span> computed in real time
+        </div>
+      </div>
+
+      <!-- Validation strip -->
+      <div class="val-strip">
+        <div class="val-title">Validated against <span>16 real-world formations</span> on 6 continents:</div>
+        <div class="val-row">
+          <span class="val-chip my">Malay Basin &#127474;&#127486;</span>
+          <span class="val-chip my">Kasawari &#127474;&#127486;</span>
+          <span class="val-chip my">Duyong &#127474;&#127486;</span>
+          <span class="val-chip">Sleipner (Norway)</span>
+          <span class="val-chip">Johansen (Norway)</span>
+          <span class="val-chip">Gorgon (Australia)</span>
+          <span class="val-chip">Otway (Australia)</span>
+          <span class="val-chip">Mount Simon (USA)</span>
+          <span class="val-chip">Niger Delta</span>
+          <span class="val-chip">In Salah (Algeria)</span>
+          <span class="val-chip">Abu Dhabi (UAE)</span>
+          <span class="val-chip">Rotterdam (NL)</span>
+          <span class="val-chip">Alberta (Canada)</span>
+          <span class="val-chip">Nile Delta</span>
+          <span class="val-chip">N. Sumatra</span>
+          <span class="val-chip">Sn&#248;hvit</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom">
+
+    <!-- Workflow steps -->
+    <div class="workflow">
+      <div class="workflow-title">How it works &nbsp;&mdash;&nbsp; from blank screen to regulatory report in under 5 minutes:</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-name">Define Formation</div>
+          <div class="step-desc">Pick a preset or enter geology parameters</div>
+        </div>
+        <div class="step-arrow">&rsaquo;</div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-name">Run Simulation</div>
+          <div class="step-desc">50-year CO&#8322; injection, plume and pressure</div>
+        </div>
+        <div class="step-arrow">&rsaquo;</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-name">Screen Risk</div>
+          <div class="step-desc">Geomechanics, leakage and Monte Carlo bounds</div>
+        </div>
+        <div class="step-arrow">&rsaquo;</div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-name">Export Report</div>
+          <div class="step-desc">Malaysia CCUS Act 2025 permit pre-application PDF</div>
+        </div>
+        <div class="step-arrow">&rsaquo;</div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-name">Registry Seal</div>
+          <div class="step-desc">Auditable certificate in the Digital Twin Registry</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR / CTA -->
+    <div class="qr-wrap">
+      <!-- QR code placeholder — replace with actual QR for live demo URL -->
+      <div class="qr-box">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Finder pattern TL -->
+          <rect x="5" y="5" width="30" height="30" rx="3" fill="none" stroke="#0f172a" stroke-width="4"/>
+          <rect x="13" y="13" width="14" height="14" rx="1.5" fill="#0f172a"/>
+          <!-- Finder pattern TR -->
+          <rect x="65" y="5" width="30" height="30" rx="3" fill="none" stroke="#0f172a" stroke-width="4"/>
+          <rect x="73" y="13" width="14" height="14" rx="1.5" fill="#0f172a"/>
+          <!-- Finder pattern BL -->
+          <rect x="5" y="65" width="30" height="30" rx="3" fill="none" stroke="#0f172a" stroke-width="4"/>
+          <rect x="13" y="73" width="14" height="14" rx="1.5" fill="#0f172a"/>
+          <!-- Data modules (decorative) -->
+          <rect x="42" y="5" width="6" height="6" fill="#0f172a"/>
+          <rect x="50" y="5" width="6" height="6" fill="#0f172a"/>
+          <rect x="42" y="13" width="6" height="6" fill="#0f172a"/>
+          <rect x="50" y="21" width="6" height="6" fill="#0f172a"/>
+          <rect x="58" y="13" width="6" height="6" fill="#0f172a"/>
+          <rect x="42" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="50" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="58" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="42" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="58" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="42" y="58" width="6" height="6" fill="#0f172a"/>
+          <rect x="50" y="58" width="6" height="6" fill="#0f172a"/>
+          <rect x="65" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="73" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="81" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="65" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="81" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="73" y="58" width="6" height="6" fill="#0f172a"/>
+          <rect x="81" y="58" width="6" height="6" fill="#0f172a"/>
+          <rect x="5" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="13" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="21" y="42" width="6" height="6" fill="#0f172a"/>
+          <rect x="5" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="21" y="50" width="6" height="6" fill="#0f172a"/>
+          <rect x="13" y="58" width="6" height="6" fill="#0f172a"/>
+          <rect x="65" y="73" width="6" height="6" fill="#0f172a"/>
+          <rect x="73" y="65" width="6" height="6" fill="#0f172a"/>
+          <rect x="81" y="73" width="6" height="6" fill="#0f172a"/>
+          <rect x="65" y="81" width="6" height="6" fill="#0f172a"/>
+          <rect x="81" y="81" width="6" height="6" fill="#0f172a"/>
+          <!-- CarbonLens teal accent dot in center -->
+          <circle cx="50" cy="50" r="4" fill="#00b89a"/>
+        </svg>
+      </div>
+      <div class="qr-cta">Try the Live Demo</div>
+      <div class="qr-sub">Open on any phone or laptop &mdash; no app, no sign-up.</div>
+      <div class="qr-url">carbonlens.app</div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <div class="ftr-disc">
+      Screening-level tool for pre-FEED assessment, education and regulatory pre-application support. Does not replace detailed reservoir simulation or independent expert review. Open-source MIT licence.
+    </div>
+    <div class="ftr-right">
+      <b>github.com/carbonlens</b><br>
+      Open Source &nbsp;·&nbsp; MIT &nbsp;·&nbsp; v0.1
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

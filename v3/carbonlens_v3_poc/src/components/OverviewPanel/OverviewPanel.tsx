@@ -58,10 +58,10 @@ export default function OverviewPanel() {
   }, [jurisdiction])
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="w-full space-y-5">
       
       {/* Dashboard Top Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-theme/20 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-start md:items-center justify-between gap-3 border-b border-theme/20 pb-4">
         <div>
           <div className="text-[10px] font-mono text-accent uppercase tracking-widest flex items-center gap-1.5">
             <LayoutDashboard size={12} /> Executive Control Room
@@ -86,7 +86,7 @@ export default function OverviewPanel() {
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           title="Target Aquifer Depth"
           value={`${params.depth} m`}
@@ -119,19 +119,19 @@ export default function OverviewPanel() {
       </div>
 
       {/* Analytics Main Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         
         {/* Left Column: Sequestration Performance & Trapping */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           
           {/* Containment and Simulation Capacity */}
-          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-5 shadow-sm">
+          <div className="rounded-xl border border-theme/30 bg-card p-4 md:p-5 space-y-4 md:space-y-5 shadow-sm">
             <h2 className="text-sm font-semibold text-primary font-mono uppercase tracking-wider flex items-center gap-2 border-b border-theme/20 pb-2.5">
               <Activity size={15} className="text-accent" /> Sequestration Performance &amp; Capacity
             </h2>
 
             {simResult ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-4">
                   <div>
                     <span className="text-[10px] font-mono text-muted uppercase block">Containment Confidence</span>
@@ -198,7 +198,7 @@ export default function OverviewPanel() {
 
           {/* Trapping Mechanisms Distribution */}
           {simResult && (
-            <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-sm">
+            <div className="rounded-xl border border-theme/30 bg-card p-4 md:p-5 space-y-4 shadow-sm">
               <h2 className="text-sm font-semibold text-primary font-mono uppercase tracking-wider flex items-center gap-2 border-b border-theme/20 pb-2.5">
                 <Droplets size={15} className="text-accent" /> Carbon Sequestration Trapping Breakdown
               </h2>
@@ -211,7 +211,7 @@ export default function OverviewPanel() {
                   <div className="h-full bg-error transition-all" style={{ width: `${trappedPct.mobile}%` }} title={`Structural Trapping ${trappedPct.mobile.toFixed(1)}%`} />
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
                   <TrappingLegendItem label="Residual Trapping" percentage={trappedPct.residual} color="bg-emerald-500" desc="Trapped in pores" />
                   <TrappingLegendItem label="Dissolved Phase" percentage={trappedPct.solubility} color="bg-teal-500" desc="Dissolved in brine" />
                   <TrappingLegendItem label="Mineralization" percentage={trappedPct.mineral} color="bg-amber-600" desc="Precipitated as rock" />
@@ -223,10 +223,10 @@ export default function OverviewPanel() {
         </div>
 
         {/* Right Column: Geomechanical Safety Factors & Leakage */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           
           {/* Geomechanics Validation Checks */}
-          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-4 shadow-sm">
+          <div className="rounded-xl border border-theme/30 bg-card p-4 md:p-5 space-y-4 shadow-sm">
             <h2 className="text-sm font-semibold text-primary font-mono uppercase tracking-wider flex items-center gap-2 border-b border-theme/20 pb-2.5">
               <Hammer size={15} className="text-accent" /> Geomechanical Safety
             </h2>
@@ -266,7 +266,7 @@ export default function OverviewPanel() {
           </div>
 
           {/* Containment Risk Assessment */}
-          <div className="rounded-xl border border-theme/30 bg-card p-5 space-y-3 shadow-sm">
+          <div className="rounded-xl border border-theme/30 bg-card p-4 md:p-5 space-y-3 shadow-sm">
             <h2 className="text-sm font-semibold text-primary font-mono uppercase tracking-wider flex items-center gap-2 border-b border-theme/20 pb-2.5">
               <Crosshair size={15} className="text-accent" /> Leakage Risk Assessment
             </h2>
@@ -312,17 +312,17 @@ interface StatCardProps {
 
 function StatCard({ title, value, description, subtext, icon: Icon, badgeColor }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-theme bg-card p-4 space-y-2.5 shadow-sm hover:border-theme/60 transition-all flex flex-col justify-between">
-      <div className="flex items-center justify-between">
-        <span className="text-[9px] font-mono text-muted uppercase tracking-wider">{title}</span>
-        <div className="w-7 h-7 rounded-lg bg-tertiary flex items-center justify-center text-accent">
-          <Icon size={14} />
+    <div className="rounded-xl border border-theme bg-card p-3 md:p-4 space-y-2 md:space-y-2.5 shadow-sm hover:border-theme/60 transition-all flex flex-col justify-between min-w-0">
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-[8px] md:text-[9px] font-mono text-muted uppercase tracking-wider leading-tight">{title}</span>
+        <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-tertiary flex items-center justify-center text-accent shrink-0">
+          <Icon size={12} />
         </div>
       </div>
-      <div className="space-y-1">
-        <div className="text-2xl font-semibold font-mono text-primary">{value}</div>
-        <p className="text-[10px] font-mono text-secondary leading-tight truncate">{description}</p>
-        <p className="text-[9px] font-mono text-muted/65 leading-none truncate">{subtext}</p>
+      <div className="space-y-1 min-w-0">
+        <div className="text-lg md:text-2xl font-semibold font-mono text-primary truncate">{value}</div>
+        <p className="text-[9px] md:text-[10px] font-mono text-secondary leading-tight truncate">{description}</p>
+        <p className="text-[8px] md:text-[9px] font-mono text-muted/65 leading-none truncate">{subtext}</p>
       </div>
     </div>
   )

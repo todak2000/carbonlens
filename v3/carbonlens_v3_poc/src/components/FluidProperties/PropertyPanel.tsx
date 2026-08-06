@@ -8,7 +8,7 @@ export default function PropertyPanel() {
   const result = useSimulationStore((s) => s.result)
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto bg-card rounded-xl border border-theme/30 shadow-md">
+    <div className="w-full space-y-5 bg-card rounded-xl border border-theme/30 shadow-md p-4 md:p-5">
       <div>
         <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">Fluid &amp; Reservoir Properties</h1>
         <p className="text-xs text-muted font-mono mt-0.5">Thermodynamic states, lithology defaults, and transport parameters</p>

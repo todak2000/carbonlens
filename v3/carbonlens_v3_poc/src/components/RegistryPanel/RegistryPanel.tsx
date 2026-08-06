@@ -148,7 +148,7 @@ export default function RegistryPanel() {
     : null
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="w-full space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-theme/20 pb-4">
         <div>
@@ -367,7 +367,7 @@ export default function RegistryPanel() {
                 </div>
                 <div className="space-y-2">
                   {mockTxns.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between text-[11px] font-mono border-b border-theme/10 pb-1.5 last:border-0">
+                    <div key={tx.id} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] font-mono border-b border-theme/10 pb-1.5 last:border-0">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${tx.status === 'confirmed' ? 'bg-success' : 'bg-warning'}`} />
                         <span className="text-secondary font-semibold">{tx.label}</span>

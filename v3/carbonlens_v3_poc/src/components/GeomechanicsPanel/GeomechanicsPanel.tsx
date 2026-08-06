@@ -404,10 +404,10 @@ export default function GeomechanicsPanel() {
   }, [capFrac, fracPres, sf, seisRisk, slipPot, heaveM, mData, params.caprockFriction, params.caprockCohesion, params.biotCoefficient, sv, sh, maip, maipMargin, presFrontR])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-theme/20 pb-4">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-theme/20 pb-4">
+        <div className="min-w-0">
           <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">Geomechanical Containment Safety</h1>
           <p className="text-xs text-muted font-mono mt-0.5">Stage 2: Target Aquifer &amp; Caprock Integrity Assessment</p>
         </div>
@@ -581,11 +581,11 @@ export default function GeomechanicsPanel() {
                 <div key={c.id} className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono border ${
                   c.ok ? 'bg-tertiary/10 border-theme/10 text-secondary' : 'bg-error/10 border-error/30 text-error font-semibold'
                 }`}>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <span>{c.ok ? '✓' : '✕'}</span>
                     <span>{c.label}</span>
                   </div>
-                  <span>{c.detail}</span>
+                  <span className="min-w-0 text-right truncate">{c.detail}</span>
                 </div>
               ))}
             </div>
@@ -647,10 +647,10 @@ export default function GeomechanicsPanel() {
       <div className="border-t border-theme mt-4 pt-3 px-4 pb-4">
         <button
           onClick={() => setPanel('screening')}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold font-mono transition bg-blue-600 hover:bg-blue-500 text-white shadow-md text-center leading-normal"
         >
-          <ChevronRight size={13} />
-          Geomechanics Reviewed — Continue to Screening →
+          <ChevronRight size={14} className="shrink-0" />
+          <span>Geomechanics Reviewed — Continue to Screening →</span>
         </button>
       </div>
     </div>

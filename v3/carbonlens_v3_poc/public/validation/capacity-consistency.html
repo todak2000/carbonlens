@@ -24,14 +24,78 @@
     .bug-item { margin:4px 0; display:flex; gap:8px; }
     .bug-id { font-family:monospace; background:#fee2e2; color:#991b1b; padding:1px 6px; border-radius:4px; font-size:7.5pt; white-space:nowrap; }
     .meta { font-size:7.5pt; color:#94a3b8; margin-top:16px; border-top:1px solid #e2e8f0; padding-top:10px; }
-  </style>
+  
+    /* ── SCREEN RESPONSIVE (mobile / tablet) ───────────────────────── */
+    @media screen and (max-width: 900px) {
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Cover page */
+      .cover-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+      .back-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+
+      /* Cover title */
+      .cover-title { font-size: clamp(18pt, 6vw, 28pt) !important; letter-spacing: -0.3px !important; }
+
+      /* Cover formation strip */
+      .cover-formation-strip { flex-wrap: wrap !important; gap: 16px !important; }
+
+      /* Cover meta grid */
+      .cover-meta-grid { grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
+
+      /* KPI grid: 2 columns on mobile */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+      /* Two-col and three-col grids: stack */
+      .two-col { grid-template-columns: 1fr !important; gap: 10px !important; }
+      .three-col { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+      /* Tables: horizontal scroll */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; }
+
+      /* Section boxes */
+      .section-box { padding: 10px 12px !important; }
+
+      /* Sensitivity chart label */
+      .sen-label { width: 70px !important; font-size: 7pt !important; }
+
+      /* Mass balance label */
+      .mass-label { width: 140px !important; font-size: 8pt !important; }
+
+      /* Content page */
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+
+      /* Page header */
+      .page-header { flex-wrap: wrap !important; gap: 6px !important; }
+
+      /* Page footer */
+      .page-footer { flex-direction: column !important; gap: 4px !important; }
+    }
+
+    @media screen and (max-width: 480px) {
+      .cover-title { font-size: clamp(16pt, 7vw, 22pt) !important; }
+      .cover-meta-grid { grid-template-columns: 1fr !important; }
+      .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+      .three-col { grid-template-columns: 1fr !important; }
+      .cover-formation-strip { gap: 12px !important; }
+    }
+
+    @media screen and (max-width: 360px) {
+      .kpi-grid { grid-template-columns: 1fr !important; }
+    }
+</style>
 </head>
 <body>
 
 <div class="header">
   <h1>CarbonLens v3 — Capacity Consistency Audit</h1>
   <p>Cross-engine consistency checks: Formation Panel Step 3 vs computeOptimalRate vs useSimulation — all three must agree</p>
-  <p style="margin-top:6px;color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:8pt">Generated: 2026-07-26T14:34:31.239Z • 16 formations • Tolerance: 2%</p>
+  <p style="margin-top:6px;color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:8pt">Generated: 2026-08-06T04:58:16.672Z • 16 formations • Tolerance: 2%</p>
 </div>
 
 <div class="bug-legend">
@@ -46,8 +110,8 @@
 <div class="kpi-row">
   <div class="kpi"><div class="kpi-label">Formations Tested</div><div class="kpi-value">16</div></div>
   <div class="kpi"><div class="kpi-label">Total Checks</div><div class="kpi-value">156</div></div>
-  <div class="kpi" style="border-top-color:#10b981"><div class="kpi-label">Passing</div><div class="kpi-value" style="color:#065f46">155</div></div>
-  <div class="kpi" style="border-top-color:#f59e0b"><div class="kpi-label">Warnings</div><div class="kpi-value" style="color:#92400e">1</div></div>
+  <div class="kpi" style="border-top-color:#10b981"><div class="kpi-label">Passing</div><div class="kpi-value" style="color:#065f46">156</div></div>
+  <div class="kpi" style="border-top-color:#f59e0b"><div class="kpi-label">Warnings</div><div class="kpi-value" style="color:#92400e">0</div></div>
   <div class="kpi" style="border-top-color:#ef4444"><div class="kpi-label">Failures</div><div class="kpi-value" style="color:#991b1b">0</div></div>
 </div>
 
@@ -190,9 +254,9 @@
       <td style="font-size:7.5pt;color:#64748b">North Sea, Netherlands</td>
       <td><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-size:7pt;font-weight:700">depleted</span></td>
       <td><span style="padding:1px 7px;border-radius:8px;font-size:7pt;font-weight:700;font-family:monospace;background:#f1f5f9;color:#475569">EU</span></td>
-      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#fef3c7;color:#92400e;border:1px solid #fde68a">⚠ WARN</span></td>
-      <td style="text-align:center;color:#065f46;font-weight:700">11</td>
-      <td style="text-align:center;color:#92400e;font-weight:700">1</td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+      <td style="text-align:center;color:#065f46;font-weight:700">12</td>
+      <td style="text-align:center;color:#92400e;font-weight:700">0</td>
       <td style="text-align:center;color:#991b1b;font-weight:700">0</td>
     </tr><tr>
       <td style="font-weight:600">Alberta Basin</td>
@@ -704,70 +768,70 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
         <td style="font-weight:600">Panel P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=64.335 Mt, Sim=64.335 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=44.696 Mt, Sim=44.696 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
         <td style="font-weight:600">RateEnv P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">RateEnv=64.335 Mt, Sim=64.335 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=44.696 Mt, Sim=44.696 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
         <td style="font-weight:600">Panel P50 === RateEnv P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=64.335, RateEnv=64.335 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=44.696, RateEnv=44.696 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
         <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=67.043, P50=44.696, P90=26.817 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
         <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=67.043, P50=44.696, P90=26.817 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
         <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=75.688, P50=64.335, P90=45.413 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=67.043, P50=44.696, P90=26.817 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
         <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel P50=64.335 Mt ≈ GIIP=64.335 Mt (DOE-wrong=0.052 Mt)</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=44.696 Mt ≈ GIIP=44.696 Mt (DOE-wrong=0.110 Mt)</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
         <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Sim P50=64.335 Mt ≈ GIIP=64.335 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=44.696 Mt ≈ GIIP=44.696 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
         <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=64.335 Mt, 4xArea=64.335 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=44.696 Mt, 4xArea=44.696 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
         <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=64.335 Mt, 4xArea=64.335 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=44.696 Mt, 4xArea=44.696 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
@@ -781,14 +845,14 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
         <td style="font-weight:600">CO2 density in physical range</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">210.47 kg/m³</td>
+        <td style="font-family:monospace;font-size:7.5pt">416.66 kg/m³</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
         <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">min=2.7523, opt=3.8991, max=4.5872 Mt/yr/well</td>
+        <td style="font-family:monospace;font-size:7.5pt">min=1.6253, opt=2.7088, max=4.0632 Mt/yr/well</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr></tbody>
         </table>
@@ -819,70 +883,70 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
         <td style="font-weight:600">Panel P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=53.076 Mt, Sim=53.076 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=188.295 Mt, Sim=188.295 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
         <td style="font-weight:600">RateEnv P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">RateEnv=53.076 Mt, Sim=53.076 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=188.295 Mt, Sim=188.295 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
         <td style="font-weight:600">Panel P50 === RateEnv P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=53.076, RateEnv=53.076 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=188.295, RateEnv=188.295 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
         <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=282.442, P50=188.295, P90=112.977 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
         <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=282.442, P50=188.295, P90=112.977 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
         <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=62.443, P50=53.076, P90=37.466 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=282.442, P50=188.295, P90=112.977 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
         <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel P50=53.076 Mt ≈ GIIP=53.076 Mt (DOE-wrong=3.823 Mt)</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=188.295 Mt ≈ GIIP=188.295 Mt (DOE-wrong=38.226 Mt)</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
         <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Sim P50=53.076 Mt ≈ GIIP=53.076 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=188.295 Mt ≈ GIIP=188.295 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
         <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=53.076 Mt, 4xArea=53.076 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=188.295 Mt, 4xArea=188.295 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
         <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=53.076 Mt, 4xArea=53.076 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=188.295 Mt, 4xArea=188.295 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
@@ -903,7 +967,7 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
         <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">min=2.2706, opt=3.2167, max=3.7844 Mt/yr/well</td>
+        <td style="font-family:monospace;font-size:7.5pt">min=6.8471, opt=11.4118, max=17.1177 Mt/yr/well</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr></tbody>
         </table>
@@ -934,70 +998,70 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
         <td style="font-weight:600">Panel P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=1.904 Mt, Sim=1.904 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=11.925 Mt, Sim=11.925 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
         <td style="font-weight:600">RateEnv P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">RateEnv=1.904 Mt, Sim=1.904 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=11.925 Mt, Sim=11.925 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
         <td style="font-weight:600">Panel P50 === RateEnv P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=1.904, RateEnv=1.904 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=11.925, RateEnv=11.925 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
         <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=17.888, P50=11.925, P90=7.155 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
         <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=17.888, P50=11.925, P90=7.155 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
         <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=2.240, P50=1.904, P90=1.344 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=17.888, P50=11.925, P90=7.155 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
         <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel P50=1.904 Mt ≈ GIIP=1.904 Mt (DOE-wrong=1.724 Mt)</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=11.925 Mt ≈ GIIP=11.925 Mt (DOE-wrong=1.724 Mt)</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
         <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Sim P50=1.904 Mt ≈ GIIP=1.904 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=11.925 Mt ≈ GIIP=11.925 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
         <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=1.904 Mt, 4xArea=1.904 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=11.925 Mt, 4xArea=11.925 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
         <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=1.904 Mt, 4xArea=1.904 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=11.925 Mt, 4xArea=11.925 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
@@ -1018,7 +1082,7 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
         <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">min=0.0814, opt=0.1154, max=0.1357 Mt/yr/well</td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.4337, opt=0.7228, max=1.0841 Mt/yr/well</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr></tbody>
         </table>
@@ -1588,15 +1652,15 @@
         </table>
       </div>
       <div style="margin:20px 0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;page-break-inside:avoid">
-        <div style="background:#fef3c7;border-bottom:2px solid #fde68a;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="background:#d1fae5;border-bottom:2px solid #a7f3d0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <span style="font-weight:800;font-size:11pt;color:#0d1f3c">Rotterdam / North Sea</span>
             <span style="margin-left:10px;font-size:8.5pt;color:#64748b">North Sea, Netherlands</span>
             <span style="margin-left:8px;font-size:7.5pt;color:#94a3b8;font-family:monospace">[depleted_gas]</span>
           </div>
           <div style="display:flex;gap:10px;font-size:8pt;font-weight:700">
-            <span style="color:#065f46">11 PASS</span>
-            <span style="color:#92400e">1 WARN</span>
+            <span style="color:#065f46">12 PASS</span>
+            <span style="color:#92400e">0 WARN</span>
             <span style="color:#991b1b">0 FAIL</span>
           </div>
         </div>
@@ -1613,70 +1677,70 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
         <td style="font-weight:600">Panel P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=66.117 Mt, Sim=66.117 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=67.889 Mt, Sim=67.889 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
         <td style="font-weight:600">RateEnv P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">RateEnv=66.117 Mt, Sim=66.117 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=67.889 Mt, Sim=67.889 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
         <td style="font-weight:600">Panel P50 === RateEnv P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=66.117, RateEnv=66.117 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=67.889, RateEnv=67.889 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
         <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=96.177, P50=67.889, P90=45.260 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
         <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=96.177, P50=67.889, P90=45.260 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
         <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=77.784, P50=66.117, P90=46.671 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=96.177, P50=67.889, P90=45.260 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-depleted-method</td>
         <td style="font-weight:600">Panel uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel P50=66.117 Mt ≈ GIIP=66.117 Mt (DOE-wrong=3.234 Mt)</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel P50=67.889 Mt ≈ GIIP=67.889 Mt (DOE-wrong=57.206 Mt)</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-depleted-method</td>
         <td style="font-weight:600">Simulation uses GIIP-based method for depleted field</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Sim P50=66.117 Mt ≈ GIIP=66.117 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">Sim P50=67.889 Mt ≈ GIIP=67.889 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-sim</td>
         <td style="font-weight:600">Sim capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=66.117 Mt, 4xArea=66.117 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=67.889 Mt, 4xArea=67.889 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">depleted-area-independence-panel</td>
         <td style="font-weight:600">Panel capacity unchanged when area 4x (depleted gas is GIIP-bound)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Base=66.117 Mt, 4xArea=66.117 Mt, change=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Base=67.889 Mt, 4xArea=67.889 Mt, change=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
@@ -1689,15 +1753,15 @@
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">co2-density-sanity</td>
         <td style="font-weight:600">CO2 density in physical range</td>
-        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#fef3c7;color:#92400e;border:1px solid #fde68a">⚠ WARN</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">37.69 kg/m³</td>
-        <td style="font-size:7.5pt;color:#92400e">Low density 37.69 kg/m³: subcritical or near-critical CO2 at these T/P conditions. Capacity will be underestimated.</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
+        <td style="font-family:monospace;font-size:7.5pt">666.74 kg/m³</td>
+        <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
         <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">min=2.8285, opt=4.0071, max=4.7142 Mt/yr/well</td>
+        <td style="font-family:monospace;font-size:7.5pt">min=2.7430, opt=4.1145, max=5.8289 Mt/yr/well</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr></tbody>
         </table>
@@ -1728,42 +1792,42 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-sim-p50</td>
         <td style="font-weight:600">Panel P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=175.422 Mt, Sim=175.422 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.316 Mt, Sim=1.316 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-vs-sim-p50</td>
         <td style="font-weight:600">RateEnv P50 === Sim P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">RateEnv=175.422 Mt, Sim=175.422 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">RateEnv=1.316 Mt, Sim=1.316 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-vs-rateenv-p50</td>
         <td style="font-weight:600">Panel P50 === RateEnv P50</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">Panel=175.422, RateEnv=175.422 Mt, diff=0.00%</td>
+        <td style="font-family:monospace;font-size:7.5pt">Panel=1.316, RateEnv=1.316 Mt, diff=0.00%</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">panel-capacity-ordering</td>
         <td style="font-weight:600">Panel P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=3.618, P50=1.316, P90=0.335 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
         <td style="font-family:monospace;font-size:7pt;color:#475569">rateenv-capacity-ordering</td>
         <td style="font-weight:600">RateEnv P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=3.618, P50=1.316, P90=0.335 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="background:#f8fafc">
         <td style="font-family:monospace;font-size:7pt;color:#475569">sim-capacity-ordering</td>
         <td style="font-weight:600">Sim P10 >= P50 >= P90 (DOE exceedance)</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">P10=482.410, P50=175.422, P90=44.733 Mt</td>
+        <td style="font-family:monospace;font-size:7.5pt">P10=3.618, P50=1.316, P90=0.335 Mt</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr>
       <tr style="">
@@ -1791,7 +1855,7 @@
         <td style="font-family:monospace;font-size:7pt;color:#475569">rate-envelope-ordering</td>
         <td style="font-weight:600">RateEnv: minRate < optimalRate < maxRate</td>
         <td><span style="padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ PASS</span></td>
-        <td style="font-family:monospace;font-size:7.5pt">min=2.7111, opt=10.6316, max=29.2370 Mt/yr/well</td>
+        <td style="font-family:monospace;font-size:7.5pt">min=0.0203, opt=0.0797, max=0.2193 Mt/yr/well</td>
         <td style="font-size:7.5pt;color:#475569">OK</td>
       </tr></tbody>
         </table>

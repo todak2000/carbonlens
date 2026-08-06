@@ -61,7 +61,7 @@ export default function EconomicsPanel() {
   }, [params, wells, simResult, jurisdiction, projectYears])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-theme/20 pb-4">
         <div>

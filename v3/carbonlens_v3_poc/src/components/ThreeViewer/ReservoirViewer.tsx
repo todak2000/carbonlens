@@ -1987,7 +1987,7 @@ export default function ReservoirViewer() {
           backdropFilter: 'blur(4px)',
         }}
       >
-        <div className="pl-3 text-[10px] font-mono font-semibold uppercase tracking-wider text-secondary">
+        <div className="hidden sm:block pl-3 text-[10px] font-mono font-semibold uppercase tracking-wider text-secondary">
           3D Reservoir Simulation Model
         </div>
 
@@ -2021,12 +2021,12 @@ export default function ReservoirViewer() {
           )}
 
           <button onClick={togglePressure}
-            className={`text-[9px] font-mono px-2 py-1 rounded border ${showPressure ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
+            className={`hidden sm:inline-flex items-center text-[9px] font-mono px-2 py-1 rounded border ${showPressure ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
           >
             {showPressure ? '✕ P-field' : '⊞ P-field'}
           </button>
           <button onClick={toggleStress}
-            className={`text-[9px] font-mono px-2 py-1 rounded border ${showStress ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
+            className={`hidden sm:inline-flex items-center text-[9px] font-mono px-2 py-1 rounded border ${showStress ? 'bg-accent text-white border-accent' : 'bg-tertiary text-muted hover:text-secondary border-theme'}`}
           >
             {showStress ? '✕ Stress' : '⊟ Stress'}
           </button>
@@ -2048,7 +2048,7 @@ export default function ReservoirViewer() {
       {/* 3D View */}
       {viewMode === '3d' && (
         <div className="absolute inset-0 pt-8">
-          <Canvas camera={{ position: [3.5, 2.8, 3.5], fov: 40 }} gl={{ preserveDrawingBuffer: true }}>
+          <Canvas camera={{ position: typeof window !== 'undefined' && window.innerWidth < 768 ? [6.2, 5.0, 6.2] : [3.5, 2.8, 3.5], fov: typeof window !== 'undefined' && window.innerWidth < 768 ? 48 : 40 }} gl={{ preserveDrawingBuffer: true }}>
             <color attach="background" args={blowoutActive ? ['#1a0505'] : [theme === 'dark' ? '#0a1015' : '#dce2ec']} />
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} intensity={0.9} />
@@ -2079,7 +2079,7 @@ export default function ReservoirViewer() {
             <PlumeLabelAnnotation />
             <BoundingBox />
             <GridHelper />
-            <OrbitControls makeDefault enableDamping dampingFactor={0.12} minDistance={1.2} maxDistance={8} />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.12} minDistance={1.2} maxDistance={18} />
           </Canvas>
           <StatsOverlay />
           <SimulationHUD />

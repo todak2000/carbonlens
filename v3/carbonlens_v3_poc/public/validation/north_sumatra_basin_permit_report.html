@@ -1,0 +1,1477 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Indonesia CCS Storage Permit — Pre-Application (PP 19/2023)</title><style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap');
+
+@page { size: A4; margin: 10mm 10mm 10mm 10mm; }
+@page :first { margin: 0; size: A4; }
+@page back-cover { margin: 0; size: A4; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 9.5pt; color: #1e293b; background: white; line-height: 1.55;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1 { font-size: 22pt; color: #0d1f3c; font-weight: 800; letter-spacing: -0.3px; }
+h2 {
+  font-size: 11pt; color: #0d1f3c; font-weight: 700;
+  margin: 12px 0 6px; padding-bottom: 5px;
+  border-bottom: 2px solid #00c4a0;
+  display: flex; align-items: center; gap: 8px;
+  page-break-after: avoid; page-break-inside: avoid;
+}
+h2::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 13px;
+  background: #00c4a0; border-radius: 2px; flex-shrink: 0;
+}
+h3 { font-size: 9.5pt; color: #1e3a5f; font-weight: 700; margin: 8px 0 4px; page-break-after: avoid; }
+p { margin: 5px 0; }
+code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 10px 0;
+  font-size: 8.8pt; border: 1px solid #e2e8f0;
+  border-radius: 8px; overflow: hidden;
+}
+th {
+  background: #0d1f3c; color: white;
+  padding: 7px 10px; text-align: left;
+  font-weight: 600; font-size: 8pt;
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.03em;
+}
+td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: #f8fafc; }
+td:first-child { font-weight: 600; color: #0d1f3c; }
+
+.badge-green { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.badge-red   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; display: inline-block; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+.kpi-card {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 8px 10px; background: #f8fafc;
+  border-top: 3px solid #00c4a0; page-break-inside: avoid;
+}
+.kpi-label { font-size: 6.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+.kpi-value { font-size: 15pt; font-weight: 800; color: #0d1f3c; line-height: 1.15; font-family: 'IBM Plex Mono', monospace; }
+.kpi-sub { font-size: 7.5pt; color: #64748b; margin-top: 3px; }
+
+.bar-track { background: #e2e8f0; border-radius: 4px; height: 8px; margin: 4px 0; overflow: hidden; }
+
+.section-box {
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 10px 12px; margin: 8px 0;
+  background: #f8fafc; page-break-inside: avoid;
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+
+.accent { color: #00c4a0; font-weight: 600; }
+.muted { color: #64748b; font-size: 8.8pt; }
+
+footer {
+  margin-top: 22px; padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 7.5pt; color: #94a3b8;
+  display: flex; justify-content: space-between;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.page-break { page-break-before: always; }
+.no-break { page-break-inside: avoid; }
+
+.page-header-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.page-header-rule {
+  height: 2px;
+  background: linear-gradient(90deg, #00c4a0, #3b82f6, #00c4a0);
+  border-radius: 2px; margin-bottom: 14px;
+}
+
+.cover { min-height: 240px; display: flex; flex-direction: column; justify-content: center; }
+.cover-bar { background: linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 100%); color: white; padding: 28px 32px; border-radius: 10px; margin-bottom: 20px; }
+.risk-low     { color: #065f46; font-weight: 600; }
+.risk-moderate{ color: #92400e; font-weight: 600; }
+.risk-high    { color: #991b1b; font-weight: 600; }
+.checklist-item { padding: 5px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 8px; font-size: 9pt; }
+.check-yes { color: #065f46; font-weight: 700; }
+.check-no  { color: #64748b; }
+ol.numbered { padding-left: 18px; }
+ol.numbered li { margin: 6px 0; font-size: 9pt; }
+
+    /* ── SCREEN RESPONSIVE (mobile / tablet) ───────────────────────── */
+    @media screen and (max-width: 900px) {
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Cover page */
+      .cover-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+      .back-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+
+      /* Cover title */
+      .cover-title { font-size: clamp(18pt, 6vw, 28pt) !important; letter-spacing: -0.3px !important; }
+
+      /* Cover formation strip */
+      .cover-formation-strip { flex-wrap: wrap !important; gap: 16px !important; }
+
+      /* Cover meta grid */
+      .cover-meta-grid { grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
+
+      /* KPI grid: 2 columns on mobile */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+      /* Two-col and three-col grids: stack */
+      .two-col { grid-template-columns: 1fr !important; gap: 10px !important; }
+      .three-col { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+      /* Tables: horizontal scroll */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; }
+
+      /* Section boxes */
+      .section-box { padding: 10px 12px !important; }
+
+      /* Sensitivity chart label */
+      .sen-label { width: 70px !important; font-size: 7pt !important; }
+
+      /* Mass balance label */
+      .mass-label { width: 140px !important; font-size: 8pt !important; }
+
+      /* Content page */
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+
+      /* Page header */
+      .page-header { flex-wrap: wrap !important; gap: 6px !important; }
+
+      /* Page footer */
+      .page-footer { flex-direction: column !important; gap: 4px !important; }
+    }
+
+    @media screen and (max-width: 480px) {
+      .cover-title { font-size: clamp(16pt, 7vw, 22pt) !important; }
+      .cover-meta-grid { grid-template-columns: 1fr !important; }
+      .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+      .three-col { grid-template-columns: 1fr !important; }
+      .cover-formation-strip { gap: 12px !important; }
+    }
+
+    @media screen and (max-width: 360px) {
+      .kpi-grid { grid-template-columns: 1fr !important; }
+    }
+
+    /* ── PERMIT REPORT COVER RESPONSIVE ── */
+    @media screen and (max-width: 768px) {
+      /* Override inline cover page padding */
+      body > div:first-of-type[style*="padding:52px"] {
+        padding: clamp(24px,5vw,52px) clamp(16px,4vw,40px) clamp(20px,5vw,40px) !important;
+      }
+      /* Any full-page section div */
+      body > div[style*="min-height:100vh"] {
+        padding-left: clamp(16px, 4vw, 40px) !important;
+        padding-right: clamp(16px, 4vw, 40px) !important;
+      }
+      /* Large heading in permit reports */
+      h1 { font-size: clamp(16pt, 6vw, 22pt) !important; }
+      /* Cover grid-like elements */
+      div[style*="grid-template-columns"] {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+      }
+    }
+</style></head><body>
+  
+  <div style="min-height:100vh;background:linear-gradient(160deg,#040f1e 0%,#0b2240 45%,#071a30 100%);display:flex;flex-direction:column;padding:52px 40px 40px;color:white;page-break-after:always;box-sizing:border-box;">
+    <!-- Logo -->
+    <div style="margin-bottom:auto;"><svg width="200" height="40" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.45)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="700" fill="white" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+</svg></div>
+
+    <!-- Centre content -->
+    <div style="margin:auto 0;padding:40px 0;">
+      <div style="display:inline-block;background:rgba(0,196,160,0.12);border:1px solid rgba(0,196,160,0.45);border-radius:4px;padding:4px 14px;margin-bottom:22px;">
+        <span style="font-size:8pt;color:#00c4a0;font-family:'IBM Plex Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;">REGULATORY PRE-APPLICATION</span>
+      </div>
+      <h1 style="color:white;font-size:30pt;font-weight:800;line-height:1.12;margin:0 0 12px;letter-spacing:-0.5px;">Indonesia CCS Storage Permit — Pre-Application (PP 19/2023)</h1>
+      <p style="color:#7dd3fc;font-size:13pt;margin:0 0 32px;font-weight:300;">Ministry of Energy and Mineral Resources (MEMR) / SKK Migas</p>
+      <div style="height:3px;background:linear-gradient(90deg,#00c4a0,#3b82f6);border-radius:2px;width:100px;margin-bottom:32px;"></div>
+      <div style="display:flex;gap:40px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:5px;">Formation</div>
+          <div style="color:white;font-size:12pt;font-weight:600;">North Sumatra Basin</div>
+        </div>
+        <div>
+          <div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:5px;">Location</div>
+          <div style="color:white;font-size:12pt;font-weight:600;">Northern Sumatra, Indonesia</div>
+        </div>
+        <div><div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:5px;">Jurisdiction</div><div style="color:#00c4a0;font-size:12pt;font-weight:600;">Indonesia</div></div>
+      </div>
+    </div>
+
+    <!-- Bottom meta strip -->
+    <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:28px;margin-top:auto;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;">Prepared For</div>
+          <div style="font-size:11pt;font-weight:700;color:white;">CarbonLens Test Suite</div>
+          <div style="font-size:8pt;color:#64748b;margin-top:2px;">Applicant / Client</div>
+        </div>
+        <div>
+          <div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;">Prepared By</div>
+          <div style="font-size:11pt;font-weight:700;color:white;">CarbonLens Simulation Studio v3</div>
+          <div style="font-size:8pt;color:#64748b;margin-top:2px;">CarbonLens Simulation Studio v3</div>
+        </div>
+        <div>
+          <div style="font-size:7pt;color:#475569;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;">Date Issued</div>
+          <div style="font-size:11pt;font-weight:700;color:white;">29 July 2026</div>
+          <div style="font-size:8pt;color:#64748b;margin-top:2px;">Ref: CL-20260729-ID</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.35);padding:3px 12px;border-radius:12px;font-size:7.5pt;font-weight:700;">PRELIMINARY SCREENING</span>
+        <span style="font-size:7.5pt;color:#475569;">Not for regulatory submission · Independent review required</span>
+      </div>
+    </div>
+  </div>
+  
+
+  
+
+  <!-- =====================================================================
+       SECTION 1: APPLICATION OVERVIEW
+       ===================================================================== -->
+  <div class="page-break"></div>
+  <div class="page-header-bar">
+    <svg width="200" height="40" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.22)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+</svg>
+    <div style="text-align:right;">
+      <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Indonesia CCS Storage Permit — Pre-Application (PP 19/2023)</div>
+      <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">29 July 2026 &mdash; PRELIMINARY SCREENING</div>
+    </div>
+  </div>
+  <div class="page-header-rule"></div>
+
+  
+  <div style="margin:16px 0;padding:16px 18px;background:rgba(245,158,11,0.12);border:1.5px solid #f59e0b;border-radius:10px;display:flex;gap:18px;align-items:center;page-break-inside:avoid;">
+    <!-- QR code placeholder -->
+    <div style="flex-shrink:0;">
+      <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc;border-radius:4px;padding:2px;">
+        <rect x="0" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="9.142857142857142" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="18.285714285714285" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="27.428571428571427" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="36.57142857142857" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="45.71428571428571" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="0" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="9.142857142857142" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="9.142857142857142" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="18.285714285714285" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="18.285714285714285" y="18.285714285714285" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="27.428571428571427" y="18.285714285714285" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="36.57142857142857" y="18.285714285714285" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="18.285714285714285" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="27.428571428571427" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="18.285714285714285" y="27.428571428571427" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="36.57142857142857" y="27.428571428571427" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="27.428571428571427" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="36.57142857142857" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="18.285714285714285" y="36.57142857142857" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="27.428571428571427" y="36.57142857142857" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="36.57142857142857" y="36.57142857142857" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="36.57142857142857" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="45.71428571428571" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="45.71428571428571" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="0" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="9.142857142857142" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="18.285714285714285" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="27.428571428571427" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="36.57142857142857" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="45.71428571428571" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/><rect x="54.857142857142854" y="54.857142857142854" width="8.642857142857142" height="8.642857142857142" fill="#0d1f3c" rx="0.5"/>
+      </svg>
+    </div>
+    <!-- Certificate content -->
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:8pt;font-weight:700;color:#f59e0b;font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;">&#x2714; Digital Twin Registry &mdash; PENDING REVIEW</span>
+      </div>
+      <div style="font-size:9pt;font-weight:700;color:#0d1f3c;margin-bottom:4px;">North Sumatra Basin CO&#x2082; Geological Storage Certificate</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:6px;">
+        <div><span style="font-size:7.5pt;color:#64748b;">Asset ID: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">CL-000194-22-180</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Stored: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">15.00 Mt CO&#x2082;</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Containment: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#f59e0b;font-weight:600;">76%</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Safety Factor: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#00c4a0;font-weight:600;">2.273</span></div>
+        <div><span style="font-size:7.5pt;color:#64748b;">Jurisdiction: </span><span style="font-size:7.5pt;font-family:'IBM Plex Mono',monospace;color:#0d1f3c;font-weight:600;">ID</span></div>
+      </div>
+      <div style="font-size:7pt;color:#64748b;word-break:break-all;">
+        <span style="color:#475569;">Share: </span>
+        <span style="font-family:'IBM Plex Mono',monospace;color:#3b82f6;">https://carbonlens.io/registry/verify/CL-000194-22-180</span>
+        <span style="margin-left:8px;color:#94a3b8;">&mdash; Issued 29 July 2026 by CarbonLens Studio v3</span>
+      </div>
+    </div>
+  </div>
+  
+
+  <h2>1. Application Overview</h2>
+  
+  <table>
+    <thead><tr><th>Field</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Application Type</td><td>CCS Business Licence (Izin Usaha CCS)</td></tr>
+      <tr><td>Regulatory Authority</td><td>Ministry of Energy and Mineral Resources (MEMR) / SKK Migas</td></tr>
+      <tr><td>Legislation</td><td>Government Regulation No. 19 of 2023 on CCS (PP 19/2023); MEMR Regulation No. 2 of 2023</td></tr>
+      <tr><td>Applicant</td><td>CarbonLens Test Suite</td></tr>
+      <tr><td>Project Name</td><td>North Sumatra Basin CO&#x2082; Storage Project</td></tr>
+      <tr><td>Location</td><td>Northern Sumatra, Indonesia</td></tr>
+      <tr><td>Simulation State</td><td>Year 20 of 20 — <span class="badge-green">COMPLETE</span></td></tr>
+      <tr><td>Prepared by</td><td>CarbonLens Simulation Studio v3</td></tr>
+      <tr><td>Date</td><td>29 July 2026</td></tr>
+      <tr><td>Status</td><td><span class="badge-amber">PRELIMINARY SCREENING — NOT FOR REGULATORY SUBMISSION</span></td></tr>
+      
+    </tbody>
+  </table>
+
+  <!-- =====================================================================
+       SECTION 2: STORAGE FORMATION CHARACTERISATION
+       ===================================================================== -->
+  <h2>2. Storage Formation Characterisation</h2>
+
+  <h3>2.1 Reservoir Properties</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Depth (top of storage interval)</td><td style="vertical-align:top;white-space:nowrap;">1600 m</td></tr>
+      <tr><td>Thickness (storage interval)</td><td style="vertical-align:top;white-space:nowrap;">45.0 m</td></tr>
+      <tr><td>Porosity</td><td style="vertical-align:top;white-space:nowrap;">22.0%</td></tr>
+      <tr><td>Permeability</td><td style="vertical-align:top;white-space:nowrap;">200.0 mD</td></tr>
+      <tr><td>Initial Pore Pressure</td><td style="vertical-align:top;">16.00 MPa</td></tr>
+      <tr><td>Temperature</td><td style="vertical-align:top;white-space:nowrap;">78.0 °C</td></tr>
+      <tr><td>Formation Area</td><td style="vertical-align:top;white-space:nowrap;">180.00 km²</td></tr>
+      <tr><td>Net-to-Gross Ratio</td><td style="vertical-align:top;white-space:nowrap;">55.0%</td></tr>
+      <tr><td>Bulk Reservoir Volume<br><span style="font-size:8pt;color:#64748b;">180.00 km² × 0.0450 km depth-thickness</span></td><td style="vertical-align:top;">8.1000 km³ &nbsp;≈&nbsp; 8100000000 Mm³</td></tr>
+      <tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">Bulk Vol × porosity (22.0%)</span></td><td style="vertical-align:top;">1.78200 km³ &nbsp;≈&nbsp; 1782000000 Mm³</td></tr>
+      <tr><td>Net Pore Volume<br><span style="font-size:8pt;color:#64748b;">Gross PV × NTG (55.0%)</span></td><td style="vertical-align:top;">0.98010 km³ &nbsp;≈&nbsp; 980100000 Mm³</td></tr>
+      <tr><td>Simulation Grid (configured in Geology)</td><td style="vertical-align:top;">See Geology panel — default 60×60×20 = 72,000 cells</td></tr>
+      <tr><td>Geometry Type</td><td style="vertical-align:top;white-space:nowrap;">layered</td></tr>
+      <tr><td>Salinity (monovalent NaCl-equiv.)</td><td style="vertical-align:top;">0.450 mol/kg</td></tr>
+      <tr><td>Salinity (bivalent CaCl&#x2082;-equiv.)</td><td style="vertical-align:top;white-space:nowrap;">0.030 mol/kg</td></tr>
+      <tr><td>Hydrocarbon Content (CH&#x2084;/N&#x2082;)</td><td style="vertical-align:top;white-space:nowrap;">CH&#x2084;: 2.0% &nbsp;|&nbsp; N&#x2082;: 1.0%</td></tr>
+      <tr><td>Formation Type</td><td>saline aquifer</td></tr>
+      <tr><td>Overpressured Formation</td><td><span class="badge-amber">YES</span></td></tr>
+      <tr><td>Lithology Class</td><td>Sandstone <em style="font-size:8pt;color:#94a3b8;">(assumed — no lithology specified)</em></td></tr>
+      <tr><td>Fractured Reservoir</td><td><span class="badge-green">NO</span> <em style="font-size:8pt;color:#94a3b8;">(assumed — not specified)</em></td></tr>
+      <tr><td>Gas Initially In Place (GIIP)</td><td>N/A — saline aquifer (GIIP not applicable)</td></tr>
+      <tr><td>Abandonment Pressure</td><td>N/A — saline aquifer</td></tr>
+      <tr><td>Connate Water Saturation (S<sub>wi</sub>)</td><td>15.0% (default)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 Heterogeneity &amp; Anisotropy Corrections</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Impact</th></tr></thead>
+    <tbody>
+      <tr><td>Dykstra-Parsons V<sub>dp</sub> (Permeability Variation)</td><td>0 (homogeneous)</td><td>Homogeneous flow assumed</td></tr>
+      <tr><td>k<sub>h</sub>/k<sub>v</sub> Anisotropy Ratio</td><td>1.0 (isotropic)</td><td>Isotropic flow</td></tr>
+      <tr><td>Number of Permeability Layers</td><td>1 (homogeneous)</td><td>Single-layer model</td></tr>
+      <tr><td>Sweep Efficiency (E<sub>s</sub>)</td><td>100% <em style="font-size:8pt;color:#94a3b8;">(assumed homogeneous — run simulation for computed value)</em></td><td>Run simulation</td></tr>
+      <tr><td>AoR Heterogeneity Factor</td><td>1.0×</td><td>No heterogeneity correction</td></tr>
+      
+    </tbody>
+  </table>
+
+  <h3>2.3 Caprock &amp; Seal Properties</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Caprock Friction Angle</td><td>27.0°</td></tr>
+      <tr><td>Caprock Cohesion</td><td>6.00 MPa</td></tr>
+      <tr><td>Biot Coefficient</td><td>0.720</td></tr>
+      <tr><td>Fracture Pressure — Simple Overpressure Gradient (0.9 × (Pp + z×0.0226)) <em style="font-size:8pt;color:#94a3b8;">― approximate upper bound; overestimates true fracture pressure</em></td><td>46.94 MPa</td></tr>
+      <tr><td>Fracture Pressure — Hubbert-Willis + Mohr-Coulomb (governing value) <em style="font-size:8pt;color:#94a3b8;">― used for MAIP and safety factor in Section 6</em></td><td>37.63 MPa</td></tr>
+      <tr><td>Minimum Horizontal Stress (σ<sub>h</sub> = K<sub>0</sub> × S<sub>v</sub>)</td><td>37.63 MPa</td></tr>
+      <tr><td>Maximum Allowable Injection Pressure (MAIP = 0.9 × Hubbert-Willis fracture P)</td><td>33.87 MPa</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 CO&#x2082; Phase State at Reservoir Conditions</h3>
+  <div class="section-box">
+    <p>At reservoir conditions of <strong>78.0°C</strong> and <strong>16.00 MPa</strong>, CO&#x2082; is expected to be in <strong class="accent">supercritical</strong> phase. Supercritical CO&#x2082; at these conditions has a density of approximately <strong>431 kg/m&#xB3;</strong> (Peng-Robinson EOS with Li &amp; Yan 2009 binary interaction parameters for impure CO&#x2082; stream), providing efficient storage per unit pore volume.</p>
+  </div>
+
+  <h3>2.5 Thermal Effects &amp; Near-Wellbore Temperature</h3>
+  
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">Near-wellbore thermal effects govern CO&#x2082; phase behaviour, injectivity, and geomechanical stress near the injection interval. The Joule-Thomson (JT) effect cools the CO&#x2082; stream as it expands from the wellhead into the reservoir. Thermal recovery via heat diffusion then restores the geothermal temperature within ~100 m of the wellbore.</p>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Geothermal Gradient</h4>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Surface Reference Temperature</td><td><em style="color:#64748b;">Not configured — set in Formation Settings</em> &#xB0;C</td></tr>
+        <tr><td>Geothermal Gradient</td><td><em style="color:#64748b;">Not configured — formation temperature used directly</em></td></tr>
+        <tr><td>Temperature at Reservoir Top</td><td>— &#xB0;C</td></tr>
+        <tr><td>Temperature at Reservoir Base</td><td>— &#xB0;C</td></tr>
+        <tr><td>Mid-Reservoir Temperature</td><td>78.0 &#xB0;C</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Joule-Thomson Cooling</h4>
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Wellhead Injection Pressure (P<sub>wh</sub>)</td><td>21.00 MPa</td></tr>
+        <tr><td>Reservoir Pressure (P<sub>res</sub>)</td><td>16.00 MPa</td></tr>
+        <tr><td>Mid-Reservoir Temperature (T)</td><td>78.0 &#xB0;C</td></tr>
+        <tr><td>JT Coefficient &#x3BC;<sub>JT</sub></td><td>0.50 K/MPa (Ziabakhsh-Ganji &amp; Kooi 2012 — screening estimate)</td></tr>
+        <tr><td>JT Delta-T Near Wellbore</td><td><strong style="color:#f59e0b;">-2.50 &#xB0;C</strong></td></tr>
+        <tr><td>Effective Wellbore Temperature</td><td>75.5 &#xB0;C</td></tr>
+        <tr><td>CO&#x2082; Phase at Reservoir</td><td>SUPERCRITICAL</td></tr>
+        <tr><td>CO&#x2082; Phase at Wellbore (post-JT)</td><td><span class="badge-green">SUPERCRITICAL</span> </td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size:9pt; font-weight:700; color:#0d1f3c; margin:14px 0 6px;">Radial Temperature Profile History</h4>
+    <table>
+      <thead><tr><th>Distance from Wellbore (m)</th><th>Temperature Perturbation (&#x394;T, &#xB0;C)</th><th>Effective Temperature (&#xB0;C)</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>10 m</td>
+          <td style="color:#f59e0b;">-1.95 &#xB0;C</td>
+          <td>76.1 &#xB0;C</td>
+        </tr>
+        <tr>
+          <td>50 m</td>
+          <td style="color:#475569;">-0.40 &#xB0;C</td>
+          <td>77.6 &#xB0;C</td>
+        </tr>
+        <tr>
+          <td>100 m</td>
+          <td style="color:#475569;">-0.01 &#xB0;C</td>
+          <td>78.0 &#xB0;C</td>
+        </tr>
+        <tr>
+          <td>500 m</td>
+          <td style="color:#475569;">-0.00 &#xB0;C</td>
+          <td>78.0 &#xB0;C</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:8pt; margin-top:6px;">Radial profile computed from line-source heat conduction solution (erfc). JT cooling is strongest at the wellbore face (r&#x2192;0) and decays with distance. Thermal diffusivity: 1.0&#x00D7;10<sup>-6</sup> m&#x00B2;/s (typical sandstone). At distances &gt; 200 m, the formation temperature returns to the geothermal baseline.</p>
+  </div>
+
+  <h3>2.6 PVT Field Statistics (Spatial Density Variation)</h3>
+  
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The in-situ CO&#x2082; density field varies spatially because reservoir pressure changes with distance from the injection well. The single-point density assumption (431 kg/m&#xB3;) is replaced by a field average evaluated from Span-Wagner EOS at each pressure field point, providing a more accurate capacity estimate.</p>
+    <table>
+      <thead><tr><th>Statistic</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Minimum CO&#x2082; Density (plume edge)</td><td style="color:#475569;">481.5 kg/m&#xB3; </td></tr>
+        <tr><td>Maximum CO&#x2082; Density (wellbore)</td><td>481.5 kg/m&#xB3;</td></tr>
+        <tr><td>Mean Field-Average Density</td><td>481.5 kg/m&#xB3;</td></tr>
+        <tr><td>Density Range</td><td>0.0 kg/m&#xB3;</td></tr>
+        <tr><td>Capacity Correction Factor (weighted)</td><td>111.8%</td><tr>
+        <tr><td>Phase Warning</td><td>None</td></tr>
+        <tr><td>Subcritical Field Points</td><td>0</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:8pt;color:#64748b;margin-top:8px;">
+      The single-point density (430.9 kg/m&#xB3;, Section 2.4) is evaluated directly from the Span-Wagner EOS at initial reservoir T and P. The PVT field mean (481.5 kg/m&#xB3;) is evaluated via bilinear interpolation from a precomputed 20&#xD7;40 table at each pressure-field point. The actual discrepancy is 11.8% — driven primarily by pressure differences between the initial reservoir pressure and the spatially-varying FD pressure field after injection repressurises the formation. The Capacity Correction Factor (111.8%) quantifies the adjustment if the field-average density replaced the single-point assumption for saline aquifer pore-volume capacity estimates.
+    </p>
+  </div>
+
+  <h3>2.7 Site Screening Criteria (Bachu 2003)</h3>
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The following criteria evaluate the site&#x2019;s technical suitability for CO&#x2082; geological storage following the Bachu (2003) screening framework. Each criterion is scored Pass (green), Marginal (amber), or Fail (red) based on the current formation properties.</p>
+  </div>
+  
+  <div style="margin-bottom:12px;">
+    <span class="badge-amber" style="font-size:10pt; padding:4px 14px;">SCREENING SCORE: 50% (MARGINAL)</span>
+    <span style="font-size:8pt; color:#64748b; margin-left:10px;">4 pass, 4 marginal, 0 fail</span>
+  </div>
+  <table>
+    <thead><tr><th>Criterion</th><th>Status</th><th>Note</th></tr></thead>
+    <tbody>
+      
+      <tr>
+        <td>Depth (> 800 m for supercritical CO₂)</td>
+        <td><span class="badge-green">PASS</span></td>
+        <td style="font-size:8.5pt;">Supercritical conditions assured</td>
+      </tr>
+      <tr>
+        <td>Permeability (> 50 mD for injectivity)</td>
+        <td><span class="badge-green">PASS</span></td>
+        <td style="font-size:8.5pt;">Good injectivity</td>
+      </tr>
+      <tr>
+        <td>Porosity (> 10% for storage)</td>
+        <td><span class="badge-green">PASS</span></td>
+        <td style="font-size:8.5pt;">Good storage pore volume</td>
+      </tr>
+      <tr>
+        <td>Caprock Integrity (friction angle > 25°)</td>
+        <td><span class="badge-amber">MARGINAL</span></td>
+        <td style="font-size:8.5pt;">Adequate — verify</td>
+      </tr>
+      <tr>
+        <td>Net-to-Gross (> 0.5)</td>
+        <td><span class="badge-amber">MARGINAL</span></td>
+        <td style="font-size:8.5pt;">Moderate</td>
+      </tr>
+      <tr>
+        <td>Storage Volume (P50 > injection target)</td>
+        <td><span class="badge-amber">MARGINAL</span></td>
+        <td style="font-size:8.5pt;">1.0× headroom</td>
+      </tr>
+      <tr>
+        <td>Geomechanical Safety (SF > 1.5)</td>
+        <td><span class="badge-green">PASS</span></td>
+        <td style="font-size:8.5pt;">SF = 2.27</td>
+      </tr>
+      <tr>
+        <td>Containment Probability (> 80%)</td>
+        <td><span class="badge-amber">MARGINAL</span></td>
+        <td style="font-size:8.5pt;">76%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- =====================================================================
+       SECTION 3: INJECTION WELL PROGRAMME
+       ===================================================================== -->
+  <h2>3. Injection Well Programme</h2>
+
+  <h3>3.1 Well Configuration</h3>
+  <table>
+    <thead><tr><th>Well ID</th><th>Grid Position</th><th>Rate (Mt/yr)</th><th>Ramp-up (yr)</th><th>Ramp-down (yr)</th><th>Project Duration (yr)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>INJ-01</strong></td>
+        <td>(1, 1)</td>
+        <td>1.000</td>
+        <td>3</td>
+        <td>7</td>
+        <td>20</td>
+      </tr>
+      <tr style="background:#f1f5f9; font-weight:600;">
+        <td>TOTAL</td><td></td>
+        <td>1.000 Mt/yr</td>
+        <td colspan="3"></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8pt; margin-top:4px;">Project Duration is the full injection period. Cumulative CO&#x2082; injection is lower than (Rate × Duration) when ramp periods are present, as the well is not at peak rate for the entire project lifetime.</p>
+
+  <h3>3.2 Injection Schedule</h3>
+  <div class="section-box">
+    <p>The injection programme consists of <strong>1</strong> injection well(s) with a total design injection rate of <strong>1.000 Mt/yr</strong> over a project duration of <strong>20 years</strong>. Well ramp-up periods of <strong>3–3 years</strong> are specified to manage reservoir pressure build-up and allow geomechanical monitoring before reaching peak injection rate. Cumulative mass injected accounts for the quadratic ramp-up and ramp-down schedules and is therefore less than the simple product of peak rate × project duration. All wells shall be subject to mechanical integrity testing prior to commencement of injection.</p>
+  </div>
+
+  <h3>3.3 Near-Wellbore Halite Precipitation Risk</h3>
+  
+  <div style="border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:10px; background:#fafafa; border-left:4px solid #10b981;">
+    <p style="margin-bottom:6px;"><span class="badge-green">LOW</span> <strong>Halite risk assessment</strong> — Zeidouni (2009) dryout-radius model</p>
+    <p style="font-size:9.5pt;">Halite risk LOW. Dryout radius 131.77 m; brine TDS 30 g/L. Near-wellbore water evaporation is insufficient to precipitate significant salt volumes.</p>
+  </div>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Formation Brine TDS</td><td>30 g/L</td></tr>
+      <tr><td>Effective Dryout Radius (temperature-adjusted)</td><td>131.77 m</td></tr>
+      <tr><td>Risk Level</td><td><span class="badge-green">LOW</span></td></tr>
+      <tr><td>Recommendation</td><td style="font-size:9pt;">Standard wellhead pressure monitoring during injection commissioning is sufficient. No pre-flush required.</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8pt; margin-top:6px;">
+    Dryout radius computed from Zeidouni et al. (2009) Int. J. GHG Control 3(5):600–611. A dryout radius above 2 m with TDS &gt; 200 g/L constitutes a high-risk scenario requiring active injectivity management. This is a wellbore-scale screening metric only — pore-scale precipitation dynamics require laboratory core-flood testing for detailed assessment.
+  </p>
+
+  <h3>3.4 Wellbore Design Schematic</h3>
+  <div style="margin:10px 0;">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The following schematic illustrates the reference well design for this storage project. Casing programme is generated from formation depth and thickness following standard CCUS well architecture (surface casing → intermediate casing → CO₂ injection liner). Actual well design must be confirmed during detailed engineering.</p>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+      <div><svg xmlns="http://www.w3.org/2000/svg" width="320" height="520" viewBox="0 0 320 520">
+<defs>
+  <pattern id="cementHatch" patternUnits="userSpaceOnUse" width="8" height="8">
+    <rect width="8" height="8" fill="#d4c5a9"/>
+    <line x1="0" y1="8" x2="8" y2="0" stroke="#8a7a60" stroke-width="0.8" opacity="0.6"/>
+  </pattern>
+  <pattern id="perfPattern" patternUnits="userSpaceOnUse" width="6" height="6">
+    <rect width="6" height="6" fill="#ef4444" opacity="0.15"/>
+    <line x1="0" y1="3" x2="6" y2="3" stroke="#991b1b" stroke-width="0.7" stroke-dasharray="2 2"/>
+  </pattern>
+</defs><rect width="320" height="520" fill="#ffffff" rx="6"/><rect x="41.5" y="32" width="195" height="436.9896656534954" fill="#c8d8e8" opacity="0.35"/><text x="198" y="254.4948328267477" font-size="8" fill="#64748b" font-family="monospace">OVERBURDEN</text><rect x="41.5" y="468.9896656534954" width="195" height="18.207902735562357" fill="#8e9baa" opacity="0.55"/><text x="198" y="482.0936170212766" font-size="8" fill="#ffffff" font-weight="600" font-family="monospace">CAPROCK</text><rect x="41.5" y="487.1975683890578" width="195" height="12.802431610942222" fill="#d6c89a" opacity="0.45"/><text x="198" y="497.5987841945289" font-size="8" fill="#1e293b" font-weight="600" font-family="monospace">RESERVOIR</text><rect x="87" y="32" width="98" height="85.34954407294833" fill="url(#cementHatch)" stroke="#8a7a60" stroke-width="0.4" opacity="0.9"/><rect x="91" y="32" width="3.229906542056078" height="85.34954407294833" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="177.77009345794391" y="32" width="3.229906542056078" height="85.34954407294833" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="91" y="113.34954407294833" width="90" height="4" fill="#6a7f95" rx="1"/><text x="187" y="42" font-size="7.5" fill="#64748b" font-family="monospace">Surface Casing 13.375"</text><rect x="99.61682242990653" y="32" width="72.76635514018692" height="422.76474164133737" fill="url(#cementHatch)" stroke="#8a7a60" stroke-width="0.4" opacity="0.9"/><rect x="103.61682242990653" y="32" width="2.657943925233642" height="422.76474164133737" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="165.72523364485983" y="32" width="2.657943925233642" height="422.76474164133737" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="103.61682242990653" y="450.76474164133737" width="64.76635514018692" height="4" fill="#6a7f95" rx="1"/><text x="174.38317757009347" y="56" font-size="7.5" fill="#64748b" font-family="monospace">Intermediate Casing 9.625"</text><rect x="108.44859813084112" y="463.2996960486322" width="55.10280373831775" height="36.7003039513678" fill="url(#cementHatch)" stroke="#8a7a60" stroke-width="0.4" opacity="0.9"/><rect x="112.44859813084112" y="446.22978723404253" width="2.4358878504672887" height="53.77021276595747" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="157.11551401869158" y="446.22978723404253" width="2.4358878504672887" height="53.77021276595747" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.8"/><rect x="112.44859813084112" y="496" width="47.10280373831775" height="4" fill="#6a7f95" rx="1"/><text x="165.55140186915887" y="484.22978723404253" font-size="7.5" fill="#64748b" font-family="monospace">CO₂ Injection Liner 7"</text><rect x="119.10758878504673" y="489.1179331306991" width="33.78482242990654" height="8.961702127659578" fill="#ef4444" opacity="0.25" stroke="#991b1b" stroke-width="0.8" stroke-dasharray="3 2"/><line x1="113.10758878504673" y1="490.23814589665653" x2="119.10758878504673" y2="490.23814589665653" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="152.89241121495326" y1="490.23814589665653" x2="158.89241121495326" y2="490.23814589665653" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="113.10758878504673" y1="492.47857142857146" x2="119.10758878504673" y2="492.47857142857146" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="152.89241121495326" y1="492.47857142857146" x2="158.89241121495326" y2="492.47857142857146" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="113.10758878504673" y1="494.7189969604863" x2="119.10758878504673" y2="494.7189969604863" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="152.89241121495326" y1="494.7189969604863" x2="158.89241121495326" y2="494.7189969604863" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="113.10758878504673" y1="496.95942249240125" x2="119.10758878504673" y2="496.95942249240125" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><line x1="152.89241121495326" y1="496.95942249240125" x2="158.89241121495326" y2="496.95942249240125" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/><text x="111.10758878504673" y="496.5987841945289" text-anchor="end" font-size="7.5" fill="#991b1b" font-weight="600" font-family="monospace">PERFS</text><line x1="74" y1="469" x2="192" y2="469" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/><text x="70" y="473" text-anchor="end" font-size="8" fill="#1e293b" font-family="monospace">1536m</text><line x1="74" y1="487" x2="192" y2="487" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/><text x="70" y="491" text-anchor="end" font-size="8" fill="#1e293b" font-family="monospace">1600m</text><text x="160" y="18" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1e293b" font-family="monospace">REFERENCE WELL DESIGN</text><line x1="6" y1="500" x2="314" y2="500" stroke="#64748b" stroke-width="0.5" opacity="0.35"/><rect x="8" y="502" width="11" height="9" fill="url(#cementHatch)" stroke="#8a7a60" stroke-width="0.5" opacity="1" rx="1"/><text x="23" y="511" font-size="7.5" fill="#64748b" font-family="monospace">Cement</text><rect x="109" y="502" width="11" height="9" fill="#b0c0d0" stroke="#6a7f95" stroke-width="0.5" opacity="1" rx="1"/><text x="124" y="511" font-size="7.5" fill="#64748b" font-family="monospace">Casing</text><rect x="210" y="502" width="11" height="9" fill="#ef4444" stroke="#991b1b" stroke-width="0.5" opacity="0.4" rx="1"/><text x="225" y="511" font-size="7.5" fill="#64748b" font-family="monospace">Perforations</text></svg></div>
+      <div style="flex:1; min-width:180px;">
+        <table style="font-size:9pt;">
+          <thead><tr><th>Casing String</th><th>OD (in)</th><th>Top (m)</th><th>Base (m)</th><th>Cement Top (m)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Surface Casing</td>
+              <td>13.375"</td>
+              <td>0</td>
+              <td>300</td>
+              <td>0</td>
+            </tr><tr>
+              <td>Intermediate Casing</td>
+              <td>9.625"</td>
+              <td>0</td>
+              <td>1486</td>
+              <td>0</td>
+            </tr><tr>
+              <td>CO₂ Injection Liner ★</td>
+              <td>7"</td>
+              <td>1456</td>
+              <td>1645</td>
+              <td>1516</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="muted" style="font-size:8pt; margin-top:8px;">★ Injection string. Cement covers full caprock interval as primary barrier. Perforation interval: 1607–1638 m.</p>
+        <p class="muted" style="font-size:8pt; margin-top:4px;">All injection string metallurgy must be rated for CO₂/carbonic-acid service (corrosion-resistant alloy or CRA-lined). Cement formulation must be CO₂-resistant (e.g., Class G + silica flour blend).</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>3.5 Wellbore Hydraulics &amp; BHP Margin</h3>
+  <div class="section-box">
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th><th>Significance</th></tr></thead>
+      <tbody>
+        <tr><td>Peaceman Wellbore BHP (reservoir-side)</td><td>16.00 MPa</td><td>Darcy-flow pressure at sandface (Peaceman 1978)</td></tr>
+        <tr><td>Max Wellbore Pressure (WHP design ceiling)</td><td>21.76 MPa</td><td>Design-max WHP + CO&#x2082; column weight: hydraulic capacity ceiling for surface equipment sizing</td></tr>
+        <tr><td>Tubing Friction Drop (&Delta;P<sub>fric</sub>)</td><td>1.966 MPa</td><td>Darcy-Weisbach single-phase CO&#x2082; friction (4&quot; nominal tubing, Blasius correlation)</td></tr>
+        <tr><td>BHP Margin to Fracture (vs Peaceman BHP)</td><td style="color:#10b981; font-weight:700;">21.63 MPa</td><td>&#x2713; Safe operating margin (fracture pressure minus Peaceman BHP)</td></tr>
+        <tr><td>Injectivity Index (J)</td><td>—</td><td>J = q / &Delta;P — diagnostic for injectivity performance</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- =====================================================================
+       SECTION 4: AREA OF REVIEW (AoR)
+       ===================================================================== -->
+  <h2>4. Area of Review (AoR)</h2>
+  <div class="section-box">
+    <p>The Area of Review (AoR) is the region surrounding the CO&#x2082; storage complex within which elevated formation pressures could cause CO&#x2082; or displaced brine to migrate into underground sources of drinking water (USDW) or other protected resources. The AoR must be delineated using computational modelling and updated at regular intervals throughout the project lifetime.</p>
+  </div>
+  
+  <div style="background:#166534;border-left:4px solid #22c55e;padding:12px 16px;border-radius:6px;margin:10px 0 14px 0;font-size:9pt;line-height:1.6;">
+    <strong style="color:#22c55e;">Formation Physics Regime: BUOYANCY DOMINATED</strong>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">Primary validation metric: <strong style="color:#e2e8f0;">VE Plume Radius (Boait 2012)</strong></span>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">VE model: <strong style="color:#22c55e;">APPLICABLE</strong></span>
+    &nbsp;&middot;&nbsp;
+    <span style="color:#94a3b8;">Screening score: <strong style="color:#e2e8f0;">90/100</strong></span>
+    
+    
+    <br/><span style="color:#fcd34d;font-size:8pt;">Marginal criteria: thickness, netToGross</span>
+  </div>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Method</th></tr></thead>
+    <tbody>
+      <tr><td>Estimated Plume Radius — <strong>post-injection</strong></td><td>5577 m</td><td>Hesse et al. (2008) post-injection gravity current — leading shock front position (replaces injection-phase estimate)</td></tr>
+      <tr><td>Plume Height (vertical extent)</td><td>24 m</td><td>Fraction of formation thickness</td></tr>
+      <tr><td>AoR Radius — Pressure Threshold (primary)</td><td><strong>0 m</strong></td><td>Nordbotten (2005) two-phase composite ΔP = 1 psi (0.007 MPa) contour at year 20 <em style="color:#d97706;">(High permeability — ΔP dissipates below 1 psi at all radii. AoR governed by geometric 3× multiplier.)</em></td></tr>
+      <tr><td>AoR Radius — Geometric (3× plume, secondary)</td><td>16732 m</td><td>Legacy 3× multiplier — retained as conservative check</td></tr>
+      <tr><td><strong>Adopted AoR Search Radius</strong></td><td><strong>16732 m</strong></td><td>Max of pressure-threshold and geometric radii</td></tr>
+      <tr><td>AoR Area (circular approximation)</td><td>879.47 km²</td><td>π × r²</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8pt; margin-top:6px;">
+    The pressure-threshold AoR is derived using the Nordbotten, Celia &amp; Bachu (2005) two-phase composite pressure model. This model partitions the pressure response into an outer single-phase brine zone (governed by brine mobility and the exponential integral E₁) and a near-well CO₂ zone corrected by the effective mobility ratio. The AoR radius is the distance at which the composite pressure perturbation decays to 1 psi (0.007 MPa) — the standard criterion for potential brine displacement into an Underground Source of Drinking Water (USDW). This method is consistent with EPA Class VI guidance (40 CFR 146.84) and supersedes the single-phase Theis (1935) inversion for two-phase CO₂ storage conditions. A full regulatory AoR must also account for abandoned wellbores, faults, and multi-phase pressure fronts via dynamic 3D simulation.
+  </p>
+  
+  <h3 style="margin-top:18px;">4.1 Post-Injection Plume Evolution (Hesse et al. 2008)</h3>
+  <div class="section-box">
+    <p>All injection wells have shut in. The CO&#x2082; plume is now evolving as a gravity current governed by the Buckley-Leverett scalar conservation law with residual trapping. Two propagating shock fronts are tracked: a <strong>leading front</strong> (mobile CO&#x2082; advancing outward) and a <strong>trailing front</strong> (residual trapping boundary retreating inward, leaving permanently immobilised CO&#x2082; behind). Reference: Hesse, Orr &amp; Tchelepi (2008), J. Fluid Mech. 611:35&#x2013;60.</p>
+  </div>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Leading Front Radius (mobile plume outer edge)</td><td><strong>5577 m</strong></td><td>Rankine-Hugoniot shock on Buckley-Leverett fractional flow — outer boundary for AoR and monitoring well placement</td></tr>
+      <tr><td>Trailing Front Radius (residual trapping boundary)</td><td>4797 m</td><td>CO&#x2082; inside this radius is permanently residually trapped (Land 1968 snap-off)</td></tr>
+      <tr><td>Mobile CO&#x2082; Fraction</td><td>70.8%</td><td>Free-phase CO&#x2082; above S<sub>gr</sub> — buoyancy-driven migration risk applies to this fraction</td></tr>
+      <tr><td>Newly Residually Trapped (since shut-in)</td><td>29.2%</td><td>Incremental trapping accrued since end of injection via imbibition front sweepback</td></tr>
+      <tr><td>End-Point Mobility Ratio (M)</td><td>8.82</td><td>M = (k<sub>rg,max</sub> / &#x3BC;<sub>CO&#x2082;</sub>) / (k<sub>rw,max</sub> / &#x3BC;<sub>brine</sub>) — governs shock structure</td></tr>
+      <tr><td>Dimensionless Time (&#x3C4;)</td><td>1.54</td><td>&#x3C4; = t<sub>total</sub> / t<sub>inj</sub>; &#x3C4; = 1.0 at shut-in; plume spreading rate scales as &#x221A;&#x3C4;</td></tr>
+      <tr><td>Leading Shock Saturation</td><td>54.7%</td><td>CO&#x2082; saturation immediately behind the leading front (Welge tangent construction)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:8pt;margin-top:6px;">
+    The post-injection AoR is governed by the Hesse (2008) leading front radius reported above. The injection-phase gravity-current estimate is superseded once wells shut in. Monitoring wells should be placed at or beyond the leading front radius. The mobile fraction is the primary risk metric for buoyancy-driven migration during the post-injection monitoring period required under 40 CFR 146.93.
+  </p>
+  
+
+  
+
+  <!-- =====================================================================
+       SECTION 5: STORAGE CAPACITY ANALYSIS
+       ===================================================================== -->
+  <h2>5. Storage Capacity Analysis</h2>
+
+  <h3>5.1 DOE Statistical Capacity Estimate (Goodman et al. 2011)</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Gross Pore Volume<br><span style="font-size:8pt;color:#64748b;">180.00 km² &times; 0.0450 km &times; 22.0% porosity</span></td><td>1.7820 km³</td></tr>
+      <tr><td>CO&#x2082; Density at Reservoir Conditions</td><td>430.9 kg/m&#xB3;</td></tr>
+      <tr><td>P10 Capacity (optimistic, 10th percentile)</td><td>42.23 Mt</td></tr>
+      <tr><td>P50 Capacity (best estimate, 50th percentile)</td><td>15.36 Mt</td></tr>
+      <tr><td>P90 Capacity (conservative, 90th percentile)</td><td>3.92 Mt</td></tr>
+      <tr><td>Capacity Utilisation (this project)</td><td>97.7%</td></tr>
+      <tr><td>Storage Efficiency Coefficient (Cc)</td><td>2.0% (DOE P50)</td></tr>
+      
+      
+    </tbody>
+  </table>
+  <p class="muted">Capacity estimates follow DOE Goodman et al. (2011) methodology applied to gross pore volume. Storage efficiency coefficient Cc = 2.0% represents the P50 statistical estimate for saline aquifer storage.</p>
+
+  <h3>5.2 Trapping Mechanism Distribution (at project end)</h3>
+  
+  <table>
+    <thead><tr><th>Trapping Mechanism</th><th>Volume (Mt)</th><th>% of Tracked Mass</th></tr></thead>
+    <tbody>
+      <tr><td>Residual (capillary) trapping</td><td>4.4957</td><td>30.0%</td></tr>
+      <tr><td>Dissolution trapping (still dissolved) <sup>†</sup></td><td>5.2500</td><td>35.0%</td></tr>
+      <tr><td>Mineral trapping (precipitated carbonate) <sup>†</sup></td><td>0.0000</td><td>0.0%</td></tr>
+      <tr><td>Structural Trapping</td><td>5.2543</td><td>35.0%</td></tr>
+      <tr style="background:#e0f2fe;"><td><strong>Tracked Total (model components)</strong></td><td><strong>15.0000</strong></td><td><strong>100%</strong></td></tr>
+      
+    </tbody>
+  </table>
+  
+  <p class="muted" style="font-size:8pt;">Percentages computed against the sum of tracked trapping components (residual + solubility + mobile). Any difference between this total and cumulative injection is boundary outflow shown in Section 5.4. Mineral trapping only activates after year 50. <sup>†</sup> Dissolution and mineral rows are non-overlapping subsets: mineral row shows dissolved CO&#x2082; that has further precipitated as carbonate; dissolution row shows the remaining aqueous fraction. Together they equal the total solubility-trapped volume.</p>
+
+  <h3>5.3 Physics-Based Formation Capacity (Bachu et al. 2007)</h3>
+  <div class="section-box">
+    <p style="font-size:9.5pt; margin-bottom:10px;">The following four independent trapping capacities are computed from formation properties alone using the Bachu et al. (2007) framework. Unlike the DOE statistical method (Section 5.1), these capacities quantify the formation&#x2019;s total physical storage potential — not just the fraction utilised by the current injection programme.</p>
+    <table>
+      <thead><tr><th>Capacity Component</th><th>Volume (Mt)</th><th>% of Total</th></tr></thead>
+      <tbody>
+        <tr><td>Structural/Closure Trapping</td><td><strong>22.10</strong></td><td>67.7%</td></tr>
+        <tr><td>Residual (Capillary) Trapping</td><td>5.29</td><td>16.2%</td></tr>
+        <tr><td>Dissolution Trapping</td><td>5.25</td><td>16.1%</td></tr>
+        <tr><td>Mineral Trapping</td><td>0.00</td><td>0.0%</td></tr>
+        <tr style="background:#e0f2fe;"><td><strong>Total Formation Capacity</strong></td><td><strong>32.65 Mt</strong></td><td><strong>100%</strong></td></tr>
+        <tr><td>Formation Capacity Utilisation</td><td colspan="2">45.9% <span class="badge-green">ADEQUATE HEADROOM</span></td></tr>
+      </tbody>
+    </table>
+    <div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;margin-top:12px;border-radius:4px;">
+      
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 5px 0;font-weight:600;">DOE Statistical vs Physics-Based Capacity: Why the Values Differ</p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:0;">
+        The DOE P50 capacity (Section 5.1: 15.36 Mt) applies a statistical storage efficiency coefficient Cc = 2.0% to the gross pore volume. This coefficient is a basin-average derived from a population of US saline aquifers and represents the fraction of pore volume realistically accessible across a range of geological settings. It is not a physical limit for any specific formation.
+        The physics-based total formation capacity (Section 5.3: 32.65 Mt) independently sums the maximum CO&#x2082; retainable by structural, residual, dissolution, and mineral trapping given this formation's measured properties. It represents the theoretical upper bound for this specific site.
+        The two frameworks answer different questions: DOE provides a probabilistic screening bandwidth for regulatory comparison across sites; Bachu provides the site-specific physical ceiling. The current injection programme (15.00 Mt) represents 45.9% of the Bachu physical capacity, indicating adequate physical storage headroom, even though it exceeds the DOE P50 statistical estimate (97.7% utilisation). Both metrics must be reported to the competent authority; the DOE exceedance triggers the warning in Section 5.1.
+      </p>
+    </div>
+  </div>
+  <h3>5.4 Mass Balance &amp; Boundary Outflow</h3>
+  <div class="section-box">
+    <table>
+      <thead><tr><th>Component</th><th>Volume (Mt)</th></tr></thead>
+      <tbody>
+        <tr><td>Cumulative Injection (total stored)</td><td><strong>15.0000</strong></td></tr>
+        <tr><td>Tracked in Trapping Components</td><td>15.0000</td></tr>
+        <tr><td>Mass Balance Boundary Gap</td><td style="color:#10b981; font-weight:400;">0.0000 (0.00%)</td></tr>
+        <tr><td>Mass Balance Error (&#x3B5;)</td><td style="color:#10b981;">0.0000 Mt</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:8pt; margin-top:6px;">A positive boundary gap indicates CO&#x2082; that exited the simulation grid and is not tracked in the trapping breakdown. The mass balance error &#x3B5; = injected &#x2212; (residual + dissolved + mobile) from the analytical model. Values &lt; 1% of cumulative injection are within numerical tolerance.</p>
+  </div>
+
+  <h3>5.5 Project Economics &amp; Financial Viability</h3>
+  <div class="two-col" style="page-break-inside: avoid; margin-bottom: 15px;">
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase;">Financial Summary</p>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Jurisdiction Carbon Credit/Pricing</td><td><strong>USD 20/t</strong></td></tr>
+          <tr><td>Total CAPEX</td><td>$33.8M</td></tr>
+          <tr><td>OPEX (per tonne)</td><td>$2.50/t</td></tr>
+          <tr><td>Total OPEX</td><td>$37.5M</td></tr>
+          <tr><td>Levelized Cost (LCO₂S)</td><td><strong>$4.76/t</strong></td></tr>
+          <tr><td>Net Cost after Credits</td><td><span style="font-weight:700; color:#ef4444;">$-15.24/t</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase;">CAPEX Breakdown</p>
+      <table style="font-size:8.5pt;">
+        <tbody>
+          <tr>
+            <td style="padding:4px 6px;">Drilling</td>
+            <td style="padding:4px 6px; width:100px;">
+              <div class="bar-track"><div style="width:43.1%; background:#3b82f6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$14.6M (43%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Facilities</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:14.8%; background:#14b8a6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$5.0M (15%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Pipeline</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:34.7%; background:#f59e0b; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$11.7M (35%)</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 6px;">Monitoring</td>
+            <td style="padding:4px 6px;">
+              <div class="bar-track"><div style="width:7.4%; background:#8b5cf6; height:8px; border-radius:4px;"></div></div>
+            </td>
+            <td style="padding:4px 6px;">$2.5M (7%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">Project Cumulative Net Present Value (NPV) Profile</p>
+    <svg width="100%" height="220" viewBox="0 0 550 220" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Grid Lines -->
+      
+      <line x1="45" y1="25" x2="45" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="45" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 0</text>
+    
+      <line x1="94" y1="25" x2="94" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="94" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 2</text>
+    
+      <line x1="143" y1="25" x2="143" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="143" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 4</text>
+    
+      <line x1="192" y1="25" x2="192" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="192" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 6</text>
+    
+      <line x1="241" y1="25" x2="241" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="241" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 8</text>
+    
+      <line x1="290" y1="25" x2="290" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="290" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 10</text>
+    
+      <line x1="339" y1="25" x2="339" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="339" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 12</text>
+    
+      <line x1="388" y1="25" x2="388" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="388" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 14</text>
+    
+      <line x1="437" y1="25" x2="437" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="437" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 16</text>
+    
+      <line x1="486" y1="25" x2="486" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="486" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 18</text>
+    
+      <line x1="535" y1="25" x2="535" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="535" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 20</text>
+    
+      <line x1="45" y1="185" x2="535" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="188" font-size="7pt" fill="#475569" text-anchor="end">$-52.3M</text>
+    
+      <line x1="45" y1="153" x2="535" y2="153" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="156" font-size="7pt" fill="#475569" text-anchor="end">$-22.8M</text>
+    
+      <line x1="45" y1="121" x2="535" y2="121" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="124" font-size="7pt" fill="#475569" text-anchor="end">$6.7M</text>
+    
+      <line x1="45" y1="89" x2="535" y2="89" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="92" font-size="7pt" fill="#475569" text-anchor="end">$36.1M</text>
+    
+      <line x1="45" y1="57" x2="535" y2="57" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="60" font-size="7pt" fill="#475569" text-anchor="end">$65.6M</text>
+    
+      <line x1="45" y1="25" x2="535" y2="25" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="28" font-size="7pt" fill="#475569" text-anchor="end">$95.0M</text>
+    
+
+      <!-- Zero Line -->
+      <line x1="45" y1="128.22935634224243" x2="535" y2="128.22935634224243" stroke="#94a3b8" stroke-width="1.2"/>
+      <text x="530" y="124.22935634224243" font-size="6pt" fill="#94a3b8" text-anchor="end">Breakeven Line ($0M)</text>
+
+      <!-- NPV (no credits) Line -->
+      <polyline points="45,165 69.5,166.8861520152435 94,168.63258906639493 118.5,170.24966041005365 143,171.74694869121916 167.5,173.13332672933532 192,174.41701009796142 216.5,175.60560580965227 241,176.70615739455118 265.5,177.72518663982797 290,178.66873223730644 314.5,179.54238556830506 339,180.35132383774823 363.5,181.10034075389927 388,181.79387493552065 412.5,182.43603621479969 437,183.0306299919099 461.5,183.58117978553048 486,184.09094811295694 510.5,184.56295582353698 535,185 " fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>
+
+      <!-- NPV (with credits) Line -->
+      <polyline points="45,165 69.5,151.79693589329526 94,139.57187653523536 118.5,128.25237712962434 143,117.77135916146595 167.5,108.06671289465265 192,99.08092931426998 216.5,90.76075933243415 241,83.05689823814174 265.5,75.9236935212043 290,69.31887433885484 314.5,63.20330102186459 339,57.540733135762494 363.5,52.29761472270499 388,47.44287545135546 412.5,42.9477464964022 437,38.78559005663067 461.5,34.931741501286666 486,31.36336320930147 510.5,28.059309235241074 535,25 " fill="none" stroke="#22c55e" stroke-width="2.5"/>
+
+      <!-- Title/Legend -->
+      <g transform="translate(55, 37)">
+        <!-- NPV with Credit Legend -->
+        <rect x="0" y="0" width="8" height="8" fill="#22c55e" rx="1"/>
+        <text x="12" y="7" font-size="7pt" fill="#1e293b">NPV with ID credits ($95.0M)</text>
+
+        <!-- NPV without Credit Legend -->
+        <rect x="180" y="0" width="8" height="8" fill="#64748b" rx="1"/>
+        <text x="192" y="7" font-size="7pt" fill="#1e293b">NPV (no credits/incentive) ($-52.3M)</text>
+      </g>
+    </svg>
+  </div>
+  
+
+  
+  
+
+  <h3>5.6 Reservoir Parameter Sensitivity Analysis</h3>
+  <p class="muted">
+    One-at-a-time (OAT) sensitivity of P50 storage capacity. Bar widths reflect the actual uncertainty ranges used in the Monte Carlo run for this formation — axes are rebuilt per simulation, not cached from prior runs.
+    Injection pressure overpressure (ΔP = BHP − P<sub>i</sub>) varies inversely with permeability and thickness: a 20% reduction in either parameter increases ΔP by ~25%, elevating the geomechanical fracture risk.
+  </p>
+  
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">P50 Capacity Sensitivity Tornado Chart (Base: 15.4 Mt)</p>
+    <svg width="100%" height="160" viewBox="0 0 550 160" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Grid Ticks -->
+      
+      <line x1="120" y1="30" x2="120" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="120" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-30%</text>
+    
+      <line x1="152.5" y1="30" x2="152.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="152.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-25%</text>
+    
+      <line x1="185" y1="30" x2="185" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="185" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-20%</text>
+    
+      <line x1="217.5" y1="30" x2="217.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="217.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-15%</text>
+    
+      <line x1="250" y1="30" x2="250" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="250" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-10%</text>
+    
+      <line x1="282.5" y1="30" x2="282.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="282.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">-5%</text>
+    
+      <line x1="315" y1="30" x2="315" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="315" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">0%</text>
+    
+      <line x1="347.5" y1="30" x2="347.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="347.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+5%</text>
+    
+      <line x1="380" y1="30" x2="380" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="380" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+10%</text>
+    
+      <line x1="412.5" y1="30" x2="412.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="412.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+15%</text>
+    
+      <line x1="445" y1="30" x2="445" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="445" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+20%</text>
+    
+      <line x1="477.5" y1="30" x2="477.5" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="477.5" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+25%</text>
+    
+      <line x1="510" y1="30" x2="510" y2="135" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <text x="510" y="147" font-size="7pt" fill="#64748b" text-anchor="middle">+30%</text>
+    
+
+      <!-- Center Axis (0% change) -->
+      <line x1="315" y1="25" x2="315" y2="140" stroke="#475569" stroke-width="1.2"/>
+      <text x="315" y="20" font-size="7.5pt" font-weight="700" fill="#475569" text-anchor="middle">Baseline (P50)</text>
+
+      <!-- Bars and Labels -->
+      
+      <rect x="185" y="36.125" width="130" height="14" fill="#ef4444" rx="2"/>
+      <text x="180" y="46.125" font-size="7pt" fill="#475569" text-anchor="end">12.3 Mt</text>
+    
+      <rect x="315" y="36.125" width="130" height="14" fill="#22c55e" rx="2"/>
+      <text x="450" y="46.125" font-size="7pt" fill="#475569" text-anchor="start">18.4 Mt</text>
+    
+      <text x="90" y="46.125" font-size="8pt" font-weight="600" fill="#1e293b" text-anchor="end">Area (±20%)</text>
+    
+      <rect x="217.5" y="62.375" width="97.5" height="14" fill="#ef4444" rx="2"/>
+      <text x="212.5" y="72.375" font-size="7pt" fill="#475569" text-anchor="end">13.1 Mt</text>
+    
+      <rect x="315" y="62.375" width="97.5" height="14" fill="#22c55e" rx="2"/>
+      <text x="417.5" y="72.375" font-size="7pt" fill="#475569" text-anchor="start">17.7 Mt</text>
+    
+      <text x="90" y="72.375" font-size="8pt" font-weight="600" fill="#1e293b" text-anchor="end">Thickness (±15%)</text>
+    
+      <rect x="224" y="88.625" width="91" height="14" fill="#ef4444" rx="2"/>
+      <text x="219" y="98.625" font-size="7pt" fill="#475569" text-anchor="end">12.3 Mt</text>
+    
+      <rect x="315" y="88.625" width="91" height="14" fill="#22c55e" rx="2"/>
+      <text x="411" y="98.625" font-size="7pt" fill="#475569" text-anchor="start">18.4 Mt</text>
+    
+      <text x="90" y="98.625" font-size="8pt" font-weight="600" fill="#1e293b" text-anchor="end">Porosity (±14%)</text>
+    
+      <rect x="120" y="114.875" width="195" height="14" fill="#f87171" rx="2"/>
+      <text x="115" y="124.875" font-size="7pt" fill="#475569" text-anchor="end">10.7 Mt</text>
+    
+      <rect x="315" y="114.875" width="195" height="14" fill="#4ade80" rx="2"/>
+      <text x="515" y="124.875" font-size="7pt" fill="#475569" text-anchor="start">20.0 Mt</text>
+    
+      <text x="90" y="124.875" font-size="8pt" font-weight="600" fill="#1e293b" text-anchor="end">Permeability (±30%)</text>
+    
+    </svg>
+  </div>
+  
+
+  <!-- =====================================================================
+       SECTION 6: GEOMECHANICAL RISK ASSESSMENT
+       ===================================================================== -->
+  <h2>6. Geomechanical Risk Assessment</h2>
+  
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th><th>Criterion</th></tr></thead>
+      <tbody>
+        <tr><td>Safety Factor (Mohr-Coulomb)</td><td>2.273</td><td><span class="badge-green">PASS</span> &#x2713; Acceptable (&#x2265;1.5)</td></tr>
+        <tr><td>Fracture Pressure (Hubbert-Willis, Mohr-Coulomb adjusted)</td><td>37.63 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>FD Solver Block Pressure at Injection Well <em style="font-size:8pt;color:#94a3b8;">— implicit finite-difference, closed-box BCs</em></td><td>16.00 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Peaceman BHP (skin S=0, r<sub>w</sub>=0.1 m) <em style="font-size:8pt;color:#94a3b8;">— steady-state near-wellbore</em></td><td>16.00 MPa</td><td><span class="badge-green">&#x2713; Below MAIP</span></td></tr>
+        <tr><td>Injectivity Index J (Peaceman, zero skin)</td><td>—</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Min. Horizontal Stress σ<sub>h</sub> (K<sub>0</sub> × S<sub>v</sub>)</td><td>37.63 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Caprock Stress</td><td>19.12 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Surface Heave</td><td>0.0 mm</td><td><span class="badge-green">&#x2713; Within tolerance (<10 mm)</span></td></tr>
+        <tr><td>Seismicity Risk</td><td>LOW</td><td><span class="badge-green">&#x2713; Low risk</span></td></tr>
+        <tr><td>Fault Slip Potential (dCFF)</td><td>0.020 MPa</td><td><span class="badge-green">&#x2713; Below threshold</span></td></tr>
+        <tr><td>Dynamic Coulomb Failure Function (&#x394;CFF)</td><td>0.285 MPa</td><td><span class="badge-amber">Positive &#x394;CFF — increased failure probability on optimally oriented faults</span></td></tr>
+        <tr><td>Pressure Front Radius <em style="font-size:8pt;color:#94a3b8;">— Theis infinite-aquifer model; may exceed formation footprint for high-k formations (see note below)</em></td><td>58.59 km</td><td><span class="badge-amber">&#x26A0; Exceeds formation radius (7.6 km) — infinite-aquifer assumption; real boundary limits propagation</span></td></tr>
+        <tr><td>Overburden Stress (S<sub>v</sub>)</td><td>33.60 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Friction Angle (Mohr-Coulomb)</td><td>27.0&#xB0;</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Cohesion (Mohr-Coulomb)</td><td>6.00 MPa</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Biot Coefficient</td><td>0.720</td><td><span class="badge-green">REF</span></td></tr>
+        <tr><td>Mohr-Coulomb Margin</td><td>20.088</td><td><span class="badge-green">&#x2713; PASS</span></td></tr>
+        <tr><td>MAIP Headroom</td><td>17.31 MPa</td><td><span class="badge-green">&#x2713; Adequate</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:9pt; color:#64748b; margin-top:8px;">
+      All geomechanical criteria must be demonstrated to the competent authority prior to injection permit issuance.
+    </p>
+    <div style="background:#f0f9ff;border-left:3px solid #0284c7;padding:10px 14px;margin-top:12px;border-radius:4px;">
+      <p style="font-size:9pt;color:#0c4a6e;margin:0 0 6px 0;font-weight:600;">Pressure Model Reconciliation Note</p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:0;">
+        Two bounding pressure estimates are reported in this section. The <strong>MAIP Headroom</strong> value is derived from the
+        Theis (1935) analytical model, which treats the aquifer as effectively infinite. At high permeability (e.g. 3000 mD),
+        the Theis injection pressure remains close to initial reservoir pressure and the headroom to MAIP is large. The
+        <strong>FD Solver Block Pressure</strong> represents the opposite bound: a fully sealed, closed-box domain where all
+        injected CO<sub>2</sub> volume must be accommodated by compressibility alone, producing the maximum possible pressure
+        buildup for the given pore volume. Real formation pressures lie between these two limits depending on boundary
+        connectivity, lateral brine drainage, and aquifer support. Injection rate management must ensure that bottomhole
+        pressure (BHP) remains below MAIP (33.87 MPa) under both modelling assumptions.
+      </p>
+      <p style="font-size:9pt;color:#0c4a6e;margin:8px 0 0 0;">
+          <strong>Pressure Front Radius vs. Formation Footprint:</strong>
+          The Pressure Front Radius (58.6 km) is 8&#xD7; larger than the formation-equivalent radius
+          (7.6 km from the 180 km&#xB2; injection footprint).
+          This is normal and expected — the PFR and the formation area measure two entirely different things.
+          The PFR is the Theis (1935) characteristic pressure-diffusion length in the <em>connected brine system</em> assuming an
+          infinite aquifer: it represents how far the pressure wave has propagated through undisturbed brine after 20 years,
+          not how far CO&#x2082; has migrated.
+          The "Formation Area" in Section 2 is the CO&#x2082; injection footprint used for pore-volume and capacity calculations —
+          it is the simulation domain, not necessarily the geological boundary of the formation.
+          
+        </p>
+    </div>
+  
+  <div style="page-break-inside:avoid; margin: 15px 0;">
+    <p style="font-size:8.5pt; color:#64748b; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.06em;">Injection Pressure &amp; Flow Rate Profile</p>
+    <svg width="100%" height="220" viewBox="0 0 550 220" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-family:sans-serif;">
+      <!-- Background Grid & Labels -->
+      
+      <line x1="45" y1="25" x2="45" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="45" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 0</text>
+    
+      <line x1="91" y1="25" x2="91" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="91" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 2</text>
+    
+      <line x1="137" y1="25" x2="137" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="137" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 4</text>
+    
+      <line x1="183" y1="25" x2="183" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="183" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 6</text>
+    
+      <line x1="229" y1="25" x2="229" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="229" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 8</text>
+    
+      <line x1="275" y1="25" x2="275" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="275" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 10</text>
+    
+      <line x1="321" y1="25" x2="321" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="321" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 12</text>
+    
+      <line x1="367" y1="25" x2="367" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="367" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 14</text>
+    
+      <line x1="413" y1="25" x2="413" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="413" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 16</text>
+    
+      <line x1="459" y1="25" x2="459" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="459" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 18</text>
+    
+      <line x1="505" y1="25" x2="505" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="505" y="200" font-size="7pt" fill="#64748b" text-anchor="middle">Yr 20</text>
+    
+      <line x1="45" y1="185" x2="505" y2="185" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="188" font-size="7pt" fill="#1e40af" text-anchor="end">16.0</text>
+      <text x="513" y="188" font-size="7pt" fill="#0d9488" text-anchor="start">0.00</text>
+    
+      <line x1="45" y1="153" x2="505" y2="153" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="156" font-size="7pt" fill="#1e40af" text-anchor="end">20.3</text>
+      <text x="513" y="156" font-size="7pt" fill="#0d9488" text-anchor="start">0.20</text>
+    
+      <line x1="45" y1="121" x2="505" y2="121" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="124" font-size="7pt" fill="#1e40af" text-anchor="end">24.7</text>
+      <text x="513" y="124" font-size="7pt" fill="#0d9488" text-anchor="start">0.40</text>
+    
+      <line x1="45" y1="89" x2="505" y2="89" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="92" font-size="7pt" fill="#1e40af" text-anchor="end">29.0</text>
+      <text x="513" y="92" font-size="7pt" fill="#0d9488" text-anchor="start">0.60</text>
+    
+      <line x1="45" y1="57" x2="505" y2="57" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="60" font-size="7pt" fill="#1e40af" text-anchor="end">33.3</text>
+      <text x="513" y="60" font-size="7pt" fill="#0d9488" text-anchor="start">0.80</text>
+    
+      <line x1="45" y1="25" x2="505" y2="25" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <text x="37" y="28" font-size="7pt" fill="#1e40af" text-anchor="end">37.6</text>
+      <text x="513" y="28" font-size="7pt" fill="#0d9488" text-anchor="start">1.00</text>
+    
+
+      <!-- Left Axis Title (Pressure) -->
+      <text x="37" y="15" font-size="7pt" font-weight="700" fill="#1e40af" text-anchor="end">Pressure (MPa)</text>
+      <!-- Right Axis Title (Rate) -->
+      <text x="513" y="15" font-size="7pt" font-weight="700" fill="#0d9488" text-anchor="start">Rate (Mt/yr)</text>
+
+      <!-- Rate Area & Line -->
+      <polygon points="45,185 45,185 68,131.66666666666669 91,78.33333333333334 114,25 137,25 160,25 183,25 206,25 229,25 252,25 275,25 298,25 321,25 344,25 367,47.85714285714286 390,70.71428571428571 413,93.57142857142858 436,116.42857142857143 459,139.28571428571428 482,162.14285714285714 505,185 505,185" fill="rgba(13,148,136,0.08)"/>
+      <polyline points="45,185 68,131.66666666666669 91,78.33333333333334 114,25 137,25 160,25 183,25 206,25 229,25 252,25 275,25 298,25 321,25 344,25 367,47.85714285714286 390,70.71428571428571 413,93.57142857142858 436,116.42857142857143 459,139.28571428571428 482,162.14285714285714 505,185 " fill="none" stroke="#0d9488" stroke-width="2"/>
+
+      <!-- Pressure Line -->
+      <polyline points="45,185 68,170.79601244620096 91,162.37599131965635 114,149.22741404439677 137,148.17929227396314 160,147.4427368822142 183,146.93907105087305 206,146.55300959154243 229,146.23908009993107 252,145.97416558509198 275,145.7448305899611 298,145.54254479904876 321,145.36154059246462 344,145.19772986169448 367,150.75551974462653 390,156.34336204142323 413,161.98971407569604 436,167.68475117798857 459,173.42140476316413 482,179.19443613415729 505,185 " fill="none" stroke="#1e40af" stroke-width="2.5"/>
+
+      <!-- Fracture Pressure Line -->
+      <line x1="45" y1="25" x2="505" y2="25" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="55" y="21" font-size="6.5pt" font-weight="700" fill="#ef4444">Fracture Limit (37.6 MPa)</text>
+
+      <!-- MAIP Line -->
+      <line x1="45" y1="52.83431952662718" x2="505" y2="52.83431952662718" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <text x="55" y="48.83431952662718" font-size="6.5pt" font-weight="700" fill="#d97706">MAIP (33.9 MPa)</text>
+
+      <!-- Legend -->
+      <g transform="translate(55, 37)">
+        <!-- Pressure Legend -->
+        <rect x="0" y="0" width="8" height="8" fill="#1e40af" rx="1"/>
+        <text x="12" y="7" font-size="7pt" fill="#1e293b">Injection pressure (BHP)</text>
+
+        <!-- Rate Legend -->
+        <rect x="130" y="0" width="8" height="8" fill="#0d9488" rx="1"/>
+        <text x="142" y="7" font-size="7pt" fill="#1e293b">Total injection rate</text>
+      </g>
+    </svg>
+  </div>
+  
+  
+  <div style="margin-top: 12px; font-size: 9.5pt; line-height: 1.5; color: #334155; page-break-inside: avoid;">
+    <strong style="color: #0d1f3c;">Fracture Mechanics &amp; Containment Assurance:</strong>
+    Exceeding the caprock fracture pressure or triggering Mohr-Coulomb shear failure along fault planes poses severe risks to storage integrity and flow assurance. 
+    Tensile fracturing in the reservoir or caprock creates high-permeability pathways, allowing injected CO₂ to bypass lower-permeability matrix zones, leading to premature plume breakthrough, loss of sweep efficiency, and potential vertical migration into upper aquifers or the atmosphere.
+    To ensure long-term containment, the injection pressure must be strictly managed below the Maximum Allowable Injection Pressure (MAIP = 33.87 MPa), ensuring a safe geomechanical operating envelope.
+  </div>
+  
+
+  <!-- =====================================================================
+       SECTION 7: MONITORING, REPORTING & VERIFICATION (MRV) PLAN
+       ===================================================================== -->
+  <div class="page-break"></div>
+
+  <h2>7. Monitoring, Reporting &amp; Verification (MRV) Plan</h2>
+  <p style="margin-bottom:10px; font-size:9.5pt;">A comprehensive MRV plan is a mandatory component of all CO&#x2082; storage permits. The following table outlines the proposed monitoring activities. The plan will be refined during detailed engineering and must be approved by the competent authority prior to injection commencement.</p>
+  <table>
+    <thead><tr><th>Activity</th><th>Frequency</th><th>Method</th><th>Objective</th></tr></thead>
+    <tbody>
+      <tr><td>Wellhead pressure monitoring</td><td>Continuous</td><td>SCADA/DCS</td><td>Detect injection anomalies</td></tr>
+      <tr><td>Formation pressure monitoring</td><td>Monthly</td><td>Downhole gauges</td><td>Track reservoir pressure evolution</td></tr>
+      <tr><td>4D seismic survey</td><td>Every 2–3 years</td><td>3D seismic</td><td>Plume migration verification</td></tr>
+      <tr><td>Microseismic monitoring</td><td>Continuous (first 5 years)</td><td>Array of geophones</td><td>Induced seismicity detection</td></tr>
+      <tr><td>Groundwater quality sampling</td><td>Annual</td><td>Sampling wells</td><td>USDW / aquifer protection</td></tr>
+      <tr><td>Surface flux monitoring</td><td>Annual</td><td>LIDAR / eddy covariance</td><td>CO&#x2082; surface leakage detection</td></tr>
+      <tr><td>Injection well integrity</td><td>Annual MIT</td><td>Pressure test / logging</td><td>Well barrier integrity</td></tr>
+      <tr><td>CO&#x2082; stream composition</td><td>Per injection batch</td><td>GC analysis</td><td>Purity certification</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:8px;">MRV reporting frequency: annual report to regulatory authority + immediate notification if anomaly detected.</p>
+
+  <!-- =====================================================================
+       SECTION 8: SITE CLOSURE & POST-CLOSURE PLAN
+       ===================================================================== -->
+  <h2>8. Site Closure &amp; Post-Closure Plan</h2>
+  <div class="section-box">
+    <p>The site closure plan shall be submitted to <strong>Ministry of Energy and Mineral Resources (MEMR) / SKK Migas</strong> at least <strong>24 months</strong> prior to cessation of injection. Post-closure monitoring shall continue for a minimum of <strong>20 years</strong> or until the authority issues a Certificate of Completion confirming permanent containment.</p>
+  </div>
+  <table>
+    <thead><tr><th>Criterion</th><th>Target</th><th>Method</th></tr></thead>
+    <tbody>
+      <tr><td>Plume stabilisation</td><td>No net migration &gt; 1 km/yr</td><td>4D seismic</td></tr>
+      <tr><td>Pressure return</td><td>Within 10% of pre-injection pressure</td><td>Downhole gauges</td></tr>
+      <tr><td>No detectable leakage</td><td>Zero flux anomalies above background</td><td>Surface monitoring</td></tr>
+      <tr><td>Well plug integrity</td><td>Zero annular pressure</td><td>MIT</td></tr>
+    </tbody>
+  </table>
+
+  <!-- =====================================================================
+       SECTION 9: REGULATORY COMPLIANCE CHECKLIST
+       ===================================================================== -->
+  <h2>9. Regulatory Compliance Checklist</h2>
+  <p class="muted" style="margin-bottom:8px;">The following items are required under <strong>Government Regulation No. 19 of 2023 on CCS (PP 19/2023); MEMR Regulation No. 2 of 2023</strong>. Each item must be completed and submitted to the competent authority as part of the formal permit application.</p>
+  <div class="section-box">
+    
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>CCS Business Activity Plan (RKHCCS) — MEMR approval</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>Working Area designation and geological site characterisation</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>CO₂ injection monitoring plan (SKK Migas oversight)</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>Environmental document (AMDAL) per Government Regulation PP 22/2021</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>Financial guarantee for site closure and post-injection care</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>Technology transfer and local content requirement (TKDN)</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+    <div class="checklist-item">
+      <span class="check-no">&#x2610;</span>
+      <div>
+        <span>Post-injection monitoring plan — minimum 5 years</span>
+        <span style="font-size:8pt; color:#94a3b8; margin-left:8px;">— Status: <em>To be completed before formal submission</em></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       SECTION 10: DISCLAIMER & DATA PROVENANCE
+       ===================================================================== -->
+  <h2>10. Disclaimer &amp; Data Provenance</h2>
+  <div class="section-box" style="border-left: 4px solid #ef4444; background:#fff5f5;">
+    <p style="font-size:9.5pt; color:#7f1d1d;"><strong>&#x26A0; IMPORTANT DISCLAIMER:</strong> This pre-application document was generated by CarbonLens Simulation Studio v3 using the scientific models listed below. All capacity estimates are preliminary screening values based on publicly available correlations and statistical methods. <strong>This document is NOT a formal regulatory permit application and has NOT been reviewed by the competent authority.</strong> Independent engineering review by a qualified petroleum or environmental engineer is required before formal submission to any regulatory body.</p>
+  </div>
+
+  <table style="margin-top:12px;">
+    <thead><tr><th>Component</th><th>Model</th><th>Reference</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Density</td><td style="padding:5px 10px;">Span-Wagner (1996) Helmholtz EOS <em style="color:#64748b;">Near-critical region (|T−Tc| < 2 K) uses nonanalytic terms; avoid at T < 220 K.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Span, R. & Wagner, W. (1996). J. Phys. Chem. Ref. Data 25(6):1509–1596. DOI: 10.1063/1.555991 <a href="https://doi.org/10.1063/1.555991" style="color:#00c4a0;">DOI</a></td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Density (Impure)</td><td style="padding:5px 10px;">Peng-Robinson (1976) EOS with Li & Yan (2009) binary interaction parameters <em style="color:#64748b;">Use only when CO₂ stream contains CH₄, N₂, H₂S, or SO₂ impurities. Pure CO₂: use Span-Wagner.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Peng, D.Y. & Robinson, D.B. (1976). Ind. Eng. Chem. Fundam. 15(1):59–64. k_ij from Li & Yan (2009) J. Supercrit. Fluids 50(2):143–150</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Viscosity</td><td style="padding:5px 10px;">Fenghour, Wakeham & Vesovic (1998) <em style="color:#64748b;">±5–10% in the dense supercritical region vs. Laesecke & Muzny (2017); upgrade pending coefficient transcription.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Fenghour, A., Wakeham, W.A. & Vesovic, V. (1998). J. Phys. Chem. Ref. Data 27(1):31–44. DOI: 10.1063/1.556013 <a href="https://doi.org/10.1063/1.556013" style="color:#00c4a0;">DOI</a></td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Phase State</td><td style="padding:5px 10px;">CO₂ critical-point thresholds</td><td style="padding:5px 10px;font-size:7.5pt;">NIST WebBook (2023). NIST Standard Reference Database 69. Tc = 304.13 K, Pc = 7.377 MPa</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Brine Density</td><td style="padding:5px 10px;">Garcia (2001) NaCl/CaCl₂ correlation <em style="color:#64748b;">Polynomial fit valid 0–200°C, 0–15 mol/kg NaCl; extrapolates outside this range.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Garcia, J.E. (2001). LBNL-49023, Lawrence Berkeley National Laboratory. Kell (1975) pure-water baseline; Bigg (1967) NaCl polynomial</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Brine Viscosity</td><td style="padding:5px 10px;">Vogel-Antoine temperature-dependent brine viscosity <em style="color:#64748b;">No salinity or pressure dependence. For high-salinity brines (>150 g/L TDS) or pressures >30 MPa, use Batzle & Wang (1992) or Phillips et al. (1981). Upgraded from hardcoded constant (6e-4 Pa·s) in July 2026.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Vogel, H. (1921); Antoine, C. (1888) (1921). mu = 2.414e-5 * 10^(247.8 / (T_K - 140)), clamped to [1.5e-4, 1.5e-3] Pa·s. Captures supercritical-reservoir temperature range (30-200°C) without salinity or pressure correction.</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Solubility (NaCl brine)</td><td style="padding:5px 10px;">Duan & Sun (2003) Pitzer-type EOS <em style="color:#64748b;">5-coefficient compact fit; ±5–10% vs full published EOS. For regulatory submissions use full Duan-Sun (2003) with all Pitzer terms.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Duan, Z. & Sun, R. (2003). Chemical Geology 193:257–271. DOI: 10.1016/S0009-2541(02)00263-2 <a href="https://doi.org/10.1016/S0009-2541(02)00263-2" style="color:#00c4a0;">DOI</a></td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Solubility (Multi-Salt Brine)</td><td style="padding:5px 10px;">Duan, Sun, Zhu & Chou (2006) multi-salt extension <em style="color:#64748b;">Ternary interaction (zeta) terms set to zero for screening accuracy; stored coefficients calibrated for MPa input.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Duan, Z., Sun, R., Zhu, C. & Chou, I.-M. (2006). Marine Chemistry 98(2–4):131–139</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Diffusion in Brine</td><td style="padding:5px 10px;">Chapman-Enskog kinetic theory with tortuosity correction <em style="color:#64748b;">Screening-level estimate; ignores salinity dependence on diffusivity.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Duan, Z. & Sun, R. (2003). Base diffusivity ~2×10⁻⁹ m²/s; tortuosity τ=1.5 for sandstone. Chapman-Enskog T-scaling.</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂-Brine Interfacial Tension</td><td style="padding:5px 10px;">MARS (Multivariate Adaptive Regression Splines) IFT model <em style="color:#64748b;">Two separate models: subcritical (16 terms, T<304.13 K) and supercritical (35 terms, T≥304.13 K). Applicability domain gated via conformal prediction intervals (80% PI). Scope: CO₂-brine IFT only; pure water and impure CO₂ streams not yet covered.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Olagunju, D.T. et al. (2026). MSc research, Universiti Teknologi PETRONAS (UTP), Malaysia. In preparation. Trained on 3,265 experimental CO₂-brine IFT datapoints from 16 independent laboratories across 4 continents.</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Relative Permeability (CO₂/brine)</td><td style="padding:5px 10px;">van Genuchten (1980) + Mualem (1976) model with Krevor et al. (2012) parameters <em style="color:#64748b;">Berea/Fontainebleau sandstone parameters from Krevor et al. (2012); user-adjustable for other lithologies.</em></td><td style="padding:5px 10px;font-size:7.5pt;">van Genuchten, M.Th. (1980). Soil Sci. Soc. Am. J. 44(5):892–898. Mualem (1976) Water Resour. Res. 12(3):513–522; lab parameters from Krevor et al. (2012) WRR 48:W02544</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Relative Permeability (Brooks-Corey)</td><td style="padding:5px 10px;">Brooks & Corey (1964) power-law kr model <em style="color:#64748b;">Simpler power-law form; less accurate near residual saturations. Use van Genuchten-Mualem as primary for CO₂/brine systems.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Brooks, R.H. & Corey, A.T. (1964). USDA Hydrology Papers 3</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">kr Hysteresis (Imbibition)</td><td style="padding:5px 10px;">Killough (1976) imbibition scanning + Land (1968) residual model <em style="color:#64748b;">Land coefficient C=5.0 for intermediate sandstone; adjust via sgrMax parameter for other lithologies.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Land, C.S. & Killough, J.E. (1976). SPE J. 16(1):37–48 (Killough); Land (1968) Trans. AIME 243:149</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Capillary Pressure</td><td style="padding:5px 10px;">Brooks-Corey (1964) drainage / imbibition curves <em style="color:#64748b;">Pc capped at 10×Pe to avoid numerical blowup. Entry pressure Pe derived from MARS IFT output and caprock pore-throat radius.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Brooks, R.H. & Corey, A.T. (1964). USDA Hydrology Papers 3</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Residual CO₂ Trapping</td><td style="padding:5px 10px;">Land (1968) residual saturation model <em style="color:#64748b;">Land coefficient C=2.5 in classical module; C=5.0 in VE solver (sandstone default). Adjust for carbonate or tight reservoirs.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Land, C.S. (1968). SPE J. 8(2):149–156</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Dissolution / Solubility Trapping</td><td style="padding:5px 10px;">Interfacial-area-limited mass transfer with Rayleigh convective onset (Riaz et al. 2006) <em style="color:#64748b;">Convective enhancement factor Ra/Ra_crit where Ra_crit=4π²; screening-level estimate only.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Riaz, A., Hesse, M., Tchelepi, H.A. & Orr, F.M. (2006). J. Fluid Mech. 548:87–111. Duan & Sun (2003) for equilibrium solubility; Ennis-King & Paterson (2005) for dissolution rate scaling</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Mineral Trapping</td><td style="padding:5px 10px;">Xu et al. (2004) geochemical kinetics <em style="color:#64748b;">Active only after year 50 (geochemical equilibration period); T-factor Arrhenius correction relative to 60°C.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Xu, T., Apps, J.A. & Pruess, K. (2004). Environ. Sci. Technol. 38(10):2790–2796</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Caprock Seal Capacity</td><td style="padding:5px 10px;">Laplace capillary entry pressure model (Schowalter 1979, Berg 1975) <em style="color:#64748b;">Uses MARS IFT output for γ; pore-throat radius r is a user input or lithology default. Screening-level only.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Schowalter, T.T. (1979). AAPG Bulletin 63(5):723–760. Berg (1975) AAPG Bulletin 59(6):939–956; Pe = 2γ·cosθ/r_throat</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Pressure (Single-Phase Transient)</td><td style="padding:5px 10px;">Theis (1935) transient radial flow well function <em style="color:#64748b;">Assumes infinite homogeneous aquifer, single fluid phase. Superseded by Nordbotten (2005) for two-phase CO₂ injection; retained for AoR baseline and single-phase validation.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Theis, C.V. (1935). Trans. AGU 16(2):519–524</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Pressure (Two-Phase CO₂)</td><td style="padding:5px 10px;">Nordbotten, Celia & Bachu (2005) two-phase composite radial flow <em style="color:#64748b;">Analytical infinite-aquifer model. For bounded domains or k<100 mD, use the FD pressure solver for accurate BHP. Used for fast screening.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Nordbotten, J.M., Celia, M.A. & Bachu, S. (2005). Transp. Porous Media 58(3):339–360</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Wellbore BHP Correction</td><td style="padding:5px 10px;">Peaceman (1978) equivalent well-block radius <em style="color:#64748b;">r_eq = 0.1982·Δx for square cells; r_w = 0.1 m default wellbore radius.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Peaceman, D.W. (1978). SPE-6893-PA</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Pressure Field (2D FD)</td><td style="padding:5px 10px;">Implicit 5-point finite-difference backward-Euler with conjugate-gradient solver <em style="color:#64748b;">CG convergence in 60–120 iterations for 60×60 grid; condition number ∼nx². For very low permeability (<1 mD) may need preconditioning.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Internal CarbonLens (2026). Matrix-free CG on 5-point SPD stencil; harmonic mean face transmissibilities; no-flow BCs. Replaces Nordbotten analytical for live 3D animation and bounded domains.</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Area of Review (AoR)</td><td style="padding:5px 10px;">Chabora & Benson (2009) pressure-threshold AoR delineation <em style="color:#64748b;">Bisection on Nordbotten (2005) composite ΔP to find threshold contour radius. Single-phase fallback: Theis radial diffusion rₐᴼᴿ = √(4Kt/φμc_t).</em></td><td style="padding:5px 10px;font-size:7.5pt;">Chabora, E. & Benson, S.M. (2009). GHGT-9 Energy Procedia 1(1). EPA Class VI UIC Program Guidance, 40 CFR 146.84; threshold 6.9 kPa (1 psi)</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO₂ Plume Migration (VE)</td><td style="padding:5px 10px;">Vertical Equilibrium 2D FD solver (Nordbotten & Celia 2006; Gasda et al. 2009; Hesse et al. 2008) <em style="color:#64748b;">Explicit forward-Euler upwind scheme; CFL-adaptive sub-stepping (~25 sub-steps/yr at 2000 mD). Numerical diffusion causes 4–37× more cells vs MRST implicit at trace-CO₂ threshold; use η>5m threshold for field comparison.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Nordbotten, J.M. & Celia, M.A. (2006). Water Resour. Res. 42:W01407. Gasda et al. (2009) Adv. Water Resour. 32:1322–1334; Hesse et al. (2008) J. Fluid Mech. 611:35–60</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Post-Injection Gravity Current</td><td style="padding:5px 10px;">Hesse, Orr & Tchelepi (2008) self-similar gravity current <em style="color:#64748b;">Buckley-Leverett fractional flow; two shocks (leading mobile, trailing residual). Assumes flat caprock; not valid for dipping or faulted structures.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Hesse, M.A., Orr, F.M. & Tchelepi, H.A. (2008). J. Fluid Mech. 611:35–60. DOI: 10.1017/S002211200800267X <a href="https://doi.org/10.1017/S002211200800267X" style="color:#00c4a0;">DOI</a></td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Capacity</td><td style="padding:5px 10px;">DOE/NETL Goodman et al. (2011) volumetric capacity methodology <em style="color:#64748b;">Volumetric method gives P10–P90 range; not a dynamic simulation. Cc coefficients are statistical averages across US saline aquifers.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Goodman, A. et al. (2011). Int. J. Greenhouse Gas Control 5(4):828–833. Cc: P10=0.0051, P50=0.020, P90=0.055</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Efficiency</td><td style="padding:5px 10px;">Kopp, Class & Helmig (2010) trapping efficiency decomposition <em style="color:#64748b;">E_geo, E_sweep, E_disp decomposition; sweep efficiency uses Buckley-Leverett end-point mobility ratio.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Kopp, A., Class, H. & Helmig, R. (2010). Int. J. Greenhouse Gas Control 4(4):727–740</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Sweep Efficiency</td><td style="padding:5px 10px;">Shook & Mitchell (2009) flow-quality index sweep efficiency <em style="color:#64748b;">Derived from tracer-based heterogeneity index (FQI). Dykstra-Parsons V_DP used as proxy for FQI; validated against layered aquifer studies.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Shook, G.M. & Mitchell, K.M. (2009). SPE-124625-MS, SPE ATCE 2009</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Heterogeneity Correction</td><td style="padding:5px 10px;">Dykstra-Parsons log-normal permeability distribution with AoR heterogeneity scaling <em style="color:#64748b;">Log-normal permeability distribution assumed. V_DP from user input or lithology default.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Dykstra, H. & Parsons, R.L. (1950). Secondary Recovery of Oil in the United States, API, p. 160–174. AoR scaling: r_AoR_corr = r_AoR × exp(σ²/4), σ = −ln(1−V_DP)</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Fracture Pressure / MAIP</td><td style="padding:5px 10px;">Hubbert & Willis (1957) minimum horizontal stress fracture pressure <em style="color:#64748b;">Poisson ratio ν=0.30 default; user-adjustable. MAIP = 0.9 × Pf per Bachu et al. (2007).</em></td><td style="padding:5px 10px;font-size:7.5pt;">Hubbert, M.K. & Willis, D.G. (1957). Trans. AIME 210:153–166</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Shear Failure / Fault Reactivation</td><td style="padding:5px 10px;">Mohr-Coulomb shear failure + Biot (1941) poroelastic coupling <em style="color:#64748b;">Slip tendency Ts = τ/σ_eff_n; 2D plane-stress; fault orientation from user input. Byerlee friction: μ=0.85 (σ_eff<200 MPa), μ=0.6 (>200 MPa).</em></td><td style="padding:5px 10px;font-size:7.5pt;">Jaeger, J.C., Cook, N.G.W. & Zimmerman, R.W. (2007). Blackwell Publishing. Streit & Hillis (2004) Energy 29(9–10):1445–1456; Byerlee (1978) friction law</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Surface Heave</td><td style="padding:5px 10px;">Teatini et al. (2011) nucleus-of-strain elastic approximation <em style="color:#64748b;">Elastic approximation: δ ≈ (ΔP·h/E)·(1−ν²)·a; valid for flat surface, isotropic elastic halfspace.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Teatini, P. et al. (2011). J. Geophys. Res. 116:B08204</td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Reservoir Temperature Profile</td><td style="padding:5px 10px;">Linear geothermal gradient <em style="color:#64748b;">Depth-averaged T used for VE property field; cell-by-cell depth correction requires topDepthField from structural module.</em></td><td style="padding:5px 10px;font-size:7.5pt;">N/A (2026). T(z) = T_surface + gradient·z; default 30°C/km (typical sedimentary basin). User-adjustable in FormationInputs.</td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Joule-Thomson Near-Wellbore Cooling</td><td style="padding:5px 10px;">Ziabakhsh-Ganji & Kooi (2012) Joule-Thomson coefficient for CO₂-brine <em style="color:#64748b;">Piecewise-linear approximation of μ_JT vs T; rigorous values require NIST REFPROP. Valid for screening-grade JT estimate (±15%).</em></td><td style="padding:5px 10px;font-size:7.5pt;">Ziabakhsh-Ganji, Z. & Kooi, H. (2012). Int. J. Greenhouse Gas Control 11S:S21–S34. DOI: 10.1016/j.ijggc.2012.07.025. JT coefficient: μ_JT ≈ 0.50–0.70 K/MPa at supercritical conditions (T > 31°C, P > 7.38 MPa) <a href="https://doi.org/10.1016/j.ijggc.2012.07.025" style="color:#00c4a0;">DOI</a></td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Near-Wellbore Thermal Recovery</td><td style="padding:5px 10px;">Line-source heat conduction erfc solution (Benson & Cole 2008; Mathias, Hardisty, Trudell & Zimmerman 2009) <em style="color:#64748b;">Semi-infinite line-source assumption; valid for r >> wellbore radius. Thermal anisotropy and bedding-parallel conductivity not included.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Mathias, S.A., Hardisty, P.E., Trudell, M.R. & Zimmerman, R.W. (2009). Transport in Porous Media 79(2):265–284. DOI: 10.1007/s11242-008-9316-7. Benson & Cole (2008) Elements 4(5):325–331 DOI:10.2113/gselements.4.5.325; analytical thermal recovery model <a href="https://doi.org/10.1007/s11242-008-9316-7" style="color:#00c4a0;">DOI</a></td></tr>
+<tr style="background:#f8fafc;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Structural Dip CO₂ Migration</td><td style="padding:5px 10px;">VE top-surface topography with structural gradient correction (Nilsen et al. 2012) <em style="color:#64748b;">Cartesian grid with depth correction; cannot represent overhanging geometries, salt diapirs, or reverse-fault cross-connections. Screening-grade structural trapping only.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Nilsen, H.M., Nordbotten, J.M. & Raynaud, X. (2012). Computational Geosciences 16(2):399–416. DOI: 10.1007/s10596-011-9257-z. Driving force: ∇(η − 2D) where D = caprock top depth (m TVD); CO₂ migrates up-dip toward smaller D. <a href="https://doi.org/10.1007/s10596-011-9257-z" style="color:#00c4a0;">DOI</a></td></tr>
+<tr><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Fault Transmissibility</td><td style="padding:5px 10px;">Manzocchi et al. (1999) fault transmissibility multiplier <em style="color:#64748b;">Fault trace rasterised at sub-cell resolution; fault dip and throw do not alter grid geometry (no 3D fault displacement). Transmissivity multiplier is the only fault representation; no across-fault juxtaposition analysis.</em></td><td style="padding:5px 10px;font-size:7.5pt;">Manzocchi, T. et al. (1999). Petroleum Geoscience 5(1):53–63. DOI: 10.1144/petgeo.5.1.53. sealingFactor ∈ [0,1] (0=sealing, 1=open) from FaultDefinition maps to face transmissibility multiplier T_face = T_open × sealingFactor. <a href="https://doi.org/10.1144/petgeo.5.1.53" style="color:#00c4a0;">DOI</a></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Appendix: Reservoir Evolution Snapshots -->
+  <div class="page-break"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+    <svg width="200" height="40" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.22)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+</svg>
+    <span style="font-size:8pt; color:#94a3b8;">Indonesia CCS Storage Permit — Pre-Application (PP 19/2023) &mdash; 29 July 2026 &mdash; PRELIMINARY</span>
+  </div>
+  <div style="height:2px; background:#00c4a0; margin-bottom:14px;"></div>
+  <h2>Appendix A: Reservoir Simulation Snapshots</h2>
+  <p style="font-size:9.5pt; margin-bottom:10px;">The following 10 images were captured from the CarbonLens 3D reservoir viewer at evenly-spaced simulation years. They illustrate CO&#x2082; plume migration, saturation evolution, and spatial distribution throughout the injection period. Screen view: auto-advancing animation. Print view: 2&times;5 image grid.</p>
+  <p class="muted" style="padding:8px 0;">No simulation snapshots available. Run a full simulation to generate reservoir evolution imagery.</p>
+
+  <!-- Footer -->
+  <footer>
+    <span>CarbonLens &mdash; carbonlens.io</span>
+    <span>Indonesia CCS Storage Permit — Pre-Application (PP 19/2023) &mdash; 29 July 2026 &mdash; PRELIMINARY</span>
+  </footer>
+
+  
+  <div style="page-break-before:always; color:#1e293b; box-sizing:border-box;">
+    <div class="page-header-bar">
+      <svg width="200" height="40" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.22)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="700" fill="#0d1f3c" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+</svg>
+      <div style="text-align:right;">
+        <div style="font-size:8.5pt;font-weight:700;color:#0d1f3c;font-family:'IBM Plex Sans',sans-serif;">Equation &amp; Model Reference</div>
+        <div style="font-size:7.5pt;color:#64748b;font-family:'IBM Plex Mono',monospace;">29 July 2026</div>
+      </div>
+    </div>
+    <div class="page-header-rule"></div>
+    <h2>Equation &amp; Model Reference</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:7.8pt;color:#334155;border-bottom:1px solid #e2e8f0;">
+      <thead>
+        <tr style="background:#0d1f3c;">
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:18%;">Module / Engine</th>
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:42%;">Equation / Correlation</th>
+          <th style="padding:6px 10px;text-align:left;color:white;font-weight:700;border-bottom:1px solid #00c4a0;width:40%;">Reference</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS (Primary)</td><td style="padding:5px 10px;font-family:monospace;">Span-Wagner (1996) 56-term Helmholtz EOS: &#x3C1;(P,T) = &#x3C1;<sub>c</sub> &middot; &#x3B4;(&#x3B1;<sub>r</sub>); accuracy &#xB1;0.05%</td><td style="padding:5px 10px;">Span &amp; Wagner (1996), J. Phys. Chem. Ref. Data 25(6):1509&ndash;1596</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; EOS (Impure)</td><td style="padding:5px 10px;font-family:monospace;">Peng-Robinson mixing rules for impure CO&#x2082; streams (CH&#x2084;, N&#x2082;, H&#x2082;S, SO&#x2082;)</td><td style="padding:5px 10px;">Peng &amp; Robinson (1976), Ind. Eng. Chem. Fundam. 15(1):59&ndash;64; Li &amp; Yan (2009) binary k<sub>ij</sub></td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Viscosity</td><td style="padding:5px 10px;font-family:monospace;">&#x3BC;(T,&#x3C1;) = &#x3BC;<sub>0</sub>(T) + &#x394;&#x3BC;(T,&#x3C1;); zero-density + excess; &#x3B5;/k=251.196 K</td><td style="padding:5px 10px;">Fenghour, Wakeham &amp; Vesovic (1998), J. Phys. Chem. Ref. Data 27(1):31&ndash;44. <em>Upgrade target: Laesecke &amp; Muzny (2017), JPCRD 46:013107 (NIST reference, ±0.5% vs ±5% in supercritical region).</em></td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(y&#x2082; &middot; P) = &#x3BC;&#x2070;(T) + 2&#x3BB;(T,P) &middot; m + &#x3BE;(T,P) &middot; m&#xB2;; Pitzer ionic strength</td><td style="padding:5px 10px;">Duan &amp; Sun (2003), Chem. Geology 193:257&ndash;271</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082; Multi-Salt Solubility</td><td style="padding:5px 10px;font-family:monospace;">ln(xCO&#x2082;<sub>mix</sub>) = ln(xCO&#x2082;<sub>pure</sub>) + &#x3A3;&#x3BB;(T,P)&middot;m<sub>i</sub>; adds CaCl&#x2082;, MgCl&#x2082;, KCl ions</td><td style="padding:5px 10px;">Duan, Sun, Zhu &amp; Chou (2006), Marine Chemistry 98(2-4):131&ndash;139</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">CO&#x2082;-Brine IFT</td><td style="padding:5px 10px;font-family:monospace;">&#x3C3; = MARS(P, T, S); multivariate adaptive regression splines trained on experimental data</td><td style="padding:5px 10px;">Olagunju (in prep.), MSc UTP Malaysia; Chiquet et al. (2007), Energy Convers. Mgmt. 48:736</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Capacity</td><td style="padding:5px 10px;font-family:monospace;">M = A &middot; h &middot; &#x3D5; &middot; &#x3C1;<sub>CO&#x2082;</sub> &middot; S<sub>g</sub> &middot; E<sub>eff</sub>; volumetric DOE methodology</td><td style="padding:5px 10px;">Goodman et al. (2011), Int. J. GHG Control 5(4):853&ndash;866; DOE (2010) Atlas</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Residual Trapping</td><td style="padding:5px 10px;font-family:monospace;">S<sub>gr</sub> = S<sub>gi</sub> / (1 + C &middot; S<sub>gi</sub>) (Land, 1968); V<sub>r</sub> = &#x3D5; &middot; (1&#x2212;S<sub>wi</sub>) &middot; S<sub>gr</sub> &middot; A &middot; h &middot; &#x3C1;<sub>CO&#x2082;</sub></td><td style="padding:5px 10px;">Pentland et al. (2011), SPE-133798; Land (1968), Trans. AIME 243:149</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Solubility Trapping</td><td style="padding:5px 10px;font-family:monospace;">m<sub>diss</sub> = &#x3D5; &middot; S<sub>w</sub> &middot; &#x3C1;<sub>brine</sub> &middot; &#x3C7;<sub>CO&#x2082;</sub>(T,P,S) &middot; A &middot; h; aqueous dissolution</td><td style="padding:5px 10px;">Duan &amp; Sun (2003); Ennis-King &amp; Paterson (2005), SPE-88502</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">VE Plume Migration</td><td style="padding:5px 10px;font-family:monospace;">&#x2202;(h<sub>g</sub>/B)/&#x2202;t + &#x2207;&middot;Q<sub>g</sub> = Q<sub>inj</sub>/B; vertical-equilibrium thin-lens approximation</td><td style="padding:5px 10px;">Nordbotten &amp; Celia (2006), Water Resour. Res. 42:W01207</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Pressure / AoR</td><td style="padding:5px 10px;font-family:monospace;">&#x394;P(r,t) = Q/(4&#x3C0;kh)[&#x3BC;<sub>b</sub>E<sub>1</sub>(r&#xB2;/4&#x3B1;<sub>b</sub>t) + (&#x3BC;<sub>eff</sub>&#x2212;&#x3BC;<sub>b</sub>)E<sub>1</sub>(R<sub>p</sub>&#xB2;/4&#x3B1;<sub>b</sub>t)]; two-phase composite; &#x3BC;<sub>b</sub>=brine, &#x3BC;<sub>eff</sub>=&#x3BC;<sub>CO&#x2082;</sub>/k<sub>r</sub></td><td style="padding:5px 10px;">Nordbotten, Celia &amp; Bachu (2005), Transp. Porous Media 58(3):339&ndash;360; Theis (1935) radial flow with E&#x2081; Pad&#xe9; approximation (stable for u &gt; 50); Hantush-Jacob leaky-aquifer extension not yet implemented</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Rel. Permeability</td><td style="padding:5px 10px;font-family:monospace;">k<sub>rg</sub> = k&#x2070;<sub>rg</sub>&middot;(1&#x2212;S<sub>e</sub>)<sup>&#xBD;</sup>&middot;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>2m</sup>; k<sub>rw</sub>=k&#x2070;<sub>rw</sub>&middot;S<sub>e</sub><sup>&#xBD;</sup>&middot;(1&#x2212;(1&#x2212;S<sub>e</sub><sup>1/m</sup>)<sup>m</sup>)&#xB2;; m=1&#x2212;1/n; + Killough&ndash;Land hysteresis</td><td style="padding:5px 10px;">van Genuchten (1980), Soil Sci. Soc. Am. J. 44:892; Mualem (1976), WRR 12:513; Krevor et al. (2012), WRR 48:W02514; Land (1968), Trans. AIME 243:149; Killough (1976), SPE J. 16(1):37</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Fracture Pressure</td><td style="padding:5px 10px;font-family:monospace;">P<sub>f</sub> = [&#x3BD;/(1&#x2212;&#x3BD;)](&#x3C3;<sub>v</sub>&#x2212;P<sub>h</sub>) + P<sub>h</sub> + T<sub>0</sub>; minimum horizontal stress criterion</td><td style="padding:5px 10px;">Hubbert &amp; Willis (1957), Trans. AIME 210:153&ndash;166</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Mohr-Coulomb</td><td style="padding:5px 10px;font-family:monospace;">&#x3C4; = c + &#x3C3;<sub>n</sub>tan(&#x3D5;); SF = &#x3C4;<sub>strength</sub>/&#x3C4;<sub>drive</sub>; failure when SF &lt; 1</td><td style="padding:5px 10px;">Jaeger, Cook &amp; Zimmerman (2007), Fundamentals of Rock Mechanics, 4th ed.</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">MAIP</td><td style="padding:5px 10px;font-family:monospace;">MAIP = 0.9 &middot; P<sub>f</sub> &#x2212; P<sub>res</sub>; maximum allowable injection pressure</td><td style="padding:5px 10px;">Bachu et al. (2007), Int. J. GHG Control 1(4):374; EPA UIC Class VI §146.88</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Surface Heave</td><td style="padding:5px 10px;font-family:monospace;">&#x3B4; &#x2248; (&#x394;P &middot; h) / E &middot; (1&#x2212;&#x3BD;&#xB2;) &middot; a; elastic nucleus-of-strain approximation</td><td style="padding:5px 10px;">Teatini et al. (2011), J. Geophys. Res. 116:B08204</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Area of Review</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR</sub> = &#x221A;(4Kt/&#x3D5;&#x3BC;c<sub>t</sub>); pressure perturbation front &#x2265; 6.9 kPa threshold</td><td style="padding:5px 10px;">Chabora &amp; Benson (2009), GHGT-9; EPA Class VI UIC Program Guidance</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Post-Injection Plume</td><td style="padding:5px 10px;font-family:monospace;">Hesse et al. (2008) gravity current: &#x2202;u/&#x2202;t + &#x2202;f(u)/&#x2202;x = 0; f(u) = u(1&#x2212;u)/[u(M&#x2212;1)+1]; two propagating shocks: leading (mobile) and trailing (residual trapping boundary)</td><td style="padding:5px 10px;">Hesse, Orr &amp; Tchelepi (2008), J. Fluid Mech. 611:35&ndash;60</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;background:rgba(0,196,160,0.04)"><td colspan="3" style="padding:7px 10px;color:#0d1f3c;font-weight:700;font-size:8pt;letter-spacing:0.05em;text-transform:uppercase;">Heterogeneous Formation Corrections</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Sweep Efficiency</td><td style="padding:5px 10px;font-family:monospace;">E<sub>s</sub> = 1 &#x2212; exp(&#x2212;3&middot;PVI&middot;FQI); FQI = &#x221A;(1&#x2212;k<sub>Vdp</sub>)/&#x3D5;; accounts for Dykstra-Parsons permeability layering</td><td style="padding:5px 10px;">Shook &amp; Mitchell (2009), SPE-119897</td></tr>
+        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">Storage Efficiency</td><td style="padding:5px 10px;font-family:monospace;">E<sub>c</sub> = E<sub>geo</sub> &#xD7; E<sub>s</sub> &#xD7; E<sub>d</sub>; E<sub>geo</sub> = NTG/&#x221A;(k<sub>layer_ratio</sub>); E<sub>d</sub> = 1/&#x221A;M (Buckley-Leverett)</td><td style="padding:5px 10px;">Kopp, Class &amp; Helmig (2010), IJGGC 4(5):831&ndash;842</td></tr>
+        <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 10px;color:#0d1f3c;font-weight:600;">AoR Heterogeneity Scaling</td><td style="padding:5px 10px;font-family:monospace;">r<sub>AoR_corrected</sub> = r<sub>AoR</sub> &#xD7; exp(&#x3C3;&#xB2;/4); &#x3C3; = &#x2212;ln(1&#x2212;k<sub>Vdp</sub>); arithmetic/geometric mean ratio correction for high-perm layer channeling</td><td style="padding:5px 10px;">Derived from log-normal distribution theory</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:8pt;color:#64748b;">Prepared by CarbonLens Simulation Studio v3 for CarbonLens Test Suite &middot; 29 July 2026</div>
+      <div style="font-size:8pt;color:#64748b;">&copy; 2026 CarbonLens &middot; carbonlens.io</div>
+    </div>
+  </div>
+  
+  
+  <div style="min-height:100vh;background:linear-gradient(160deg,#051931 0%,#0d2a4a 50%,#051931 100%);display:flex;flex-direction:column;padding:52px 40px 40px;page-break-before:always;page:back-cover;color:white;">
+    <div style="margin-bottom:40px;"><svg width="200" height="40" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0,2)">
+    <circle cx="21" cy="22" r="9" fill="none" stroke="#00b89a" stroke-width="1.8"/>
+    <circle cx="21" cy="22" r="3.5" fill="#00b89a"/>
+    <circle cx="5" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="5" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="5" fill="none" stroke="#00d4b4" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="37" cy="22" r="1.8" fill="#00d4b4" opacity="0.7"/>
+    <line x1="10" y1="22" x2="12.5" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <line x1="29.5" y1="22" x2="32" y2="22" stroke="#00d4b4" stroke-width="2.2" opacity="0.8"/>
+    <circle cx="21" cy="22" r="18" fill="none" stroke="rgba(0,184,154,0.45)" stroke-width="0.9" stroke-dasharray="2.5 3.5"/>
+  </g>
+  <text x="48" y="23" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="700" fill="white" letter-spacing="0.5">CARBON</text>
+  <text x="48" y="40" font-family="'IBM Plex Mono', monospace" font-size="19" font-weight="300" fill="#00b89a" letter-spacing="4.5">LENS</text>
+</svg></div>
+
+    <div style="flex:1;display:grid;gap:40px;align-content:start;">
+      <div>
+        <div style="height:3px;background:linear-gradient(90deg,#00c4a0,#0066cc);border-radius:2px;width:48px;margin-bottom:16px;"></div>
+        <h2 style="color:white;font-size:14pt;font-weight:700;margin:0 0 12px;">About CarbonLens</h2>
+        <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0 0 10px;">
+          CarbonLens is a browser-based CO&#x2082; geological storage simulation studio, purpose-built for deep saline aquifer CCS screening. It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation.
+        </p>
+        <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0 0 10px;">
+          Developed as MSc research at Universiti Teknologi PETRONAS (UTP), Malaysia, in partnership with the CarbonLens product team.
+        </p>
+        <div style="padding:10px 14px;background:rgba(0,196,160,0.08);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
+          <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Research Team</div>
+          <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
+            <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong> &mdash; Co-supervisor, UTP Malaysia<br>
+            <strong style="color:white;">Dr. Berihun Negash Mamo</strong> &mdash; Advisor, UTP Malaysia
+          </div>
+        </div>
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
+          <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Simulation Engine</div>
+          <div style="font-size:9pt;color:#cbd5e1;">Span-Wagner (1996) CO₂ EOS · Fenghour et al. (1998) CO₂ viscosity · CO₂ phase determination · Garcia (2001) brine density · Brine viscosity (Vogel-Antoine, T-dependent) · Duan-Sun (2003) solubility · Duan et al. (2006) multi-salt solubility · Chapman-Enskog CO₂ diffusion · MARS IFT (Olagunju, in prep.) · van Genuchten–Mualem kr · Killough–Land hysteresis · Brooks-Corey (1964) Pc · Land (1968) residual trapping · Dissolution trapping (Riaz et al. 2006) · Xu et al. (2004) mineral trapping · Laplace seal capacity (Schowalter 1979) · Theis (1935) well function · Nordbotten (2005) two-phase AoR · Peaceman (1978) well BHP · Implicit FD pressure solver · Chabora & Benson (2009) AoR · VE plume solver (Nordbotten & Celia 2006) · Hesse et al. (2008) post-injection · Nilsen et al. (2012) VE structural dip · Manzocchi et al. (1999) fault mult. · DOE Goodman (2011) storage capacity · Kopp et al. (2010) storage efficiency · Shook & Mitchell (2009) sweep efficiency · Dykstra-Parsons heterogeneity correction · Hubbert & Willis (1957) fracture pressure · Mohr-Coulomb geomechanics · Teatini et al. (2011) surface heave · Linear geothermal gradient (30°C/km) · Ziabakhsh-Ganji & Kooi (2012) JT cooling · Radial heat diffusion erfc (Mathias et al. 2009)</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:32px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);border-radius:8px;padding:16px 20px;">
+      <div style="font-size:8.5pt;font-weight:700;color:#fca5a5;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Important Disclaimer</div>
+      <p style="font-size:8.5pt;color:#fca5a5;line-height:1.6;margin:0;">
+        This document is generated by CarbonLens Simulation Studio using scientific correlations and statistical methods. All capacity estimates are preliminary screening values. <strong style="color:white;">This document is NOT a formal regulatory permit application</strong> and has not been reviewed by a competent authority. Independent review by a qualified petroleum or environmental engineer is required before submission to any regulatory body. CarbonLens accepts no liability for decisions made based solely on this screening output.
+      </p>
+    </div>
+
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:8pt;color:#475569;">Prepared by CarbonLens Simulation Studio v3 for CarbonLens Test Suite &middot; 29 July 2026</div>
+      <div style="font-size:8pt;color:#475569;">&copy; 2026 CarbonLens &middot; carbonlens.io &middot; All rights reserved</div>
+    </div>
+  </div>
+  
+</body></html>

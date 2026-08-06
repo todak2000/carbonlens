@@ -279,6 +279,18 @@ export default function Sidebar() {
     () => localStorage.getItem('cl_expert_mode') === '1'
   )
 
+  // On small screens the sidebar is an off-canvas drawer: collapsed by default
+  // below `lg`, expanded on desktop. Only reacts on breakpoint crossing so
+  // continuous resizing stays stable.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const sync = (e: MediaQueryListEvent) => setSidebar(e.matches)
+    setSidebar(mq.matches)
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [setSidebar])
+
   // Sync expert mode from localStorage on mount and when toggled
   const toggleExpertMode = () => {
     const next = !expertMode
@@ -303,7 +315,9 @@ export default function Sidebar() {
 
   return (
     <>
-      <nav className={`${w} border-r border-theme flex flex-col items-center py-3 shrink-0 bg-page transition-all duration-200 relative`}>
+      <nav className={`${w} border-r border-theme flex flex-col items-center py-3 shrink-0 bg-page transition-all duration-200
+        lg:relative lg:static lg:z-auto lg:shadow-none
+        ${sidebarOpen ? 'fixed inset-y-0 left-0 z-50 shadow-2xl' : 'hidden lg:flex'}`}>
         {/* Logo */}
         <div
           className="mb-2 cursor-pointer hover:opacity-80 transition-opacity relative"
@@ -345,15 +359,24 @@ export default function Sidebar() {
             const isComplete = stageCompletion[group.stageKey]
             const isCurrent = !isComplete && unlocked
 
+            const isStage4 = group.stageKey === 'stage4'
+
             return (
-              <div key={group.stageKey}>
+              <div key={group.stageKey} className={isStage4 ? 'hidden lg:block' : ''}>
                 {/* Group header */}
                 {sidebarOpen ? (
                   <div className="px-2 mb-0.5 flex items-center gap-1.5">
                     <span className={`text-[10px] font-bold font-mono uppercase tracking-wider select-none
                       ${unlocked ? 'text-secondary' : 'text-muted/40'}`}
                     >
-                      {group.label}
+                      {group.stageKey === 'stage5' ? (
+                        <>
+                          <span className="lg:hidden">Stage 4: Report</span>
+                          <span className="hidden lg:inline">{group.label}</span>
+                        </>
+                      ) : (
+                        group.label
+                      )}
                     </span>
                     <StageHeaderIndicator
                       isLocked={!unlocked}
@@ -371,16 +394,21 @@ export default function Sidebar() {
                     const Icon = item.icon
                     const isActive = activePanel === item.panel
                     const isLocked = !unlocked
+                    const hideOnMobile = item.panel === 'jurisdiction' || item.panel === 'registry'
 
                     const handleClick = () => {
                       setPanel(item.panel)
+                      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                        setSidebar(false)
+                      }
                     }
 
                     return (
                       <button
                         key={item.panel}
                         onClick={handleClick}
-                        className={`w-full flex items-center py-1.5 rounded-md transition text-xs font-mono
+                        className={`w-full items-center py-1.5 rounded-md transition text-xs font-mono
+                          ${hideOnMobile ? 'hidden lg:flex' : 'flex'}
                           ${sidebarOpen ? 'gap-2 px-2' : 'justify-center px-0'}
                           ${isActive
                             ? 'bg-accent text-white'
@@ -473,6 +501,14 @@ export default function Sidebar() {
           </button>
         </div>
       </nav>
+
+      {/* Mobile / tablet: drawer scrim */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setSidebar(false)}
+        />
+      )}
 
       {/* Reference drawer overlay */}
       {refDrawerOpen && (

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { useFormationStore } from '../../store/formationStore'
-import { User, ArrowLeft, MonitorPlay, Pencil, Check, X } from 'lucide-react'
+import { User, ArrowLeft, MonitorPlay, Pencil, Check, X, Menu, SlidersHorizontal } from 'lucide-react'
 import Sidebar from './Sidebar'
 import DemoModeOverlay from '../DemoMode/DemoModeOverlay'
 import ReservoirViewer from '../ThreeViewer/ReservoirViewer'
@@ -30,6 +30,7 @@ const STAGE_LABELS = ['Setup', 'Define', 'Simulate', 'Analyse', 'Report']
 export default function MainLayout() {
   const activePanel = useUIStore((s) => s.activePanel)
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
+  const setSidebar = useUIStore((s) => s.setSidebar)
   const show3D = useUIStore((s) => s.show3D)
   const user = useAuthStore((s) => s.user)
   const setView = useUIStore((s) => s.setView)
@@ -46,6 +47,19 @@ export default function MainLayout() {
   const [projectCountry, setProjectCountry] = useState('')
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState('')
+
+  // On mobile (< 1024px), Geology renders directly as standard main page content.
+  // Only Simulation uses the 3D canvas split on mobile devices.
+  const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 1024
+  const isPanelAside = activePanel === 'simulation' || (activePanel === 'geology' && !isMobileViewport)
+  const [sheetOpen, setSheetOpen] = useState(false)
+
+  // Auto-open sheet when navigating to Simulation on mobile so controls are visible by default
+  useEffect(() => {
+    if (isPanelAside && isMobileViewport) {
+      setSheetOpen(true)
+    }
+  }, [activePanel, isPanelAside, isMobileViewport])
 
   useEffect(() => {
     if (!currentProjectId) return
@@ -109,22 +123,33 @@ export default function MainLayout() {
     return <ErrorBoundary label={activePanel}>{panel}</ErrorBoundary>
   }
 
+  const asidePanelNode = isPanelAside ? renderPanel() : null
+  const showDesktopAside = isPanelAside && sidebarOpen
+
   return (
-    <div className="h-screen flex overflow-hidden bg-page text-primary">
+    <div className="h-dvh flex overflow-hidden bg-page text-primary">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 border-b border-theme flex items-center justify-between px-5 shrink-0 bg-page">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header className="min-h-14 border-b border-theme flex items-center justify-between gap-2 px-3 md:px-5 py-2 shrink-0 bg-page">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            {/* Mobile / tablet: open nav drawer */}
+            <button
+              onClick={() => setSidebar(true)}
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-tertiary text-secondary shrink-0"
+              title="Open navigation"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
               <User size={16} className="text-accent" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-primary leading-tight">Welcome back, {displayName}</p>
-              <p className="text-[10px] text-muted font-mono">{user?.email || 'engineer@carbonlens.io'}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-primary leading-tight truncate">Welcome back, {displayName}</p>
+              <p className="text-[10px] text-muted font-mono truncate max-w-[45vw] sm:max-w-none">{user?.email || 'engineer@carbonlens.io'}</p>
             </div>
             {currentProjectName && (
-              <div className="hidden sm:flex items-center gap-2 ml-2 pl-3 border-l border-theme">
-                <span className="text-[9px] text-muted font-mono uppercase tracking-wider">Project</span>
+              <div className="hidden md:flex items-center gap-2 ml-2 pl-3 border-l border-theme min-w-0">
+                <span className="text-[9px] text-muted font-mono uppercase tracking-wider shrink-0">Project</span>
                 {editingName ? (
                   <div className="flex items-center gap-1">
                     <input
@@ -138,10 +163,10 @@ export default function MainLayout() {
                     <button onClick={() => setEditingName(false)} className="text-muted hover:text-primary"><X size={12} /></button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 group">
+                  <div className="flex items-center gap-1 group min-w-0">
                     <span className="text-xs font-semibold text-primary font-mono truncate max-w-[160px]">{currentProjectName}</span>
-                    {(projectCountry || formationCountry) && <span className="text-[9px] text-muted font-mono">| {projectCountry || formationCountry}</span>}
-                    <button onClick={() => setEditingName(true)} className="opacity-0 group-hover:opacity-100 text-muted hover:text-primary transition-opacity"><Pencil size={11} /></button>
+                    {(projectCountry || formationCountry) && <span className="text-[9px] text-muted font-mono hidden xl:inline">| {projectCountry || formationCountry}</span>}
+                    <button onClick={() => setEditingName(true)} className="opacity-0 group-hover:opacity-100 text-muted hover:text-primary transition-opacity shrink-0"><Pencil size={11} /></button>
                   </div>
                 )}
               </div>
@@ -150,7 +175,7 @@ export default function MainLayout() {
 
           {/* Stage progress indicator */}
           {currentProjectId && (
-            <div className="hidden md:flex items-center gap-1.5">
+            <div className="hidden xl:flex items-center gap-1.5 shrink-0">
               {STAGE_LABELS.map((label, i) => {
                 const done = i < currentStageIndex
                 const active = i === currentStageIndex
@@ -165,64 +190,103 @@ export default function MainLayout() {
             </div>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-end shrink-0">
             <button onClick={() => setView('dashboard')}
-              className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md font-mono bg-tertiary text-secondary hover:text-primary transition"
+              className="flex items-center gap-1 text-[11px] px-2.5 md:px-3 py-1.5 rounded-md font-mono bg-tertiary text-secondary hover:text-primary transition"
             >
               <ArrowLeft size={12} />
-              Projects
+              <span className="hidden sm:inline">Projects</span>
+              <span className="sm:hidden">Back</span>
             </button>
             {isOwner && (
               <button
                 onClick={() => setDemoActive(!demoActive)}
-                className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-md font-mono transition ${
+                className={`hidden sm:flex items-center gap-1.5 text-[11px] px-2.5 md:px-3 py-1.5 rounded-md font-mono transition ${
                   demoActive
                     ? 'bg-emerald-500 text-white hover:bg-emerald-400'
                     : 'bg-tertiary text-secondary hover:text-primary border border-emerald-500/30 hover:border-emerald-500/60'
                 }`}
-                title="Re-run live exhibition demo (owner only)"
+                title="Re-run live demo (owner only)"
               >
                 <MonitorPlay size={12} />
-                {demoActive ? 'Exit Demo' : 'Re-run Demo'}
+                <span>{demoActive ? 'Exit Demo' : 'Re-run Demo'}</span>
               </button>
             )}
-            <span className="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 font-mono uppercase tracking-wider hidden sm:block">
+            <span className="hidden sm:block px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 font-mono uppercase tracking-wider">
               {user?.tier || 'Pro'}
             </span>
-
           </div>
         </header>
-        <div className="flex-1 flex overflow-hidden">
-          {(activePanel === 'simulation' || activePanel === 'geology') && sidebarOpen && (
-            <aside className={`border-r border-theme overflow-y-auto shrink-0 bg-card transition-all duration-300 ${
-              activePanel === 'geology'
-                ? (geologyExpanded ? 'w-[55%] min-w-[500px]' : 'w-96')
-                : 'w-96'
-            }`}>
-              {renderPanel()}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* Desktop / tablet: in-flow control aside for simulation & geology */}
+          {asidePanelNode && (
+            <aside
+              className={`hidden lg:flex flex-col border-r border-theme overflow-y-auto shrink-0 bg-card transition-all duration-300 ${
+                showDesktopAside
+                  ? activePanel === 'geology'
+                    ? (geologyExpanded ? 'w-[55%] min-w-[500px]' : 'w-96')
+                    : 'w-96'
+                  : 'hidden'
+              }`}
+            >
+              {asidePanelNode}
             </aside>
           )}
-          <main className="flex-1 relative bg-page overflow-hidden">
-            {(activePanel !== 'simulation' && activePanel !== 'geology') ? (
-              <div className="w-full h-full overflow-y-auto bg-page py-6 px-6">
+
+          <main className="flex-1 relative bg-page overflow-hidden min-w-0">
+            {!isPanelAside ? (
+              <div className="w-full h-full overflow-y-auto bg-page py-3 md:py-5 px-3 md:px-5">
                 <div className="max-w-7xl mx-auto w-full">
                   {renderPanel()}
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full relative overflow-hidden">
-                {show3D ? (
-                  <ErrorBoundary label="3D Viewer">
-                    <ReservoirViewer />
-                  </ErrorBoundary>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-muted font-mono text-xs">
-                    <p>3D view disabled</p>
+              <>
+                <div className="w-full h-full relative overflow-hidden">
+                  {show3D ? (
+                    <ErrorBoundary label="3D Viewer">
+                      <ReservoirViewer />
+                    </ErrorBoundary>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted font-mono text-xs">
+                      <p>3D view disabled</p>
+                    </div>
+                  )}
+                  {/* Demo mode overlay — rendered inside <main> so it's positioned over the 3D view */}
+                  <DemoModeOverlay />
+                </div>
+
+                {/* Mobile / tablet: floating toggle for the controls sheet */}
+                <button
+                  onClick={() => setSheetOpen(true)}
+                  className="lg:hidden absolute bottom-4 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent text-white text-[11px] font-mono shadow-lg"
+                  title="Show controls"
+                >
+                  <SlidersHorizontal size={13} />
+                  Controls
+                </button>
+
+                {/* Mobile / tablet: controls bottom sheet */}
+                {sheetOpen && (
+                  <div
+                    className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex flex-col rounded-t-2xl border-t border-theme shadow-2xl bg-card max-h-[65vh]"
+                  >
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-theme shrink-0">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-secondary">
+                        {activePanel === 'simulation' ? 'Simulation Controls' : 'Geology Controls'}
+                      </span>
+                      <button
+                        onClick={() => setSheetOpen(false)}
+                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-tertiary text-muted"
+                        title="Hide controls"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto pb-safe">{asidePanelNode}</div>
                   </div>
                 )}
-                {/* Demo mode overlay — rendered inside <main> so it's positioned over the 3D view */}
-                <DemoModeOverlay />
-              </div>
+              </>
             )}
           </main>
         </div>

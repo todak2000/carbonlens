@@ -164,7 +164,7 @@ export default function ExportPanel() {
   const nearZeroSalinity = params.monovalentSalinity < 0.1 && params.bivalentSalinity < 0.05
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="w-full space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-theme/20 pb-4">
         <div>
@@ -206,7 +206,7 @@ export default function ExportPanel() {
         {/* Left Column: Pre-screening report and details (60% width equivalent: col-span-7) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Formation identity — shown in all reports */}
-          <div className="rounded-lg border border-theme/20 bg-tertiary/20 px-4 py-2.5 flex items-center gap-3 text-[11px] font-mono">
+          <div className="rounded-lg border border-theme/20 bg-tertiary/20 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono">
             <span className="text-muted uppercase tracking-wider">Formation</span>
             <span className="text-accent font-bold truncate">{formationName}</span>
             {formationLocation && formationLocation !== 'User-defined site' && (

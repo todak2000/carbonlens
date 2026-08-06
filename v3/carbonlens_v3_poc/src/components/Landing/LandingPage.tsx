@@ -207,7 +207,7 @@ const SUBMISSION_TIERS = [
     featured: false,
   },
   {
-    name: "Summit Prototype Focus",
+    name: "Enterprise & Pilot",
     price: "Enterprise Pilot",
     period: " / Partnerships",
     desc: "Designed for venture building, industrial pilots, and policy integration.",
@@ -238,7 +238,7 @@ const SUBMISSION_TIERS = [
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Venture & Pitch", href: "#venture" },
+  { label: "Venture & Partnerships", href: "#venture" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -596,7 +596,7 @@ export default function LandingPage() {
                 </div>
                 <button
                   onClick={() => setView("dashboard")}
-                  className="text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
+                  className="hidden md:inline-flex text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
                 >
                   Dashboard
                 </button>
@@ -606,13 +606,13 @@ export default function LandingPage() {
               <>
                 <button
                   onClick={() => setView("auth")}
-                  className="text-xs text-secondary hover:text-primary transition font-mono px-3 py-1.5"
+                  className="hidden md:inline-flex items-center text-xs text-secondary hover:text-primary transition font-mono px-3 py-1.5"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => setView("auth")}
-                  className="text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
+                  className="hidden md:inline-flex text-xs font-mono px-4 py-1.5 md:py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition min-h-[36px]"
                 >
                   Get Started
                 </button>
@@ -738,7 +738,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] md:text-xs font-mono mb-4 md:mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Prototypes for Humanity 2026 — Dubai Future Forum
+              Open-Access CO₂ Storage Screening Platform
             </div>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-3 md:mb-5">
               Rigorous CO₂ Storage{" "}
@@ -1057,22 +1057,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ SUMMIT PITCH (DUBAI GUIDE ALIGNMENT) ══════════════════════ */}
+      {/* ═══ WHY CARBONLENS ═════════════════════════════════════════════ */}
       <section
-        id="pitch"
+        id="why"
         className="py-16 md:py-24 dark:bg-white/[0.01] bg-gray-50/50 border-t border-theme"
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono mb-4">
-              Academic &amp; Venture Showcase
+              Why CarbonLens
             </div>
             <h2 className="text-xl md:text-3xl lg:text-4xl font-bold text-primary mb-3">
-              The Summit Pitch: Addressing the Evaluation Criteria
+              A Platform Built for Any CCUS Programme
             </h2>
             <p className="text-sm md:text-base text-muted max-w-xl mx-auto">
-              How CarbonLens answers the five core questions of the 2026
-              Prototypes for Humanity exhibition.
+              Purpose-built for CO₂ saline aquifer storage screening — equally
+              suited to academic research, regulatory pre-screening, commercial
+              pilots, and sovereign storage planning.
             </p>
           </div>
 
@@ -1153,7 +1154,7 @@ export default function LandingPage() {
               >
                 {t.featured && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-emerald-500 text-[10px] font-mono font-medium text-white">
-                    Summit Focus
+                    Recommended
                   </div>
                 )}
                 <h3 className="text-sm md:text-base font-semibold text-primary mb-1">

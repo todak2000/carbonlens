@@ -105,12 +105,12 @@ export default function MonteCarloPanel() {
   const sliderCls = 'w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-accent'
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-theme/20 pb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-theme/20 pb-4">
+        <div className="flex items-center gap-2 min-w-0">
           <Shuffle size={20} className="text-accent shrink-0" />
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-mono font-bold text-primary uppercase tracking-wider">Monte Carlo Uncertainty Simulator</h1>
             <p className="text-xs text-muted font-mono mt-0.5">Latin Hypercube Sampling over key reservoir parameters</p>
           </div>
@@ -225,7 +225,8 @@ export default function MonteCarloPanel() {
               </div>
 
               {/* Summary table */}
-              <table className="w-full text-xs font-mono border-collapse pt-2">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[300px] text-xs font-mono border-collapse pt-2">
                 <thead>
                   <tr className="text-muted border-b border-theme/20 font-bold uppercase text-[10px]">
                     <th className="text-left pb-2">Metric</th>
@@ -249,6 +250,7 @@ export default function MonteCarloPanel() {
                   </tr>
                 </tbody>
               </table>
+              </div>
 
               {/* Uncertainty ratio */}
               {result.p50_Mt > 0 && (

@@ -587,7 +587,7 @@ function ResultDisplay({ result }: { result: NonNullable<ReturnType<typeof useSi
       )}
 
       {/* DOE capacity range */}
-      <div className="flex items-center justify-between bg-tertiary/40 rounded-lg px-2.5 py-1.5 border border-theme/30">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 bg-tertiary/40 rounded-lg px-2.5 py-1.5 border border-theme/30">
         <span className="text-[10px] text-muted font-mono uppercase tracking-wider font-bold">DOE Range</span>
         <span className="text-xs font-mono text-success font-semibold">
           P90 {result.capacityP90.toFixed(2)} Mt (low) &nbsp;|&nbsp; P50 {result.totalCapacity.toFixed(2)} Mt &nbsp;|&nbsp; P10 {result.capacityP10.toFixed(2)} Mt (high)
@@ -657,27 +657,29 @@ function ResultDisplay({ result }: { result: NonNullable<ReturnType<typeof useSi
               <span>📂 Plume Expansion History</span>
               <span className="text-[9px] text-muted font-mono transition-transform group-open:rotate-90">▶</span>
             </summary>
-            <div className="mt-2 max-h-40 overflow-y-auto rounded-lg bg-tertiary/40 border border-theme/30 p-2 scrollbar-thin">
-              <table className="w-full text-left border-collapse text-[11px] font-mono">
-                <thead>
-                  <tr className="border-b border-theme/30 text-muted uppercase font-bold">
-                    <th className="py-1">Year</th>
-                    <th className="py-1">Injected (Mt)</th>
-                    <th className="py-1">Radius (m)</th>
-                    <th className="py-1 text-right">Area (km²)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {numSnapshots.map((s) => (
-                    <tr key={s.year} className="border-b border-theme/10 hover:bg-white/5">
-                      <td className="py-1 text-secondary font-bold">Yr {s.year}</td>
-                      <td className="py-1">{s.injectedMt.toFixed(2)}</td>
-                      <td className="py-1 text-accent font-bold">{s.plumeRadiusM.toFixed(0)} m</td>
-                      <td className="py-1 text-right">{s.plumeAreaKm2.toFixed(3)}</td>
+            <div className="mt-2 max-h-40 overflow-y-auto rounded-lg bg-tertiary/40 border border-theme/30 p-2">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[340px] text-left border-collapse text-[11px] font-mono">
+                  <thead>
+                    <tr className="border-b border-theme/30 text-muted uppercase font-bold">
+                      <th className="py-1">Year</th>
+                      <th className="py-1">Injected (Mt)</th>
+                      <th className="py-1">Radius (m)</th>
+                      <th className="py-1 text-right">Area (km²)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {numSnapshots.map((s) => (
+                      <tr key={s.year} className="border-b border-theme/10 hover:bg-white/5">
+                        <td className="py-1 text-secondary font-bold">Yr {s.year}</td>
+                        <td className="py-1">{s.injectedMt.toFixed(2)}</td>
+                        <td className="py-1 text-accent font-bold">{s.plumeRadiusM.toFixed(0)} m</td>
+                        <td className="py-1 text-right">{s.plumeAreaKm2.toFixed(3)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </details>
         </div>

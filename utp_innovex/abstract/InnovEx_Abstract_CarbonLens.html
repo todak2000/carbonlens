@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CarbonLens — InnovEx 2026 Abstract</title>
+<style>
+  @page { size: A4; margin: 16mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10pt; line-height: 1.45; color: #1a2332; background: #fff;
+  }
+  .band { height: 4mm; background: linear-gradient(90deg, #059669, #06b6d4); margin-bottom: 7mm; }
+  .kicker {
+    font-family: "IBM Plex Mono", Menlo, monospace; font-size: 8pt; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #059669; margin-bottom: 2mm;
+  }
+  h1 { font-size: 19pt; line-height: 1.25; color: #0b1220; margin-bottom: 2.5mm; }
+  h1 .accent { color: #059669; }
+  .meta { font-size: 9pt; color: #5b6779; margin-bottom: 6mm; line-height: 1.6; }
+  .meta b { color: #1a2332; }
+  h2 {
+    font-size: 11pt; text-transform: uppercase; letter-spacing: 0.8px; color: #0b1220;
+    border-left: 3.5pt solid #059669; padding-left: 6pt; margin: 4.5mm 0 1.8mm;
+  }
+  p { margin-bottom: 2.2mm; text-align: justify; }
+  ul { margin: 0 0 2.2mm 5mm; }
+  li { margin-bottom: 1.6mm; text-align: justify; }
+  li b, p b { color: #0b1220; }
+  .stat-strip {
+    display: flex; gap: 3mm; margin: 3mm 0 1mm;
+  }
+  .stat {
+    flex: 1; border: 0.4pt solid #d7dee8; border-top: 2.5pt solid #059669;
+    border-radius: 1.2mm; padding: 2.2mm 2.5mm; text-align: center;
+  }
+  .stat .n { font-family: "IBM Plex Mono", Menlo, monospace; font-size: 13pt; font-weight: 700; color: #0b1220; }
+  .stat .l { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.6px; color: #5b6779; margin-top: 0.8mm; }
+  .flow-wrap { margin: 2.5mm 0 1mm; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+  .flow-cap { font-size: 8pt; color: #5b6779; margin-top: 1.5mm; font-style: italic; }
+  .foot {
+    margin-top: 6mm; padding-top: 2.5mm; border-top: 0.4pt solid #d7dee8;
+    font-size: 7.5pt; color: #5b6779; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="band"></div>
+
+<div class="kicker">InnovEx 2026 · Technology, Education &amp; Career (TEC26) · Universiti Teknologi PETRONAS</div>
+<h1>CarbonLens: A Browser-Native CO<sub>2</sub> Geological Storage <span class="accent">Screening &amp; Simulation Studio</span></h1>
+<div class="meta">
+  <b>Daniel T. Olagunju</b> · Universiti Teknologi PETRONAS<br>
+  MSc research project · Open-source (MIT) · v0.1.0, released June 2026 ·
+  Live software demonstration available at the booth
+</div>
+
+<h2>Project Background</h2>
+<p>
+Carbon capture and storage (CCS) is central to Malaysia's decarbonisation pathway. The national
+<b>CCUS Act 2025</b> (gazetted 1 October 2025) has established a licensing regime for CO<sub>2</sub> storage,
+and multiple Malaysian storage complexes — including Kasawari, Duyong and the Malay Basin — are progressing
+toward development. Every such project begins with <b>screening-level assessment</b>: estimating storage
+capacity, predicting CO<sub>2</sub> plume migration, bounding the pressure front (Area of Review), and checking
+geomechanical limits of the caprock before committing to expensive numerical simulation and field work.
+</p>
+
+<h2>Problem Statement</h2>
+<p>
+Early-stage CO<sub>2</sub> storage assessment sits in an uncomfortable gap. Enterprise reservoir simulators
+are designed for generic multi-component oil-and-gas workflows: they are licence-heavy, require installation
+and specialist training, and are disproportionate for rapid screening. At the other extreme, spreadsheet
+calculators are transparent but oversimplified, and cannot propagate uncertainty or produce regulator-formatted
+outputs. Students, researchers and early-stage project developers lack a tool that is simultaneously
+<b>rapid, rigorous, transparent, validated and free to run</b>.
+</p>
+
+<h2>Proposed Solution</h2>
+<p>
+<b>CarbonLens</b> is a browser-native CO<sub>2</sub> storage screening and simulation studio: the full physics
+engine runs client-side in any modern browser, with <b>zero installation and zero backend</b>. It implements
+peer-reviewed analytical and semi-analytical models — Span–Wagner and Peng–Robinson equations of state,
+Duan-family multi-salt solubility, Nordbotten vertical-equilibrium plume migration with Hesse post-injection
+gravity currents, Land/Killough hysteretic trapping, Theis pressure transients, DOE P10/P50/P90 capacity
+estimation, and Hubbert–Willis/Mohr–Coulomb geomechanical screening — inside a single integrated workspace of
+<b>16 panels</b>, from fluid properties to a 3-D reservoir viewer, Monte Carlo uncertainty quantification,
+economics, leakage risk and regulator-ready export. Sixteen real formations worldwide are shipped as validated
+presets, including three Malaysian storage candidates.
+</p>
+<div class="stat-strip">
+  <div class="stat"><div class="n">16</div><div class="l">Validated formation presets</div></div>
+  <div class="stat"><div class="n">12</div><div class="l">Permit jurisdictions incl. Malaysia</div></div>
+  <div class="stat"><div class="n">943</div><div class="l">Automated tests passing</div></div>
+  <div class="stat"><div class="n">0</div><div class="l">Installation · backend · licence</div></div>
+</div>
+
+<h2>Innovation</h2>
+<ul>
+  <li><b>First browser-native full-physics CO<sub>2</sub> storage studio.</b> A multithreaded Web-Worker simulation
+  engine with interactive 3-D plume and pressure visualisation replaces install-gated desktop software for the
+  screening stage — assessment becomes a shareable web link.</li>
+  <li><b>White-box machine learning for CO<sub>2</sub>–brine interfacial tension.</b> A MARS surrogate with
+  inspectable, citable coefficients — externally validated at <b>R²&nbsp;=&nbsp;0.945</b> on a cross-laboratory
+  holdout (RMSE&nbsp;&lt;&nbsp;2.1&nbsp;mN/m) — with an applicability-domain gate (Green/Yellow/Red) that tells the
+  user when the model should not be trusted, in contrast to black-box ML.</li>
+  <li><b>Calibrated uncertainty, everywhere.</b> Monte Carlo propagation with conformal calibration carries
+  P10/P50/P90 bounds through every reported quantity rather than single-point estimates.</li>
+  <li><b>Jurisdiction-matched permit pre-application generator.</b> Twelve regulatory regimes — US EPA Class VI,
+  UK NSTA, EU, Australia, Algeria, Nigeria, Indonesia, Egypt, UAE (MOEI), Alberta, and both Malaysian regimes
+  (Federal CCUS Act 2025 and the separate Sarawak framework) — turn screening results into
+  regulator-formatted pre-application figures in one click.</li>
+  <li><b>Verifiable assessment registry.</b> Every exported assessment can carry a registry certificate
+  (e.g. CL-XXXX-XX-XXXX) that third parties verify through a public route — a step toward auditable,
+  shareable screening work.</li>
+</ul>
+
+<h2>Project Workflow</h2>
+<div class="flow-wrap">
+<svg width="580" height="508" viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <!-- Start -->
+  <rect x="245" y="8" width="150" height="34" rx="17" fill="#0b1220"/>
+  <text x="320" y="30" text-anchor="middle" fill="#ffffff" font-size="13">Start</text>
+  <line x1="320" y1="42" x2="320" y2="62" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Step 1 -->
+  <rect x="170" y="66" width="300" height="38" rx="4" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="320" y="82" text-anchor="middle" font-size="12.5" fill="#0b1220">Literature &amp; data curation</text>
+  <text x="320" y="97" text-anchor="middle" font-size="10" fill="#5b6779">peer-reviewed correlations · 16 global formations</text>
+  <line x1="320" y1="104" x2="320" y2="124" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Step 2 -->
+  <rect x="170" y="128" width="300" height="38" rx="4" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="320" y="144" text-anchor="middle" font-size="12.5" fill="#0b1220">Browser physics engine (TypeScript)</text>
+  <text x="320" y="159" text-anchor="middle" font-size="10" fill="#5b6779">EOS · solubility · plume · pressure · geomechanics</text>
+  <line x1="320" y1="166" x2="320" y2="186" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Step 3 -->
+  <rect x="170" y="190" width="300" height="38" rx="4" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="320" y="206" text-anchor="middle" font-size="12.5" fill="#0b1220">White-box MARS surrogate (CO&#8322;–brine IFT)</text>
+  <text x="320" y="221" text-anchor="middle" font-size="10" fill="#5b6779">external R² = 0.945 · applicability-domain gate</text>
+  <line x1="320" y1="228" x2="320" y2="248" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Step 4 -->
+  <rect x="170" y="252" width="300" height="38" rx="4" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="320" y="268" text-anchor="middle" font-size="12.5" fill="#0b1220">Studio integration</text>
+  <text x="320" y="283" text-anchor="middle" font-size="10" fill="#5b6779">16 panels · 3-D viewer · Monte Carlo UQ · permit exports</text>
+  <line x1="320" y1="290" x2="320" y2="310" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Step 5 -->
+  <rect x="170" y="314" width="300" height="38" rx="4" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+  <text x="320" y="330" text-anchor="middle" font-size="12.5" fill="#0b1220">Automated testing &amp; field validation</text>
+  <text x="320" y="345" text-anchor="middle" font-size="10" fill="#5b6779">943 tests · benchmarked vs published field data</text>
+  <line x1="320" y1="352" x2="320" y2="372" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- Decision -->
+  <polygon points="320,376 430,424 320,472 210,424" fill="#fff7ed" stroke="#d97706" stroke-width="1.4"/>
+  <text x="320" y="418" text-anchor="middle" font-size="12.5" fill="#0b1220">Matches published</text>
+  <text x="320" y="434" text-anchor="middle" font-size="12.5" fill="#0b1220">field data?</text>
+
+  <!-- No loop -->
+  <line x1="210" y1="424" x2="80" y2="424" stroke="#334155" stroke-width="1.6"/>
+  <line x1="80" y1="424" x2="80" y2="147" stroke="#334155" stroke-width="1.6"/>
+  <line x1="80" y1="147" x2="166" y2="147" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="96" y="414" font-size="11" fill="#b45309">No — refine models</text>
+
+  <!-- Yes -->
+  <line x1="320" y1="472" x2="320" y2="492" stroke="#334155" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="332" y="488" font-size="11" fill="#059669">Yes</text>
+
+  <!-- End -->
+  <rect x="195" y="496" width="250" height="38" rx="19" fill="#059669"/>
+  <text x="320" y="520" text-anchor="middle" fill="#ffffff" font-size="12.5">Open-source release (MIT, v0.1.0)</text>
+</svg>
+<div class="flow-cap">Figure 1 — CarbonLens development workflow: research, implementation, surrogate development, integration, testing and validation.</div>
+</div>
+
+<div class="foot">
+  <b>Disclaimer:</b> CarbonLens produces screening-level results for pre-FEED assessment, education and regulatory
+  pre-application support. It is not a regulatory submission tool and does not replace numerical reservoir
+  simulation or independent expert review. · Software demonstrated live at the booth; source code openly available
+  under the MIT licence.
+</div>
+
+</body>
+</html>

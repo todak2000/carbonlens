@@ -55,6 +55,52 @@
 
   html {
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  img, video, svg {
+    max-width: 100%;
+  }
+
+  input, select, textarea, button {
+    font: inherit;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  /* Safe-area aware utility for fixed bars on mobile browsers */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Scrollable table wrapper fallback for dense data */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Wellbore schematic: keep 320x520 SVG fluid without distorting */
+  .wellbore-responsive svg {
+    max-width: 100%;
+    height: auto;
   }
 }
 

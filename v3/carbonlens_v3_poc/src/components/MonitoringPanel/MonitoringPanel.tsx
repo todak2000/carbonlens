@@ -835,7 +835,7 @@ export default function MonitoringPanel() {
   const currentProjectId = useUIStore(s => s.currentProjectId)
 
   return (
-    <div className="max-w-4xl mx-auto bg-card rounded-xl border border-theme/30 shadow-md flex flex-col overflow-hidden">
+    <div className="w-full space-y-5">
       {/* Panel header */}
       <div className="p-5 pb-0 shrink-0">
         <h2 className="font-semibold text-primary text-lg font-mono uppercase tracking-wider flex items-center gap-1.5 mb-3">

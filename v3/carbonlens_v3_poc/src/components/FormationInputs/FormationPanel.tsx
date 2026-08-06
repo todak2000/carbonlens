@@ -1084,12 +1084,10 @@ export default function FormationPanel() {
               <button
                 disabled={!screeningResult.canProceed || (screeningResult.requiresAcknowledgment && !amberAcknowledged)}
                 onClick={() => { setPanel('geology') }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold font-mono transition
-                  disabled:opacity-40 disabled:cursor-not-allowed
-                  bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white"
+                className="w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold font-mono transition disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-500 hover:bg-emerald-400 disabled:bg-tertiary disabled:text-muted text-white shadow-md text-center leading-normal"
               >
-                <ShieldCheck size={13} />
-                Confirm Formation &amp; Continue to Geology →
+                <ShieldCheck size={14} className="shrink-0" />
+                <span>Confirm Formation &amp; Continue to Geology →</span>
               </button>
             </div>
           </div>
@@ -1122,7 +1120,7 @@ export default function FormationPanel() {
   }, [params.depth, params.thickness])
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="w-full space-y-5">
       
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-theme/20 pb-4">
@@ -1264,7 +1262,7 @@ export default function FormationPanel() {
             </button>
 
             {/* Step Indicators */}
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               {SUB_STEPS.map(({ n, label }) => (
                 <button key={n}
                   onClick={() => setSubStep(n as SubStep)}

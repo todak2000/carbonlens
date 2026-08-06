@@ -23,6 +23,12 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: #f0f4f8; }
   .no-print { display: none !important; }
   .cert-outer { box-shadow: none !important; page-break-inside: avoid; }
 }
+
+@media screen and (max-width: 900px) {
+  .cert-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cert-outer { min-width: 840px; }
+  .cert-actionbar { flex-wrap: wrap; gap: 10px; }
+}
 `
 
 // ── Logo (dark version for white background) ──────────────────────────────────
@@ -158,17 +164,17 @@ export default function CertificatePage({ assetId, embedded }: { assetId: string
 
       {/* ── Action bar (screen only, hidden in embedded mode) ── */}
       {!embedded && (
-        <div className="no-print" style={{
+        <div className="no-print cert-actionbar" style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
           background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
-          padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderBottom: '1px solid #e2e8f0',
           boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
         }}>
           <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, color: '#64748b', letterSpacing: 1 }}>
             CERTIFICATE · {assetId}
           </span>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               onClick={() => window.print()}
               style={{ background: '#00a884', color: 'white', border: 'none', borderRadius: 6, padding: '8px 18px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'IBM Plex Mono,monospace', letterSpacing: 1 }}
@@ -186,7 +192,7 @@ export default function CertificatePage({ assetId, embedded }: { assetId: string
       )}
 
       {/* ── Page wrapper ── */}
-      <div style={{ minHeight: embedded ? 0 : '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: embedded ? 0 : 64, paddingBottom: embedded ? 0 : 40, background: '#f0f4f8' }}>
+      <div className="cert-scroll" style={{ minHeight: embedded ? 0 : '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: embedded ? 0 : 64, paddingBottom: embedded ? 0 : 40, background: '#f0f4f8' }}>
         <div className="cert-outer" style={{
           width: '100%',
           maxWidth: 1050,

@@ -208,11 +208,92 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 .mass-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
 .mass-fill  { height: 100%; border-radius: 5px; }
 .mass-pct   { width: 40px; text-align: right; font-family:'IBM Plex Mono',monospace; font-weight: 600; font-size: 8pt; color: #0d1f3c; flex-shrink: 0; }
+
+    /* ── SCREEN RESPONSIVE (mobile / tablet) ───────────────────────── */
+    @media screen and (max-width: 900px) {
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+    }
+
+    @media screen and (max-width: 768px) {
+      /* Cover page */
+      .cover-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+      .back-page {
+        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
+      }
+
+      /* Cover title */
+      .cover-title { font-size: clamp(18pt, 6vw, 28pt) !important; letter-spacing: -0.3px !important; }
+
+      /* Cover formation strip */
+      .cover-formation-strip { flex-wrap: wrap !important; gap: 16px !important; }
+
+      /* Cover meta grid */
+      .cover-meta-grid { grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
+
+      /* KPI grid: 2 columns on mobile */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+      /* Two-col and three-col grids: stack */
+      .two-col { grid-template-columns: 1fr !important; gap: 10px !important; }
+      .three-col { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+
+      /* Tables: horizontal scroll */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; }
+
+      /* Section boxes */
+      .section-box { padding: 10px 12px !important; }
+
+      /* Sensitivity chart label */
+      .sen-label { width: 70px !important; font-size: 7pt !important; }
+
+      /* Mass balance label */
+      .mass-label { width: 140px !important; font-size: 8pt !important; }
+
+      /* Content page */
+      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
+
+      /* Page header */
+      .page-header { flex-wrap: wrap !important; gap: 6px !important; }
+
+      /* Page footer */
+      .page-footer { flex-direction: column !important; gap: 4px !important; }
+    }
+
+    @media screen and (max-width: 480px) {
+      .cover-title { font-size: clamp(16pt, 7vw, 22pt) !important; }
+      .cover-meta-grid { grid-template-columns: 1fr !important; }
+      .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+      .three-col { grid-template-columns: 1fr !important; }
+      .cover-formation-strip { gap: 12px !important; }
+    }
+
+    @media screen and (max-width: 360px) {
+      .kpi-grid { grid-template-columns: 1fr !important; }
+    }
+
+    /* ── TOP NAV BAR RESPONSIVE ── */
+    @media screen and (max-width: 768px) {
+      .cl-topnav {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+      }
+      .cl-topnav-btns {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+      }
+      .cl-topnav > span:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+    }
 </style>
 </head>
-<body><div style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;" class="no-print">
+<body><div class="cl-topnav no-print" style="position:sticky;top:0;z-index:100;background:#0d1f3c;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
   <span style="color:#00c4a0;font-family:'IBM Plex Mono',monospace;font-size:9pt;font-weight:700;">CarbonLens Validation Report</span>
-  <div style="display:flex;gap:8px;">
+  <div class="cl-topnav-btns" style="display:flex;gap:8px;flex-wrap:wrap;">
     <button onclick="window.print()" style="background:#00c4a0;color:#0d1f3c;border:none;border-radius:4px;padding:5px 14px;font-size:8pt;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2B07; Download PDF</button>
     <button onclick="window.location.href='index.html'" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:5px 14px;font-size:8pt;cursor:pointer;font-family:'IBM Plex Mono',monospace;">&#x2190; All Reports</button>
   </div>
@@ -247,11 +328,11 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </div>
       <div class="cover-formation-item">
         <div class="label">P50 Storage Capacity</div>
-        <div class="val">64.3 Mt CO₂</div>
+        <div class="val">44.7 Mt CO₂</div>
       </div>
       <div class="cover-formation-item">
         <div class="label">Safety Factor (Fs)</div>
-        <div class="val" style="color:#ef4444">0.96 — HIGH RISK</div>
+        <div class="val" style="color:#ef4444">0.74 — HIGH RISK</div>
       </div>
       <div class="cover-formation-item">
         <div class="label">Reservoir Depth</div>
@@ -259,20 +340,20 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </div>
       <div class="cover-formation-item">
         <div class="label">Temperature / Pressure</div>
-        <div class="val">91°C · 10.5 MPa</div>
+        <div class="val">91°C · 17.6 MPa</div>
       </div>
     </div>
 
     <div style="display:flex;gap:12px;align-items:center">
       <span class="cover-pill">PHYSICS VALIDATED · ALL PASS</span>
-      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 26 July 2026</span>
+      <span style="font-size:7pt;color:#475569">CarbonLens Simulation Studio v3 · 06 August 2026</span>
     </div>
   </div>
 
   <div class="cover-meta-grid">
     <div>
       <div class="cover-meta-label">Formation Description</div>
-      <div class="cover-meta-val" style="font-size:9pt;font-weight:400;color:#94a3b8">Low-permeability fractured carbonate reservoir, Krechba field. h=20m, k≈10mD, T=91°C. Sub-hydrostatic after depletion.</div>
+      <div class="cover-meta-val" style="font-size:9pt;font-weight:400;color:#94a3b8">Low-permeability fractured carbonate reservoir, Krechba field. h=20m, k=10mD, T=91°C. BP/Statoil/Sonatrach 2004-2011. P_initial 17.6 MPa; P at injection start 10.5 MPa.</div>
     </div>
     <div>
       <div class="cover-meta-label">Simulation Scenario</div>
@@ -281,7 +362,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     </div>
     <div>
       <div class="cover-meta-label">Report Generated</div>
-      <div class="cover-meta-val" style="font-size:9pt">26 July 2026</div>
+      <div class="cover-meta-val" style="font-size:9pt">06 August 2026</div>
       <div class="cover-meta-sub">CarbonLens v3 Physics Engine</div>
     </div>
   </div>
@@ -305,7 +386,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">In Salah</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 06 August 2026
     </div>
   </div>
 
@@ -327,7 +408,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <thead><tr><th>Fluid / Geomech Parameter</th><th>Value</th><th>Unit</th></tr></thead>
       <tbody>
         <tr><td>Temperature (T)</td><td class="mono">91.0</td><td>°C</td></tr>
-        <tr><td>Pressure (P)</td><td class="mono">10.50</td><td>MPa</td></tr>
+        <tr><td>Pressure (P)</td><td class="mono">17.60</td><td>MPa</td></tr>
         <tr><td>Salinity — Monovalent</td><td class="mono">0.300</td><td>mol/kg</td></tr>
         <tr><td>Salinity — Bivalent</td><td class="mono">0.050</td><td>mol/kg</td></tr>
         <tr><td>Caprock Friction (φ_f)</td><td class="mono">25.0°</td><td>—</td></tr>
@@ -339,7 +420,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <h2>2 · Fluid Property Validation</h2>
   <p style="font-size:8.5pt;color:#64748b;margin-bottom:8px">
-    At initial reservoir conditions: <strong>T = 91.0 °C</strong>, <strong>P = 10.50 MPa</strong>
+    At initial reservoir conditions: <strong>T = 91.0 °C</strong>, <strong>P = 17.60 MPa</strong>
   </p>
   <table>
     <thead>
@@ -354,50 +435,50 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       <tr>
         <td>Phase State</td>
-        <td class="mono" style="font-size:7.5pt">91.0 °C, 10.50 MPa</td>
+        <td class="mono" style="font-size:7.5pt">91.0 °C, 17.60 MPa</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
         <td>Critical point: 31.04 °C, 7.38 MPa</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>CO₂ Density</td>
-        <td class="mono" style="font-size:7.5pt">91.0 °C, 10.50 MPa</td>
-        <td><strong>210.47 kg/m³</strong></td>
+        <td class="mono" style="font-size:7.5pt">91.0 °C, 17.60 MPa</td>
+        <td><strong>416.66 kg/m³</strong></td>
         <td>Span-Wagner (1996) Helmholtz EOS</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>Brine Density</td>
         <td class="mono" style="font-size:7.5pt">91.0 °C, 0.300 mol/kg</td>
-        <td><strong>986.94 kg/m³</strong></td>
+        <td><strong>989.11 kg/m³</strong></td>
         <td>Garcia (2001)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>Density Contrast (Δρ)</td>
         <td class="mono" style="font-size:7.5pt">ρ_brine − ρ_CO₂</td>
-        <td><strong>776.47 kg/m³</strong></td>
+        <td><strong>572.45 kg/m³</strong></td>
         <td>Buoyancy driver — Boait (2012)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>CO₂ Viscosity</td>
-        <td class="mono" style="font-size:7.5pt">91.0 °C, 10.50 MPa</td>
-        <td><strong>2.210 × 10⁻⁵ Pa·s</strong></td>
+        <td class="mono" style="font-size:7.5pt">91.0 °C, 17.60 MPa</td>
+        <td><strong>3.230 × 10⁻⁵ Pa·s</strong></td>
         <td>Fenghour et al. (1998)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>CO₂ Solubility</td>
-        <td class="mono" style="font-size:7.5pt">91.0 °C, 10.50 MPa</td>
-        <td><strong>0.4781 mol/kg</strong></td>
+        <td class="mono" style="font-size:7.5pt">91.0 °C, 17.60 MPa</td>
+        <td><strong>0.6138 mol/kg</strong></td>
         <td>Duan-Sun (2003)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
       <tr>
         <td>Interfacial Tension (IFT)</td>
-        <td class="mono" style="font-size:7.5pt">91.0 °C, 10.50 MPa</td>
-        <td><strong>37.77 mN/m</strong></td>
+        <td class="mono" style="font-size:7.5pt">91.0 °C, 17.60 MPa</td>
+        <td><strong>30.47 mN/m</strong></td>
         <td>MARS ML Model (Olagunju, in prep.)</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -418,7 +499,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <tr>
         <td>Effective Diffusivity (Dₑff)</td>
         <td class="mono" style="font-size:7.5pt">91.0 °C, φ = 0.12</td>
-        <td><strong>1.823 × 10⁻¹⁰ m²/s</strong></td>
+        <td><strong>1.922 × 10⁻¹⁰ m²/s</strong></td>
         <td>Millington &amp; Quirk (1961) effective diffusivity</td>
         <td><span class="badge badge-pass">✓ PASS</span></td>
       </tr>
@@ -428,12 +509,12 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div class="callout" style="margin-top:12px">
     <div class="callout-title">Physical Interpretation</div>
     <p>
-      CO₂ at 10.50 MPa and 91.0 °C is <strong>supercritical</strong> — above both the critical temperature (31.04 °C) and critical pressure (7.38 MPa). It behaves as a liquid-like dense phase (210 kg/m³) with gas-like mobility, maximising storage density and dissolution trapping.
+      CO₂ at 17.60 MPa and 91.0 °C is <strong>supercritical</strong> — above both the critical temperature (31.04 °C) and critical pressure (7.38 MPa). It behaves as a liquid-like dense phase (417 kg/m³) with gas-like mobility, maximising storage density and dissolution trapping.
     </p>
     <p style="margin-top:5px">
-      Density contrast Δρ = <strong>776.5 kg/m³</strong> drives buoyant plume migration.
-      IFT = <strong>37.8 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
-      Solubility = <strong>0.4781 mol/kg</strong> sets the dissolution trapping capacity.
+      Density contrast Δρ = <strong>572.5 kg/m³</strong> drives buoyant plume migration.
+      IFT = <strong>30.5 mN/m</strong> governs capillary snap-off and residual trapping efficiency.
+      Solubility = <strong>0.6138 mol/kg</strong> sets the dissolution trapping capacity.
     </p>
   </div>
 
@@ -448,17 +529,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <line x1="42" y1="112" x2="290" y2="112" stroke="#e2e8f0" stroke-width="1"/>
   <line x1="290" y1="10" x2="290" y2="112" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3"/>
   <line x1="42" y1="112.0" x2="290" y2="112.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="61.0" x2="290" y2="61.0" stroke="#f1f5f9" stroke-width="0.8"/><line x1="42" y1="10.0" x2="290" y2="10.0" stroke="#f1f5f9" stroke-width="0.8"/>
-  <line x1="92.3" y1="10" x2="92.3" y2="112" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,3"/>
-  <text x="92.3" y="8" text-anchor="middle" font-size="6" fill="#f59e0b">Pc=7.38</text>
-  <path d="M42.0,89.6 L104.0,75.3 L166.0,58.4 L228.0,39.2 L290.0,19.3 L290.0,112.0 L42,112.0 Z" fill="rgba(0,196,160,0.08)"/>
-  <path d="M42.0,89.6 L104.0,75.3 L166.0,58.4 L228.0,39.2 L290.0,19.3" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M42.0,23.3 L104.0,38.5 L166.0,47.0 L228.0,53.0 L290.0,57.3" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
-  <circle cx="166.0" cy="58.4" r="3.5" fill="#00c4a0" stroke="white" stroke-width="1.5"/>
-  <text x="39" y="115.0" text-anchor="end" font-size="6" fill="#64748b">0</text><text x="39" y="64.0" text-anchor="end" font-size="6" fill="#64748b">200</text><text x="39" y="13.0" text-anchor="end" font-size="6" fill="#64748b">400</text>
+  
+  <path d="M42.0,86.5 L104.0,67.8 L166.0,48.1 L228.0,31.7 L290.0,19.3 L290.0,112.0 L42,112.0 Z" fill="rgba(0,196,160,0.08)"/>
+  <path d="M42.0,86.5 L104.0,67.8 L166.0,48.1 L228.0,31.7 L290.0,19.3" fill="none" stroke="#00c4a0" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M42.0,23.3 L104.0,36.8 L166.0,45.0 L228.0,50.0 L290.0,53.3" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+  <circle cx="166.0" cy="48.1" r="3.5" fill="#00c4a0" stroke="white" stroke-width="1.5"/>
+  <text x="39" y="115.0" text-anchor="end" font-size="6" fill="#64748b">0</text><text x="39" y="64.0" text-anchor="end" font-size="6" fill="#64748b">332</text><text x="39" y="13.0" text-anchor="end" font-size="6" fill="#64748b">665</text>
   <text x="14" y="61" text-anchor="middle" font-size="6.5" fill="#00c4a0" transform="rotate(-90,14,61)">rho_CO2 (kg/m3)</text>
-  <text x="293" y="115.0" text-anchor="start" font-size="6" fill="#64748b">0</text><text x="293" y="64.0" text-anchor="start" font-size="6" fill="#64748b">30</text><text x="293" y="13.0" text-anchor="start" font-size="6" fill="#64748b">59</text>
+  <text x="293" y="115.0" text-anchor="start" font-size="6" fill="#64748b">0</text><text x="293" y="64.0" text-anchor="start" font-size="6" fill="#64748b">23</text><text x="293" y="13.0" text-anchor="start" font-size="6" fill="#64748b">46</text>
   <text x="326" y="61" text-anchor="middle" font-size="6.5" fill="#3b82f6" transform="rotate(90,326,61)">IFT (mN/m)</text>
-  <text x="42.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">5.3</text><text x="104.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">7.9</text><text x="166.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">10.5</text><text x="228.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">13.1</text><text x="290.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">15.8</text>
+  <text x="42.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">8.8</text><text x="104.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">13.2</text><text x="166.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">17.6</text><text x="228.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">22.0</text><text x="290.0" y="123" text-anchor="middle" font-size="6" fill="#64748b">26.4</text>
   <text x="166" y="139" text-anchor="middle" font-size="6.5" fill="#64748b">Pressure (MPa)</text>
   <rect x="210" y="10" width="78" height="26" fill="rgba(255,255,255,0.9)" rx="4" stroke="#e2e8f0" stroke-width="0.8"/>
   <line x1="214" y1="19" x2="226" y2="19" stroke="#00c4a0" stroke-width="2"/>
@@ -494,7 +574,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>In Salah</em></span>
-    <span>Page 1 · Generated 26 July 2026</span>
+    <span>Page 1 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -516,7 +596,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">In Salah</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 06 August 2026
     </div>
   </div>
 
@@ -525,22 +605,22 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-label">P90 Low Estimate</div>
-      <div class="kpi-value">45.4 Mt</div>
-      <div class="kpi-sub">Fill factor: 60% (Bachu 2007)</div>
+      <div class="kpi-value">26.8 Mt</div>
+      <div class="kpi-sub">30% fill (carbonate, Bachu 2007)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P50 Best Estimate</div>
-      <div class="kpi-value" style="color:#00c4a0">64.3 Mt</div>
-      <div class="kpi-sub">Fill factor: 85% (Bachu 2007)</div>
+      <div class="kpi-value" style="color:#00c4a0">44.7 Mt</div>
+      <div class="kpi-sub">50% fill (carbonate, Bachu 2007)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">P10 High Estimate</div>
-      <div class="kpi-value">75.7 Mt</div>
-      <div class="kpi-sub">Fill factor: 100% (Bachu 2007)</div>
+      <div class="kpi-value">67.0 Mt</div>
+      <div class="kpi-sub">75% fill (carbonate, Bachu 2007)</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Containment Probability</div>
-      <div class="kpi-value" style="color:#00c4a0">77.5%</div>
+      <div class="kpi-value" style="color:#00c4a0">77.2%</div>
       <div class="kpi-sub">NTG + trapped fraction</div>
     </div>
   </div>
@@ -548,25 +628,25 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   <h3>3.1 CO₂ Mass Distribution — Year 20 · Active Injection: 12.50 Mt</h3>
   <div class="two-col" style="gap:12px;margin-bottom:8px;align-items:start">
     <div><svg width="300" height="150" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-  <path d="M70.0,40.0 L70.0,20.0 A50,50,0,0,1,118.7,81.1 L99.2,76.7 A30,30,0,0,0,70.0,40.0 Z" fill="#00c4a0" stroke="white" stroke-width="1.5"/><path d="M99.2,76.7 L118.7,81.1 A50,50,0,0,1,32.3,102.9 L47.4,89.7 A30,30,0,0,0,99.2,76.7 Z" fill="#3b82f6" stroke="white" stroke-width="1.5"/><path d="M47.4,89.7 L32.3,102.9 A50,50,0,0,1,70.0,20.0 L70.0,40.0 A30,30,0,0,0,47.4,89.7 Z" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
+  <path d="M70.0,40.0 L70.0,20.0 A50,50,0,0,1,117.2,86.4 L98.3,79.8 A30,30,0,0,0,70.0,40.0 Z" fill="#00c4a0" stroke="white" stroke-width="1.5"/><path d="M98.3,79.8 L117.2,86.4 A50,50,0,0,1,37.3,107.8 L50.4,92.7 A30,30,0,0,0,98.3,79.8 Z" fill="#3b82f6" stroke="white" stroke-width="1.5"/><path d="M50.4,92.7 L37.3,107.8 A50,50,0,0,1,70.0,20.0 L70.0,40.0 A30,30,0,0,0,50.4,92.7 Z" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
   <text x="70" y="66" text-anchor="middle" font-size="8" font-weight="700" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">12.5</text>
   <text x="70" y="78" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Mt total</text>
   <g transform="translate(155,47)"><g transform="translate(0,0)">
       <rect x="0" y="0" width="9" height="9" fill="#00c4a0" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Residual (28.6%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Residual (30.3%)</text>
     </g><g transform="translate(0,18)">
       <rect x="0" y="0" width="9" height="9" fill="#3b82f6" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Dissolution (35.0%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Dissolution (31.1%)</text>
     </g><g transform="translate(0,36)">
       <rect x="0" y="0" width="9" height="9" fill="#f59e0b" rx="2"/>
-      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Structural (36.4%)</text>
+      <text x="13" y="8" font-size="7.5" fill="#1e293b" font-family="'IBM Plex Sans',sans-serif">Structural (38.6%)</text>
     </g></g>
 </svg></div>
     <div style="font-size:8pt;color:#64748b;line-height:1.7;padding-top:4px">
       <p>Each mechanism solved <strong>independently</strong>. The free-phase fraction is derived from the Land (1968) relative permeability complement, not a mathematical remainder.</p>
-      <p style="margin-top:4px">Formation capacity utilization: <strong>263.6%</strong> (12.50 Mt / 4.74 Mt total).</p>
+      <p style="margin-top:4px">Formation capacity utilization: <strong>274.1%</strong> (12.50 Mt / 4.56 Mt total).</p>
       <p style="margin-top:4px">Mass balance ε = <strong>0.000 Mt</strong> (0.0% — model consistent).</p>
-      <p style="margin-top:4px">Plume radius: <strong>15545.9 m</strong> · Height: <strong>4.8 m</strong></p>
+      <p style="margin-top:4px">Plume radius: <strong>10834.6 m</strong> · Height: <strong>5.8 m</strong></p>
     </div>
   </div>
 
@@ -583,22 +663,22 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       <tr>
         <td><span class="badge badge-perm">Structural (Closure)</span></td>
-        <td class="mono">0.133 Mt</td>
-        <td class="mono">0.133 Mt</td>
+        <td class="mono">0.263 Mt</td>
+        <td class="mono">0.263 Mt</td>
         <td class="mono">100.0%</td>
         <td style="font-size:7.5pt;color:#64748b">Trap geometry × NTG × φ × (1−S<sub>wi</sub>−S<sub>gr</sub>)</td>
       </tr>
       <tr>
         <td><span class="badge badge-perm">Residual (Capillary)</span></td>
-        <td class="mono">0.235 Mt</td>
-        <td class="mono">3.571 Mt</td>
-        <td class="mono">1522.8%</td>
+        <td class="mono">0.417 Mt</td>
+        <td class="mono">3.788 Mt</td>
+        <td class="mono">909.0%</td>
         <td style="font-size:7.5pt;color:#64748b">Land (1968) snap-off · PVI×FQI sweep efficiency</td>
       </tr>
       <tr>
         <td><span class="badge badge-perm">Dissolution (Brine)</span></td>
-        <td class="mono">4.375 Mt</td>
-        <td class="mono">4.375 Mt</td>
+        <td class="mono">3.882 Mt</td>
+        <td class="mono">3.882 Mt</td>
         <td class="mono">100.0%</td>
         <td style="font-size:7.5pt;color:#64748b">Duan-Sun (2003) + Fick + Rayleigh convection</td>
       </tr>
@@ -611,16 +691,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       </tr>
       <tr style="border-top:2px solid #0d1f3c">
         <td><strong>Total Formation Capacity</strong></td>
-        <td class="mono"><strong>4.742 Mt</strong></td>
+        <td class="mono"><strong>4.561 Mt</strong></td>
         <td class="mono"><strong>12.500 Mt</strong></td>
-        <td class="mono"><strong>263.6%</strong></td>
-        <td style="font-size:7.5pt;color:#64748b">Hydrodynamic free-phase: 4.554 Mt</td>
+        <td class="mono"><strong>274.1%</strong></td>
+        <td style="font-size:7.5pt;color:#64748b">Hydrodynamic free-phase: 4.830 Mt</td>
       </tr>
     </tbody>
   </table>
   <div style="font-size:7.5pt;color:#64748b;margin-top:6px">
-    Plume radius: 15545.9 m &nbsp;·&nbsp; Plume height: 4.8 m
-    &nbsp;·&nbsp; Structural (free-phase): 4.554 Mt (36.4% of injected)
+    Plume radius: 10834.6 m &nbsp;·&nbsp; Plume height: 5.8 m
+    &nbsp;·&nbsp; Structural (free-phase): 4.830 Mt (38.6% of injected)
     &nbsp;·&nbsp; <strong style="color:#00c4a0">ε = 0.000 Mt</strong>
     (✓ model consistent: snap-off capacity ≥ Land-predicted residual)
   </div>
@@ -633,16 +713,16 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div style="display:flex;align-items:center;gap:10px">
         <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
   <path d="M18.0,68.0 A52,52,0,0,1,44.0,23.0 L49.0,31.6 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M44.0,23.0 A52,52,0,0,1,53.9,18.5 L57.0,28.1 A42,42,0,0,0,49.0,31.6 Z" fill="#fef3c7" opacity="0.85"/><path d="M53.9,18.5 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,57.0,28.1 Z" fill="#d1fae5" opacity="0.85"/>
-  <line x1="70" y1="68" x2="43.1" y2="25.9" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <line x1="70" y1="68" x2="34.2" y2="33.1" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
   <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
-  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">0.96</text>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">0.74</text>
   <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Fs</text>
   <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">Safety Factor</text>
   <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">0</text>
   <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">3.0</text>
 </svg>
         <div>
-          <div class="kpi-value" style="color:#ef4444">0.957</div>
+          <div class="kpi-value" style="color:#ef4444">0.739</div>
           <div class="kpi-sub">Limit ≥ 1.20 &nbsp; <span class="badge badge-warn">⚠ WARNING</span></div>
         </div>
       </div>
@@ -651,17 +731,17 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
       <div class="kpi-label">MAIP Margin</div>
       <div style="display:flex;align-items:center;gap:10px">
         <svg width="140" height="80" viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-  <path d="M18.0,68.0 A52,52,0,0,1,31.1,33.5 L38.6,40.1 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M31.1,33.5 A52,52,0,0,1,51.6,19.4 L55.1,28.7 A42,42,0,0,0,38.6,40.1 Z" fill="#fef3c7" opacity="0.85"/><path d="M51.6,19.4 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,55.1,28.7 Z" fill="#d1fae5" opacity="0.85"/>
-  <line x1="70" y1="68" x2="22.8" y2="51.5" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18.0,68.0 A52,52,0,0,1,50.3,19.9 L54.1,29.1 A42,42,0,0,0,28.0,68.0 Z" fill="#fee2e2" opacity="0.85"/><path d="M50.3,19.9 A52,52,0,0,1,70.2,16.0 L70.1,26.0 A42,42,0,0,0,54.1,29.1 Z" fill="#fef3c7" opacity="0.85"/><path d="M70.2,16.0 A52,52,0,0,1,122.0,68.0 L112.0,68.0 A42,42,0,0,0,70.1,26.0 Z" fill="#d1fae5" opacity="0.85"/>
+  <line x1="70" y1="68" x2="21.0" y2="58.3" stroke="#0d1f3c" stroke-width="2" stroke-linecap="round"/>
   <circle cx="70" cy="68" r="3.5" fill="#0d1f3c"/>
-  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">-16.09</text>
+  <text x="70" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="#0d1f3c" font-family="'IBM Plex Mono',monospace">-50.35</text>
   <text x="70" y="82" text-anchor="middle" font-size="6.5" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">%</text>
   <text x="70" y="92" text-anchor="middle" font-size="6" fill="#64748b" font-family="'IBM Plex Sans',sans-serif">MAIP Margin</text>
-  <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">-30</text>
+  <text x="16" y="73" text-anchor="middle" font-size="6" fill="#64748b">-60</text>
   <text x="124" y="73" text-anchor="middle" font-size="6" fill="#64748b">100.0</text>
 </svg>
         <div>
-          <div class="kpi-value" style="color:#ef4444">-16.1%</div>
+          <div class="kpi-value" style="color:#ef4444">-50.3%</div>
           <div class="kpi-sub">MAIP = 27.26 MPa &nbsp; <span class="badge badge-warn">⚠ WARNING</span></div>
         </div>
       </div>
@@ -676,33 +756,33 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       <tr><td>Fracture Pressure</td><td>Must exceed inj. P</td><td class="mono">30.29 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Maximum Allowable Injection Pressure (MAIP)</td><td>90% × fracture gradient</td><td class="mono">27.26 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
-      <tr><td>MAIP Safety Margin</td><td>&gt; 0%</td><td class="mono">-16.1%</td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
-      <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">4.925 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
+      <tr><td>MAIP Safety Margin</td><td>&gt; 0%</td><td class="mono">-50.3%</td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
+      <tr><td>Mohr-Coulomb Safety Margin</td><td>&gt; 0 MPa</td><td class="mono">1.964 MPa</td><td><span class="badge badge-pass">✓ PASS</span></td></tr>
       <tr><td>Induced Seismicity Risk</td><td>Low</td><td><strong style="color:#991b1b">HIGH</strong></td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
-      <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">0.85062</td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
-      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">3.85682 cm</td><td><span class="badge badge-warn">⚠ CHECK</span></td></tr>
+      <tr><td>Fault Slip Potential</td><td>&lt; 0.05</td><td class="mono">1.00000</td><td><span class="badge badge-warn">⚠ WARNING</span></td></tr>
+      <tr><td>Predicted Surface Heave</td><td>&lt; 1.0 cm</td><td class="mono">2.11803 cm</td><td><span class="badge badge-warn">⚠ CHECK</span></td></tr>
       <tr><td>Overburden Stress (σᵥ)</td><td>Lithostat</td><td class="mono">45.90 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
       <tr><td>Min. Horizontal Stress (σₕ)</td><td>In-situ</td><td class="mono">30.29 MPa</td><td><span class="badge badge-info">INFO</span></td></tr>
-      <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">18.60 km</td><td><span class="badge badge-info">INFO</span></td></tr>
+      <tr><td>Pressure Front Radius</td><td>Diagnostic</td><td class="mono">18.11 km</td><td><span class="badge badge-info">INFO</span></td></tr>
     </tbody>
   </table>
 
   <div class="callout" style="margin-top:10px">
     <div class="callout-title">Geomechanical Interpretation</div>
     <p>
-      <strong>Safety Factor 0.96:</strong>
+      <strong>Safety Factor 0.74:</strong>
       <span style="color:#ef4444">Below the minimum regulatory threshold (1.2). Reduce injection rates or refine caprock parameters before operation.</span>
     </p>
     <p style="margin-top:5px">
-      <strong>MAIP Margin -16.1%:</strong>
+      <strong>MAIP Margin -50.3%:</strong>
       Narrow margin between peak injection pressure and MAIP. Careful injection rate management required.
-      Surface heave of <strong>3.85682 cm</strong> is within satellite InSAR detection thresholds.
+      Surface heave of <strong>2.11803 cm</strong> is within satellite InSAR detection thresholds.
     </p>
   </div>
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>In Salah</em></span>
-    <span>Page 2 · Generated 26 July 2026</span>
+    <span>Page 2 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -724,7 +804,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">In Salah</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 06 August 2026
     </div>
   </div>
   
@@ -748,7 +828,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>In Salah</em></span>
-    <span>Page 3 · Generated 26 July 2026</span>
+    <span>Page 3 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="content-page page-break" style="padding:14mm 14mm 12mm">
@@ -770,14 +850,14 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 </svg></div>
     <div style="text-align:right;font-size:7.5pt;color:#64748b">
       <strong style="color:#0d1f3c">In Salah</strong> · Physical Validation Audit<br>
-      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 26 July 2026
+      <span style="font-family:'IBM Plex Mono',monospace">in_salah.html</span> · 06 August 2026
     </div>
   </div>
 
   <h2>5 · Pressure Sensitivity Table</h2>
   <p style="font-size:8.5pt;color:#64748b;margin-bottom:8px">
     CO₂ and brine properties at constant temperature <strong>T = 91.0 °C</strong>,
-    varying pressure from 0.50× to 1.50× the baseline (10.50 MPa).
+    varying pressure from 0.50× to 1.50× the baseline (17.60 MPa).
   </p>
   <table>
     <thead>
@@ -795,53 +875,53 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <tbody>
       
       <tr >
-        <td class="mono">5.25</td>
+        <td class="mono">8.80</td>
         <td class="mono">0.50×</td>
-        <td class="mono">87.9</td>
-        <td class="mono">985.3</td>
-        <td class="mono">1.897 × 10⁻⁵</td>
-        <td class="mono">0.3011</td>
-        <td class="mono">51.50</td>
-        <td><span class="phase-chip phase-sub">SUBCRITICAL</span></td>
+        <td class="mono">166.3</td>
+        <td class="mono">986.4</td>
+        <td class="mono">2.072 × 10⁻⁵</td>
+        <td class="mono">0.4295</td>
+        <td class="mono">40.36</td>
+        <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
-        <td class="mono">7.88</td>
+        <td class="mono">13.20</td>
         <td class="mono">0.75×</td>
-        <td class="mono">144.1</td>
-        <td class="mono">986.1</td>
-        <td class="mono">2.014 × 10⁻⁵</td>
-        <td class="mono">0.3999</td>
-        <td class="mono">42.67</td>
+        <td class="mono">287.9</td>
+        <td class="mono">987.8</td>
+        <td class="mono">2.520 × 10⁻⁵</td>
+        <td class="mono">0.5411</td>
+        <td class="mono">34.20</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr style="background:rgba(0,196,160,0.06);font-weight:600">
-        <td class="mono">10.50</td>
+        <td class="mono">17.60</td>
         <td class="mono">1.00×</td>
-        <td class="mono">210.5</td>
-        <td class="mono">986.9</td>
-        <td class="mono">2.210 × 10⁻⁵</td>
-        <td class="mono">0.4781</td>
-        <td class="mono">37.77</td>
+        <td class="mono">416.7</td>
+        <td class="mono">989.1</td>
+        <td class="mono">3.230 × 10⁻⁵</td>
+        <td class="mono">0.6138</td>
+        <td class="mono">30.47</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
-        <td class="mono">13.13</td>
+        <td class="mono">22.00</td>
         <td class="mono">1.25×</td>
-        <td class="mono">285.7</td>
-        <td class="mono">987.7</td>
-        <td class="mono">2.510 × 10⁻⁵</td>
-        <td class="mono">0.5396</td>
-        <td class="mono">34.27</td>
+        <td class="mono">523.2</td>
+        <td class="mono">990.5</td>
+        <td class="mono">4.015 × 10⁻⁵</td>
+        <td class="mono">0.6572</td>
+        <td class="mono">28.20</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
       <tr >
-        <td class="mono">15.75</td>
+        <td class="mono">26.40</td>
         <td class="mono">1.50×</td>
-        <td class="mono">364.0</td>
-        <td class="mono">988.5</td>
-        <td class="mono">2.910 × 10⁻⁵</td>
-        <td class="mono">0.5873</td>
-        <td class="mono">31.77</td>
+        <td class="mono">604.4</td>
+        <td class="mono">991.8</td>
+        <td class="mono">4.752 × 10⁻⁵</td>
+        <td class="mono">0.6785</td>
+        <td class="mono">26.69</td>
         <td><span class="phase-chip phase-super">SUPERCRITICAL</span></td>
       </tr>
     </tbody>
@@ -865,27 +945,27 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px">
       <div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Thickness: 16.0 → 20.0 → 24.0 m</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">64.33</span> / <span class="mono" style="color:#00c4a0">64.33</span> / <span class="mono">64.33 Mt</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.500</span> / <span class="mono" style="color:#00c4a0">10.500</span> / <span class="mono">10.500 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.853</span> / <span class="mono" style="color:#00c4a0">0.957</span> / <span class="mono">1.077</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">44.70</span> / <span class="mono" style="color:#00c4a0">44.70</span> / <span class="mono">44.70 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">17.600</span> / <span class="mono" style="color:#00c4a0">17.600</span> / <span class="mono">17.600 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.711</span> / <span class="mono" style="color:#00c4a0">0.739</span> / <span class="mono">0.817</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">GIIP-bound: capacity fixed by GIIP + fill factor (Bachu 2007) — not this parameter</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Porosity: 9.6% → 12.0% → 14.4%</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">64.33</span> / <span class="mono" style="color:#00c4a0">64.33</span> / <span class="mono">64.33 Mt</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.500</span> / <span class="mono" style="color:#00c4a0">10.500</span> / <span class="mono">10.500 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.951</span> / <span class="mono" style="color:#00c4a0">0.957</span> / <span class="mono">0.962</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">44.70</span> / <span class="mono" style="color:#00c4a0">44.70</span> / <span class="mono">44.70 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">17.600</span> / <span class="mono" style="color:#00c4a0">17.600</span> / <span class="mono">17.600 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.735</span> / <span class="mono" style="color:#00c4a0">0.739</span> / <span class="mono">0.742</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">GIIP-bound: capacity fixed by GIIP + fill factor (Bachu 2007) — not this parameter</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Permeability: 8 → 10 → 12 mD</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">64.33</span> / <span class="mono" style="color:#00c4a0">64.33</span> / <span class="mono">64.33 Mt</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.500</span> / <span class="mono" style="color:#00c4a0">10.500</span> / <span class="mono">10.500 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.853</span> / <span class="mono" style="color:#00c4a0">0.957</span> / <span class="mono">1.072</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">44.70</span> / <span class="mono" style="color:#00c4a0">44.70</span> / <span class="mono">44.70 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">17.600</span> / <span class="mono" style="color:#00c4a0">17.600</span> / <span class="mono">17.600 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.711</span> / <span class="mono" style="color:#00c4a0">0.739</span> / <span class="mono">0.813</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">No capacity effect — affects ΔP only</div>
         </div><div style="border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px;background:white">
           <div style="font-size:7pt;font-weight:700;color:#0d1f3c;margin-bottom:3px">Area: 4.0 → 5.0 → 6.0 km²</div>
-          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">64.33</span> / <span class="mono" style="color:#00c4a0">64.33</span> / <span class="mono">64.33 Mt</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">10.500</span> / <span class="mono" style="color:#00c4a0">10.500</span> / <span class="mono">10.500 MPa</span></div>
-          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.957</span> / <span class="mono" style="color:#00c4a0">0.957</span> / <span class="mono">0.957</span></div>
+          <div style="font-size:6.5pt;color:#64748b">P50: <span class="mono">44.70</span> / <span class="mono" style="color:#00c4a0">44.70</span> / <span class="mono">44.70 Mt</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Peak P: <span class="mono">17.600</span> / <span class="mono" style="color:#00c4a0">17.600</span> / <span class="mono">17.600 MPa</span></div>
+          <div style="font-size:6.5pt;color:#64748b">Fs: <span class="mono">0.739</span> / <span class="mono" style="color:#00c4a0">0.739</span> / <span class="mono">0.739</span></div>
           <div style="font-size:6pt;color:#94a3b8;margin-top:2px;font-style:italic">GIIP-bound: capacity fixed by GIIP + fill factor (Bachu 2007) — not this parameter</div>
         </div>
     </div>
@@ -940,7 +1020,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
 
   <div class="page-footer">
     <span>CarbonLens v3 · Physics Engine Validation · <em>In Salah</em></span>
-    <span>Page 4 · Generated 26 July 2026</span>
+    <span>Page 4 · Generated 06 August 2026</span>
   </div>
 </div>
 <div class="back-page">
@@ -1004,7 +1084,7 @@ td:first-child { font-weight: 600; color: #0d1f3c; }
   </div>
 
   <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:7.5pt;color:#475569">In Salah Validation Report · 26 July 2026</div>
+    <div style="font-size:7.5pt;color:#475569">In Salah Validation Report · 06 August 2026</div>
     <div style="font-size:7.5pt;color:#475569">© 2026 CarbonLens · carbonlens.app · All rights reserved</div>
   </div>
 </div></body>

@@ -199,7 +199,7 @@ export default function MethodologyPanel() {
   const [expanded, setExpanded] = useState<string | null>('CO\u2082 Density')
 
   return (
-    <div className="p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-120px)]">
+    <div className="w-full space-y-5">
       <h2 className="font-semibold text-primary text-xs font-mono uppercase tracking-wider flex items-center gap-1.5">
         <BookOpen size={13} /> Methodology &amp; Academic Attribution
       </h2>

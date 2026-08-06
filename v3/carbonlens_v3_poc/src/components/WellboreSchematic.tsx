@@ -226,8 +226,8 @@ export const WellboreSchematic: React.FC<WellboreSchematicProps> = ({
   const svgString = generateWellboreSVGString(design, label)
   return (
     <div
-      className={className}
-      style={{ display: 'inline-block', lineHeight: 0, ...style }}
+      className={className ? `wellbore-responsive ${className}` : 'wellbore-responsive'}
+      style={{ display: 'inline-block', lineHeight: 0, maxWidth: '100%', ...style }}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: controlled SVG generation
       dangerouslySetInnerHTML={{ __html: svgString }}
     />
