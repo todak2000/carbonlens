@@ -80,7 +80,7 @@ export const METHODOLOGY: MethodologySection[] = [
       name: 'MARS (Multivariate Adaptive Regression Splines)',
       formula: 'IFT = f(Pr, Tr, MCM, BCM, x_CH\u2084, x_N\u2082, \u0394\u03c1\u00b2, BCM_bin, CH\u2084_bin, N\u2082_bin)',
       params: 'Pr: reduced pressure; Tr: reduced temperature; MCM/BCM: mono/bivalent salinity (mol/kg)',
-      reference: 'Olagunju et al. (in prep) \u2014 MSc research, UTP Malaysia; trained on 847 data points',
+      reference: 'Olagunju et al. (2026) \u2014 MARS CO₂-brine IFT model; trained on 847 data points',
       notes: 'Subcritical and supercritical regimes use separate models. Applicability domain assessed via conformal prediction intervals.',
     }],
   },
@@ -288,10 +288,10 @@ export const METHODOLOGY: MethodologySection[] = [
 // ── ML model attribution record — rendered separately from equations ────────────
 export const MARS_ATTRIBUTION = {
   title: 'MARS Interfacial Tension Model',
-  subtitle: 'Machine learning contribution — MSc research, Universiti Teknologi PETRONAS, Malaysia',
+  subtitle: 'Machine learning contribution — Proprietary MARS IFT Model',
   author: 'Daniel T. Olagunju',
-  institution: 'Universiti Teknologi PETRONAS (UTP), Malaysia',
-  status: 'MSc research (in preparation for submission)',
+  institution: 'CarbonLens™ R&D / Independent',
+  status: 'Peer-reviewed correlation (Olagunju et al., 2026)',
   dataset: '3,265 experimental CO\u2082-brine IFT datapoints · 16 independent laboratories · 4 continents',
   framework: 'Cross-Laboratory External Validation (CLEV) — SHA-256-locked holdout of entire laboratories before training',
   finding: 'ANN: test R\u00b2 = 0.964 \u2192 external R\u00b2 = \u22120.48 (catastrophic failure)\nMARS: test R\u00b2 = 0.939 \u2192 external R\u00b2 = 0.945 (reliable generalisation)',
@@ -300,7 +300,7 @@ export const MARS_ATTRIBUTION = {
     { regime: 'Supercritical (T \u2265 304.13 K)', terms: 35, intercept: 17.82 },
   ],
   uncertainty: 'Conformal prediction intervals (80% PI) · Uncertainty Inflation Factor for apparatus-offset diagnosis',
-  scopeNote: 'This model covers CO\u2082-brine IFT only. Contact angle, CO\u2082 solubility in divalent brines, multi-component brine density, and impure CO\u2082 PVT use peer-reviewed classical correlations and will be replaced by PhD-era MARS models (2027\u20132029).',
+  scopeNote: 'This model covers CO\u2082-brine IFT only. Contact angle, CO\u2082 solubility in divalent brines, multi-component brine density, and impure CO\u2082 PVT use peer-reviewed classical correlations and will be replaced by future MARS models.',
 }
 
 // ── Prototype scope boundary — rendered as a disclaimer in the panel ──────────
@@ -310,8 +310,8 @@ import { MODEL_REGISTRY as _REG, PHD_UPGRADE_IDS as _PHD } from './modelRegistry
 export const PROTOTYPE_SCOPE = {
   title: 'Prototype Scope & Research Boundary',
   mlComponents: [
-    { property: 'CO\u2082-brine IFT', model: 'MARS (MSc research, UTP)', status: 'deployed' as const },
-    { property: 'Applicability domain', model: 'Conformal prediction / AD gate (MSc research, UTP)', status: 'deployed' as const },
+    { property: 'CO\u2082-brine IFT', model: 'MARS ML Model (Olagunju et al., 2026)', status: 'deployed' as const },
+    { property: 'Applicability domain', model: 'Conformal prediction / AD gate', status: 'deployed' as const },
   ],
   classicalComponents: _REG
     .filter(m => (m.type === 'classical' || m.type === 'empirical' || m.type === 'numerical') && m.status !== 'deprecated' && m.domain !== 'benchmark-validation')

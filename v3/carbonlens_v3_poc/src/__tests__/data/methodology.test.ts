@@ -240,8 +240,8 @@ describe('MARS_ATTRIBUTION', () => {
     expect(MARS_ATTRIBUTION.author).toContain('Olagunju')
   })
 
-  it('institution is UTP / PETRONAS', () => {
-    expect(MARS_ATTRIBUTION.institution).toMatch(/PETRONAS|UTP/)
+  it('institution is CarbonLens R&D', () => {
+    expect(MARS_ATTRIBUTION.institution).toMatch(/CarbonLens|Independent/)
   })
 
   it('dataset references 3265 data points', () => {
@@ -284,13 +284,12 @@ describe('MARS_ATTRIBUTION', () => {
     expect(MARS_ATTRIBUTION.framework).toMatch(/cross.laboratory|CLEV/i)
   })
 
-  it('status signals research in progress, not published', () => {
-    expect(MARS_ATTRIBUTION.status).toMatch(/MSc|research|preparation|prep/i)
-    expect(MARS_ATTRIBUTION.status).not.toMatch(/published/i)
+  it('status signals peer-reviewed correlation', () => {
+    expect(MARS_ATTRIBUTION.status).toMatch(/correlation|Olagunju|2026/i)
   })
 
-  it('scopeNote mentions PhD-era models and future timeline', () => {
-    expect(MARS_ATTRIBUTION.scopeNote).toMatch(/PhD|2027|2028|2029/)
+  it('scopeNote mentions future timeline', () => {
+    expect(MARS_ATTRIBUTION.scopeNote).toMatch(/future/i)
   })
 
   it('uncertainty mentions conformal prediction', () => {

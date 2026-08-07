@@ -1084,7 +1084,7 @@ function buildBackPage(preset: (typeof FORMATION_PRESETS)[0]): string {
         It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation — entirely in the browser.
       </p>
       <p style="color:#94a3b8;font-size:8.5pt;line-height:1.7;margin:0 0 16px">
-        Developed as MSc research at Universiti Teknologi PETRONAS, Malaysia.
+        CarbonLens™ Independent Software Studio.
       </p>
       <div style="padding:12px 14px;background:rgba(0,196,160,0.1);border-left:3px solid ${T.teal};border-radius:0 6px 6px 0">
         <div style="font-size:7pt;color:${T.teal};font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Physics Engine Models</div>
@@ -1679,7 +1679,7 @@ function buildMasterHTML(summaryRows: any[]): string {
     <div>
       <div class="cover-meta-label">Report Date</div>
       <div class="cover-meta-val" style="font-size:9pt">${date}</div>
-      <div class="cover-meta-sub">MSc Research · Universiti Teknologi PETRONAS, Malaysia</div>
+      <div class="cover-meta-sub">CarbonLens™ Independent Software Studio</div>
     </div>
   </div>
 </div>`

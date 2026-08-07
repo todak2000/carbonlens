@@ -503,7 +503,7 @@ export function exportExecutiveSummary(
   // Right: institution disclaimer (single line, no MARS/ML/Sleipner reference)
   setTxt(doc, [150, 170, 200] as const)
   doc.text(
-    'MSc research, Universiti Teknologi PETRONAS  |  Screening-level accuracy — not a regulatory submission',
+    'CarbonLens™  |  Screening-level accuracy — not a regulatory submission',
     W - M,
     ftY,
     { align: 'right' },

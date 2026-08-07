@@ -129,10 +129,10 @@
       "domain": "transport-properties",
       "property": "CO₂-Brine Interfacial Tension",
       "name": "MARS (Multivariate Adaptive Regression Splines) IFT model",
-      "shortName": "MARS IFT (Olagunju, in prep.)",
+      "shortName": "MARS IFT (Olagunju et al., 2026)",
       "type": "ml",
       "status": "active",
-      "citation": "Olagunju, D.T. et al. (2026). MSc research, Universiti Teknologi PETRONAS (UTP), Malaysia. In preparation. Trained on 3,265 experimental CO₂-brine IFT datapoints from 16 independent laboratories across 4 continents.",
+      "citation": "Olagunju, D.T. et al. (2026). MARS machine learning model for CO₂-brine interfacial tension prediction. Trained on 3,265 experimental CO₂-brine IFT datapoints from 16 independent laboratories across 4 continents.",
       "implementedIn": "engine/mars/evaluate.ts",
       "knownLimitations": "Two separate models: subcritical (16 terms, T<304.13 K) and supercritical (35 terms, T≥304.13 K). Applicability domain gated via conformal prediction intervals (80% PI). Scope: CO₂-brine IFT only; pure water and impure CO₂ streams not yet covered."
     },

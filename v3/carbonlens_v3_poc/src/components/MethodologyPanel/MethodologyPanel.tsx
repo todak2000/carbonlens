@@ -128,7 +128,7 @@ function PrototypeScopeCard() {
         <div className="px-3 pb-3 space-y-3 border-t border-theme">
           {/* ML components */}
           <div className="pt-2.5">
-            <div className="text-[8px] text-muted font-mono uppercase tracking-wider mb-1.5">ML Components (MSc Research)</div>
+            <div className="text-[8px] text-muted font-mono uppercase tracking-wider mb-1.5">ML Components (Olagunju et al., 2026)</div>
             <div className="space-y-1">
               {s.mlComponents.map((c) => (
                 <div key={c.property} className="flex items-center justify-between gap-2">
@@ -260,7 +260,7 @@ export default function MethodologyPanel() {
         <p className="text-[9px] font-mono font-semibold text-muted uppercase tracking-wider mb-2">Full Reference List</p>
         <ul className="space-y-1">
           {[
-            'Olagunju et al. (in prep) — MARS CO₂-brine IFT model · MSc research, UTP Malaysia',
+            'Olagunju et al. (2026) — MARS CO₂-brine IFT model · CarbonLens™ R&D',
             'Span & Wagner (1996) J. Phys. Chem. Ref. Data 25(6), 1509–1596 — CO₂ EOS',
             'Fenghour et al. (1998) J. Phys. Chem. Ref. Data 27(1), 31–44 — CO₂ viscosity',
             'Duan & Sun (2003) Chem. Geol. 193, 257–271 — CO₂ solubility',

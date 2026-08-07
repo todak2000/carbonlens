@@ -853,15 +853,13 @@ function buildBackPage(opts: {
           CarbonLens is a browser-based CO&#x2082; geological storage simulation studio, purpose-built for deep saline aquifer CCS screening. It delivers real-time plume simulation, geomechanical risk assessment, and regulatory permit preparation.
         </p>
         <p style="color:#94a3b8;font-size:9.5pt;line-height:1.7;margin:0 0 10px;">
-          Developed as MSc research at Universiti Teknologi PETRONAS (UTP), Malaysia, in partnership with the CarbonLens product team.
+          CarbonLens™ is an independent software studio developed by Daniel T. Olagunju.
         </p>
         <div style="padding:10px 14px;background:rgba(0,196,160,0.08);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
-          <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Research Team</div>
+          <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Product Author &amp; Developer</div>
           <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
-            <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong> &mdash; Co-supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Berihun Negash Mamo</strong> &mdash; Advisor, UTP Malaysia
+            <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Founder &amp; Lead Developer, CarbonLens™<br>
+            <span style="font-size:8pt;color:#94a3b8;">Independent CO₂ Storage Screening Studio</span>
           </div>
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
@@ -1459,7 +1457,7 @@ function buildExecutiveSummaryBody(
   <!-- Footer -->
   <footer>
     <span>CarbonLens &mdash; ${window.location.hostname} &mdash; Generated ${dateStr}</span>
-    <span>MSc Research, Universiti Teknologi PETRONAS, Malaysia | Preliminary screening only</span>
+    <span>CarbonLens™ | Independent Software Studio | Preliminary screening only</span>
   </footer>
   <p style="font-size:7pt; color:#cbd5e1; margin-top:8px; line-height:1.6;">
     Scientific basis: DOE Goodman et al. (2011); Peng &amp; Robinson (1976) PR-EOS with Li &amp; Yan (2009) binary interaction parameters; Fenghour et al. (1998) viscosity; Duan &amp; Sun (2003) solubility (NaCl); Duan et al. (2006) multi-salt solubility (CaCl&#x2082;, MgCl&#x2082;, KCl); Nordbotten et al. (2005) two-phase AoR; Hesse, Orr &amp; Tchelepi (2008) post-injection gravity current; van Genuchten (1980) &amp; Mualem (1976) kr; Krevor et al. (2012); Furre et al. (2017); Boait et al. (2012)

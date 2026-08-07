@@ -723,12 +723,10 @@ export function openSleipnerReport(): void {
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">
-        <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Research Team</div>
+        <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Product Author &amp; Developer</div>
         <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
-          <strong style="color:white;">Daniel T. Olagunju</strong>, Author, MSc Researcher, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong>, Supervisor, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong>, Co-supervisor, UTP Malaysia<br>
-          <strong style="color:white;">Dr. Berihun Negash Mamo</strong>, Advisor, UTP Malaysia
+          <strong style="color:white;">Daniel T. Olagunju</strong>, Founder &amp; Lead Developer, CarbonLens™<br>
+          <span style="font-size:8pt;color:#94a3b8;">Independent CO₂ Storage Screening Studio</span>
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;">

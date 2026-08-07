@@ -871,7 +871,7 @@ export default function DemoModeOverlay() {
             </div>
 
             <p className="text-[8px] text-white/20 font-mono mt-2">
-              CarbonLens · Span-Wagner EOS · Duan-Sun Solubility · Nordbotten Two-Phase · Mohr-Coulomb · MARS ML IFT · UTP Malaysia · Sleipner-validated
+              CarbonLens™ · Span-Wagner EOS · Duan-Sun Solubility · Nordbotten Two-Phase · Mohr-Coulomb · MARS ML IFT · Independent Software Studio · Sleipner-validated
             </p>
           </div>
         </>

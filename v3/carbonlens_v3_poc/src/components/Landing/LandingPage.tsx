@@ -272,7 +272,7 @@ const FAQ_DATA: Record<FaqTab, { q: string; a: string }[]> = {
     },
     {
       q: "Can I cite CarbonLens in my research?",
-      a: "Yes. CarbonLens is developed by Daniel T. Olagunju at Universiti Teknologi PETRONAS, Malaysia. A companion MARS-IFT journal paper (machine learning model for CO\u2082-brine interfacial tension) is currently under peer review. The technical white paper with full methodology documentation is available for download. Contact the corresponding author for citation guidance.",
+      a: "Yes. CarbonLens™ is an independent software platform developed by Daniel T. Olagunju. A companion MARS-IFT journal paper (machine learning model for CO\u2082-brine interfacial tension) is currently under peer review. The technical white paper with full methodology documentation is available for download.",
     },
   ],
   Industry: [
@@ -484,8 +484,7 @@ export default function LandingPage() {
             <div className="flex flex-col gap-3 px-5 py-4 border-t border-white/10">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <p className="text-[10px] text-white/30 font-mono">
-                  CarbonLens Simulation Studio v3 · Sleipner-validated · UTP
-                  Malaysia
+                  CarbonLens Simulation Studio v3 · Sleipner-validated · Independent Software Product
                 </p>
                 <div className="flex items-center gap-3">
                   {/* Download — owner only */}

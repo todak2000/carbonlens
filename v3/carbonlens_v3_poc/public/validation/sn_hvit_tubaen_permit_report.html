@@ -101,89 +101,6 @@ footer {
 .check-no  { color: #64748b; }
 ol.numbered { padding-left: 18px; }
 ol.numbered li { margin: 6px 0; font-size: 9pt; }
-
-    /* ── SCREEN RESPONSIVE (mobile / tablet) ───────────────────────── */
-    @media screen and (max-width: 900px) {
-      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
-    }
-
-    @media screen and (max-width: 768px) {
-      /* Cover page */
-      .cover-page {
-        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
-      }
-      .back-page {
-        padding: clamp(20px, 5vw, 50px) clamp(14px, 4vw, 44px) clamp(20px, 5vw, 40px) !important;
-      }
-
-      /* Cover title */
-      .cover-title { font-size: clamp(18pt, 6vw, 28pt) !important; letter-spacing: -0.3px !important; }
-
-      /* Cover formation strip */
-      .cover-formation-strip { flex-wrap: wrap !important; gap: 16px !important; }
-
-      /* Cover meta grid */
-      .cover-meta-grid { grid-template-columns: 1fr 1fr !important; gap: 14px !important; }
-
-      /* KPI grid: 2 columns on mobile */
-      .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-
-      /* Two-col and three-col grids: stack */
-      .two-col { grid-template-columns: 1fr !important; gap: 10px !important; }
-      .three-col { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
-
-      /* Tables: horizontal scroll */
-      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%; }
-
-      /* Section boxes */
-      .section-box { padding: 10px 12px !important; }
-
-      /* Sensitivity chart label */
-      .sen-label { width: 70px !important; font-size: 7pt !important; }
-
-      /* Mass balance label */
-      .mass-label { width: 140px !important; font-size: 8pt !important; }
-
-      /* Content page */
-      .content-page { padding: 0 clamp(10px, 3vw, 20px) !important; }
-
-      /* Page header */
-      .page-header { flex-wrap: wrap !important; gap: 6px !important; }
-
-      /* Page footer */
-      .page-footer { flex-direction: column !important; gap: 4px !important; }
-    }
-
-    @media screen and (max-width: 480px) {
-      .cover-title { font-size: clamp(16pt, 7vw, 22pt) !important; }
-      .cover-meta-grid { grid-template-columns: 1fr !important; }
-      .kpi-grid { grid-template-columns: 1fr 1fr !important; }
-      .three-col { grid-template-columns: 1fr !important; }
-      .cover-formation-strip { gap: 12px !important; }
-    }
-
-    @media screen and (max-width: 360px) {
-      .kpi-grid { grid-template-columns: 1fr !important; }
-    }
-
-    /* ── PERMIT REPORT COVER RESPONSIVE ── */
-    @media screen and (max-width: 768px) {
-      /* Override inline cover page padding */
-      body > div:first-of-type[style*="padding:52px"] {
-        padding: clamp(24px,5vw,52px) clamp(16px,4vw,40px) clamp(20px,5vw,40px) !important;
-      }
-      /* Any full-page section div */
-      body > div[style*="min-height:100vh"] {
-        padding-left: clamp(16px, 4vw, 40px) !important;
-        padding-right: clamp(16px, 4vw, 40px) !important;
-      }
-      /* Large heading in permit reports */
-      h1 { font-size: clamp(16pt, 6vw, 22pt) !important; }
-      /* Cover grid-like elements */
-      div[style*="grid-template-columns"] {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
-      }
-    }
 </style></head><body>
   
   <div style="min-height:100vh;background:linear-gradient(160deg,#040f1e 0%,#0b2240 45%,#071a30 100%);display:flex;flex-direction:column;padding:52px 40px 40px;color:white;page-break-after:always;box-sizing:border-box;">
@@ -1454,9 +1371,8 @@ ol.numbered li { margin: 6px 0; font-size: 9pt; }
           <div style="font-size:8pt;color:#00c4a0;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Research Team</div>
           <div style="font-size:9pt;color:#cbd5e1;line-height:1.75;">
             <strong style="color:white;">Daniel T. Olagunju</strong> &mdash; Author, MSc Researcher, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Okorie Ekwe Agwu</strong> &mdash; Supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Muhammad Aslam MD Yusof</strong> &mdash; Co-supervisor, UTP Malaysia<br>
-            <strong style="color:white;">Dr. Berihun Negash Mamo</strong> &mdash; Advisor, UTP Malaysia
+            <span style="font-size:8pt;color:#94a3b8;">Independent CO2 Storage Screening Studio</span>
+            
           </div>
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,196,160,0.1);border-left:3px solid #00c4a0;border-radius:0 6px 6px 0;">

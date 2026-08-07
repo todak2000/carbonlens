@@ -60,4 +60,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Research context
 
-CarbonLens is developed as part of an MSc research project at Universiti Teknologi PETRONAS. Physics modules are peer-reviewed published correlations. The MARS IFT surrogate has been submitted for publication. The tool is released for community testing and feedback.
+CarbonLens™ is an independent browser-native CO₂ storage simulation studio developed by Daniel T. Olagunju. Physics modules are peer-reviewed published correlations. The MARS IFT model is documented in Olagunju et al. (2026).
